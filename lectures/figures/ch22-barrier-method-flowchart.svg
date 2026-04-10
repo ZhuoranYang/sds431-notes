@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 380" width="680" height="380">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#968a80"/>
+    </marker>
+  </defs>
+
+  <text x="340" y="28" text-anchor="middle" font-size="16" font-weight="bold">Barrier Method Flowchart</text>
+
+  <!-- Initialize -->
+  <rect x="260" y="45" width="160" height="40" rx="8" fill="#f9f6f0" stroke="#968a80" stroke-width="1.5"/>
+  <text x="340" y="70" text-anchor="middle" font-size="12">Initialize 𝑥, 𝑡 > 0</text>
+  <line x1="340" y1="85" x2="340" y2="115" stroke="#968a80" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <!-- Center via Newton -->
+  <rect x="220" y="120" width="240" height="45" rx="10" fill="#7b97ad" fill-opacity="0.12" stroke="#7b97ad" stroke-width="1.8"/>
+  <text x="340" y="140" text-anchor="middle" font-size="12" fill="#7b97ad" font-weight="bold">Centering step</text>
+  <text x="340" y="156" text-anchor="middle" font-size="11" fill="#7b97ad">Minimize 𝑡𝑓(𝑥) + 𝜙(𝑥) via Newton</text>
+  <line x1="340" y1="165" x2="340" y2="195" stroke="#968a80" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <!-- Update x -->
+  <rect x="260" y="200" width="160" height="40" rx="8" fill="#f9f6f0" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="340" y="224" text-anchor="middle" font-size="12" fill="#7a9a7e">Update 𝑥 := 𝑥*(𝑡)</text>
+  <line x1="340" y1="240" x2="340" y2="270" stroke="#968a80" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <!-- Check stopping -->
+  <polygon points="340,275 440,310 340,345 240,310" fill="#f9f6f0" stroke="#b8995e" stroke-width="1.5"/>
+  <text x="340" y="308" text-anchor="middle" font-size="11" fill="#b8995e">𝑚/𝑡 &lt;= 𝜀 ?</text>
+
+  <!-- Yes: stop -->
+  <line x1="440" y1="310" x2="530" y2="310" stroke="#968a80" stroke-width="1.2" marker-end="url(#arr)"/>
+  <text x="460" y="300" font-size="11" fill="#7a9a7e">yes</text>
+  <rect x="535" y="292" width="100" height="36" rx="8" fill="#7a9a7e" fill-opacity="0.15" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="585" y="315" text-anchor="middle" font-size="12" fill="#7a9a7e" font-weight="bold">STOP</text>
+
+  <!-- No: increase t -->
+  <line x1="240" y1="310" x2="130" y2="310" stroke="#968a80" stroke-width="1.2"/>
+  <text x="210" y="300" font-size="11" fill="#b56b6b">no</text>
+  <rect x="50" y="292" width="130" height="36" rx="8" fill="#b56b6b" fill-opacity="0.12" stroke="#b56b6b" stroke-width="1.5"/>
+  <text x="115" y="315" text-anchor="middle" font-size="12" fill="#b56b6b">𝑡 := 𝜇 . 𝑡</text>
+
+  <!-- Loop back up -->
+  <line x1="50" y1="310" x2="30" y2="310" stroke="#968a80" stroke-width="1.2"/>
+  <line x1="30" y1="310" x2="30" y2="142" stroke="#968a80" stroke-width="1.2"/>
+  <line x1="30" y1="142" x2="215" y2="142" stroke="#968a80" stroke-width="1.2" marker-end="url(#arr)"/>
+</svg>

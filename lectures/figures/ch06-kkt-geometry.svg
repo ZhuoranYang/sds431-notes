@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 380" width="500" height="380">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#3d352f"/>
+    </marker>
+    <marker id="arr-rose" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#b56b6b"/>
+    </marker>
+    <marker id="arr-gold" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#b8995e"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#7b97ad"/>
+    </marker>
+  </defs>
+
+  <text x="250" y="28" text-anchor="middle" font-size="16" font-weight="bold">KKT Conditions: Geometry</text>
+
+  <!-- Feasible region -->
+  <path d="M 80,300 Q 60,180 150,110 Q 250,50 350,110 Q 400,180 350,300 Z" fill="#7a9a7e" fill-opacity="0.1" stroke="#7a9a7e" stroke-width="1.8"/>
+  <text x="210" y="250" text-anchor="middle" font-size="12" fill="#7a9a7e">feasible Ω</text>
+
+  <!-- Constraint boundaries labeled -->
+  <text x="55" y="200" font-size="10" fill="#968a80">𝑔₁(𝑥)=0</text>
+  <text x="350" y="80" font-size="10" fill="#968a80">𝑔₂(𝑥)=0</text>
+
+  <!-- Optimal point on boundary -->
+  <circle cx="230" cy="95" r="6" fill="#b56b6b"/>
+  <text x="225" y="82" text-anchor="middle" font-size="13" fill="#b56b6b" font-style="italic">𝑥*</text>
+
+  <!-- -∇f(x*) arrow (negative gradient of objective) -->
+  <line x1="230" y1="95" x2="230" y2="170" stroke="#b56b6b" stroke-width="2" marker-end="url(#arr-rose)"/>
+  <text x="242" y="145" font-size="11" fill="#b56b6b">-∇𝑓(𝑥*)</text>
+
+  <!-- ∇g1(x*) arrow (constraint gradient 1) -->
+  <line x1="230" y1="95" x2="190" y2="155" stroke="#b8995e" stroke-width="1.8" marker-end="url(#arr-gold)"/>
+  <text x="175" y="130" font-size="11" fill="#b8995e">𝜆₁∇𝑔₁</text>
+
+  <!-- ∇g2(x*) arrow (constraint gradient 2) -->
+  <line x1="230" y1="95" x2="270" y2="155" stroke="#7b97ad" stroke-width="1.8" marker-end="url(#arr-blue)"/>
+  <text x="280" y="130" font-size="11" fill="#7b97ad">𝜆₂∇𝑔₂</text>
+
+  <!-- KKT condition: -∇f = λ1 ∇g1 + λ2 ∇g2 -->
+  <text x="250" y="310" text-anchor="middle" font-size="12" fill="#3d352f" font-weight="bold">KKT: -∇𝑓(𝑥*) = 𝜆₁∇𝑔₁(𝑥*) + 𝜆₂∇𝑔₂(𝑥*)</text>
+  <text x="250" y="330" text-anchor="middle" font-size="11" fill="#968a80">with 𝜆₁, 𝜆₂ >= 0 (dual feasibility)</text>
+  <text x="250" y="350" text-anchor="middle" font-size="11" fill="#968a80">and 𝜆ᵢ 𝑔ᵢ(𝑥*) = 0 (complementary slackness)</text>
+</svg>

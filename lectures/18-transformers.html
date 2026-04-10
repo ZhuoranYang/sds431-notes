@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>18&nbsp; Transformers – S&amp;DS 431/631 — Optimization and Computation</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../lectures/summary.html" rel="next">
+<link href="../lectures/17-diffusion-models.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-1db14e1c4cc35bfe1d9badc9e4551eed.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-434abab37f7d394f280d9c89d7fbc13f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/17-diffusion-models.html">Modern Computation Models</a></li><li class="breadcrumb-item"><a href="../lectures/18-transformers.html"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Transformers</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">S&amp;DS 431/631 — Optimization and Computation</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Preparation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/01-introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction and Motivation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/02-math-background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Background</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Convex Optimization Basics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/03-convex-sets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Convex Sets</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/04-convex-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Convex Functions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/05-convex-optimization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Convex Optimization</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">First-Order Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Linear Programming</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/09-lp-formulation-geometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">LP Formulation and Geometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/10-simplex-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">The Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/11-lp-duality.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">LP Duality</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/12-dual-simplex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The Dual Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/13-lp-applications.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">LP Applications and Game Theory</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Second-Order and Interior Point Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/15-ellipsoid-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Ellipsoid Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/16-interior-point-methods.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Interior Point Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Modern Computation Models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/17-diffusion-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Diffusion Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/18-transformers.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Transformers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/summary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Course Summary</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-overview" id="toc-sec-overview" class="nav-link active" data-scroll-target="#sec-overview"><span class="header-section-number">18.1</span> What Will Be Covered</a></li>
+  <li><a href="#sec-motivation" id="toc-sec-motivation" class="nav-link" data-scroll-target="#sec-motivation"><span class="header-section-number">18.2</span> 1. Motivation</a>
+  <ul class="collapse">
+  <li><a href="#sec-language-tasks" id="toc-sec-language-tasks" class="nav-link" data-scroll-target="#sec-language-tasks"><span class="header-section-number">18.2.1</span> Language Tasks</a></li>
+  </ul></li>
+  <li><a href="#sec-three-types" id="toc-sec-three-types" class="nav-link" data-scroll-target="#sec-three-types"><span class="header-section-number">18.3</span> 2. Three Types of Transformer-Based Language Models</a>
+  <ul class="collapse">
+  <li><a href="#sec-encoder-only" id="toc-sec-encoder-only" class="nav-link" data-scroll-target="#sec-encoder-only"><span class="header-section-number">18.3.1</span> Task Type 1: Encoder-Only (Feature Extraction + Discriminative Tasks)</a></li>
+  <li><a href="#sec-decoder-only" id="toc-sec-decoder-only" class="nav-link" data-scroll-target="#sec-decoder-only"><span class="header-section-number">18.3.2</span> Task Type 2: Decoder-Only (Autoregressive Generation)</a></li>
+  <li><a href="#sec-encoder-decoder" id="toc-sec-encoder-decoder" class="nav-link" data-scroll-target="#sec-encoder-decoder"><span class="header-section-number">18.3.3</span> Task Type 3: Encoder-Decoder Transformer</a></li>
+  </ul></li>
+  <li><a href="#sec-architecture" id="toc-sec-architecture" class="nav-link" data-scroll-target="#sec-architecture"><span class="header-section-number">18.4</span> 3. Architectures of Transformers</a>
+  <ul class="collapse">
+  <li><a href="#sec-prediction-head" id="toc-sec-prediction-head" class="nav-link" data-scroll-target="#sec-prediction-head"><span class="header-section-number">18.4.1</span> Prediction Head &amp; Softmax</a></li>
+  <li><a href="#sec-loss-function" id="toc-sec-loss-function" class="nav-link" data-scroll-target="#sec-loss-function"><span class="header-section-number">18.4.2</span> Loss Function for Decoder-Only Model</a></li>
+  <li><a href="#sec-token-embedding" id="toc-sec-token-embedding" class="nav-link" data-scroll-target="#sec-token-embedding"><span class="header-section-number">18.4.3</span> Token Embedding</a></li>
+  </ul></li>
+  <li><a href="#sec-attention" id="toc-sec-attention" class="nav-link" data-scroll-target="#sec-attention"><span class="header-section-number">18.5</span> 4. Attention Mechanism</a>
+  <ul class="collapse">
+  <li><a href="#sec-cross-attention" id="toc-sec-cross-attention" class="nav-link" data-scroll-target="#sec-cross-attention"><span class="header-section-number">18.5.1</span> Cross Attention: The Equations</a></li>
+  <li><a href="#sec-self-attention" id="toc-sec-self-attention" class="nav-link" data-scroll-target="#sec-self-attention"><span class="header-section-number">18.5.2</span> Self-Attention</a></li>
+  </ul></li>
+  <li><a href="#sec-position-embedding" id="toc-sec-position-embedding" class="nav-link" data-scroll-target="#sec-position-embedding"><span class="header-section-number">18.6</span> 5. Position Embedding</a></li>
+  <li><a href="#sec-causal-masking" id="toc-sec-causal-masking" class="nav-link" data-scroll-target="#sec-causal-masking"><span class="header-section-number">18.7</span> 6. Causal Masking: Don’t See the Future</a></li>
+  <li><a href="#sec-mlp-layer" id="toc-sec-mlp-layer" class="nav-link" data-scroll-target="#sec-mlp-layer"><span class="header-section-number">18.8</span> 7. Add MLP Layers After Each Attention Layer</a></li>
+  <li><a href="#sec-multi-head" id="toc-sec-multi-head" class="nav-link" data-scroll-target="#sec-multi-head"><span class="header-section-number">18.9</span> 8. Multi-Head Attention</a></li>
+  <li><a href="#sec-residual-layernorm" id="toc-sec-residual-layernorm" class="nav-link" data-scroll-target="#sec-residual-layernorm"><span class="header-section-number">18.10</span> 9. Residual Connections &amp; Layer Normalization</a></li>
+  <li><a href="#sec-full-architecture" id="toc-sec-full-architecture" class="nav-link" data-scroll-target="#sec-full-architecture"><span class="header-section-number">18.11</span> 10. Full Transformer Architecture</a></li>
+  <li><a href="#sec-gpt3-exercise" id="toc-sec-gpt3-exercise" class="nav-link" data-scroll-target="#sec-gpt3-exercise"><span class="header-section-number">18.12</span> Exercise: Understanding GPT-3 Parameters</a></li>
+  <li><a href="#sec-transformer-circuits" id="toc-sec-transformer-circuits" class="nav-link" data-scroll-target="#sec-transformer-circuits"><span class="header-section-number">18.13</span> Transformer Circuits &amp; Residual Stream</a></li>
+  <li><a href="#sec-interactive-demo" id="toc-sec-interactive-demo" class="nav-link" data-scroll-target="#sec-interactive-demo"><span class="header-section-number">18.14</span> Interactive Demos</a>
+  <ul class="collapse">
+  <li><a href="#self-attention-computation" id="toc-self-attention-computation" class="nav-link" data-scroll-target="#self-attention-computation"><span class="header-section-number">18.14.1</span> Self-Attention Computation</a></li>
+  <li><a href="#gpt-3-parameter-count" id="toc-gpt-3-parameter-count" class="nav-link" data-scroll-target="#gpt-3-parameter-count"><span class="header-section-number">18.14.2</span> GPT-3 Parameter Count</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/17-diffusion-models.html">Modern Computation Models</a></li><li class="breadcrumb-item"><a href="../lectures/18-transformers.html"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Transformers</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Transformers</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Adapted from slides by Anna Goldie (Stanford CS 224n), John Hewitt, and Song Han (MIT 6.5940)</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Prerequisites
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><a href="../lectures/17-diffusion-models.html">Part 6</a>: deep generative models, training with gradient descent</li>
+<li><a href="../lectures/02-math-background.html">Part 2</a>: linear algebra, matrix operations</li>
+</ul>
+</div>
+</div>
+<p>The transformer architecture has fundamentally reshaped artificial intelligence. Since the publication of “Attention Is All You Need” in 2017, transformers have become the universal backbone for language models (GPT, Claude, LLaMA), vision models (ViT), protein structure prediction (AlphaFold), and much more. Understanding how transformers work is now essential for anyone working at the intersection of optimization and machine learning.</p>
+<p>At its core, the transformer is built from a small set of mathematical operations — matrix multiplications, softmax normalization, and elementwise nonlinearities — all of which are trained end-to-end using the gradient-based optimization methods developed earlier in this course. The key innovation is the <strong>attention mechanism</strong>, which allows each token in a sequence to dynamically attend to every other token, computing a weighted average that captures long-range dependencies. Combined with positional encodings, residual connections, and layer normalization, these attention layers are stacked into deep networks with billions of parameters.</p>
+<p>This chapter walks through the transformer architecture from the ground up. We will see how token embeddings map discrete words into continuous vectors, how self-attention computes context-dependent representations, and how the full decoder architecture generates text one token at a time. We also analyze the parameter count of GPT-3 to build concrete intuition for the scale of these models.</p>
+<section id="sec-overview" class="level2" data-number="18.1">
+<h2 data-number="18.1" class="anchored" data-anchor-id="sec-overview"><span class="header-section-number">18.1</span> What Will Be Covered</h2>
+<ul>
+<li>Language tasks and three types of transformer models (encoder-only, decoder-only, encoder-decoder)</li>
+<li>Token embedding, positional encoding, and the softmax prediction head</li>
+<li>The attention mechanism: cross attention and self-attention</li>
+<li>Multi-head attention, causal masking, MLP layers, residual connections, and layer normalization</li>
+<li>Full transformer decoder architecture and GPT-3 parameter analysis</li>
+</ul>
+</section>
+<section id="sec-motivation" class="level2" data-number="18.2">
+<h2 data-number="18.2" class="anchored" data-anchor-id="sec-motivation"><span class="header-section-number">18.2</span> 1. Motivation</h2>
+<p>Transformer models are <strong>revolutionary</strong>. The foundational paper “Attention Is All You Need” (Vaswani et al., 2017) introduced the Transformer architecture, which has since become the backbone of virtually all modern AI systems: ChatGPT/GPT-4 (OpenAI), Claude (Anthropic), Gemini (Google), LLaMA (Meta), and many more.</p>
+<p>Today, Transformer-based models dominate the LMSYS Chatbot Arena Leaderboard (Chiang et al., 2024), with models like GPT-4-Turbo, Claude 3 Opus, and Gemini 1.5 Pro at the top.</p>
+<p>Transformers have even shown great promise <strong>outside of NLP</strong>:</p>
+<ul>
+<li><strong>Protein folding:</strong> AlphaFold2 (Jumper et al., 2021) uses attention mechanisms</li>
+<li><strong>Image classification:</strong> Vision Transformer (ViT) outperforms ResNet-based baselines (Dosovitskiy et al., 2020)</li>
+<li><strong>ML for Systems:</strong> Transformer-based compiler models (GO-one) speed up other Transformer models (Zhou et al., 2020)</li>
+</ul>
+<section id="sec-language-tasks" class="level3" data-number="18.2.1">
+<h3 data-number="18.2.1" class="anchored" data-anchor-id="sec-language-tasks"><span class="header-section-number">18.2.1</span> Language Tasks</h3>
+<div id="def-language-tasks" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.1 (Two Main Types of Language Tasks)</strong></span> <strong>1. Generative tasks</strong> (conditional generation): e.g., translation, code generation. <span class="math display">\mathbb{P}(\text{text} \mid \text{text / image}).</span></p>
+<p><strong>2. Discriminative tasks</strong> (classification): e.g., part-of-speech classification, sentiment analysis. <span class="math display">\mathbb{P}(\text{label} \mid \text{text}).</span></p>
+</div>
+<p>Understanding this distinction between generative and discriminative tasks is important because it directly determines which type of transformer architecture is appropriate: encoder-only models excel at discriminative tasks, while decoder-only models are designed for generation.</p>
+</section>
+</section>
+<section id="sec-three-types" class="level2" data-number="18.3">
+<h2 data-number="18.3" class="anchored" data-anchor-id="sec-three-types"><span class="header-section-number">18.3</span> 2. Three Types of Transformer-Based Language Models</h2>
+<p>Depending on the task, transformers come in three flavors that differ in how information flows through the model. The choice between them determines whether the model can “see the whole input at once” (useful for classification) or must generate output one token at a time (necessary for text generation). Understanding these three variants clarifies why modern large language models are almost exclusively decoder-only.</p>
+<section id="sec-encoder-only" class="level3" data-number="18.3.1">
+<h3 data-number="18.3.1" class="anchored" data-anchor-id="sec-encoder-only"><span class="header-section-number">18.3.1</span> Task Type 1: Encoder-Only (Feature Extraction + Discriminative Tasks)</h3>
+<div id="def-encoder-only" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.2 (Encoder-Only Transformer)</strong></span> An encoder-only transformer creates a <strong>sequence of token-level features</strong> of the input (for discriminative tasks).</p>
+<ul>
+<li><strong>Input:</strong> sequence of tokens <span class="math inline">w_1, \ldots, w_L</span>; <span class="math inline">L</span> = sequence length</li>
+<li><strong>Output:</strong> sequence of features <span class="math inline">z_1, z_2, \ldots, z_L \in \mathbb{R}^d</span></li>
+</ul>
+<p><strong>Key characteristic:</strong> each <span class="math inline">z_\ell</span> depends on the <em>whole</em> input. That is, <span class="math inline">z_\ell</span> depends on <span class="math inline">\{w_1, \ldots, w_L\}</span> for all <span class="math inline">\ell \in [L]</span>.</p>
+<p>Extract global features for <strong>downstream tasks</strong> (trained separately using these features):</p>
+<ul>
+<li><strong>Token-level:</strong> part-of-speech classification</li>
+<li><strong>Sentence-level:</strong> sentiment analysis</li>
+</ul>
+<p><strong>Key examples:</strong> BERT, Vision Transformer (ViT)</p>
+</div>
+</section>
+<section id="sec-decoder-only" class="level3" data-number="18.3.2">
+<h3 data-number="18.3.2" class="anchored" data-anchor-id="sec-decoder-only"><span class="header-section-number">18.3.2</span> Task Type 2: Decoder-Only (Autoregressive Generation)</h3>
+<div id="def-decoder-only" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.3 (Decoder-Only Transformer)</strong></span> A decoder-only transformer generates a sequence of features for <strong>generating the next token</strong>.</p>
+<ul>
+<li><strong>Input:</strong> sequence of tokens <span class="math inline">w_1, w_2, \ldots, w_L</span></li>
+<li><strong>Output:</strong> sequence of features <span class="math inline">z_1, z_2, \ldots, z_L</span></li>
+</ul>
+<p><strong>Key characteristics:</strong></p>
+<ul>
+<li>Each <span class="math inline">z_\ell</span> only depends on <span class="math inline">w_1, w_2, \ldots, w_\ell</span> (<strong>autoregressive</strong> / cannot look into the future)</li>
+<li>Predict <span class="math inline">w_{\ell+1}</span> using <span class="math inline">z_\ell</span> only, via a <strong>softmax prediction layer</strong></li>
+</ul>
+<p><strong>Key examples:</strong> GPT family, LLaMA, Mistral</p>
+</div>
+<div id="exm-autoregressive" class="theorem example">
+<p><span class="theorem-title"><strong>Example 18.1 (Autoregressive Generation)</strong></span> We want a model that predicts the next word given context. For “I am a Yale ?”, we want: <span class="math display">\mathbb{P}(w_5 \mid w_{1:4}) = \mathbb{P}(\text{"student"} \mid \text{"I am a Yale"}).</span></p>
+<p>An <strong>autoregressive LLM</strong> = Decoder-only TF + Prediction Head: <span class="math inline">\mathbb{P}_\theta(w_{\ell+1} \mid w_1, \ldots, w_\ell)</span>.</p>
+<p>Autoregressive generation proceeds step by step:</p>
+<ul>
+<li><span class="math inline">\mathbb{P}(\text{"I"} \mid \text{prompt} = \text{"My name is X."})</span></li>
+<li><span class="math inline">\mathbb{P}(\text{"am"} \mid \text{prompt} = \text{"My name is X. I"})</span></li>
+<li><span class="math inline">\mathbb{P}(\text{"a"} \mid \text{prompt} = \text{"My name is X. I am"})</span></li>
+<li><span class="math inline">\mathbb{P}(\text{"Yale"} \mid \text{prompt} = \text{"My name is X. I am a"})</span></li>
+<li><span class="math inline">\mathbb{P}(\text{"student"} \mid \text{prompt} = \text{"My name is X. I am a Yale"})</span></li>
+</ul>
+<p>Each output word is copied back into the input for the next prediction.</p>
+</div>
+</section>
+<section id="sec-encoder-decoder" class="level3" data-number="18.3.3">
+<h3 data-number="18.3.3" class="anchored" data-anchor-id="sec-encoder-decoder"><span class="header-section-number">18.3.3</span> Task Type 3: Encoder-Decoder Transformer</h3>
+<div id="def-encoder-decoder" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.4 (Encoder-Decoder Transformer)</strong></span> The original Transformer model (Vaswani et al., 2017). Used for <strong>machine translation</strong> and conditional generation.</p>
+<p>The encoder processes the input sequence into features; the decoder autoregressively generates the output, attending to the encoder features via <strong>cross attention</strong>.</p>
+<p>Example: (“Hello”, “world”, “!”) <span class="math inline">\to</span> Encoder <span class="math inline">\to</span> features <span class="math inline">\to</span> Decoder <span class="math inline">\to</span> (“Bonjour”, “le”, “monde”, “!”)</p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Current Landscape
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Encoder-decoder models and encoder-only LLMs are <strong>not popular now</strong>.</p>
+<ul>
+<li><strong>Decoder-only</strong> models are most popular — GPT family, LLaMA, Mistral</li>
+<li>Decoder-only models can also perform discriminative tasks</li>
+<li>Only exception: Vision Transformer (ViT), which is encoder-only</li>
+</ul>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-architecture" class="level2" data-number="18.4">
+<h2 data-number="18.4" class="anchored" data-anchor-id="sec-architecture"><span class="header-section-number">18.4</span> 3. Architectures of Transformers</h2>
+<p><em>Note: This is the most important part of this class, and it is very complicated.</em></p>
+<p>There are many components of these neural networks. To introduce the architecture, we equivalently introduce the “forward” function: <strong>How is the input language token sequence transformed into the output?</strong></p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Mental Picture</strong> (using GPT-3 as reference):</p>
+<ul>
+<li><span class="math inline">V</span> = vocabulary size = 50,257</li>
+<li><span class="math inline">d</span> = model dimension = 12,288</li>
+<li><span class="math inline">L</span> = sequence length = 2,048</li>
+</ul>
+<p>Input: <span class="math inline">w_1, \ldots, w_L</span> (tokens, <span class="math inline">w_i \in \mathbb{R}^V</span> one-hot). Transformer (embedding, MLP, attention, layer norm, residual link) produces features <span class="math inline">z_1, \ldots, z_L \in \mathbb{R}^d</span>. Then a prediction layer produces the loss <span class="math inline">\ell_1, \ldots, \ell_L</span>.</p>
+</div>
+</div>
+</div>
+<section id="sec-prediction-head" class="level3" data-number="18.4.1">
+<h3 data-number="18.4.1" class="anchored" data-anchor-id="sec-prediction-head"><span class="header-section-number">18.4.1</span> Prediction Head &amp; Softmax</h3>
+<p>The prediction head is designed according to the task, which determines the loss function. A transformer outputs a real-valued vector <span class="math inline">z_\ell \in \mathbb{R}^d</span> at each position, but for next-token prediction we need a probability distribution over the vocabulary. The softmax function bridges this gap by converting an arbitrary vector of real numbers (“logits”) into a valid probability distribution.</p>
+<div id="def-softmax" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.5 (Softmax Function)</strong></span> For any <span class="math inline">N</span> real numbers <span class="math inline">\{v_i\}_{i \in [N]}</span>, the <strong>softmax function</strong> gives us a probability distribution over <span class="math inline">[N] = \{1, \ldots, N\}</span>: <span class="math display">\text{Denote: } p = \text{Softmax}(\{v_i\}_{i \in [N]}) \in \mathbb{R}^N.</span> <span class="math display">\mathbb{P}(\text{random variable} = i) = p(i) = \frac{\exp(v_i)}{\sum_{j=1}^{N} \exp(v_j)}.</span></p>
+<p>Equivalently, <span class="math inline">p(i) \propto \exp(v_i)</span>. <strong>Key insight:</strong> Softmax gives us a distribution.</p>
+</div>
+<p>The softmax function converts a vector of arbitrary real-valued scores (logits) into a valid probability distribution. The exponential function ensures all outputs are positive, and the normalization ensures they sum to one. Larger logits receive exponentially more probability mass, making softmax a “soft” version of the argmax operation.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Decoding (Unembedding) + Softmax
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The TF produces a vector <span class="math inline">z_\ell \in \mathbb{R}^d</span>. We can map <span class="math inline">z_\ell</span> to <span class="math inline">\mathbb{R}^N</span>, then apply softmax: <span class="math display">\underbrace{W_U}_{\mathbb{R}^{N \times d}} \cdot z_\ell = \mathbb{R}^N \xrightarrow{\text{Softmax}} \text{distribution over } [N], \quad \text{e.g., over tokens with } N = V.</span></p>
+<p>This is a <strong>softmax linear model</strong>.</p>
+<p><strong>Discriminative task:</strong> e.g., sentiment analysis — aggregate <span class="math inline">z_1, \ldots, z_L</span> (e.g., <span class="math inline">z = \frac{1}{L}\sum_{\ell=1}^{L} z_\ell</span>), then feed into a softmax linear classifier: <span class="math inline">\mathbb{P}(\text{positive} \mid z) \propto \exp(w^\top z)</span>.</p>
+<p><strong>Autoregressive generation:</strong> use <span class="math inline">z_\ell</span> to predict <span class="math inline">w_{\ell+1}</span> via softmax linear classification.</p>
+</div>
+</div>
+</section>
+<section id="sec-loss-function" class="level3" data-number="18.4.2">
+<h3 data-number="18.4.2" class="anchored" data-anchor-id="sec-loss-function"><span class="header-section-number">18.4.2</span> Loss Function for Decoder-Only Model</h3>
+<p>With the softmax prediction head in place, we need a loss function to train the model. The natural choice for next-token prediction is to maximize the probability of the correct next token at each position, which leads to the cross-entropy loss. This is equivalent to maximum likelihood estimation and is the standard training objective for all autoregressive language models.</p>
+<div id="thm-cross-entropy" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 18.1 (Cross-Entropy Loss (Equivalent to MLE))</strong></span> At each token position <span class="math inline">\ell \in [L]</span>, TF outputs <span class="math inline">z_\ell \in \mathbb{R}^d</span>. After unembedding (<span class="math inline">W_U \in \mathbb{R}^{d \times V}</span>) + softmax, we have a distribution <span class="math inline">p_\ell \in \Delta_L</span>.</p>
+<p>The next-token label is <span class="math inline">w_{\ell+1}</span> (one-hot vector). The loss is: <span class="math display">\text{Loss}(\theta) = -\sum_{\ell=1}^{L-1} w_{\ell+1}^\top \log p_\ell = -\sum_{\ell=1}^{L-1} \log \mathbb{P}_\theta(w_{\ell+1} \mid w_1, \ldots, w_\ell).</span></p>
+<p>This is the <strong>cross-entropy loss</strong>, equivalent to <strong>maximum likelihood estimation (MLE)</strong>. Parameters <span class="math inline">\theta</span> are trained via gradient-based optimization using backpropagation (see <a href="../lectures/02-math-background.html">Part 2</a> for backpropagation and automatic differentiation).</p>
+</div>
+<p>The cross-entropy loss penalizes the model for assigning low probability to the correct next token. Minimizing this loss is equivalent to maximizing the likelihood of the training data, which connects transformer training directly to the statistical framework of maximum likelihood estimation studied throughout this course.</p>
+</section>
+<section id="sec-token-embedding" class="level3" data-number="18.4.3">
+<h3 data-number="18.4.3" class="anchored" data-anchor-id="sec-token-embedding"><span class="header-section-number">18.4.3</span> Token Embedding</h3>
+<div id="def-token-embedding" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.6 (Word/Token Embedding)</strong></span> Each word <span class="math inline">w</span> (a one-hot vector in <span class="math inline">\mathbb{R}^N</span>) is associated with a vector <span class="math inline">x_w \in \mathbb{R}^d</span> via an <strong>embedding matrix</strong> <span class="math inline">W_E \in \mathbb{R}^{d \times N}</span>: <span class="math display">x_i = W_E \, w_i \in \mathbb{R}^d.</span></p>
+<p>The embedding matrix is <strong>learned from data</strong>. Input size: <span class="math inline">L \times N</span>. Output size: <span class="math inline">L \times d</span>.</p>
+<p>For GPT-3: <span class="math inline">L = 2048</span>, <span class="math inline">N = 50{,}257</span>, <span class="math inline">d = 12{,}288</span>.</p>
+</div>
+<p>The embedding matrix converts discrete tokens (represented as sparse one-hot vectors in a very high-dimensional space <span class="math inline">\mathbb{R}^N</span>) into dense, continuous vectors in a much lower-dimensional space <span class="math inline">\mathbb{R}^d</span>. This is essential because all subsequent operations in the transformer — attention, MLP layers, optimization — operate on continuous vectors.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Why Word Embedding?
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Word embeddings equip words with “distance” to capture similarity. Using <strong>cosine similarity</strong>: <span class="math display">\cos(u, v) = \frac{u^\top v}{\|u\| \cdot \|v\|}.</span></p>
+<p>Similar words are <strong>close</strong> in the embedded space. Word2Vec and GloVe encode <strong>semantic meaning</strong> — interesting patterns emerge (e.g., king - man + woman <span class="math inline">\approx</span> queen). Now we are in Euclidean space and it is easy to operate using calculus.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-attention" class="level2" data-number="18.5">
+<h2 data-number="18.5" class="anchored" data-anchor-id="sec-attention"><span class="header-section-number">18.5</span> 4. Attention Mechanism</h2>
+<p><strong>Attention</strong> treats each word’s representation as a <strong>query</strong> to access and incorporate information from <strong>a set of values</strong>.</p>
+<div id="def-attention" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.7 (Attention)</strong></span> Given a set of vector <em>values</em> and a vector <em>query</em>, <strong>attention</strong> is a technique to compute a <strong>weighted sum of the values</strong>, dependent on the query. We say the query <em>attends to</em> the values.</p>
+<p>Attention is just a <strong>weighted average</strong> — this is very powerful if the weights are learned!</p>
+<p>In <strong>attention</strong>, the query matches all keys <em>softly</em> (weights between 0 and 1). In a <strong>lookup table</strong>, the query matches one key exactly.</p>
+</div>
+<p>The power of attention lies in its ability to dynamically route information: each token can selectively focus on the most relevant parts of the input, with the relevance weights learned from data. This is what allows transformers to capture long-range dependencies in sequences.</p>
+<section id="sec-cross-attention" class="level3" data-number="18.5.1">
+<h3 data-number="18.5.1" class="anchored" data-anchor-id="sec-cross-attention"><span class="header-section-number">18.5.1</span> Cross Attention: The Equations</h3>
+<p>We now formalize the attention computation. The key idea is to use dot products between the query and each key to compute similarity scores, apply softmax to obtain weights, and then return the weighted sum of values. The <span class="math inline">1/\sqrt{d_1}</span> scaling factor prevents the dot products from growing too large in high dimensions, which would push softmax into regions of near-zero gradient.</p>
+<div id="thm-cross-attention" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 18.2 (Cross Attention Formula)</strong></span> Suppose we have (key, value) pairs <span class="math inline">\{(k_i, v_i)\}_{i \in [L]}</span> with <span class="math inline">k_i \in \mathbb{R}^{d_1}</span>, <span class="math inline">v_i \in \mathbb{R}^{d'}</span>, and a query <span class="math inline">q \in \mathbb{R}^{d_1}</span>.</p>
+<ol type="1">
+<li><strong>Compute</strong> similarity scores: <span class="math inline">e = (q^\top k_1, \ldots, q^\top k_L) \in \mathbb{R}^L</span></li>
+<li><strong>Similarity</strong> (attention weights): <span class="math inline">\alpha = \text{Softmax}(e) \in \Delta_L</span>, where <span class="math display">\alpha_i = \frac{\exp(k_i^\top q / \sqrt{d_1})}{\sum_{j=1}^{L} \exp(k_j^\top q / \sqrt{d_1})}.</span> So <span class="math inline">\alpha_i = \mathbb{P}(k_i \text{ is closest to } q)</span>.</li>
+<li><strong>Aggregation:</strong> <span class="math inline">h = \sum_{i=1}^{L} \alpha_i \cdot v_i \in \mathbb{R}^{d'}</span></li>
+</ol>
+<p><strong>Output:</strong> <span class="math inline">(q, h)</span> where <span class="math inline">q \in \mathbb{R}^{d_1}</span>, <span class="math inline">h \in \mathbb{R}^{d'}</span>.</p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Similarity is captured by <span class="math inline">k_i^\top q</span>. The vector <span class="math inline">(k_1^\top q, \ldots, k_L^\top q)</span> is called the <strong>attention score</strong>. We can use other functions in addition to softmax (e.g., ReLU).</p>
+</div>
+</div>
+<p>An important structural property of the attention mechanism has a direct consequence for how we must handle sequential data.</p>
+<div id="cor-permutation-invariance" class="theorem corollary">
+<p><span class="theorem-title"><strong>Corollary 18.1 (Permutation Invariance)</strong></span> The attention output <span class="math inline">\sum_{i=1}^{L} \alpha_i \cdot v_i</span> remains the same if we permute key-value pairs <span class="math inline">\{(k_i, v_i)\}_{i \in [L]}</span>, because of the “<span class="math inline">\sum</span>”.</p>
+<p><strong>Note:</strong> Ordering in a sequence matters. Natural language has order: “united states” <span class="math inline">\neq</span> “states united”. We will address this with positional embeddings.</p>
+</div>
+<p>Permutation invariance is both a strength and a limitation. It means attention treats the input as a set rather than a sequence, which is why positional embeddings are essential for tasks where order matters, such as language modeling.</p>
+</section>
+<section id="sec-self-attention" class="level3" data-number="18.5.2">
+<h3 data-number="18.5.2" class="anchored" data-anchor-id="sec-self-attention"><span class="header-section-number">18.5.2</span> Self-Attention</h3>
+<div id="fig-self-attention" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-self-attention-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch13-self-attention.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;18.1: Self-attention mechanism. The input sequence X is projected into queries Q, keys K, and values V via learned weight matrices. Attention weights are computed as \mathrm{softmax}(QK^\top/\sqrt{d_k}), then applied to V to produce context-aware output representations."><img src="figures/ch13-self-attention.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-self-attention-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;18.1: Self-attention mechanism. The input sequence <span class="math inline">X</span> is projected into queries <span class="math inline">Q</span>, keys <span class="math inline">K</span>, and values <span class="math inline">V</span> via learned weight matrices. Attention weights are computed as <span class="math inline">\mathrm{softmax}(QK^\top/\sqrt{d_k})</span>, then applied to <span class="math inline">V</span> to produce context-aware output representations.
+</figcaption>
+</figure>
+</div>
+<p><a href="#fig-self-attention" class="quarto-xref">Figure&nbsp;<span>18.1</span></a> illustrates the computation flow. The input matrix <span class="math inline">X \in \mathbb{R}^{L \times d}</span> is projected through three learned weight matrices to produce queries <span class="math inline">Q</span>, keys <span class="math inline">K</span>, and values <span class="math inline">V</span>. Queries and keys are combined via the scaled dot product <span class="math inline">QK^\top / \sqrt{d_k}</span> to form a raw attention-score matrix (one row per query token, one column per key token). The softmax normalizes each row into a probability distribution over positions, and the resulting attention weights are multiplied by <span class="math inline">V</span> to produce the final output — a context-enriched representation where each token’s output is a weighted mixture of all value vectors.</p>
+<p>In cross attention, the queries and key-value pairs come from different sources (e.g., the decoder queries the encoder). In a transformer’s main computation, however, each token in the sequence attends to all other tokens in the same sequence. This is called self-attention, and it is the mechanism that allows each token’s representation to incorporate contextual information from the entire input.</p>
+<div id="def-self-attention" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.8 (Self-Attention)</strong></span> Self-attention is an attention module where <strong>query, key, value</strong> are all computed from the <strong>same</strong> input vectors. Given post-embedding sequence <span class="math inline">X = (x_1, \ldots, x_L) \in \mathbb{R}^{L \times d}</span>: <span class="math display">Q = X W_Q, \quad K = X W_K, \quad V = X W_V \quad \in \mathbb{R}^{L \times d_1},</span></p>
+<p>where <span class="math inline">W_Q, W_K, W_V \in \mathbb{R}^{d \times d_1}</span> are learnable weight matrices.</p>
+<p>For position <span class="math inline">\ell</span>: <span class="math display">\alpha_\ell = \text{Softmax}\!\left(\left\{q_\ell^\top k_j / \sqrt{d_1}\right\}_{j \in [L]}\right) \in \Delta_L.</span></p>
+<p>The output at position <span class="math inline">\ell</span> is: <span class="math display">h_\ell = \sum_{j=1}^{L} \alpha_{\ell j} \cdot v_j = \sum_{j=1}^{L} \alpha_{\ell j} \cdot (W_V x_j).</span></p>
+<p>Here <span class="math inline">\alpha_{\ell,j}</span> measures the similarity between <span class="math inline">\{x_\ell, x_j\}</span>: <span class="math display">\alpha_{\ell j} = \frac{\exp(q_\ell^\top k_j / \sqrt{d_1})}{\sum_{s=1}^{L} \exp(q_\ell^\top k_s / \sqrt{d_1})} = \frac{\exp(x_\ell^\top W_Q^\top W_K x_j / \sqrt{d_1})}{\sum_{s=1}^{L} \exp(x_\ell^\top W_Q^\top W_K x_s / \sqrt{d_1})}.</span></p>
+</div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Algorithm: Self-Attention in Matrix Form
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Input: <span class="math inline">X \in \mathbb{R}^{L \times d}</span>, <span class="math inline">X = (x_1, x_2, \ldots, x_L)</span>.</p>
+<ol type="1">
+<li>Map into queries, keys, values: <span class="math inline">Q = X W_Q</span>, <span class="math inline">K = X W_K</span>, <span class="math inline">V = X W_V \in \mathbb{R}^{L \times d_1}</span></li>
+<li>Calculate attention score: <span class="math inline">E = Q K^\top \in \mathbb{R}^{L \times L}</span></li>
+<li>Apply softmax to each row: <span class="math inline">P = \text{Softmax}(E / \sqrt{d_1}) \in \mathbb{R}^{L \times L}</span></li>
+<li>Output = <span class="math inline">PV = \text{Softmax}(Q K^\top / \sqrt{d_1}) \cdot V</span></li>
+</ol>
+</div>
+</div>
+<p><em>Figure 12.1: Attention weight matrix visualization. Each row shows how much each token attends to every other token. Brighter cells indicate stronger attention.</em></p>
+</section>
+</section>
+<section id="sec-position-embedding" class="level2" data-number="18.6">
+<h2 data-number="18.6" class="anchored" data-anchor-id="sec-position-embedding"><span class="header-section-number">18.6</span> 5. Position Embedding</h2>
+<p>We want to include token position in the input. Since self-attention is permutation invariant, we need to explicitly encode order.</p>
+<div id="def-positional-embedding" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.9 (Positional Embedding)</strong></span> A special trick of transformers: the embedding of (token, position) is <strong>additive</strong>: <span class="math display">\text{emb}(\text{token}, \text{position}) = \text{emb}(\text{token}) + \text{emb}(\text{position}).</span></p>
+<p>So <span class="math inline">x_i = \text{emb}(w_i) + \text{pe}_i \in \mathbb{R}^d</span>, where <span class="math inline">d</span> = dimension of word embedding.</p>
+</div>
+<p>The additive structure of positional embedding is a design choice that keeps the architecture simple: the model receives a single vector per token that encodes both what the token is and where it appears in the sequence. This allows the attention mechanism to use position information when computing relevance scores.</p>
+<p><strong>Three major practices of position embedding:</strong></p>
+<ol type="1">
+<li><strong>Absolute embedding:</strong> each <span class="math inline">\ell \mapsto \text{pe}_\ell</span>, trained directly. Parameters: <span class="math inline">\{\text{pe}_1, \ldots, \text{pe}_L\} \in \mathbb{R}^{L \times d}</span>.</li>
+<li><strong>Sinusoidal positional encoding</strong> (a special case of 3): use a fixed vector <span class="math display">\vec{p}_t = \begin{pmatrix} \sin(\omega_1 \cdot t) \\ \cos(\omega_1 \cdot t) \\ \sin(\omega_2 \cdot t) \\ \cos(\omega_2 \cdot t) \\ \vdots \\ \sin(\omega_{d/2} \cdot t) \\ \cos(\omega_{d/2} \cdot t) \end{pmatrix}_{d \times 1}.</span> This encodes <strong>relative</strong> positional information via rotation matrices.</li>
+<li><strong>Relative positional embedding:</strong> embed relative positions <span class="math inline">i - j</span>. Map <span class="math inline">(i,j) \mapsto \vec{P}_{i-j}</span> with learnable vectors. Used in RoPE (Rotary Position Embedding, used in LLaMA). The attention score formula becomes: <span class="math inline">\alpha_i = \text{Softmax}\!\left(\{q_i^\top(k_j + \vec{P}_{i-j})\}_{j \in [L]}\right)</span>.</li>
+</ol>
+<p><em>Figure 12.2: Sinusoidal positional encoding heatmap. Each row is a position, each column a dimension of the encoding vector. Low-frequency sinusoids vary slowly across positions while high-frequency ones oscillate rapidly.</em></p>
+</section>
+<section id="sec-causal-masking" class="level2" data-number="18.7">
+<h2 data-number="18.7" class="anchored" data-anchor-id="sec-causal-masking"><span class="header-section-number">18.7</span> 6. Causal Masking: Don’t See the Future</h2>
+<p>For autoregressive generation, the model must predict token <span class="math inline">w_{\ell+1}</span> using only <span class="math inline">w_1, \ldots, w_\ell</span>. But standard self-attention lets every token attend to every other token, including future ones. Causal masking enforces the autoregressive constraint by preventing information from flowing backward in time.</p>
+<div id="def-causal-masking" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.10 (Causal Masking)</strong></span> In decoder-only models, we need to ensure that token <span class="math inline">\ell</span> cannot attend to future tokens. We manually set <span class="math inline">\alpha_{\ell j} = 0</span> for all <span class="math inline">j &gt; \ell</span>.</p>
+<p>To achieve this:</p>
+<ul>
+<li>If <span class="math inline">j &gt; \ell</span>: set <span class="math inline">\text{Mask}_{\ell j} = -\infty</span></li>
+<li>If <span class="math inline">j \leq \ell</span>: set <span class="math inline">\text{Mask}_{\ell j} = 0</span></li>
+</ul>
+<p><span class="math display">\text{Attention score} = \text{Softmax}(Q K^\top + \text{Mask}).</span></p>
+<p>After softmax, the <span class="math inline">-\infty</span> elements become <strong>zero</strong>.</p>
+<p><strong>Note:</strong> Only use causal masking for decoder TF. Encoder-only models (like BERT) use full (global) attention.</p>
+</div>
+<p>Causal masking enforces the autoregressive property at the architectural level: by preventing each token from attending to future positions, we ensure that the prediction of <span class="math inline">w_{\ell+1}</span> depends only on <span class="math inline">w_1, \ldots, w_\ell</span>. This is what makes left-to-right text generation possible during inference.</p>
+<p><em>Figure 12.3: Left — Global (encoder) attention mask: all tokens attend to all tokens. Right — Causal (decoder) attention mask: each token only attends to itself and previous tokens.</em></p>
+</section>
+<section id="sec-mlp-layer" class="level2" data-number="18.8">
+<h2 data-number="18.8" class="anchored" data-anchor-id="sec-mlp-layer"><span class="header-section-number">18.8</span> 7. Add MLP Layers After Each Attention Layer</h2>
+<p>Self-attention output <span class="math inline">\sum_{j=1}^{L} \alpha_{\ell j} \cdot W_V x_j</span> is a weighted average of linear functions of embeddings. We <strong>need to add nonlinearities</strong>.</p>
+<div id="def-mlp-layer" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.11 (MLP / Feed-Forward Layer)</strong></span> The MLP is a 2-layer neural network applied <strong>independently</strong> for each position <span class="math inline">\ell \in [L]</span>: <span class="math display">m_\ell = \text{MLP}(\text{output}_\ell) : \mathbb{R}^{d_1} \to \mathbb{R}^{d_1}</span> <span class="math display">= W_2 \cdot \sigma(W_1 x + b_1) + b_2,</span></p>
+<p>where <span class="math inline">\sigma</span> is a nonlinearity (ReLU or GELU), <span class="math inline">W_1 \in \mathbb{R}^{d_1 \times d_f}</span>, <span class="math inline">b_1 \in \mathbb{R}^{d_f}</span>, <span class="math inline">W_2 \in \mathbb{R}^{d_f \times d_1}</span>, <span class="math inline">b_2 \in \mathbb{R}^{d_1}</span>.</p>
+<p>Typically <span class="math inline">d_f \gg d_1</span>. In GPT-3: <span class="math inline">d_f = 4d</span>.</p>
+<p>The same MLP is applied independently for each <span class="math inline">\ell \in [L]</span>.</p>
+</div>
+</section>
+<section id="sec-multi-head" class="level2" data-number="18.9">
+<h2 data-number="18.9" class="anchored" data-anchor-id="sec-multi-head"><span class="header-section-number">18.9</span> 8. Multi-Head Attention</h2>
+<p>Instead of having a single attention module, we use <strong>multi-head self attention</strong>: multiple (<span class="math inline">H</span>) attention heads in parallel.</p>
+<div id="def-multi-head-attention" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.12 (Multi-Head Attention)</strong></span> <span class="math inline">H</span> = number of attention heads. Each head has three matrices <span class="math inline">\{W_K^h, W_Q^h, W_V^h\}_{h \in [H]}</span>, each <span class="math inline">\in \mathbb{R}^{d \times d_1}</span>, where <span class="math inline">d_1 = d / H</span>.</p>
+<p>At each position <span class="math inline">\ell</span>, input <span class="math inline">x_\ell \in \mathbb{R}^d</span>, <span class="math inline">d = H \cdot d_1</span>:</p>
+<ul>
+<li>Head <span class="math inline">h</span> looks at <span class="math inline">x_\ell^{(h)} \in \mathbb{R}^{d_1}</span> (the <span class="math inline">h</span>-th chunk of the vector)</li>
+<li><span class="math inline">\text{Output}^h = \sum_{j=1}^{L} \alpha_{\ell j}^h \cdot v_j^h</span> for each head <span class="math inline">h</span></li>
+<li>Final output = <span class="math inline">W_O \begin{pmatrix} \text{output}^1 \\ \text{output}^2 \\ \vdots \\ \text{output}^H \end{pmatrix} \in \mathbb{R}^d</span>, where <span class="math inline">W_O \in \mathbb{R}^{d \times d}</span> is the output matrix that mixes across heads.</li>
+</ul>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Each Head Captures Different Semantics
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Different attention heads learn to attend to different patterns: some heads focus on adjacent tokens, some on syntactic relationships, some on semantic similarity. This is visible when visualizing attention matrices from different heads.</p>
+</div>
+</div>
+</section>
+<section id="sec-residual-layernorm" class="level2" data-number="18.10">
+<h2 data-number="18.10" class="anchored" data-anchor-id="sec-residual-layernorm"><span class="header-section-number">18.10</span> 9. Residual Connections &amp; Layer Normalization</h2>
+<p>A transformer decoder stacks dozens (or even nearly a hundred) layers of attention and MLP blocks. Training such deep networks without any architectural tricks would be nearly impossible due to vanishing or exploding gradients. Two key ingredients make deep transformers trainable: residual connections and layer normalization.</p>
+<div id="def-residual-connection" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.13 (Residual Connection)</strong></span> Instead of <span class="math inline">X^{(i)} = \text{Layer}(X^{(i-1)})</span>, we let: <span class="math display">X^{(i)} = X^{(i-1)} + \text{Layer}(X^{(i-1)}).</span></p>
+<p>That is: <span class="math inline">X \mapsto X + \text{MHA}(X)</span>. Add the input to the output of multi-head attention. This biases the mapping to identity, so we only have to learn “the residual.”</p>
+</div>
+<p>Residual connections are critical for training deep networks: they provide a direct gradient pathway from the output back to earlier layers, preventing the vanishing gradient problem. From an optimization perspective, they make the loss landscape smoother and easier to navigate.</p>
+<p>Layer normalization complements residual connections by stabilizing the distribution of activations across layers. Without normalization, the scale of hidden representations can drift unpredictably as data passes through many layers, making optimization difficult.</p>
+<div id="def-layer-normalization" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.14 (Layer Normalization)</strong></span> Normalization applied to each feature vector <strong>individually</strong>. For a vector <span class="math inline">x \in \mathbb{R}^d</span>:</p>
+<ul>
+<li>Mean: <span class="math inline">\mu = \frac{1}{d} \sum_{j=1}^{d} x_j</span></li>
+<li>Standard deviation: <span class="math inline">\sigma = \sqrt{\frac{1}{d} \sum_{j=1}^{d} (x_j - \mu)^2}</span></li>
+<li>Normalization: <span class="math inline">v = \frac{x - \mu}{\sigma + \varepsilon}</span>, where <span class="math inline">\varepsilon</span> is a small number to avoid numerical instability</li>
+</ul>
+<p>Do this operation LayerNorm: <span class="math inline">x \mapsto v</span> for all <span class="math inline">x</span> in the sequence: <span class="math inline">x_1, x_2, \ldots, x_L \in \mathbb{R}^d</span>.</p>
+</div>
+<p>Layer normalization stabilizes training by ensuring that the inputs to each sub-layer have consistent scale, regardless of the activations from previous layers. This is particularly important in deep transformers with many stacked blocks, where without normalization the magnitude of activations can grow or shrink uncontrollably.</p>
+</section>
+<section id="sec-full-architecture" class="level2" data-number="18.11">
+<h2 data-number="18.11" class="anchored" data-anchor-id="sec-full-architecture"><span class="header-section-number">18.11</span> 10. Full Transformer Architecture</h2>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>The Transformer Decoder</strong> is a stack of Transformer Decoder <strong>Blocks</strong>. Each Block consists of:</p>
+<ol type="1">
+<li>(Masked) Multi-Head Self-Attention</li>
+<li>Add &amp; Norm (residual connection + layer norm)</li>
+<li>Feed-Forward Network (MLP)</li>
+<li>Add &amp; Norm</li>
+</ol>
+<p>Two design choices: <strong>Post-norm</strong> (original): LN after each sub-layer. <strong>Pre-norm</strong> (more popular now): LN before each sub-layer, for better training stability.</p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Revisiting Model Types
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>Encoder-only:</strong> Do not use causal masking. In training, hide (mask) some random tokens and predict them. Example: BERT.</li>
+<li><strong>Decoder-only:</strong> Use causal masking to mask the future. Trained to predict next token. Example: GPT.</li>
+<li><strong>Encoder-Decoder:</strong> Output of encoder is fed into decoder blocks, attended by features of decoder using <strong>cross attention</strong> (at each layer). Example: T5.</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="sec-gpt3-exercise" class="level2" data-number="18.12">
+<h2 data-number="18.12" class="anchored" data-anchor-id="sec-gpt3-exercise"><span class="header-section-number">18.12</span> Exercise: Understanding GPT-3 Parameters</h2>
+<p>GPT-3 175B: <span class="math inline">n_\text{layers} = 96</span>, <span class="math inline">d_\text{model} = 12288</span>, <span class="math inline">n_\text{heads} = 96</span>, <span class="math inline">d_\text{head} = 128</span>. Context window <span class="math inline">L = 2048</span>, vocabulary size <span class="math inline">N = 50257</span>. Note: <span class="math inline">d = H \times d_1</span>.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Algorithm: Computing the Number of Parameters
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ol type="1">
+<li><strong>Word embedding:</strong> <span class="math inline">W_E \in \mathbb{R}^{N \times d}</span> <span class="math inline">\Rightarrow</span> <span class="math inline">\#\text{param} = N \cdot d</span></li>
+<li><strong>Position embedding:</strong> <span class="math inline">W_{PE} \in \mathbb{R}^{L \times d}</span> <span class="math inline">\Rightarrow</span> <span class="math inline">\#\text{param} = L \cdot d</span></li>
+<li><strong>Each self-attention layer:</strong> Each <span class="math inline">W_Q^h, W_K^h, W_V^h \in \mathbb{R}^{d \times d_1}</span> <span class="math inline">\Rightarrow</span> <span class="math inline">\#\text{param} = 3 \times d \times d_1 \times H = 3d^2</span>. Output matrix <span class="math inline">W_O \in \mathbb{R}^{d \times d}</span> <span class="math inline">\Rightarrow</span> <span class="math inline">d^2</span>. Total MHA: <span class="math inline">4d^2</span> per layer <span class="math inline">\times n_\text{layer}</span>.</li>
+<li><strong>MLP layer:</strong> <span class="math inline">(W_1, W_2, b_1, b_2)</span> <span class="math inline">\Rightarrow</span> <span class="math inline">\approx 4d \times d \times 2 = 8d^2</span> per layer <span class="math inline">\times n_\text{layer}</span>.</li>
+</ol>
+<p>Neglecting biases and layer norms: <span class="math display">\#\text{param} = N \cdot d + L \cdot d + 12 \cdot d^2 \times n_\text{layer} \approx 174{,}074{,}267{,}648 \approx 174 \times 10^9 \quad (99.5\% \text{ accurate}).</span></p>
+</div>
+</div>
+</section>
+<section id="sec-transformer-circuits" class="level2" data-number="18.13">
+<h2 data-number="18.13" class="anchored" data-anchor-id="sec-transformer-circuits"><span class="header-section-number">18.13</span> Transformer Circuits &amp; Residual Stream</h2>
+<p>We can view a Transformer as a model that processes a sequence of tokens in multiple layers. In each layer, the vector at the same position is processed by attention, normalization, and MLP. The vector itself is added directly to the next layer by <strong>residual connection</strong>.</p>
+<div id="thm-single-layer-attention" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 18.3 (Single-Layer Attention-Only Transformer)</strong></span> For a single-layer attention-only transformer:</p>
+<ul>
+<li>Token embedding: <span class="math inline">x_0 = W_E \, t</span>, where <span class="math inline">t = \binom{w}{i} \in \mathbb{R}^{L+V}</span> (token + position)</li>
+<li>Attention: <span class="math inline">x_1 = x_0 + \sum_{h \in H} h(x_0)</span></li>
+<li>Logits: <span class="math inline">T(t) = W_U x_{-1}</span> (unembedding)</li>
+</ul>
+<p>Define the <strong>QK-matrix</strong>: <span class="math inline">W_{QK}^h = (W_Q^h)^\top W_K^h / \sqrt{d} \in \mathbb{R}^{d \times d}</span></p>
+<p>and the <strong>OV-matrix</strong>: <span class="math inline">W_{OV}^h = W_O^h W_V^h \in \mathbb{R}^{d \times d}</span>.</p>
+<p>Then: <span class="math inline">A^h = \text{Softmax}(X_0 \, W_{QK}^h \, X_0^\top) \in \mathbb{R}^{L \times L}</span>, and we can write the full model as: <span class="math display">T(x) = X \underbrace{(W_U W_E)^\top}_{\text{residual}} + \sum_{h=1}^{H} A^h \cdot X \cdot \underbrace{(W_U W_{OV}^h W_E)}_{\text{a single matrix}}.</span></p>
+<p>where <span class="math inline">X</span> is the input sequence, <span class="math inline">A^h = \text{Softmax}(X \, W_{QK}^h \, X^\top)</span>.</p>
+</div>
+</section>
+<section id="sec-interactive-demo" class="level2" data-number="18.14">
+<h2 data-number="18.14" class="anchored" data-anchor-id="sec-interactive-demo"><span class="header-section-number">18.14</span> Interactive Demos</h2>
+<p>The following code computes attention weights for a simple self-attention example. Edit and run to explore.</p>
+<section id="self-attention-computation" class="level3" data-number="18.14.1">
+<h3 data-number="18.14.1" class="anchored" data-anchor-id="self-attention-computation"><span class="header-section-number">18.14.1</span> Self-Attention Computation</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Simple self-attention example</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">42</span>)</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>L <span class="op">=</span> <span class="dv">4</span>  <span class="co"># sequence length</span></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> <span class="dv">8</span>  <span class="co"># embedding dimension</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>d1 <span class="op">=</span> <span class="dv">4</span>  <span class="co"># attention head dimension</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulated token embeddings (e.g., "I", "love", "deep", "learning")</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>tokens <span class="op">=</span> [<span class="st">"I"</span>, <span class="st">"love"</span>, <span class="st">"deep"</span>, <span class="st">"learning"</span>]</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> np.random.randn(L, d)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Weight matrices</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>W_Q <span class="op">=</span> np.random.randn(d, d1) <span class="op">*</span> <span class="fl">0.3</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>W_K <span class="op">=</span> np.random.randn(d, d1) <span class="op">*</span> <span class="fl">0.3</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>W_V <span class="op">=</span> np.random.randn(d, d1) <span class="op">*</span> <span class="fl">0.3</span></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute Q, K, V</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>Q <span class="op">=</span> X <span class="op">@</span> W_Q  <span class="co"># (L, d1)</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>K <span class="op">=</span> X <span class="op">@</span> W_K</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> X <span class="op">@</span> W_V</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Attention scores</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>E <span class="op">=</span> Q <span class="op">@</span> K.T <span class="op">/</span> np.sqrt(d1)  <span class="co"># (L, L)</span></span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Raw attention scores (Q K^T / sqrt(d1)):"</span>)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.<span class="bu">round</span>(E, <span class="dv">3</span>))</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Softmax (row-wise)</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> softmax(x):</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    e <span class="op">=</span> np.exp(x <span class="op">-</span> x.<span class="bu">max</span>(axis<span class="op">=-</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>))</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> e <span class="op">/</span> e.<span class="bu">sum</span>(axis<span class="op">=-</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>alpha <span class="op">=</span> softmax(E)</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Attention weights (after softmax):"</span>)</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, tok <span class="kw">in</span> <span class="bu">enumerate</span>(tokens):</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    weights <span class="op">=</span> <span class="st">", "</span>.join(<span class="ss">f"</span><span class="sc">{</span>tokens[j]<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>alpha[i,j]<span class="sc">:.3f}</span><span class="ss">"</span> <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(L))</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>tok<span class="sc">}</span><span class="ss"> attends to -&gt; </span><span class="sc">{</span>weights<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Output</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> alpha <span class="op">@</span> V</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Output shape: </span><span class="sc">{</span>output<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Output (first 3 dims):</span><span class="ch">\n</span><span class="sc">{</span>np<span class="sc">.</span><span class="bu">round</span>(output[:, :<span class="dv">3</span>], <span class="dv">3</span>)<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Causal mask for decoder</span></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">--- With Causal Masking ---"</span>)</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> np.triu(np.ones((L, L)) <span class="op">*</span> (<span class="op">-</span><span class="fl">1e9</span>), k<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>E_masked <span class="op">=</span> E <span class="op">+</span> mask</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>alpha_causal <span class="op">=</span> softmax(E_masked)</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Causal attention weights:"</span>)</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, tok <span class="kw">in</span> <span class="bu">enumerate</span>(tokens):</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>    weights <span class="op">=</span> <span class="st">", "</span>.join(<span class="ss">f"</span><span class="sc">{</span>tokens[j]<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>alpha_causal[i,j]<span class="sc">:.3f}</span><span class="ss">"</span> <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(L))</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>tok<span class="sc">}</span><span class="ss"> attends to -&gt; </span><span class="sc">{</span>weights<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="gpt-3-parameter-count" class="level3" data-number="18.14.2">
+<h3 data-number="18.14.2" class="anchored" data-anchor-id="gpt-3-parameter-count"><span class="header-section-number">18.14.2</span> GPT-3 Parameter Count</h3>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># GPT-3 175B configuration</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>configs <span class="op">=</span> {</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GPT-3 Small"</span>:  {<span class="st">"n_params_official"</span>: <span class="st">"125M"</span>,  <span class="st">"n_layers"</span>: <span class="dv">12</span>, <span class="st">"d_model"</span>: <span class="dv">768</span>,   <span class="st">"n_heads"</span>: <span class="dv">12</span>, <span class="st">"d_head"</span>: <span class="dv">64</span>},</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GPT-3 Medium"</span>: {<span class="st">"n_params_official"</span>: <span class="st">"350M"</span>,  <span class="st">"n_layers"</span>: <span class="dv">24</span>, <span class="st">"d_model"</span>: <span class="dv">1024</span>,  <span class="st">"n_heads"</span>: <span class="dv">16</span>, <span class="st">"d_head"</span>: <span class="dv">64</span>},</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GPT-3 Large"</span>:  {<span class="st">"n_params_official"</span>: <span class="st">"760M"</span>,  <span class="st">"n_layers"</span>: <span class="dv">24</span>, <span class="st">"d_model"</span>: <span class="dv">1536</span>,  <span class="st">"n_heads"</span>: <span class="dv">16</span>, <span class="st">"d_head"</span>: <span class="dv">96</span>},</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GPT-3 XL"</span>:     {<span class="st">"n_params_official"</span>: <span class="st">"1.3B"</span>,  <span class="st">"n_layers"</span>: <span class="dv">24</span>, <span class="st">"d_model"</span>: <span class="dv">2048</span>,  <span class="st">"n_heads"</span>: <span class="dv">24</span>, <span class="st">"d_head"</span>: <span class="dv">128</span>},</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GPT-3 175B"</span>:   {<span class="st">"n_params_official"</span>: <span class="st">"175.0B"</span>,<span class="st">"n_layers"</span>: <span class="dv">96</span>, <span class="st">"d_model"</span>: <span class="dv">12288</span>, <span class="st">"n_heads"</span>: <span class="dv">96</span>, <span class="st">"d_head"</span>: <span class="dv">128</span>},</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="dv">50257</span>  <span class="co"># vocabulary size</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>L <span class="op">=</span> <span class="dv">2048</span>   <span class="co"># context window</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Vocabulary size N = </span><span class="sc">{</span>N<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Context window  L = </span><span class="sc">{</span>L<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'Model'</span><span class="sc">:&lt;16}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Official'</span><span class="sc">:&gt;10}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Computed'</span><span class="sc">:&gt;16}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Accuracy'</span><span class="sc">:&gt;10}</span><span class="ss">"</span>)</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"-"</span> <span class="op">*</span> <span class="dv">56</span>)</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, cfg <span class="kw">in</span> configs.items():</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> cfg[<span class="st">"d_model"</span>]</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    n_layer <span class="op">=</span> cfg[<span class="st">"n_layers"</span>]</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1. Word embedding: N * d</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    word_emb <span class="op">=</span> N <span class="op">*</span> d</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2. Position embedding: L * d</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    pos_emb <span class="op">=</span> L <span class="op">*</span> d</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 3. Self-attention: 4*d^2 per layer</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    attn <span class="op">=</span> <span class="dv">4</span> <span class="op">*</span> d<span class="op">**</span><span class="dv">2</span> <span class="op">*</span> n_layer</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 4. MLP: 8*d^2 per layer</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    mlp <span class="op">=</span> <span class="dv">8</span> <span class="op">*</span> d<span class="op">**</span><span class="dv">2</span> <span class="op">*</span> n_layer</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    total <span class="op">=</span> word_emb <span class="op">+</span> pos_emb <span class="op">+</span> attn <span class="op">+</span> mlp</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Parse official</span></span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    official_str <span class="op">=</span> cfg[<span class="st">"n_params_official"</span>]</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="st">"B"</span> <span class="kw">in</span> official_str:</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>        official <span class="op">=</span> <span class="bu">float</span>(official_str.replace(<span class="st">"B"</span>,<span class="st">""</span>)) <span class="op">*</span> <span class="fl">1e9</span></span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>        official <span class="op">=</span> <span class="bu">float</span>(official_str.replace(<span class="st">"M"</span>,<span class="st">""</span>)) <span class="op">*</span> <span class="fl">1e6</span></span>
+<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    accuracy <span class="op">=</span> total <span class="op">/</span> official <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">:&lt;16}</span><span class="ss"> </span><span class="sc">{</span>official_str<span class="sc">:&gt;10}</span><span class="ss"> </span><span class="sc">{</span>total<span class="sc">:&gt;16,}</span><span class="ss"> </span><span class="sc">{</span>accuracy<span class="sc">:&gt;9.1f}</span><span class="ss">%"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><em>Figure 12.4: Dot product of sinusoidal positional encodings across positions. The diagonal structure shows that nearby positions have similar encodings, encoding relative position information.</em></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Looking Ahead
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This concludes the course. The optimization foundations developed throughout—from convexity and duality to first-order methods and stochastic optimization—provide the mathematical toolkit for understanding and advancing modern machine learning.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="summary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
+<ul>
+<li><strong>Attention mechanism.</strong> The core operation computes <span class="math inline">\operatorname{Attention}(Q,K,V) = \operatorname{softmax}\!\bigl(\frac{QK^\top}{\sqrt{d_k}}\bigr)V</span>, where queries, keys, and values are linear projections of the input; this allows each token to attend to all other tokens with learned, content-dependent weights.</li>
+<li><strong>Positional encoding.</strong> Since self-attention is permutation-equivariant, sinusoidal positional encodings <span class="math inline">\operatorname{PE}(pos, 2i) = \sin(pos / 10000^{2i/d})</span> inject sequence-order information; causal masking further enforces autoregressive structure by preventing attention to future tokens.</li>
+<li><strong>Transformer block.</strong> Each block applies multi-head self-attention followed by a position-wise MLP, with residual connections and layer normalization (<span class="math inline">x + \operatorname{Sublayer}(x)</span>) around each sub-layer—enabling stable training of very deep models.</li>
+<li><strong>Multi-head attention.</strong> Running <span class="math inline">h</span> attention heads in parallel with independent projections <span class="math inline">W_i^Q, W_i^K, W_i^V</span> lets the model capture diverse relational patterns; outputs are concatenated and linearly projected back to the model dimension.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../lectures/17-diffusion-models.html" class="pagination-link" aria-label="Diffusion Models">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Diffusion Models</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../lectures/summary.html" class="pagination-link" aria-label="Course Summary">
+        <span class="nav-page-text">Course Summary</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+const figFontHeading = '"Crimson Pro", Georgia, serif';
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
+  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
+];
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

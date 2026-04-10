@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>16&nbsp; Interior Point Methods – S&amp;DS 431/631 — Optimization and Computation</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../lectures/17-diffusion-models.html" rel="next">
+<link href="../lectures/15-ellipsoid-method.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-1db14e1c4cc35bfe1d9badc9e4551eed.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-434abab37f7d394f280d9c89d7fbc13f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/14-newton-method.html">Second-Order and Interior Point Methods</a></li><li class="breadcrumb-item"><a href="../lectures/16-interior-point-methods.html"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Interior Point Methods</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">S&amp;DS 431/631 — Optimization and Computation</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Preparation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/01-introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction and Motivation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/02-math-background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Background</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Convex Optimization Basics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/03-convex-sets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Convex Sets</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/04-convex-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Convex Functions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/05-convex-optimization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Convex Optimization</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">First-Order Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Linear Programming</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/09-lp-formulation-geometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">LP Formulation and Geometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/10-simplex-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">The Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/11-lp-duality.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">LP Duality</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/12-dual-simplex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The Dual Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/13-lp-applications.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">LP Applications and Game Theory</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Second-Order and Interior Point Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/15-ellipsoid-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Ellipsoid Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/16-interior-point-methods.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Interior Point Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Modern Computation Models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/17-diffusion-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Diffusion Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/18-transformers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Transformers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/summary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Course Summary</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-overview" id="toc-sec-overview" class="nav-link active" data-scroll-target="#sec-overview"><span class="header-section-number">16.1</span> What Will Be Covered</a></li>
+  <li><a href="#sec-unconstrained-to-constrained" id="toc-sec-unconstrained-to-constrained" class="nav-link" data-scroll-target="#sec-unconstrained-to-constrained"><span class="header-section-number">16.2</span> From Unconstrained to Constrained Optimization</a></li>
+  <li><a href="#sec-equality-newton" id="toc-sec-equality-newton" class="nav-link" data-scroll-target="#sec-equality-newton"><span class="header-section-number">16.3</span> Equality-Constrained Newton’s Method</a>
+  <ul class="collapse">
+  <li><a href="#sec-equality-kkt" id="toc-sec-equality-kkt" class="nav-link" data-scroll-target="#sec-equality-kkt"><span class="header-section-number">16.3.1</span> Optimality Conditions</a></li>
+  <li><a href="#sec-feasible-newton" id="toc-sec-feasible-newton" class="nav-link" data-scroll-target="#sec-feasible-newton"><span class="header-section-number">16.3.2</span> Version I: Feasible Start Newton</a></li>
+  <li><a href="#sec-infeasible-newton" id="toc-sec-infeasible-newton" class="nav-link" data-scroll-target="#sec-infeasible-newton"><span class="header-section-number">16.3.3</span> Version II: Infeasible Start (Primal-Dual Newton)</a></li>
+  <li><a href="#sec-connecting-versions" id="toc-sec-connecting-versions" class="nav-link" data-scroll-target="#sec-connecting-versions"><span class="header-section-number">16.3.4</span> Connecting the Two Versions</a></li>
+  </ul></li>
+  <li><a href="#sec-constrained-decrement" id="toc-sec-constrained-decrement" class="nav-link" data-scroll-target="#sec-constrained-decrement"><span class="header-section-number">16.4</span> Newton Decrement for Constrained Problems</a></li>
+  <li><a href="#sec-log-barrier" id="toc-sec-log-barrier" class="nav-link" data-scroll-target="#sec-log-barrier"><span class="header-section-number">16.5</span> Going Beyond Equality Constraints — The Log Barrier</a>
+  <ul class="collapse">
+  <li><a href="#sec-why-barrier" id="toc-sec-why-barrier" class="nav-link" data-scroll-target="#sec-why-barrier"><span class="header-section-number">16.5.1</span> Why Newton Alone Is Not Enough</a></li>
+  <li><a href="#sec-indicator-to-barrier" id="toc-sec-indicator-to-barrier" class="nav-link" data-scroll-target="#sec-indicator-to-barrier"><span class="header-section-number">16.5.2</span> From Indicator to Barrier</a></li>
+  <li><a href="#sec-barrier-function" id="toc-sec-barrier-function" class="nav-link" data-scroll-target="#sec-barrier-function"><span class="header-section-number">16.5.3</span> The Barrier Function and Barrier Problem</a></li>
+  <li><a href="#sec-barrier-derivatives" id="toc-sec-barrier-derivatives" class="nav-link" data-scroll-target="#sec-barrier-derivatives"><span class="header-section-number">16.5.4</span> Gradient and Hessian of the Barrier</a></li>
+  </ul></li>
+  <li><a href="#sec-central-path" id="toc-sec-central-path" class="nav-link" data-scroll-target="#sec-central-path"><span class="header-section-number">16.6</span> The Central Path</a></li>
+  <li><a href="#sec-lp-central-path" id="toc-sec-lp-central-path" class="nav-link" data-scroll-target="#sec-lp-central-path"><span class="header-section-number">16.7</span> Example: The LP Central Path</a></li>
+  <li><a href="#sec-perturbed-kkt" id="toc-sec-perturbed-kkt" class="nav-link" data-scroll-target="#sec-perturbed-kkt"><span class="header-section-number">16.8</span> Interpreting the Central Path via Perturbed KKT</a></li>
+  <li><a href="#sec-barrier-method" id="toc-sec-barrier-method" class="nav-link" data-scroll-target="#sec-barrier-method"><span class="header-section-number">16.9</span> The Barrier Method</a>
+  <ul class="collapse">
+  <li><a href="#sec-barrier-convergence" id="toc-sec-barrier-convergence" class="nav-link" data-scroll-target="#sec-barrier-convergence"><span class="header-section-number">16.9.1</span> Convergence of the Barrier Method</a></li>
+  <li><a href="#sec-parameter-choice" id="toc-sec-parameter-choice" class="nav-link" data-scroll-target="#sec-parameter-choice"><span class="header-section-number">16.9.2</span> Choosing the Parameters</a></li>
+  </ul></li>
+  <li><a href="#sec-comparison" id="toc-sec-comparison" class="nav-link" data-scroll-target="#sec-comparison"><span class="header-section-number">16.10</span> Comparison of Methods</a></li>
+  <li><a href="#sec-looking-ahead" id="toc-sec-looking-ahead" class="nav-link" data-scroll-target="#sec-looking-ahead"><span class="header-section-number">16.11</span> Looking Ahead</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a>
+  <ul class="collapse">
+  <li><a href="#second-order-methods-comparison" id="toc-second-order-methods-comparison" class="nav-link" data-scroll-target="#second-order-methods-comparison">Second-Order Methods Comparison</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/14-newton-method.html">Second-Order and Interior Point Methods</a></li><li class="breadcrumb-item"><a href="../lectures/16-interior-point-methods.html"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Interior Point Methods</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Interior Point Methods</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Newton’s method gives us a powerful tool for unconstrained optimization, converging quadratically near a solution. But most real-world problems come with inequality constraints — budgets, capacity limits, non-negativity requirements — that Newton’s method cannot handle directly. Interior point methods extend Newton’s method to constrained problems by replacing hard inequality constraints with a smooth logarithmic penalty, then systematically tightening the penalty until the solution converges to the true optimum. These methods are the engine behind modern optimization solvers such as MOSEK, Gurobi’s barrier solver, and CVXPY’s default backend.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Companion Notebook
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hands-on Python notebook accompanies this chapter. Click the badge to open in Google Colab.</p>
+<ul>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/23-equality-constrained-newton.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Equality-Constrained Newton</strong> — implementing the equality-constrained Newton method step by step</li>
+</ul>
+</div>
+</div>
+<section id="sec-overview" class="level2" data-number="16.1">
+<h2 data-number="16.1" class="anchored" data-anchor-id="sec-overview"><span class="header-section-number">16.1</span> What Will Be Covered</h2>
+<ul>
+<li>From unconstrained to constrained optimization: the challenge of inequality constraints</li>
+<li>Equality-constrained Newton’s method: feasible start (Version I) and infeasible start (Version II)</li>
+<li>The constrained Newton decrement as a stopping criterion</li>
+<li>The logarithmic barrier function and its approximation properties</li>
+<li>The central path and its connection to perturbed KKT conditions</li>
+<li>The barrier method algorithm: centering, parameter update, and convergence</li>
+<li>A worked LP example with the central path</li>
+<li>Interactive demo: implementing the barrier method in Python</li>
+</ul>
+</section>
+<section id="sec-unconstrained-to-constrained" class="level2" data-number="16.2">
+<h2 data-number="16.2" class="anchored" data-anchor-id="sec-unconstrained-to-constrained"><span class="header-section-number">16.2</span> From Unconstrained to Constrained Optimization</h2>
+<p>In <a href="../lectures/14-newton-method.html">Chapter 18</a>, we developed Newton’s method for unconstrained optimization: given a twice-differentiable function <span class="math inline">f</span>, Newton’s method iterates <span class="math inline">x^{k+1} = x^k - [\nabla^2 f(x^k)]^{-1} \nabla f(x^k)</span> and converges quadratically near the optimum. But most optimization problems of practical interest have constraints.</p>
+<p>The general convex optimization problem takes the form:</p>
+<p><span class="math display">
+\begin{aligned}
+\min_{x \in \mathbb{R}^n} \quad &amp; f(x) \\
+\text{subject to} \quad &amp; f_i(x) \leq 0, \quad i = 1, 2, \ldots, m \\
+&amp; Ax = b,
+\end{aligned}
+</span></p>
+<p>where <span class="math inline">f</span> and <span class="math inline">f_1, \ldots, f_m</span> are convex, <span class="math inline">A \in \mathbb{R}^{p \times n}</span> with <span class="math inline">\operatorname{rank}(A) = p</span>. By the theory of <a href="../lectures/05-convex-optimization.html">Part 5</a>, optimality is characterized by the KKT conditions.</p>
+<p><strong>Our plan</strong> for this chapter:</p>
+<ol type="1">
+<li>Handle <strong>equality constraints</strong> first by modifying Newton’s method.</li>
+<li>Incorporate <strong>inequality constraints</strong> via a logarithmic barrier function.</li>
+<li>Combine both into the <strong>barrier method</strong> (interior point method).</li>
+</ol>
+<div id="fig-three-step-plan" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-three-step-plan-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch22-three-step-plan.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;16.1: Three-step plan: equality constraints via modified Newton, log barrier for inequality constraints, then the barrier method."><img src="figures/ch22-three-step-plan.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-three-step-plan-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16.1: Three-step plan: equality constraints via modified Newton, log barrier for inequality constraints, then the barrier method.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-equality-newton" class="level2" data-number="16.3">
+<h2 data-number="16.3" class="anchored" data-anchor-id="sec-equality-newton"><span class="header-section-number">16.3</span> Equality-Constrained Newton’s Method</h2>
+<p>We begin with the simpler problem of equality-constrained optimization:</p>
+<p><span class="math display">
+\min_{x \in \mathbb{R}^n} \; f(x) \quad \text{subject to} \quad Ax = b,
+</span></p>
+<p>where <span class="math inline">f</span> is convex and twice differentiable, <span class="math inline">A \in \mathbb{R}^{p \times n}</span> with <span class="math inline">\operatorname{rank}(A) = p</span>.</p>
+<p>There are three natural approaches to this problem:</p>
+<ol type="1">
+<li><strong>Eliminate constraints</strong>: substitute <span class="math inline">x = Fz + x_0</span> where <span class="math inline">AF = 0</span> and <span class="math inline">Ax_0 = b</span>, reducing to an unconstrained problem in <span class="math inline">z</span>.</li>
+<li><strong>Solve the dual problem</strong>: form the Lagrangian and optimize the dual.</li>
+<li><strong>Equality-constrained Newton</strong> (our focus): directly apply a Newton-like iteration that respects the constraint <span class="math inline">Ax = b</span>.</li>
+</ol>
+<section id="sec-equality-kkt" class="level3" data-number="16.3.1">
+<h3 data-number="16.3.1" class="anchored" data-anchor-id="sec-equality-kkt"><span class="header-section-number">16.3.1</span> Optimality Conditions</h3>
+<div id="thm-equality-kkt" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 16.1 (Theorem 19.1 (KKT Conditions for Equality-Constrained Problems))</strong></span> Suppose <span class="math inline">f</span> is convex and differentiable and <span class="math inline">\operatorname{rank}(A) = p</span>. Then <span class="math inline">x^*</span> is optimal for <span class="math inline">\min f(x)</span> subject to <span class="math inline">Ax = b</span> if and only if there exists <span class="math inline">\nu^* \in \mathbb{R}^p</span> such that:</p>
+<p><span id="eq-equality-kkt"><span class="math display">
+\nabla f(x^*) + A^\top \nu^* = 0, \qquad Ax^* = b.
+\tag{16.1}</span></span></p>
+</div>
+<p>The first condition says the gradient of <span class="math inline">f</span> must be a linear combination of the rows of <span class="math inline">A</span> at optimality — the gradient is “absorbed” by the constraints. The second condition says <span class="math inline">x^*</span> must be feasible.</p>
+</section>
+<section id="sec-feasible-newton" class="level3" data-number="16.3.2">
+<h3 data-number="16.3.2" class="anchored" data-anchor-id="sec-feasible-newton"><span class="header-section-number">16.3.2</span> Version I: Feasible Start Newton</h3>
+<p>Suppose we start from a feasible point <span class="math inline">x</span> with <span class="math inline">Ax = b</span>. We want to find a descent direction <span class="math inline">d</span> that keeps us feasible. Replacing <span class="math inline">f</span> by its second-order Taylor approximation around <span class="math inline">x</span>:</p>
+<p><span class="math display">
+\min_{d} \; f(x) + \nabla f(x)^\top d + \frac{1}{2} d^\top \nabla^2 f(x) \, d \quad \text{subject to} \quad Ad = 0.
+</span></p>
+<p>The constraint <span class="math inline">Ad = 0</span> ensures that after updating <span class="math inline">x \leftarrow x + \alpha d</span>, we still satisfy <span class="math inline">A(x + \alpha d) = Ax + \alpha Ad = b + 0 = b</span>.</p>
+<p>Writing the KKT conditions for this quadratic subproblem yields the <strong>Newton system</strong>:</p>
+<p><span id="eq-newton-kkt-system"><span class="math display">
+\begin{pmatrix} \nabla^2 f(x) &amp; A^\top \\ A &amp; 0 \end{pmatrix} \begin{pmatrix} d \\ w \end{pmatrix} = \begin{pmatrix} -\nabla f(x) \\ 0 \end{pmatrix}.
+\tag{16.2}</span></span></p>
+<div id="def-kkt-matrix" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 16.1 (Definition 19.1 (KKT Matrix))</strong></span> The block matrix</p>
+<p><span class="math display">
+K = \begin{pmatrix} \nabla^2 f(x) &amp; A^\top \\ A &amp; 0 \end{pmatrix}
+</span></p>
+<p>is called the <strong>KKT matrix</strong>. It is invertible whenever <span class="math inline">\nabla^2 f(x) \succ 0</span> on the null space of <span class="math inline">A</span> and <span class="math inline">\operatorname{rank}(A) = p</span>.</p>
+</div>
+<p><strong>The algorithm</strong> (Feasible Start Newton):</p>
+<ol type="1">
+<li>Start with <span class="math inline">x^0</span> satisfying <span class="math inline">Ax^0 = b</span>.</li>
+<li>At each iteration, solve the Newton system to get the direction <span class="math inline">d</span>.</li>
+<li>Perform a backtracking line search: <span class="math inline">x \leftarrow x + \alpha \cdot d</span>.</li>
+<li>Stop when the Newton decrement is small.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Feasibility is Preserved
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If <span class="math inline">Ax = b</span> and <span class="math inline">Ad = 0</span>, then <span class="math inline">A(x + \alpha d) = b</span> for any step size <span class="math inline">\alpha</span>. The feasible-start Newton method automatically stays on the constraint surface.</p>
+</div>
+</div>
+</section>
+<section id="sec-infeasible-newton" class="level3" data-number="16.3.3">
+<h3 data-number="16.3.3" class="anchored" data-anchor-id="sec-infeasible-newton"><span class="header-section-number">16.3.3</span> Version II: Infeasible Start (Primal-Dual Newton)</h3>
+<p>What if we do not have a feasible starting point? We can still apply Newton’s method by treating the KKT conditions (<a href="#eq-equality-kkt" class="quarto-xref">Equation&nbsp;<span>16.1</span></a>) as a system of nonlinear equations to be solved.</p>
+<p>Define the KKT residual:</p>
+<p><span class="math display">
+F(x, \nu) = \begin{pmatrix} \nabla f(x) + A^\top \nu \\ Ax - b \end{pmatrix}.
+</span></p>
+<p>The KKT conditions say <span class="math inline">F(x^*, \nu^*) = 0</span>. Applying Newton-Raphson to this system, we linearize <span class="math inline">F</span> at the current <span class="math inline">(x, \nu)</span> and solve:</p>
+<p><span class="math display">
+\begin{pmatrix} \nabla^2 f(x) &amp; A^\top \\ A &amp; 0 \end{pmatrix} \begin{pmatrix} \Delta x \\ \Delta \nu \end{pmatrix} = -\begin{pmatrix} \nabla f(x) + A^\top \nu \\ Ax - b \end{pmatrix}.
+</span></p>
+<div id="thm-primal-dual-properties" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 16.2 (Theorem 19.2 (Properties of Primal-Dual Newton))</strong></span> The infeasible-start Newton method has the following properties:</p>
+<ol type="1">
+<li><strong>No feasibility requirement</strong>: the starting point need not satisfy <span class="math inline">Ax = b</span>.</li>
+<li><strong>Joint updates</strong>: both primal variable <span class="math inline">x</span> and dual variable <span class="math inline">\nu</span> are updated simultaneously.</li>
+<li><strong>Quadratic convergence</strong>: locally, the iterates converge quadratically to a KKT point.</li>
+<li><strong>One-step feasibility</strong>: if the full step <span class="math inline">\alpha = 1</span> is taken, then <span class="math inline">A(x + \Delta x) = b</span>. That is, the iterate becomes feasible after a single full Newton step.</li>
+</ol>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof (of Property 4).</strong> From the second block row of the Newton system: <span class="math inline">A \Delta x = -(Ax - b) = b - Ax</span>. Therefore <span class="math inline">A(x + \Delta x) = Ax + A\Delta x = Ax + (b - Ax) = b</span>. <span class="math inline">\blacksquare</span></p>
+</div>
+</section>
+<section id="sec-connecting-versions" class="level3" data-number="16.3.4">
+<h3 data-number="16.3.4" class="anchored" data-anchor-id="sec-connecting-versions"><span class="header-section-number">16.3.4</span> Connecting the Two Versions</h3>
+<p>The two versions solve the same KKT system (<a href="#eq-newton-kkt-system" class="quarto-xref">Equation&nbsp;<span>16.2</span></a>), just with different right-hand sides. When the current iterate <span class="math inline">x</span> is already feasible (<span class="math inline">Ax = b</span>) and we set <span class="math inline">\nu = w</span> (the dual variable from the Newton system), the right-hand side of Version II becomes:</p>
+<p><span class="math display">
+-\begin{pmatrix} \nabla f(x) + A^\top w \\ Ax - b \end{pmatrix} = -\begin{pmatrix} \nabla f(x) + A^\top w \\ 0 \end{pmatrix}.
+</span></p>
+<p>Comparing with Version I, both solve the same linear system with the same matrix — only the right-hand side differs. When <span class="math inline">x</span> is feasible, Version I and Version II produce the same Newton direction <span class="math inline">d = \Delta x</span>.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-feasible-vs-infeasible</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 19.1: Feasible-start Newton (blue) stays on the constraint line, while infeasible-start Newton (rose) approaches the constraint and then follows it. Contours show the objective function."</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Objective: f(x,y) = (x-3)^2 + 4*(y-2)^2</span></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Constraint: x + y = 3  =&gt;  y = 3 - x</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>x_grid <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">5.5</span>, <span class="dv">200</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>y_grid <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">5.5</span>, <span class="dv">200</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>X, Y <span class="op">=</span> np.meshgrid(x_grid, y_grid)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>Z <span class="op">=</span> (X <span class="op">-</span> <span class="dv">3</span>)<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> <span class="dv">4</span><span class="op">*</span>(Y <span class="op">-</span> <span class="dv">2</span>)<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Constraint line</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>cx <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">5.5</span>, <span class="dv">100</span>)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>cy <span class="op">=</span> <span class="dv">3</span> <span class="op">-</span> cx</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Feasible start iterates (starting on constraint, converging to optimum on constraint)</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>fs_x <span class="op">=</span> [<span class="fl">0.5</span>, <span class="fl">1.2</span>, <span class="fl">1.65</span>, <span class="fl">1.78</span>, <span class="fl">1.8</span>]</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>fs_y <span class="op">=</span> [<span class="fl">2.5</span>, <span class="fl">1.8</span>, <span class="fl">1.35</span>, <span class="fl">1.22</span>, <span class="fl">1.2</span>]</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Infeasible start iterates (starting off constraint, then jumping to it)</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>inf_x <span class="op">=</span> [<span class="fl">1.0</span>, <span class="fl">1.8</span>, <span class="fl">1.82</span>, <span class="fl">1.8</span>]</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>inf_y <span class="op">=</span> [<span class="fl">3.5</span>, <span class="fl">1.6</span>, <span class="fl">1.2</span>, <span class="fl">1.2</span>]</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Contour(</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>x_grid, y<span class="op">=</span>y_grid, z<span class="op">=</span>Z,</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    colorscale<span class="op">=</span>[[<span class="dv">0</span>, <span class="st">'rgba(184,153,94,0.1)'</span>], [<span class="fl">0.5</span>, <span class="st">'rgba(184,153,94,0.3)'</span>], [<span class="dv">1</span>, <span class="st">'rgba(184,153,94,0.6)'</span>]],</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    contours<span class="op">=</span><span class="bu">dict</span>(start<span class="op">=</span><span class="fl">0.5</span>, end<span class="op">=</span><span class="dv">20</span>, size<span class="op">=</span><span class="dv">2</span>),</span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    showscale<span class="op">=</span><span class="va">False</span>, name<span class="op">=</span><span class="st">'Objective contours'</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>cx, y<span class="op">=</span>cy, mode<span class="op">=</span><span class="st">'lines'</span>,</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#968a80'</span>, width<span class="op">=</span><span class="fl">2.5</span>, dash<span class="op">=</span><span class="st">'dash'</span>),</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Constraint: x + y = 3'</span></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>fs_x, y<span class="op">=</span>fs_y, mode<span class="op">=</span><span class="st">'lines+markers'</span>,</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7b97ad'</span>, width<span class="op">=</span><span class="fl">2.5</span>),</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7b97ad'</span>, size<span class="op">=</span><span class="dv">9</span>, line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">1</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Version I (feasible start)'</span></span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>inf_x, y<span class="op">=</span>inf_y, mode<span class="op">=</span><span class="st">'lines+markers'</span>,</span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, width<span class="op">=</span><span class="fl">2.5</span>),</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">9</span>, symbol<span class="op">=</span><span class="st">'diamond'</span>,</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">1</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Version II (infeasible start)'</span></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>[<span class="fl">1.8</span>], y<span class="op">=</span>[<span class="fl">1.2</span>], mode<span class="op">=</span><span class="st">'markers'</span>,</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b8995e'</span>, size<span class="op">=</span><span class="dv">14</span>, symbol<span class="op">=</span><span class="st">'star'</span>,</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Optimal x*'</span></span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>    xaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'x₁'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">5.5</span>], zeroline<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>    yaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'x₂'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">5.5</span>], zeroline<span class="op">=</span><span class="va">True</span>, scaleanchor<span class="op">=</span><span class="st">'x'</span>),</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>    showlegend<span class="op">=</span><span class="va">True</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">48</span>, b<span class="op">=</span><span class="dv">50</span>, l<span class="op">=</span><span class="dv">55</span>, r<span class="op">=</span><span class="dv">20</span>)</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The KKT matrix is the same in both versions — it is the KKT matrix of the quadratic subproblem. The only difference is the right-hand side: Version I has zero in the second block (because <span class="math inline">Ax = b</span>), while Version II has the residual <span class="math inline">Ax - b</span>.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-constrained-decrement" class="level2" data-number="16.4">
+<h2 data-number="16.4" class="anchored" data-anchor-id="sec-constrained-decrement"><span class="header-section-number">16.4</span> Newton Decrement for Constrained Problems</h2>
+<p>Just as the Newton decrement provides a stopping criterion for unconstrained Newton’s method, we need an analogous quantity for the equality-constrained setting.</p>
+<div id="def-constrained-decrement" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 16.2 (Definition 19.2 (Constrained Newton Decrement))</strong></span> Let <span class="math inline">d_{\mathrm{nt}}(x)</span> be the Newton direction obtained from the KKT system. The <strong>constrained Newton decrement</strong> is:</p>
+<p><span class="math display">
+\lambda(x) = \sqrt{d_{\mathrm{nt}}(x)^\top \nabla^2 f(x) \, d_{\mathrm{nt}}(x)}.
+</span></p>
+</div>
+<p>The Newton decrement measures the quality of the quadratic approximation at the current point, restricted to the feasible subspace.</p>
+<div id="thm-decrement-gap" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 16.3 (Theorem 19.3 (Interpretation of the Newton Decrement))</strong></span> The constrained Newton decrement satisfies:</p>
+<p><span class="math display">
+f(x) - \inf\{f(x + v) + \nabla f(x)^\top v + \tfrac{1}{2} v^\top \nabla^2 f(x) v \mid Av = 0\} = \frac{1}{2}\lambda(x)^2.
+</span></p>
+<p>That is, <span class="math inline">\frac{1}{2}\lambda(x)^2</span> is the gap between the current objective value and the minimum of the quadratic model on the feasible subspace.</p>
+</div>
+<p>In practice, we stop the equality-constrained Newton method when <span class="math inline">\lambda(x) \leq \epsilon</span> for some tolerance <span class="math inline">\epsilon &gt; 0</span>.</p>
+</section>
+<section id="sec-log-barrier" class="level2" data-number="16.5">
+<h2 data-number="16.5" class="anchored" data-anchor-id="sec-log-barrier"><span class="header-section-number">16.5</span> Going Beyond Equality Constraints — The Log Barrier</h2>
+<p>We now tackle the general convex optimization problem with both inequality and equality constraints:</p>
+<p><span class="math display">
+\min_{x} \; f(x) \quad \text{s.t.} \quad f_i(x) \leq 0, \; i = 1, \ldots, m, \quad Ax = b.
+</span></p>
+<section id="sec-why-barrier" class="level3" data-number="16.5.1">
+<h3 data-number="16.5.1" class="anchored" data-anchor-id="sec-why-barrier"><span class="header-section-number">16.5.1</span> Why Newton Alone Is Not Enough</h3>
+<p>The KKT conditions for this problem include complementary slackness <span class="math inline">\lambda_i f_i(x) = 0</span> with <span class="math inline">\lambda_i \geq 0</span> and <span class="math inline">f_i(x) \leq 0</span>. These conditions involve inequalities and a product-equals-zero condition that are inherently non-smooth — Newton’s method, which relies on differentiability, cannot handle them directly.</p>
+<div id="fig-barrier-vs-no-barrier" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-barrier-vs-no-barrier-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch22-barrier-vs-no-barrier.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;16.2: Without a barrier, Newton iterates can escape the feasible region. With the log barrier, a repulsive force keeps iterates strictly inside."><img src="figures/ch22-barrier-vs-no-barrier.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-barrier-vs-no-barrier-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16.2: Without a barrier, Newton iterates can escape the feasible region. With the log barrier, a repulsive force keeps iterates strictly inside.
+</figcaption>
+</figure>
+</div>
+<p><strong>The idea</strong>: replace the hard inequality constraints with a smooth penalty function that blows up as we approach the boundary.</p>
+</section>
+<section id="sec-indicator-to-barrier" class="level3" data-number="16.5.2">
+<h3 data-number="16.5.2" class="anchored" data-anchor-id="sec-indicator-to-barrier"><span class="header-section-number">16.5.2</span> From Indicator to Barrier</h3>
+<p>The original problem is equivalent to:</p>
+<p><span class="math display">
+\min_{x} \; f(x) + \sum_{i=1}^{m} \mathbb{I}_{(-\infty, 0]}(f_i(x)) \quad \text{s.t.} \quad Ax = b,
+</span></p>
+<p>where the indicator function <span class="math inline">\mathbb{I}_{(-\infty, 0]}(u) = 0</span> if <span class="math inline">u \leq 0</span> and <span class="math inline">+\infty</span> otherwise. This reformulation folds the inequality constraints into the objective, but the indicator is not differentiable — we cannot apply Newton’s method.</p>
+<div id="def-log-barrier-approx" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 16.3 (Definition 19.3 (Logarithmic Barrier Approximation))</strong></span> The <strong>logarithmic barrier approximation</strong> to the indicator function is:</p>
+<p><span class="math display">
+\widehat{I}_t(u) = -\frac{1}{t}\log(-u), \qquad \operatorname{dom}(\widehat{I}_t) = \{u : u &lt; 0\},
+</span></p>
+<p>where <span class="math inline">t &gt; 0</span> is a parameter controlling the accuracy of the approximation.</p>
+</div>
+<p>This approximation has three key properties:</p>
+<ul>
+<li><strong>Convex and differentiable</strong> on its domain <span class="math inline">\{u &lt; 0\}</span>.</li>
+<li><strong>Blows up</strong> as <span class="math inline">u \to 0^-</span>: <span class="math inline">-\frac{1}{t}\log(-u) \to +\infty</span>, enforcing strict inequality.</li>
+<li><strong>Tightens</strong> as <span class="math inline">t \to \infty</span>: the approximation approaches the indicator function.</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-barrier-approximation</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 19.2: The log barrier approximation −(1/t)log(−u) for several values of t. As t increases, the barrier more closely approximates the indicator function I(u) = 0 for u ≤ 0 and +∞ for u &gt; 0."</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>u <span class="op">=</span> np.linspace(<span class="op">-</span><span class="dv">2</span>, <span class="op">-</span><span class="fl">0.01</span>, <span class="dv">500</span>)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> [<span class="st">'#b8995e'</span>, <span class="st">'#b56b6b'</span>, <span class="st">'#7b97ad'</span>, <span class="st">'#7a9a7e'</span>, <span class="st">'#907ea0'</span>]</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>t_vals <span class="op">=</span> [<span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>]</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Indicator function (step)</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>[<span class="op">-</span><span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">0</span>], y<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">0</span>, <span class="va">None</span>],</span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#968a80'</span>, width<span class="op">=</span><span class="dv">3</span>, dash<span class="op">=</span><span class="st">'dot'</span>),</span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Indicator I(u)'</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">0</span>], y<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">4</span>],</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#968a80'</span>, width<span class="op">=</span><span class="dv">3</span>, dash<span class="op">=</span><span class="st">'dot'</span>),</span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    showlegend<span class="op">=</span><span class="va">False</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t_val, color <span class="kw">in</span> <span class="bu">zip</span>(t_vals, colors):</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    barrier <span class="op">=</span> <span class="op">-</span>(<span class="fl">1.0</span><span class="op">/</span>t_val) <span class="op">*</span> np.log(<span class="op">-</span>u)</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    mask <span class="op">=</span> barrier <span class="op">&lt;</span> <span class="fl">4.5</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    fig.add_trace(go.Scatter(</span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span>u[mask], y<span class="op">=</span>barrier[mask], mode<span class="op">=</span><span class="st">'lines'</span>,</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>        line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span>color, width<span class="op">=</span><span class="fl">2.2</span>),</span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span><span class="ss">f't = </span><span class="sc">{</span>t_val<span class="sc">}</span><span class="ss">'</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    ))</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
+<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    xaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'u'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">2.1</span>, <span class="fl">0.3</span>], zeroline<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    yaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'Barrier value'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">1.5</span>, <span class="fl">4.5</span>], zeroline<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>    showlegend<span class="op">=</span><span class="va">True</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">48</span>, b<span class="op">=</span><span class="dv">50</span>, l<span class="op">=</span><span class="dv">55</span>, r<span class="op">=</span><span class="dv">20</span>)</span>
+<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="sec-barrier-function" class="level3" data-number="16.5.3">
+<h3 data-number="16.5.3" class="anchored" data-anchor-id="sec-barrier-function"><span class="header-section-number">16.5.3</span> The Barrier Function and Barrier Problem</h3>
+<div id="def-log-barrier" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 16.4 (Definition 19.4 (Logarithmic Barrier Function))</strong></span> The <strong>logarithmic barrier function</strong> for the inequality constraints <span class="math inline">f_i(x) \leq 0</span> is:</p>
+<p><span class="math display">
+\phi(x) = -\sum_{i=1}^{m} \log(-f_i(x)),
+</span></p>
+<p>with <span class="math inline">\operatorname{dom}(\phi) = \{x : f_i(x) &lt; 0 \; \forall \, i\}</span> (the strictly feasible set).</p>
+</div>
+<div id="fig-log-barrier" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-log-barrier-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch04-log-barrier.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;16.3: The logarithmic barrier function. As the barrier parameter t increases, -(1/t)\log(-u) more closely approximates the indicator function I_-(u) that is zero for u < 0 and +\infty for u \geq 0. The barrier creates a smooth “wall” that goes to +\infty as x approaches the constraint boundary, keeping iterates strictly in the interior of the feasible set."><img src="figures/ch04-log-barrier.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-log-barrier-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16.3: The logarithmic barrier function. As the barrier parameter <span class="math inline">t</span> increases, <span class="math inline">-(1/t)\log(-u)</span> more closely approximates the indicator function <span class="math inline">I_-(u)</span> that is zero for <span class="math inline">u &lt; 0</span> and <span class="math inline">+\infty</span> for <span class="math inline">u \geq 0</span>. The barrier creates a smooth “wall” that goes to <span class="math inline">+\infty</span> as <span class="math inline">x</span> approaches the constraint boundary, keeping iterates strictly in the interior of the feasible set.
+</figcaption>
+</figure>
+</div>
+<p>Note that <span class="math inline">\phi(x) \to +\infty</span> as <span class="math inline">x</span> approaches the boundary of the feasible region (i.e., as any <span class="math inline">f_i(x) \to 0^-</span>). This “barrier” prevents iterates from leaving the interior of the feasible set.</p>
+<div id="def-barrier-problem" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 16.5 (Definition 19.5 (Barrier Problem))</strong></span> For parameter <span class="math inline">t &gt; 0</span>, the <strong>barrier problem</strong> <span class="math inline">(P_t)</span> is:</p>
+<p><span id="eq-barrier-problem"><span class="math display">
+\min_{x} \; t \cdot f(x) + \phi(x) \quad \text{subject to} \quad Ax = b.
+\tag{16.3}</span></span></p>
+<p>Equivalently, dividing by <span class="math inline">t</span>:</p>
+<p><span class="math display">
+\min_{x} \; f(x) + \frac{1}{t}\phi(x) \quad \text{subject to} \quad Ax = b.
+</span></p>
+</div>
+<p>The barrier problem (<a href="#eq-barrier-problem" class="quarto-xref">Equation&nbsp;<span>16.3</span></a>) is an equality-constrained problem — we can solve it using the equality-constrained Newton method from the previous section, applying the KKT system (<a href="#eq-newton-kkt-system" class="quarto-xref">Equation&nbsp;<span>16.2</span></a>) with <span class="math inline">f</span> replaced by <span class="math inline">t \cdot f + \phi</span>!</p>
+</section>
+<section id="sec-barrier-derivatives" class="level3" data-number="16.5.4">
+<h3 data-number="16.5.4" class="anchored" data-anchor-id="sec-barrier-derivatives"><span class="header-section-number">16.5.4</span> Gradient and Hessian of the Barrier</h3>
+<p>To apply Newton’s method to <span class="math inline">(P_t)</span>, we need the gradient and Hessian of <span class="math inline">\phi</span>:</p>
+<p><span class="math display">
+\nabla \phi(x) = \sum_{i=1}^{m} \frac{1}{-f_i(x)} \nabla f_i(x),
+</span></p>
+<p><span class="math display">
+\nabla^2 \phi(x) = \sum_{i=1}^{m} \frac{1}{f_i(x)^2} \nabla f_i(x) \nabla f_i(x)^\top + \sum_{i=1}^{m} \frac{1}{-f_i(x)} \nabla^2 f_i(x).
+</span></p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>The Tradeoff in Choosing <span class="math inline">t</span>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>Large <span class="math inline">t</span></strong>: the barrier <span class="math inline">(1/t)\phi(x)</span> is small, so <span class="math inline">x^*(t)</span> is close to the true optimum. But the Hessian of <span class="math inline">\phi</span> varies rapidly near the boundary, making Newton’s method converge slowly.</li>
+<li><strong>Small <span class="math inline">t</span></strong>: the barrier is dominant, and <span class="math inline">x^*(t)</span> lies deep in the interior of the feasible set — far from optimal but easy to find with Newton.</li>
+</ul>
+<p>This tradeoff motivates the <strong>path-following</strong> strategy: start with small <span class="math inline">t</span>, solve <span class="math inline">(P_t)</span>, then gradually increase <span class="math inline">t</span>.</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-central-path" class="level2" data-number="16.6">
+<h2 data-number="16.6" class="anchored" data-anchor-id="sec-central-path"><span class="header-section-number">16.6</span> The Central Path</h2>
+<p>As we vary <span class="math inline">t &gt; 0</span>, the solutions <span class="math inline">x^*(t)</span> of the barrier problem (<a href="#eq-barrier-problem" class="quarto-xref">Equation&nbsp;<span>16.3</span></a>) trace out a curve through the interior of the feasible set. This curve is the <strong>central path</strong>, and it is the geometric backbone of interior point methods.</p>
+<div id="def-central-path" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 16.6 (Definition 19.6 (Central Path))</strong></span> The <strong>central path</strong> is the set <span class="math inline">\{x^*(t) : t &gt; 0\}</span>, where <span class="math inline">x^*(t)</span> is the unique solution to the barrier problem <span class="math inline">(P_t)</span>.</p>
+</div>
+<div id="fig-central-path" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-central-path-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/central-path.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;16.4: The central path of the interior point method: as the barrier parameter decreases, the iterates approach the optimal vertex while staying in the interior of the feasible region."><img src="figures/central-path.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-central-path-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16.4: The central path of the interior point method: as the barrier parameter decreases, the iterates approach the optimal vertex while staying in the interior of the feasible region.
+</figcaption>
+</figure>
+</div>
+<div id="fig-central-path-diagram" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-central-path-diagram-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch22-central-path-diagram.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;16.5: The central path traces through the interior of the feasible region from the analytic center toward the optimal vertex as t increases."><img src="figures/ch22-central-path-diagram.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-central-path-diagram-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16.5: The central path traces through the interior of the feasible region from the analytic center toward the optimal vertex as <span class="math inline">t</span> increases.
+</figcaption>
+</figure>
+</div>
+<div id="thm-central-path-properties" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 16.4 (Theorem 19.4 (Properties of the Central Path))</strong></span> Assume <span class="math inline">f, f_1, \ldots, f_m</span> are convex, the problem satisfies Slater’s condition, and <span class="math inline">\operatorname{rank}(A) = p</span>. Then:</p>
+<ol type="1">
+<li><strong>Strict feasibility</strong>: <span class="math inline">f_i(x^*(t)) &lt; 0</span> for all <span class="math inline">i</span>, and <span class="math inline">Ax^*(t) = b</span>.</li>
+<li><strong>Convergence</strong>: <span class="math inline">x^*(t) \to x^*</span> (an optimal solution) as <span class="math inline">t \to \infty</span>.</li>
+<li><strong>Perturbed KKT</strong>: each central path point satisfies</li>
+</ol>
+<p><span class="math display">
+t \, \nabla f(x^*(t)) + \nabla \phi(x^*(t)) + A^\top \nu(t) = 0, \qquad Ax^*(t) = b.
+</span></p>
+<ol start="4" type="1">
+<li><strong>Dual recovery</strong>: the central path induces dual variables</li>
+</ol>
+<p><span class="math display">
+\lambda_i^*(t) = \frac{-1}{t \cdot f_i(x^*(t))} &gt; 0, \qquad i = 1, \ldots, m.
+</span></p>
+<ol start="5" type="1">
+<li><strong>Duality gap bound</strong>: <span class="math inline">f(x^*(t)) - p^* \leq m/t</span>, where <span class="math inline">p^*</span> is the optimal value of the original problem.</li>
+</ol>
+</div>
+<p>Property 5 is the most important for algorithm design: it tells us exactly how close <span class="math inline">x^*(t)</span> is to optimal, and we can achieve any desired accuracy by choosing <span class="math inline">t</span> large enough.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof sketch (of the duality gap bound).</strong> The optimality condition for <span class="math inline">(P_t)</span> gives <span class="math inline">t \nabla f(x^*(t)) + \sum_{i=1}^{m} \frac{1}{-f_i(x^*(t))} \nabla f_i(x^*(t)) + A^\top \nu(t) = 0</span>. Setting <span class="math inline">\lambda_i^*(t) = \frac{-1}{t \cdot f_i(x^*(t))}</span>, this becomes <span class="math inline">\nabla f(x^*(t)) + \sum_i \lambda_i^*(t) \nabla f_i(x^*(t)) + \frac{1}{t} A^\top \nu(t) = 0</span>, which is the stationarity condition of the Lagrangian. The dual objective evaluated at <span class="math inline">(\lambda^*(t), \nu(t)/t)</span> satisfies:</p>
+<p><span class="math display">
+g(\lambda^*(t), \nu(t)/t) \geq f(x^*(t)) - \sum_{i=1}^{m} \lambda_i^*(t) f_i(x^*(t)) - m/t = f(x^*(t)) - m/t.
+</span></p>
+<p>Wait — more carefully, <span class="math inline">\lambda_i^*(t) f_i(x^*(t)) = \frac{-1}{t \cdot f_i(x^*(t))} \cdot f_i(x^*(t)) = \frac{1}{t}</span> for each <span class="math inline">i</span>. Summing gives <span class="math inline">\sum_i \lambda_i^*(t) f_i(x^*(t)) = -m/t</span>. Since <span class="math inline">g(\lambda^*(t), \nu(t)/t) \leq p^*</span> (weak duality) and the duality gap is <span class="math inline">f(x^*(t)) - g(\lambda^*(t), \nu(t)/t) = m/t</span>, we conclude <span class="math inline">f(x^*(t)) - p^* \leq m/t</span>. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The central path traces a smooth curve through the <strong>interior</strong> of the feasible set, converging to the optimal solution as <span class="math inline">t \to \infty</span>. This is why these methods are called “interior point” methods — they stay strictly inside the feasible region, never touching the boundary until the limit.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-lp-central-path" class="level2" data-number="16.7">
+<h2 data-number="16.7" class="anchored" data-anchor-id="sec-lp-central-path"><span class="header-section-number">16.7</span> Example: The LP Central Path</h2>
+<p>To build intuition, consider a concrete LP in two dimensions:</p>
+<p><span class="math display">
+\min_{x \in \mathbb{R}^2} \; c^\top x \quad \text{subject to} \quad a_i^\top x \leq b_i, \quad i = 1, \ldots, m.
+</span></p>
+<p>The barrier function specializes to:</p>
+<p><span class="math display">
+\phi(x) = -\sum_{i=1}^{m} \log(b_i - a_i^\top x),
+</span></p>
+<p>and the barrier gradient becomes <span class="math inline">\nabla \phi(x) = \sum_{i=1}^{m} \frac{a_i}{b_i - a_i^\top x} = A^\top d</span>, where <span class="math inline">d_i = 1/(b_i - a_i^\top x)</span>.</p>
+<p>The central path point <span class="math inline">x^*(t)</span> satisfies:</p>
+<p><span class="math display">
+t \cdot c + \nabla \phi(x^*(t)) = 0.
+</span></p>
+<p>At <span class="math inline">t = 0</span>, this gives <span class="math inline">\nabla \phi(x^*(0)) = 0</span>, which is the <strong>analytic center</strong> of the polytope — the point that maximizes the product of distances to the constraint boundaries. As <span class="math inline">t \to \infty</span>, <span class="math inline">x^*(t)</span> moves toward the optimal vertex, tracing a smooth arc through the interior.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-lp-central-path</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 19.3: The central path for a 2D LP. The path begins at the analytic center (t ≈ 0) and curves toward the optimal vertex as t → ∞. Each dot represents x*(t) for a particular value of t."</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Define a 2D polytope: pentagon</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Constraints: a_i^T x &lt;= b_i</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># x1 &gt;= 0, x2 &gt;= 0, x1 + 2*x2 &lt;= 8, 2*x1 + x2 &lt;= 8, x1 + x2 &lt;= 5.5</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>A_ineq <span class="op">=</span> np.array([[<span class="op">-</span><span class="dv">1</span>, <span class="dv">0</span>], [<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>], [<span class="dv">1</span>, <span class="dv">2</span>], [<span class="dv">2</span>, <span class="dv">1</span>], [<span class="dv">1</span>, <span class="dv">1</span>]])</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>b_ineq <span class="op">=</span> np.array([<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">8</span>, <span class="dv">8</span>, <span class="fl">5.5</span>])</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>c_obj <span class="op">=</span> np.array([<span class="op">-</span><span class="dv">2</span>, <span class="op">-</span><span class="dv">1</span>])  <span class="co"># min c^T x  =&gt; optimal near vertex with large x1</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Vertices of the polytope (computed by hand / intersection)</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>verts <span class="op">=</span> np.array([</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">0</span>, <span class="dv">0</span>], [<span class="dv">4</span>, <span class="dv">0</span>], [<span class="fl">3.333</span>, <span class="fl">1.333</span>], [<span class="fl">1.0</span>, <span class="fl">3.5</span>], [<span class="dv">0</span>, <span class="dv">4</span>]</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Close polygon</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>poly_x <span class="op">=</span> <span class="bu">list</span>(verts[:, <span class="dv">0</span>]) <span class="op">+</span> [verts[<span class="dv">0</span>, <span class="dv">0</span>]]</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>poly_y <span class="op">=</span> <span class="bu">list</span>(verts[:, <span class="dv">1</span>]) <span class="op">+</span> [verts[<span class="dv">0</span>, <span class="dv">1</span>]]</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Central path: solve t*c + nabla phi(x) = 0 numerically</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> minimize</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> barrier_obj(x_flat, t_val, c_vec, A_mat, b_vec):</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> np.array(x_flat)</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    slacks <span class="op">=</span> b_vec <span class="op">-</span> A_mat <span class="op">@</span> x</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> np.<span class="bu">any</span>(slacks <span class="op">&lt;=</span> <span class="fl">1e-12</span>):</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="fl">1e12</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> t_val <span class="op">*</span> c_vec <span class="op">@</span> x <span class="op">-</span> np.<span class="bu">sum</span>(np.log(slacks))</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>central_path_pts <span class="op">=</span> []</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>t_values <span class="op">=</span> [<span class="fl">0.01</span>, <span class="fl">0.1</span>, <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">30</span>, <span class="dv">80</span>, <span class="dv">200</span>]</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>x_init <span class="op">=</span> np.array([<span class="fl">1.5</span>, <span class="fl">1.5</span>])</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t_val <span class="kw">in</span> t_values:</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    res <span class="op">=</span> minimize(barrier_obj, x_init, args<span class="op">=</span>(t_val, c_obj, A_ineq, b_ineq),</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>                   method<span class="op">=</span><span class="st">'Nelder-Mead'</span>, options<span class="op">=</span>{<span class="st">'xatol'</span>: <span class="fl">1e-10</span>, <span class="st">'fatol'</span>: <span class="fl">1e-10</span>, <span class="st">'maxiter'</span>: <span class="dv">10000</span>})</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>    central_path_pts.append(res.x.copy())</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    x_init <span class="op">=</span> res.x.copy()</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>cp <span class="op">=</span> np.array(central_path_pts)</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Objective contours</span></span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>x_grid <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">5.5</span>, <span class="dv">200</span>)</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>y_grid <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">5.5</span>, <span class="dv">200</span>)</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>X, Y <span class="op">=</span> np.meshgrid(x_grid, y_grid)</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>Z_obj <span class="op">=</span> c_obj[<span class="dv">0</span>] <span class="op">*</span> X <span class="op">+</span> c_obj[<span class="dv">1</span>] <span class="op">*</span> Y</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a><span class="co"># Contours</span></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Contour(</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>x_grid, y<span class="op">=</span>y_grid, z<span class="op">=</span>Z_obj,</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>    colorscale<span class="op">=</span>[[<span class="dv">0</span>, <span class="st">'rgba(184,153,94,0.08)'</span>], [<span class="fl">0.5</span>, <span class="st">'rgba(184,153,94,0.2)'</span>], [<span class="dv">1</span>, <span class="st">'rgba(184,153,94,0.4)'</span>]],</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>    contours<span class="op">=</span><span class="bu">dict</span>(start<span class="op">=-</span><span class="dv">10</span>, end<span class="op">=</span><span class="dv">2</span>, size<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>    showscale<span class="op">=</span><span class="va">False</span>, name<span class="op">=</span><span class="st">'Objective contours'</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a><span class="co"># Feasible polytope</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>poly_x, y<span class="op">=</span>poly_y, fill<span class="op">=</span><span class="st">'toself'</span>,</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>    fillcolor<span class="op">=</span><span class="st">'rgba(123,154,126,0.15)'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7a9a7e'</span>, width<span class="op">=</span><span class="fl">2.5</span>),</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Feasible polytope'</span>, mode<span class="op">=</span><span class="st">'lines'</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="co"># Central path</span></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>cp[:, <span class="dv">0</span>], y<span class="op">=</span>cp[:, <span class="dv">1</span>], mode<span class="op">=</span><span class="st">'lines'</span>,</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#907ea0'</span>, width<span class="op">=</span><span class="dv">3</span>),</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Central path'</span></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>cp[:, <span class="dv">0</span>], y<span class="op">=</span>cp[:, <span class="dv">1</span>], mode<span class="op">=</span><span class="st">'markers'</span>,</span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#907ea0'</span>, size<span class="op">=</span><span class="dv">8</span>, line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">1</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>    text<span class="op">=</span>[<span class="ss">f't = </span><span class="sc">{</span>t_values[i]<span class="sc">}</span><span class="ss">'</span> <span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(t_values))],</span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>    hoverinfo<span class="op">=</span><span class="st">'text'</span>, name<span class="op">=</span><span class="st">'x*(t)'</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a><span class="co"># Analytic center (approx t=0)</span></span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>[cp[<span class="dv">0</span>, <span class="dv">0</span>]], y<span class="op">=</span>[cp[<span class="dv">0</span>, <span class="dv">1</span>]], mode<span class="op">=</span><span class="st">'markers'</span>,</span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b8995e'</span>, size<span class="op">=</span><span class="dv">12</span>, symbol<span class="op">=</span><span class="st">'diamond'</span>,</span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Analytic center (t ≈ 0)'</span></span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimal vertex</span></span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>[<span class="fl">4.0</span>], y<span class="op">=</span>[<span class="fl">0.0</span>], mode<span class="op">=</span><span class="st">'markers'</span>,</span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">14</span>, symbol<span class="op">=</span><span class="st">'star'</span>,</span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Optimal vertex x*'</span></span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a>))</span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>    xaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'x₁'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">5.5</span>], zeroline<span class="op">=</span><span class="va">True</span>),</span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a>    yaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'x₂'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">5.5</span>], zeroline<span class="op">=</span><span class="va">True</span>, scaleanchor<span class="op">=</span><span class="st">'x'</span>),</span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a>    showlegend<span class="op">=</span><span class="va">True</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">48</span>, b<span class="op">=</span><span class="dv">50</span>, l<span class="op">=</span><span class="dv">55</span>, r<span class="op">=</span><span class="dv">20</span>)</span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="sec-perturbed-kkt" class="level2" data-number="16.8">
+<h2 data-number="16.8" class="anchored" data-anchor-id="sec-perturbed-kkt"><span class="header-section-number">16.8</span> Interpreting the Central Path via Perturbed KKT</h2>
+<p>The duality gap bound <span class="math inline">f(x^*(t)) - p^* \leq m/t</span> gives a quantitative measure of optimality. The central path also has an elegant interpretation through the lens of KKT conditions, revealing why interior point methods converge to a true KKT point. At each point along the path, the KKT conditions are “almost” satisfied, with a controlled perturbation.</p>
+<div id="thm-perturbed-kkt" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 16.5 (Theorem 19.5 (Perturbed KKT Conditions))</strong></span> The central path point <span class="math inline">(x^*(t), \lambda^*(t), \nu^*(t))</span> satisfies:</p>
+<ol type="1">
+<li><strong>Primal feasibility (strict)</strong>: <span class="math inline">f_i(x^*(t)) &lt; 0</span> for all <span class="math inline">i</span>, and <span class="math inline">Ax^*(t) = b</span>.</li>
+<li><strong>Dual feasibility</strong>: <span class="math inline">\lambda_i^*(t) = \frac{-1}{t \cdot f_i(x^*(t))} &gt; 0</span> for all <span class="math inline">i</span>.</li>
+<li><strong>Stationarity</strong>: <span class="math inline">\nabla f(x^*(t)) + \sum_{i=1}^{m} \lambda_i^*(t) \nabla f_i(x^*(t)) + A^\top \nu^*(t) = 0</span>.</li>
+<li><strong>Perturbed complementary slackness</strong>: <span class="math inline">\lambda_i^*(t) \cdot f_i(x^*(t)) = -\frac{1}{t}</span> for all <span class="math inline">i</span>.</li>
+</ol>
+</div>
+<p>Compare condition 4 with exact complementary slackness, which requires <span class="math inline">\lambda_i \cdot f_i(x^*) = 0</span>. The perturbation <span class="math inline">-1/t</span> vanishes as <span class="math inline">t \to \infty</span>, so the central path converges to an exact KKT point.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Uniform Perturbation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The perturbed complementary slackness <span class="math inline">\lambda_i f_i = -1/t</span> is the <strong>same</strong> for every constraint <span class="math inline">i</span>. This means the central path “treats all constraints equally” — it does not prematurely decide which constraints will be active at the optimum. This is one reason interior point methods are numerically stable.</p>
+</div>
+</div>
+</section>
+<section id="sec-barrier-method" class="level2" data-number="16.9">
+<h2 data-number="16.9" class="anchored" data-anchor-id="sec-barrier-method"><span class="header-section-number">16.9</span> The Barrier Method</h2>
+<p>Having established the central path, the duality gap bound <span class="math inline">m/t</span>, and the perturbed KKT interpretation, we now have all the ingredients to state the full barrier method (also called the <strong>path-following interior point method</strong>).</p>
+<div id="def-barrier-method" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 16.7 (Definition 19.7 (Barrier Method))</strong></span> <strong>Input</strong>: strictly feasible <span class="math inline">x^0</span> (with <span class="math inline">f_i(x^0) &lt; 0</span> for all <span class="math inline">i</span> and <span class="math inline">Ax^0 = b</span>), initial <span class="math inline">t^0 &gt; 0</span>, growth factor <span class="math inline">\mu &gt; 1</span>, tolerance <span class="math inline">\varepsilon &gt; 0</span>.</p>
+<p><strong>Repeat</strong>:</p>
+<ol type="1">
+<li><strong>Centering step</strong>: Starting from the current <span class="math inline">x</span>, use equality-constrained Newton’s method to (approximately) minimize <span class="math inline">t \cdot f(x) + \phi(x)</span> subject to <span class="math inline">Ax = b</span>. Let <span class="math inline">x^*(t)</span> denote the result.</li>
+<li><strong>Update</strong>: <span class="math inline">x \leftarrow x^*(t)</span>.</li>
+<li><strong>Increase <span class="math inline">t</span></strong>: <span class="math inline">t \leftarrow \mu \cdot t</span>.</li>
+<li><strong>Stop</strong> if <span class="math inline">m/t \leq \varepsilon</span>.</li>
+</ol>
+<p><strong>Output</strong>: <span class="math inline">x</span> (an <span class="math inline">\varepsilon</span>-optimal solution).</p>
+</div>
+<div id="fig-barrier-flowchart" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-barrier-flowchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch22-barrier-method-flowchart.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-6" title="Figure&nbsp;16.6: The barrier method flowchart: initialize, center via Newton, update x, increase t, and check stopping criterion m/t \leq \varepsilon."><img src="figures/ch22-barrier-method-flowchart.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-barrier-flowchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;16.6: The barrier method flowchart: initialize, center via Newton, update <span class="math inline">x</span>, increase <span class="math inline">t</span>, and check stopping criterion <span class="math inline">m/t \leq \varepsilon</span>.
+</figcaption>
+</figure>
+</div>
+<p>The key insight is <strong>warm starting</strong>: we initialize the centering step for parameter <span class="math inline">\mu t</span> using the solution <span class="math inline">x^*(t)</span> from the previous centering step. Since <span class="math inline">\mu t</span> is not too far from <span class="math inline">t</span> (provided <span class="math inline">\mu</span> is moderate), <span class="math inline">x^*(t)</span> is a good starting point, and Newton’s method converges in just a few iterations.</p>
+<section id="sec-barrier-convergence" class="level3" data-number="16.9.1">
+<h3 data-number="16.9.1" class="anchored" data-anchor-id="sec-barrier-convergence"><span class="header-section-number">16.9.1</span> Convergence of the Barrier Method</h3>
+<div id="thm-barrier-convergence" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 16.6 (Theorem 19.6 (Convergence of the Barrier Method))</strong></span> After solving the barrier problem <span class="math inline">(P_{t^k})</span> where <span class="math inline">t^k = \mu^k \cdot t^0</span>:</p>
+<p><span class="math display">
+f(x^k) - p^* \leq \frac{m}{\mu^k \cdot t^0}.
+</span></p>
+<p>The number of outer iterations to reach <span class="math inline">\varepsilon</span>-accuracy is:</p>
+<p><span class="math display">
+K = \left\lceil \frac{\log(m / (\varepsilon \cdot t^0))}{\log \mu} \right\rceil.
+</span></p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof.</strong> After <span class="math inline">k</span> outer iterations, <span class="math inline">t^k = \mu^k t^0</span>. By the duality gap bound (Theorem 19.4, Property 5), <span class="math inline">f(x^k) - p^* \leq m/t^k = m/(\mu^k t^0)</span>. Setting <span class="math inline">m/(\mu^k t^0) \leq \varepsilon</span> and solving for <span class="math inline">k</span> gives the result. <span class="math inline">\blacksquare</span></p>
+</div>
+</section>
+<section id="sec-parameter-choice" class="level3" data-number="16.9.2">
+<h3 data-number="16.9.2" class="anchored" data-anchor-id="sec-parameter-choice"><span class="header-section-number">16.9.2</span> Choosing the Parameters</h3>
+<p>The barrier method has three parameters: <span class="math inline">t^0</span>, <span class="math inline">\mu</span>, and the accuracy of each centering step. The choice involves a tradeoff:</p>
+<ul>
+<li><strong><span class="math inline">\mu</span> too small</strong> (e.g., <span class="math inline">\mu = 1.01</span>): each outer step makes little progress, so we need many outer iterations (many barrier problems to solve).</li>
+<li><strong><span class="math inline">\mu</span> too large</strong> (e.g., <span class="math inline">\mu = 100</span>): the warm-starting advantage is lost, so each centering step requires many Newton iterations.</li>
+<li><strong><span class="math inline">t^0</span> too small</strong>: the initial central path point is far from optimal, requiring many outer iterations.</li>
+<li><strong><span class="math inline">t^0</span> too large</strong>: the first centering step is expensive (poor initialization for Newton).</li>
+</ul>
+<p>Typical choices in practice: <span class="math inline">\mu \in [2, 50]</span> and <span class="math inline">t^0 = m / (f(x^0) - p^{\text{est}})</span> where <span class="math inline">p^{\text{est}}</span> is an estimate of <span class="math inline">p^*</span>.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Complexity of the Barrier Method
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>With careful parameter tuning (specifically <span class="math inline">\mu = 1 + 1/\sqrt{m}</span>), the barrier method achieves an <span class="math inline">\varepsilon</span>-optimal solution in <span class="math inline">O(\sqrt{m} \cdot \log(m/\varepsilon))</span> Newton steps total. Each Newton step costs <span class="math inline">O(n^3)</span> for a dense problem (dominated by solving the KKT system). This polynomial-time complexity was a major theoretical breakthrough — unlike the simplex method, interior point methods have provably efficient worst-case behavior.</p>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-barrier-convergence</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 19.4: Convergence of the barrier method. Left: duality gap m/t decreases geometrically with each outer iteration. Right: effect of the growth factor μ on the total number of Newton steps."</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotly.subplots <span class="im">import</span> make_subplots</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> make_subplots(rows<span class="op">=</span><span class="dv">1</span>, cols<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    subplot_titles<span class="op">=</span>(<span class="st">'Duality gap vs. outer iteration'</span>, <span class="st">'Total Newton steps vs. μ'</span>))</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Left: gap convergence for different mu</span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>m_constraints <span class="op">=</span> <span class="dv">10</span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>t0 <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>mu_vals <span class="op">=</span> [<span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">10</span>, <span class="dv">50</span>]</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>colors_left <span class="op">=</span> [<span class="st">'#7a9a7e'</span>, <span class="st">'#7b97ad'</span>, <span class="st">'#b8995e'</span>, <span class="st">'#b56b6b'</span>]</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> mu, color <span class="kw">in</span> <span class="bu">zip</span>(mu_vals, colors_left):</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    iters <span class="op">=</span> np.arange(<span class="dv">0</span>, <span class="dv">30</span>)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    gap <span class="op">=</span> m_constraints <span class="op">/</span> (t0 <span class="op">*</span> mu<span class="op">**</span>iters)</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    mask <span class="op">=</span> gap <span class="op">&gt;</span> <span class="fl">1e-8</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    fig.add_trace(go.Scatter(</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span>iters[mask], y<span class="op">=</span>gap[mask], mode<span class="op">=</span><span class="st">'lines+markers'</span>,</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span>color, width<span class="op">=</span><span class="dv">2</span>),</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>        marker<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">5</span>, color<span class="op">=</span>color),</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span><span class="ss">f'μ = </span><span class="sc">{</span>mu<span class="sc">}</span><span class="ss">'</span>, legendgroup<span class="op">=</span><span class="ss">f'mu</span><span class="sc">{</span>mu<span class="sc">}</span><span class="ss">'</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>    ), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Right: total Newton steps vs mu (schematic)</span></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>mu_range <span class="op">=</span> np.linspace(<span class="fl">1.1</span>, <span class="dv">100</span>, <span class="dv">200</span>)</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Outer iters = log(m/(eps*t0)) / log(mu)</span></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Newton per centering ~ c * (mu - 1) for large mu</span></span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>eps <span class="op">=</span> <span class="fl">1e-4</span></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>outer <span class="op">=</span> np.log(m_constraints <span class="op">/</span> (eps <span class="op">*</span> t0)) <span class="op">/</span> np.log(mu_range)</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Approx Newton steps per centering (increases with mu)</span></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>newton_per <span class="op">=</span> <span class="dv">3</span> <span class="op">+</span> <span class="fl">0.8</span> <span class="op">*</span> (mu_range <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>total <span class="op">=</span> outer <span class="op">*</span> newton_per</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>mu_range, y<span class="op">=</span>total, mode<span class="op">=</span><span class="st">'lines'</span>,</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#907ea0'</span>, width<span class="op">=</span><span class="fl">2.5</span>),</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Total Newton steps'</span>, showlegend<span class="op">=</span><span class="va">True</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Mark optimal mu region</span></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>opt_idx <span class="op">=</span> np.argmin(total)</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>[mu_range[opt_idx]], y<span class="op">=</span>[total[opt_idx]], mode<span class="op">=</span><span class="st">'markers'</span>,</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">12</span>, symbol<span class="op">=</span><span class="st">'star'</span>,</span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="ss">f'Optimal μ ≈ </span><span class="sc">{</span>mu_range[opt_idx]<span class="sc">:.1f}</span><span class="ss">'</span>, showlegend<span class="op">=</span><span class="va">True</span></span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>fig.update_xaxes(title_text<span class="op">=</span><span class="st">'Outer iteration k'</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>fig.update_yaxes(title_text<span class="op">=</span><span class="st">'Duality gap m/t'</span>, <span class="bu">type</span><span class="op">=</span><span class="st">'log'</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>fig.update_xaxes(title_text<span class="op">=</span><span class="st">'Growth factor μ'</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>fig.update_yaxes(title_text<span class="op">=</span><span class="st">'Total Newton steps'</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>    showlegend<span class="op">=</span><span class="va">True</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">48</span>, b<span class="op">=</span><span class="dv">50</span>, l<span class="op">=</span><span class="dv">55</span>, r<span class="op">=</span><span class="dv">20</span>),</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>    height<span class="op">=</span><span class="dv">400</span></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>The barrier method thus achieves polynomial-time convergence for general convex programs with inequality constraints, inheriting the quadratic convergence of Newton’s method at each centering step. We now place it alongside the other optimization algorithms developed in this course.</p>
+</section>
+</section>
+<section id="sec-comparison" class="level2" data-number="16.10">
+<h2 data-number="16.10" class="anchored" data-anchor-id="sec-comparison"><span class="header-section-number">16.10</span> Comparison of Methods</h2>
+<p>The following table summarizes the methods we have studied for solving optimization problems:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Constraints Handled</th>
+<th>Per-Iteration Cost</th>
+<th>Convergence</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Gradient Descent</td>
+<td>None</td>
+<td><span class="math inline">O(n)</span></td>
+<td>Linear</td>
+</tr>
+<tr class="even">
+<td>Newton’s Method</td>
+<td>None (or equality)</td>
+<td><span class="math inline">O(n^3)</span></td>
+<td>Quadratic</td>
+</tr>
+<tr class="odd">
+<td>Simplex</td>
+<td>LP only</td>
+<td>Variable</td>
+<td>Finite (exponential worst case)</td>
+</tr>
+<tr class="even">
+<td>Barrier / Interior Point</td>
+<td>General convex</td>
+<td><span class="math inline">O(n^3)</span> per Newton step</td>
+<td><span class="math inline">O(\sqrt{m} \log(1/\varepsilon))</span> Newton steps</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The barrier method combines Newton’s quadratic convergence (for each centering step) with a systematic outer loop (increasing <span class="math inline">t</span>) to handle inequality constraints. The total work is polynomial in the problem size, making it suitable for large-scale problems.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-looking-ahead" class="level2" data-number="16.11">
+<h2 data-number="16.11" class="anchored" data-anchor-id="sec-looking-ahead"><span class="header-section-number">16.11</span> Looking Ahead</h2>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Interior Point Methods in Practice
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Interior point methods are the theoretical backbone of modern optimization solvers:</p>
+<ul>
+<li><strong>MOSEK</strong>: uses a homogeneous self-dual interior point method for LP, SOCP, and SDP.</li>
+<li><strong>Gurobi</strong>: offers both simplex and barrier (interior point) solvers; the barrier solver is often faster on large, dense problems.</li>
+<li><strong>CVXPY / SCS</strong>: the default backend for CVXPY uses operator-splitting methods, but CVXPY can also call MOSEK’s interior point solver for higher accuracy.</li>
+</ul>
+<p>The ideas in this chapter — log barriers, central paths, and perturbed KKT conditions — extend naturally to second-order cone programs (SOCP) and semidefinite programs (SDP), forming the basis of <strong>conic optimization</strong>. While we will not cover these extensions in detail, the intuition is the same: replace conic constraints with barrier functions and follow the central path.</p>
+<p>For a deeper treatment of interior point methods, including self-concordant barriers, primal-dual interior point methods, and complexity bounds for conic programs, see Boyd &amp; Vandenberghe, Chapter 11, or the monograph by Nesterov and Nemirovskii, <em>Interior-Point Polynomial Algorithms in Convex Programming</em> (1994).</p>
+</div>
+</div>
+</section>
+<section id="summary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
+<ul>
+<li><strong>From unconstrained to constrained.</strong> Interior point methods handle inequality constraints <span class="math inline">f_i(x) \leq 0</span> by replacing them with the logarithmic barrier <span class="math inline">\phi(x) = -\sum_{i=1}^{m}\log(-f_i(x))</span>, converting the constrained problem into a sequence of unconstrained problems <span class="math inline">\min_x\; t\, f_0(x) + \phi(x)</span> for increasing <span class="math inline">t</span>.</li>
+<li><strong>Central path.</strong> As <span class="math inline">t \to \infty</span>, the minimizers <span class="math inline">x^*(t)</span> trace a smooth curve—the central path—through the strict interior of the feasible region, converging to the true constrained optimum; each point on the path satisfies perturbed KKT conditions with duality gap <span class="math inline">m/t</span>.</li>
+<li><strong>Barrier method.</strong> The algorithm alternates between a centering step (solving the barrier problem via Newton’s method) and a parameter update (<span class="math inline">t \leftarrow \mu \cdot t</span> with <span class="math inline">\mu &gt; 1</span>); after <span class="math inline">O(\sqrt{m}\log(m/\varepsilon))</span> outer iterations, the duality gap drops below <span class="math inline">\varepsilon</span>.</li>
+<li><strong>Equality-constrained Newton.</strong> For problems with equality constraints <span class="math inline">Ax = b</span>, Newton’s method is modified to solve the KKT system jointly for the primal step <span class="math inline">\Delta x</span> and dual variable <span class="math inline">\nu</span>, ensuring feasibility is maintained throughout.</li>
+</ul>
+<section id="second-order-methods-comparison" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="second-order-methods-comparison">Second-Order Methods Comparison</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Per-iteration cost</th>
+<th>Convergence</th>
+<th>Handles constraints</th>
+<th>Key idea</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Newton</strong></td>
+<td><span class="math inline">O(n^3)</span> Hessian solve</td>
+<td>Quadratic (local)</td>
+<td>Unconstrained / equality</td>
+<td>Curvature-adapted step</td>
+</tr>
+<tr class="even">
+<td><strong>Ellipsoid</strong></td>
+<td><span class="math inline">O(n^2)</span> ellipsoid update</td>
+<td><span class="math inline">O(n^2 \log(1/\varepsilon))</span></td>
+<td>Convex (via oracle)</td>
+<td>Volume shrinking</td>
+</tr>
+<tr class="odd">
+<td><strong>Interior Point</strong></td>
+<td><span class="math inline">O(n^3)</span> Newton centering</td>
+<td><span class="math inline">O(\sqrt{m}\log(1/\varepsilon))</span> outer</td>
+<td>Inequality + equality</td>
+<td>Log-barrier + central path</td>
+</tr>
+</tbody>
+</table>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../lectures/15-ellipsoid-method.html" class="pagination-link" aria-label="The Ellipsoid Method">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Ellipsoid Method</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../lectures/17-diffusion-models.html" class="pagination-link" aria-label="Diffusion Models">
+        <span class="nav-page-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Diffusion Models</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+const figFontHeading = '"Crimson Pro", Georgia, serif';
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
+  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
+];
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

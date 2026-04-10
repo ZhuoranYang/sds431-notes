@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 260" width="680" height="260">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr-fwd" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#7a9a7e"/>
+    </marker>
+    <marker id="arr-bwd" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#b56b6b"/>
+    </marker>
+  </defs>
+
+  <text x="340" y="24" text-anchor="middle" font-size="16" font-weight="bold">Backpropagation: Forward and Backward Pass</text>
+
+  <!-- Nodes -->
+  <!-- Input x -->
+  <circle cx="60" cy="120" r="28" fill="#7b97ad" fill-opacity="0.12" stroke="#7b97ad" stroke-width="1.8"/>
+  <text x="60" y="116" text-anchor="middle" font-size="14" fill="#7b97ad" font-weight="bold">𝑥</text>
+  <text x="60" y="132" text-anchor="middle" font-size="10" fill="#7b97ad">input</text>
+
+  <!-- W1 multiply -->
+  <circle cx="180" cy="120" r="28" fill="#7a9a7e" fill-opacity="0.12" stroke="#7a9a7e" stroke-width="1.8"/>
+  <text x="180" y="116" text-anchor="middle" font-size="13" fill="#7a9a7e" font-weight="bold">𝑊₁𝑥</text>
+  <text x="180" y="132" text-anchor="middle" font-size="10" fill="#7a9a7e">linear</text>
+
+  <!-- ReLU -->
+  <circle cx="300" cy="120" r="28" fill="#b8995e" fill-opacity="0.12" stroke="#b8995e" stroke-width="1.8"/>
+  <text x="300" y="116" text-anchor="middle" font-size="13" fill="#b8995e" font-weight="bold">ReLU</text>
+  <text x="300" y="132" text-anchor="middle" font-size="10" fill="#b8995e">activation</text>
+
+  <!-- W2 multiply -->
+  <circle cx="420" cy="120" r="28" fill="#7a9a7e" fill-opacity="0.12" stroke="#7a9a7e" stroke-width="1.8"/>
+  <text x="420" y="116" text-anchor="middle" font-size="13" fill="#7a9a7e" font-weight="bold">𝑊₂𝑧</text>
+  <text x="420" y="132" text-anchor="middle" font-size="10" fill="#7a9a7e">linear</text>
+
+  <!-- Loss -->
+  <circle cx="560" cy="120" r="28" fill="#b56b6b" fill-opacity="0.12" stroke="#b56b6b" stroke-width="1.8"/>
+  <text x="560" y="116" text-anchor="middle" font-size="14" fill="#b56b6b" font-weight="bold">ℒ</text>
+  <text x="560" y="132" text-anchor="middle" font-size="10" fill="#b56b6b">loss</text>
+
+  <!-- Forward arrows (solid, green) -->
+  <line x1="90" y1="110" x2="148" y2="110" stroke="#7a9a7e" stroke-width="2" marker-end="url(#arr-fwd)"/>
+  <line x1="210" y1="110" x2="268" y2="110" stroke="#7a9a7e" stroke-width="2" marker-end="url(#arr-fwd)"/>
+  <line x1="330" y1="110" x2="388" y2="110" stroke="#7a9a7e" stroke-width="2" marker-end="url(#arr-fwd)"/>
+  <line x1="450" y1="110" x2="528" y2="110" stroke="#7a9a7e" stroke-width="2" marker-end="url(#arr-fwd)"/>
+
+  <!-- Forward label -->
+  <text x="340" y="66" text-anchor="middle" font-size="12" fill="#7a9a7e" font-weight="bold">Forward pass</text>
+
+  <!-- Backward arrows (dashed, red) -->
+  <line x1="528" y1="135" x2="450" y2="135" stroke="#b56b6b" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arr-bwd)"/>
+  <line x1="388" y1="135" x2="330" y2="135" stroke="#b56b6b" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arr-bwd)"/>
+  <line x1="268" y1="135" x2="210" y2="135" stroke="#b56b6b" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arr-bwd)"/>
+  <line x1="148" y1="135" x2="90" y2="135" stroke="#b56b6b" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arr-bwd)"/>
+
+  <!-- Backward label -->
+  <text x="340" y="180" text-anchor="middle" font-size="12" fill="#b56b6b" font-weight="bold">Backward pass (chain rule)</text>
+
+  <!-- Gradient labels -->
+  <text x="490" y="155" text-anchor="middle" font-size="10" fill="#b56b6b">∂ℒ/∂𝑊₂</text>
+  <text x="360" y="155" text-anchor="middle" font-size="10" fill="#b56b6b">∂ℒ/∂𝑧</text>
+  <text x="240" y="155" text-anchor="middle" font-size="10" fill="#b56b6b">∂ℒ/∂𝑊₁</text>
+
+  <!-- Chain rule annotation -->
+  <text x="340" y="210" text-anchor="middle" font-size="11" fill="#968a80" font-style="italic">∂ℒ/∂𝑊₁ = (∂ℒ/∂𝑊₂) (∂𝑊₂/∂ReLU) (∂ReLU/∂𝑊₁)</text>
+</svg>

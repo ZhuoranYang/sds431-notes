@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>4&nbsp; Convex Functions – S&amp;DS 431/631 — Optimization and Computation</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../lectures/05-convex-optimization.html" rel="next">
+<link href="../lectures/03-convex-sets.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-1db14e1c4cc35bfe1d9badc9e4551eed.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-434abab37f7d394f280d9c89d7fbc13f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/03-convex-sets.html">Convex Optimization Basics</a></li><li class="breadcrumb-item"><a href="../lectures/04-convex-functions.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Convex Functions</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">S&amp;DS 431/631 — Optimization and Computation</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Preparation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/01-introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction and Motivation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/02-math-background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Background</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Convex Optimization Basics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/03-convex-sets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Convex Sets</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/04-convex-functions.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Convex Functions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/05-convex-optimization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Convex Optimization</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">First-Order Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Linear Programming</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/09-lp-formulation-geometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">LP Formulation and Geometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/10-simplex-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">The Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/11-lp-duality.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">LP Duality</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/12-dual-simplex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The Dual Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/13-lp-applications.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">LP Applications and Game Theory</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Second-Order and Interior Point Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/15-ellipsoid-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Ellipsoid Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/16-interior-point-methods.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Interior Point Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Modern Computation Models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/17-diffusion-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Diffusion Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/18-transformers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Transformers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/summary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Course Summary</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-convex-func-def" id="toc-sec-convex-func-def" class="nav-link active" data-scroll-target="#sec-convex-func-def"><span class="header-section-number">4.1</span> Definition and the Chord Inequality</a></li>
+  <li><a href="#sec-first-order-condition" id="toc-sec-first-order-condition" class="nav-link" data-scroll-target="#sec-first-order-condition"><span class="header-section-number">4.2</span> First-Order Condition</a></li>
+  <li><a href="#sec-second-order-condition" id="toc-sec-second-order-condition" class="nav-link" data-scroll-target="#sec-second-order-condition"><span class="header-section-number">4.3</span> Second-Order Condition</a></li>
+  <li><a href="#sec-operations-convex-funcs" id="toc-sec-operations-convex-funcs" class="nav-link" data-scroll-target="#sec-operations-convex-funcs"><span class="header-section-number">4.4</span> Operations That Preserve Convexity</a></li>
+  <li><a href="#sec-sublevel-sets" id="toc-sec-sublevel-sets" class="nav-link" data-scroll-target="#sec-sublevel-sets"><span class="header-section-number">4.5</span> Sublevel Sets and Quasiconvexity</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/03-convex-sets.html">Convex Optimization Basics</a></li><li class="breadcrumb-item"><a href="../lectures/04-convex-functions.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Convex Functions</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Convex Functions</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Having established the theory of convex sets in the previous chapter — including the convexity definition (<a href="03-convex-sets.html#eq-convex-set-def" class="quarto-xref">Equation&nbsp;<span>3.1</span></a>) and the preservation rules in <a href="03-convex-sets.html#thm-operations-convex-sets" class="quarto-xref">Theorem&nbsp;<span>3.2</span></a> — we now turn to the functions we optimize over them. A convex function is one whose graph “curves upward,” ensuring that there are no hidden valleys or local minima that could trap an optimization algorithm.</p>
+<p>We develop the theory of convex functions through three equivalent characterizations — the chord inequality, the tangent-line condition, and the Hessian test — culminating in powerful preservation rules that let us establish convexity of complex objectives without resorting to direct computation. These tools will be used in every subsequent chapter of the course.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Companion Notebooks
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.</p>
+<ul>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/03-convex-functions.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Convex Function Properties</strong> — visualizing epigraphs, level sets, and tangent-line characterizations</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/04-convex-functions-3d.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>3D Convex Geometry</strong> — interactive 3D plots of convex sets, ellipsoids, convex hulls, and level sets</li>
+</ul>
+</div>
+</div>
+<section id="sec-convex-func-def" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="sec-convex-func-def"><span class="header-section-number">4.1</span> Definition and the Chord Inequality</h2>
+<p>The most basic way to express “curving upward” is the <strong>chord inequality</strong>: the function value at any mixture of two points lies below the chord connecting them. The formal definition below makes this intuition precise.</p>
+<div id="def-convex-function" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 4.1 (Definition 4.7 (Convex Function))</strong></span> A function <span class="math inline">f : \mathbb{R}^n \to \mathbb{R}</span> is <strong>convex</strong> if <span class="math inline">\text{dom}(f)</span> is a convex set and for all <span class="math inline">x, y \in \text{dom}(f)</span> and <span class="math inline">\lambda \in [0,1]</span>,</p>
+<p><span id="eq-convex-function-def"><span class="math display">f(\lambda x + (1-\lambda)y) \leq \lambda f(x) + (1-\lambda)f(y). \tag{4.1}</span></span></p>
+<p>Geometrically: the function value at any convex combination lies below (or on) the chord connecting <span class="math inline">(x, f(x))</span> and <span class="math inline">(y, f(y))</span>.</p>
+<p><span class="math inline">f</span> is <strong>strictly convex</strong> if the inequality is strict for <span class="math inline">\lambda \in (0,1)</span> and <span class="math inline">x \neq y</span>.</p>
+<p><span class="math inline">f</span> is <strong>concave</strong> if <span class="math inline">-f</span> is convex.</p>
+</div>
+<p>The defining inequality (<a href="#eq-convex-function-def" class="quarto-xref">Equation&nbsp;<span>4.1</span></a>) says that the graph of a convex function always lies <strong>below</strong> any chord drawn between two of its points. Equivalently, a convex function “bows upward.” This simple geometric property has profound algorithmic consequences: it ensures that every local minimum is a global minimum, which is the reason convex optimization problems are tractable.</p>
+<div class="figure-container">
+  <div id="fig-convex-function"></div>
+  <div class="figure-caption">Figure 4.2: A convex function in 3D: f(x₁,x₂) = x₁² + x₂². The surface lies below any chord, and every sublevel set is convex.</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const plotlyConfig = {responsive: true, displayModeBar: false};
+
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || null; }
+
+  const N = 40;
+  const xv = [], yv = [], zv = [];
+  for (let i = 0; i < N; i++) {
+    const row_x = [], row_y = [], row_z = [];
+    for (let j = 0; j < N; j++) {
+      const x = -2 + 4 * i / (N - 1);
+      const y = -2 + 4 * j / (N - 1);
+      row_x.push(x); row_y.push(y); row_z.push(x * x + y * y);
+    }
+    xv.push(row_x); yv.push(row_y); zv.push(row_z);
+  }
+  const p1 = [-1.5, -1.0], p2 = [1.5, 1.0];
+  const chord_x = [], chord_y = [], chord_z = [];
+  for (let t = 0; t <= 1; t += 0.02) {
+    const cx = p1[0] + t * (p2[0] - p1[0]);
+    const cy = p1[1] + t * (p2[1] - p1[1]);
+    chord_x.push(cx); chord_y.push(cy);
+    chord_z.push((p1[0]*p1[0]+p1[1]*p1[1]) + t * ((p2[0]*p2[0]+p2[1]*p2[1]) - (p1[0]*p1[0]+p1[1]*p1[1])));
+  }
+
+  const traces = [
+    {
+      type: 'surface',
+      z: zv, x: xv, y: yv,
+      opacity: 0.85,
+      colorscale: [[0, '#dfe8ef'], [0.5, '#7b97ad'], [1, '#b8995e']],
+      showscale: false, hoverinfo: 'z',
+    },
+    {
+      type: 'scatter3d', mode: 'lines',
+      x: chord_x, y: chord_y, z: chord_z,
+      line: {color: '#b56b6b', width: 6}, name: 'Chord (above surface)',
+    },
+    {
+      type: 'scatter3d', mode: 'markers',
+      x: [p1[0], p2[0]], y: [p1[1], p2[1]], z: [p1[0]*p1[0]+p1[1]*p1[1], p2[0]*p2[0]+p2[1]*p2[1]],
+      marker: {color: '#b56b6b', size: 5}, name: 'Endpoints', showlegend: false,
+    }
+  ];
+  const layout = {
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: '"Source Serif 4", Georgia, serif', size: 14 },
+    scene: {
+      xaxis: {title: 'x\u2081', gridcolor: '#e0d9d1'},
+      yaxis: {title: 'x\u2082', gridcolor: '#e0d9d1'},
+      zaxis: {title: 'f(x)', gridcolor: '#e0d9d1'},
+      camera: {eye: {x: 1.6, y: 1.6, z: 1.0}},
+    },
+    showlegend: true, legend: { x: 0.7, y: 0.95, font: {size: 13} },
+    margin: {t: 10, b: 10, l: 10, r: 10},
+  };
+  Plotly.newPlot('fig-convex-function', traces, layout, plotlyConfig);
+});
+</script>
+<div id="exm-common-convex-concave-functions" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.1 (Common Convex and Concave Functions)</strong></span> <strong>Convex functions:</strong></p>
+<ul>
+<li>Affine: <span class="math inline">f(x) = a^\top x + b</span> (also concave)</li>
+<li>Quadratic: <span class="math inline">f(x) = x^\top Q x</span> for <span class="math inline">Q \succeq 0</span></li>
+<li>Norms: <span class="math inline">f(x) = \|x\|_p</span> for <span class="math inline">p \geq 1</span></li>
+<li>Exponential: <span class="math inline">f(x) = e^{ax}</span></li>
+<li>Log-sum-exp: <span class="math inline">f(x) = \log\left(\sum_i e^{x_i}\right)</span></li>
+<li>Max function: <span class="math inline">f(x) = \max(x_1, \ldots, x_n)</span></li>
+</ul>
+<p><strong>Concave functions:</strong> <span class="math inline">\log(x)</span> on <span class="math inline">x &gt; 0</span>, <span class="math inline">\sqrt{x}</span> on <span class="math inline">x \geq 0</span>.</p>
+</div>
+<p>With the definition and examples in hand, we now ask: how do we <em>verify</em> convexity in practice? The chord inequality requires checking all pairs of points, which is impractical. For differentiable functions, there is a far more useful equivalent condition involving only the gradient.</p>
+</section>
+<section id="sec-first-order-condition" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="sec-first-order-condition"><span class="header-section-number">4.2</span> First-Order Condition</h2>
+<p>For differentiable functions, convexity is equivalent to a single elegant condition: the tangent hyperplane at any point must lie below the function everywhere. This <strong>first-order condition</strong> is the workhorse for proving optimality in convex optimization.</p>
+<div id="thm-first-order-condition" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 4.1 (Theorem 4.5 (First-Order Condition))</strong></span> Suppose <span class="math inline">f</span> is differentiable and <span class="math inline">\text{dom}(f)</span> is convex. Then <span class="math inline">f</span> is convex if and only if</p>
+<p><span id="eq-first-order-convexity"><span class="math display">f(y) \geq f(x) + \nabla f(x)^\top (y - x) \quad \forall\, x, y \in \text{dom}(f). \tag{4.2}</span></span></p>
+<p>Geometrically: the tangent line (first-order Taylor approximation) at any point is a <strong>global underestimator</strong> of <span class="math inline">f</span>.</p>
+</div>
+<div id="fig-first-order-condition" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-first-order-condition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch01-first-order-condition.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;4.1: First-order condition: at every point the tangent line lies below the graph of a convex function. The gap f(y) - [f(x) + \nabla f(x)^\top(y-x)] is non-negative everywhere, and equals zero only at y = x."><img src="figures/ch01-first-order-condition.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-first-order-condition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.1: First-order condition: at every point the tangent line lies below the graph of a convex function. The gap <span class="math inline">f(y) - [f(x) + \nabla f(x)^\top(y-x)]</span> is non-negative everywhere, and equals zero only at <span class="math inline">y = x</span>.
+</figcaption>
+</figure>
+</div>
+<p>The first-order condition provides an equivalent characterization of convexity for differentiable functions. It says that the tangent hyperplane at any point lies entirely below the graph of <span class="math inline">f</span>. This is a much stronger statement than the chord condition in the definition: it must hold globally, not just between two specific points. This property is the key reason why gradient-based methods work so well for convex functions.</p>
+<p>An immediate and powerful consequence of <a href="#eq-first-order-convexity" class="quarto-xref">Equation&nbsp;<span>4.2</span></a> is that, for convex functions, the familiar necessary condition <span class="math inline">\nabla f(x^*) = 0</span> becomes <em>sufficient</em> for global optimality. This is the fundamental reason why convex optimization is tractable.</p>
+<div id="cor-optimality-convex" class="theorem corollary">
+<p><span class="theorem-title"><strong>Corollary 4.1 (Corollary 4.1 (Optimality Condition for Convex Functions))</strong></span> If <span class="math inline">f</span> is convex and differentiable, then <span class="math inline">\nabla f(x^*) = 0</span> implies <span class="math inline">x^*</span> is a <strong>global</strong> minimizer. That is, for convex functions, every local minimum is a global minimum.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>If <span class="math inline">\nabla f(x^*) = 0</span>, then by <a href="#eq-first-order-convexity" class="quarto-xref">Equation&nbsp;<span>4.2</span></a>, for every <span class="math inline">y</span> we have <span class="math inline">f(y) \geq f(x^*) + \nabla f(x^*)^\top(y - x^*) = f(x^*) + 0 = f(x^*)</span>. Since this holds for all <span class="math inline">y</span>, the point <span class="math inline">x^*</span> achieves the smallest possible function value. Hence we conclude the proof. <span class="math inline">\blacksquare</span></p>
+</div>
+<p>The first-order condition characterizes convexity through the gradient, but checking it still requires verifying an inequality at every pair of points. For twice-differentiable functions, there is an even more convenient test that involves only a local computation: checking the sign of the Hessian.</p>
+</section>
+<section id="sec-second-order-condition" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="sec-second-order-condition"><span class="header-section-number">4.3</span> Second-Order Condition</h2>
+<p>Since the Hessian captures local curvature, requiring it to be positive semidefinite everywhere is equivalent to saying the function curves upward in every direction at every point — which is exactly convexity. This gives the most computationally convenient characterization of the three.</p>
+<div id="thm-second-order-condition" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 4.2 (Theorem 4.6 (Second-Order Condition))</strong></span> Suppose <span class="math inline">f</span> is twice differentiable and <span class="math inline">\text{dom}(f)</span> is convex. Then:</p>
+<p><span class="math display">f \text{ is convex} \iff \nabla^2 f(x) \succeq 0 \quad \forall\, x \in \text{dom}(f).</span></p>
+<p>That is, the Hessian matrix is positive semidefinite everywhere.</p>
+<p>Furthermore, if <span class="math inline">\nabla^2 f(x) \succ 0</span> for all <span class="math inline">x</span> (Hessian is positive definite), then <span class="math inline">f</span> is <strong>strictly convex</strong>.</p>
+</div>
+<p>The second-order condition gives the most practical test for convexity of smooth functions: simply compute the Hessian and check whether all its eigenvalues are nonnegative. For quadratic functions the Hessian is constant, so one eigenvalue check suffices. For more general functions the Hessian varies with <span class="math inline">x</span>, and one must verify positive semidefiniteness at every point in the domain.</p>
+<div id="exm-hessian-convexity" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.2 (Verifying Convexity via the Hessian)</strong></span> Consider <span class="math inline">f(x) = x^\top Q x + b^\top x + c</span> where <span class="math inline">Q \in \mathbb{R}^{n \times n}</span> is symmetric.</p>
+<p><span class="math inline">\nabla f(x) = 2Qx + b</span> and <span class="math inline">\nabla^2 f(x) = 2Q</span>.</p>
+<p>Thus <span class="math inline">f</span> is convex <span class="math inline">\iff</span> <span class="math inline">2Q \succeq 0</span> <span class="math inline">\iff</span> <span class="math inline">Q \succeq 0</span> (all eigenvalues of <span class="math inline">Q</span> are nonnegative).</p>
+</div>
+<p><a href="#fig-convex-function-characterization" class="quarto-xref">Figure&nbsp;<span>4.2</span></a> summarizes the three characterizations side by side: each gives a different lens on the same underlying property, and the choice among them depends on what information is available (function values, gradients, or Hessians).</p>
+<div id="fig-convex-function-characterization" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-convex-function-characterization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/convex-function-characterization.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;4.2: Three characterizations of convex functions: first-order (tangent line below), second-order (positive semidefinite Hessian), and epigraph (convex set above the graph)."><img src="figures/convex-function-characterization.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-convex-function-characterization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.2: Three characterizations of convex functions: first-order (tangent line below), second-order (positive semidefinite Hessian), and epigraph (convex set above the graph).
+</figcaption>
+</figure>
+</div>
+<p>The three characterizations above — chord inequality, first-order condition, and second-order condition — give us ways to verify that a single function is convex. But in practice, objective functions arise as combinations of simpler pieces. Rather than checking convexity of the final expression from scratch, we can certify it compositionally using preservation rules.</p>
+</section>
+<section id="sec-operations-convex-funcs" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="sec-operations-convex-funcs"><span class="header-section-number">4.4</span> Operations That Preserve Convexity</h2>
+<p>Just as we built complex convex sets from simpler ones (<a href="03-convex-sets.html#thm-operations-convex-sets" class="quarto-xref">Theorem&nbsp;<span>3.2</span></a>), we can establish convexity of complicated objective functions by decomposing them into simpler convex components. The following rules are the function-level analogue of those set operations: they let us certify convexity compositionally, without ever computing a Hessian.</p>
+<div id="thm-operations-convex-functions" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 4.3 (Theorem 4.7 (Operations Preserving Convexity of Functions))</strong></span> &nbsp;</p>
+<ol type="1">
+<li><strong>Nonnegative weighted sum:</strong> If <span class="math inline">f_1, \ldots, f_k</span> are convex and <span class="math inline">w_1, \ldots, w_k \geq 0</span>, then <span class="math inline">\sum_{i=1}^k w_i f_i</span> is convex.</li>
+<li><strong>Composition with affine:</strong> If <span class="math inline">f</span> is convex, then <span class="math inline">g(x) = f(Ax + b)</span> is convex.</li>
+<li><strong>Pointwise maximum:</strong> If <span class="math inline">f_1, \ldots, f_k</span> are convex, then <span class="math inline">f(x) = \max_i f_i(x)</span> is convex.</li>
+<li><strong>Pointwise supremum:</strong> If <span class="math inline">f(x,y)</span> is convex in <span class="math inline">x</span> for each <span class="math inline">y</span>, then <span class="math inline">g(x) = \sup_y f(x,y)</span> is convex.</li>
+<li><strong>Composition rules:</strong>
+<ul>
+<li>If <span class="math inline">h</span> is convex &amp; nondecreasing and <span class="math inline">g</span> is convex, then <span class="math inline">h(g(x))</span> is convex.</li>
+<li>If <span class="math inline">h</span> is convex &amp; nonincreasing and <span class="math inline">g</span> is concave, then <span class="math inline">h(g(x))</span> is convex.</li>
+</ul></li>
+<li><strong>Partial minimization:</strong> If <span class="math inline">f(x,y)</span> is convex in <span class="math inline">(x,y)</span>, then <span class="math inline">g(x) = \inf_y f(x,y)</span> is convex (provided the infimum is attained or handled properly).</li>
+</ol>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Why These Rules Matter
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>These rules let us establish convexity of complex functions <em>without</em> computing derivatives. For instance, <span class="math inline">\|Ax - b\|_2</span> is convex because the norm is convex and <span class="math inline">Ax - b</span> is affine (rule 2). The max of linear functions is convex (rule 3), which shows that piecewise-linear convex functions arise naturally.</p>
+</div>
+</div>
+<p>Having developed tools for building and recognizing convex functions, we now circle back to convex sets. It turns out that convex functions naturally produce convex sets when we “slice” their graphs at a fixed height. This connection is central to constrained optimization, where feasible regions are often defined by inequalities of the form <span class="math inline">f(x) \leq \alpha</span>.</p>
+</section>
+<section id="sec-sublevel-sets" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="sec-sublevel-sets"><span class="header-section-number">4.5</span> Sublevel Sets and Quasiconvexity</h2>
+<p>Sublevel sets describe the region where a function takes values at or below a given threshold — precisely the kind of set that arises as a feasible region when we impose an inequality constraint <span class="math inline">f(x) \leq \alpha</span>.</p>
+<div id="def-sublevel-set" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 4.2 (Definition 4.8 (Sublevel Set))</strong></span> The <strong><span class="math inline">\alpha</span>-sublevel set</strong> of a function <span class="math inline">f : \mathbb{R}^n \to \mathbb{R}</span> is</p>
+<p><span class="math display">C_\alpha = \{x \in \text{dom}(f) : f(x) \leq \alpha\}.</span></p>
+</div>
+<p>A natural and important consequence of function convexity is that cutting the graph at any height produces a convex “slice.” This means that constraints of the form <span class="math inline">f(x) \leq \alpha</span>, where <span class="math inline">f</span> is convex, always yield convex feasible regions.</p>
+<div id="thm-sublevel-sets-convex" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 4.4 (Theorem 4.8 (Sublevel Sets of Convex Functions Are Convex))</strong></span> If <span class="math inline">f</span> is convex, then every sublevel set <span class="math inline">C_\alpha = \{x : f(x) \leq \alpha\}</span> is convex.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>Let <span class="math inline">x, y \in C_\alpha</span>, so <span class="math inline">f(x) \leq \alpha</span> and <span class="math inline">f(y) \leq \alpha</span>. For any <span class="math inline">\lambda \in [0,1]</span>, applying the convexity definition (<a href="#eq-convex-function-def" class="quarto-xref">Equation&nbsp;<span>4.1</span></a>) gives the first inequality below, and the assumption <span class="math inline">f(x), f(y) \leq \alpha</span> gives the second:</p>
+<p><span class="math display">f(\lambda x + (1-\lambda)y) \leq \lambda f(x) + (1-\lambda)f(y) \leq \lambda\alpha + (1-\lambda)\alpha = \alpha.</span></p>
+<p>Hence <span class="math inline">\lambda x + (1-\lambda)y \in C_\alpha</span>, so the sublevel set is convex. This completes the proof. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Converse Does Not Hold
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The converse is <strong>not</strong> true: a function can have convex sublevel sets without being convex. For example, <span class="math inline">f(x) = -e^{-x^2}</span> has convex sublevel sets (intervals) but is not a convex function. The property of having convex sublevel sets is called <strong>quasiconvexity</strong>.</p>
+</div>
+</div>
+<p>The function classes we have encountered — convex, strongly convex, Lipschitz continuous, and smooth — form a hierarchy of regularity conditions. Each additional property gives optimization algorithms more structure to exploit, leading to faster convergence guarantees. The diagram below summarizes the inclusion relationships among these classes and their key implications for optimization.</p>
+<div id="fig-function-hierarchy" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-function-hierarchy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch01-function-hierarchy.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;4.3: Hierarchy of function classes used in optimization. Stronger regularity assumptions (inner classes) yield faster convergence rates. Lipschitz continuity and smoothness control how fast a function can change; strong convexity prevents the function from being “too flat” near its minimum."><img src="figures/ch01-function-hierarchy.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-function-hierarchy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.3: Hierarchy of function classes used in optimization. Stronger regularity assumptions (inner classes) yield faster convergence rates. Lipschitz continuity and smoothness control how fast a function can change; strong convexity prevents the function from being “too flat” near its minimum.
+</figcaption>
+</figure>
+</div>
+<div class="figure-container">
+  <div id="fig-sublevel-sets"></div>
+  <div class="figure-caption">Figure 4.3: Sublevel sets of f(x₁,x₂) = x₁² + 2x₂² at levels α = 1, 2, 4. Each sublevel set is an ellipse (convex).</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const plotlyConfig = {responsive: true, displayModeBar: false};
+
+  const alphas = [1, 2, 4];
+  const colors = ['rgba(122,154,126,0.2)', 'rgba(123,143,163,0.18)', 'rgba(144,126,160,0.18)'];
+  const strokes = ['#7a9a7e', '#7b97ad', '#907ea0'];
+
+  const tracesFilled = alphas.map((alpha, idx) => {
+    const pts = 80;
+    const ex = [], ey = [];
+    for (let k = 0; k <= pts; k++) {
+      const t = 2 * Math.PI * k / pts;
+      ex.push(Math.sqrt(alpha) * Math.cos(t));
+      ey.push(Math.sqrt(alpha / 2) * Math.sin(t));
+    }
+    return {
+      x: ex, y: ey, fill: 'toself', fillcolor: colors[idx],
+      line: {color: strokes[idx], width: 2.5},
+      name: '\u03B1 = ' + alpha, mode: 'lines',
+    };
+  }).reverse();
+
+  const layout = {
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: 'rgba(0,0,0,0)',
+    font: { family: '"Source Serif 4", Georgia, serif', size: 14 },
+    xaxis: { title: {text: 'x\u2081'}, range: [-3, 3], zeroline: true, gridcolor: '#e0d9d1', linecolor: '#968a80', tickfont: {size: 12} },
+    yaxis: { title: {text: 'x\u2082'}, range: [-2.2, 2.2], zeroline: true, scaleanchor: 'x', gridcolor: '#e0d9d1', linecolor: '#968a80', tickfont: {size: 12} },
+    showlegend: true, legend: { x: 0.75, y: 1, font: {size: 13} },
+    margin: {t: 20, b: 50, l: 55, r: 20},
+  };
+  Plotly.newPlot('fig-sublevel-sets', tracesFilled, layout, plotlyConfig);
+});
+</script>
+<p>We now have a complete toolkit for recognizing and building convex functions: three equivalent characterizations (chord inequality, first-order condition, Hessian test), a library of preservation rules, and the connection back to convex sets through sublevel sets. In the next chapter, we assemble these ingredients into the formal framework of convex optimization problems — standard forms, duality theory, and KKT optimality conditions — where the payoff of convexity becomes fully apparent.</p>
+</section>
+<section id="summary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
+<ul>
+<li><strong>Convex functions.</strong> A function <span class="math inline">f</span> is convex if <span class="math inline">f(\lambda x + (1-\lambda)y) \leq \lambda f(x) + (1-\lambda)f(y)</span>; equivalently, its epigraph is a convex set. First-order condition: <span class="math inline">f(y) \geq f(x) + \nabla f(x)^\top(y-x)</span>; second-order condition: <span class="math inline">\nabla^2 f(x) \succeq 0</span>.</li>
+<li><strong>Preservation rules.</strong> Nonnegative weighted sums, compositions with affine maps, and pointwise suprema of convex functions remain convex — these rules let us verify convexity of complex objectives without computing the Hessian.</li>
+<li><strong>Key consequence.</strong> For convex functions, <span class="math inline">\nabla f(x^*) = 0</span> implies <span class="math inline">x^*</span> is a global minimizer. This is why convex optimization is tractable: every local minimum is a global minimum.</li>
+<li><strong>Sublevel sets.</strong> Every sublevel set <span class="math inline">\{x : f(x) \leq \alpha\}</span> of a convex function is convex, which guarantees that the feasible region of a convex inequality constraint is a convex set.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../lectures/03-convex-sets.html" class="pagination-link" aria-label="Convex Sets">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Convex Sets</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../lectures/05-convex-optimization.html" class="pagination-link" aria-label="Convex Optimization">
+        <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Convex Optimization</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+const figFontHeading = '"Crimson Pro", Georgia, serif';
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
+  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
+];
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

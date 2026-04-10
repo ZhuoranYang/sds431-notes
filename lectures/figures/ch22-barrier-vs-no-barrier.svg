@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 340" width="700" height="340">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#3d352f"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="350" y="28" text-anchor="middle" font-size="16" font-weight="bold">Without vs With Log Barrier</text>
+
+  <!-- === Left: No barrier === -->
+  <text x="185" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#b56b6b">Without barrier</text>
+
+  <!-- Feasible region -->
+  <rect x="60" y="100" width="250" height="180" rx="4" fill="#7a9a7e" fill-opacity="0.08" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="185" y="118" text-anchor="middle" font-size="11" fill="#7a9a7e">feasible region</text>
+
+  <!-- Newton iterates escaping -->
+  <circle cx="150" cy="180" r="3" fill="#7b97ad"/>
+  <text x="140" y="175" font-size="10" fill="#7b97ad">𝑥₀</text>
+  <circle cx="200" cy="160" r="3" fill="#7b97ad"/>
+  <text x="190" y="155" font-size="10" fill="#7b97ad">𝑥₁</text>
+  <circle cx="280" cy="140" r="3" fill="#b56b6b"/>
+  <text x="270" y="135" font-size="10" fill="#b56b6b">𝑥₂</text>
+  <!-- Escaping point -->
+  <circle cx="340" cy="120" r="4" fill="#b56b6b"/>
+  <text x="345" y="115" font-size="10" fill="#b56b6b">𝑥₃ (infeasible!)</text>
+
+  <!-- Path -->
+  <polyline points="150,180 200,160 280,140 340,120" fill="none" stroke="#b56b6b" stroke-width="1.5" stroke-dasharray="4 3"/>
+
+  <!-- === Right: With barrier === -->
+  <text x="525" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#7a9a7e">With log barrier</text>
+
+  <!-- Feasible region -->
+  <rect x="400" y="100" width="250" height="180" rx="4" fill="#7a9a7e" fill-opacity="0.08" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="525" y="118" text-anchor="middle" font-size="11" fill="#7a9a7e">feasible region</text>
+
+  <!-- Barrier repulsive force (wavy lines near boundary) -->
+  <path d="M 405,130 Q 410,135 405,140 Q 400,145 405,150 Q 410,155 405,160 Q 400,165 405,170 Q 410,175 405,180 Q 400,185 405,190 Q 410,195 405,200 Q 400,205 405,210 Q 410,215 405,220 Q 400,225 405,230 Q 410,235 405,240 Q 400,245 405,250 Q 410,255 405,260 Q 400,265 405,270" fill="none" stroke="#b8995e" stroke-width="0.8" opacity="0.5"/>
+  <path d="M 645,130 Q 640,135 645,140 Q 650,145 645,150 Q 640,155 645,160 Q 650,165 645,170 Q 640,175 645,180 Q 650,185 645,190 Q 640,195 645,200 Q 650,205 645,210" fill="none" stroke="#b8995e" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- Newton iterates staying inside -->
+  <circle cx="490" cy="200" r="3" fill="#7b97ad"/>
+  <text x="480" y="195" font-size="10" fill="#7b97ad">𝑥₀</text>
+  <circle cx="530" cy="185" r="3" fill="#7b97ad"/>
+  <text x="535" y="180" font-size="10" fill="#7b97ad">𝑥₁</text>
+  <circle cx="555" cy="175" r="3" fill="#7a9a7e"/>
+  <text x="560" y="170" font-size="10" fill="#7a9a7e">𝑥₂</text>
+  <circle cx="570" cy="168" r="3" fill="#7a9a7e"/>
+  <text x="575" y="163" font-size="10" fill="#7a9a7e">𝑥₃ (inside!)</text>
+
+  <!-- Path -->
+  <polyline points="490,200 530,185 555,175 570,168" fill="none" stroke="#7a9a7e" stroke-width="1.5"/>
+
+  <!-- Barrier label -->
+  <text x="525" y="255" text-anchor="middle" font-size="11" fill="#b8995e">barrier repels from boundary</text>
+</svg>

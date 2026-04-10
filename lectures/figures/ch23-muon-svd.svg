@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 240" width="680" height="240">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#968a80"/>
+    </marker>
+  </defs>
+
+  <text x="340" y="24" text-anchor="middle" font-size="16" font-weight="bold">Muon: SVD Orthogonalization</text>
+
+  <!-- G = U Σ V^T -->
+  <rect x="15" y="55" width="70" height="75" rx="4" fill="#7b97ad" fill-opacity="0.12" stroke="#7b97ad" stroke-width="1.5"/>
+  <text x="50" y="98" text-anchor="middle" font-size="14" fill="#7b97ad" font-weight="bold">𝐺</text>
+
+  <text x="100" y="98" text-anchor="middle" font-size="16" fill="#3d352f">=</text>
+
+  <!-- U -->
+  <rect x="115" y="55" width="55" height="75" rx="4" fill="#7a9a7e" fill-opacity="0.12" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="142" y="98" text-anchor="middle" font-size="14" fill="#7a9a7e" font-weight="bold">𝑈</text>
+
+  <!-- Σ -->
+  <rect x="180" y="60" width="55" height="55" rx="4" fill="#b8995e" fill-opacity="0.15" stroke="#b8995e" stroke-width="1.5"/>
+  <text x="207" y="93" text-anchor="middle" font-size="14" fill="#b8995e" font-weight="bold">𝛴</text>
+
+  <!-- V^T -->
+  <rect x="245" y="60" width="70" height="55" rx="4" fill="#907ea0" fill-opacity="0.12" stroke="#907ea0" stroke-width="1.5"/>
+  <text x="280" y="93" text-anchor="middle" font-size="14" fill="#907ea0" font-weight="bold">𝑉&#x1D40;</text>
+
+  <!-- Arrow to replacement -->
+  <line x1="330" y1="90" x2="370" y2="90" stroke="#b56b6b" stroke-width="2.5" marker-end="url(#arr)"/>
+  <text x="350" y="80" text-anchor="middle" font-size="12" fill="#b56b6b" font-weight="bold">replace</text>
+
+  <!-- Muon update = U I V^T = U V^T -->
+  <!-- U -->
+  <rect x="385" y="55" width="55" height="75" rx="4" fill="#7a9a7e" fill-opacity="0.12" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="412" y="98" text-anchor="middle" font-size="14" fill="#7a9a7e" font-weight="bold">𝑈</text>
+
+  <!-- I (replacing Σ) -->
+  <rect x="450" y="60" width="55" height="55" rx="4" fill="#7a9a7e" fill-opacity="0.2" stroke="#7a9a7e" stroke-width="2"/>
+  <text x="477" y="93" text-anchor="middle" font-size="14" fill="#7a9a7e" font-weight="bold">𝐼</text>
+
+  <!-- V^T -->
+  <rect x="515" y="60" width="70" height="55" rx="4" fill="#907ea0" fill-opacity="0.12" stroke="#907ea0" stroke-width="1.5"/>
+  <text x="550" y="93" text-anchor="middle" font-size="14" fill="#907ea0" font-weight="bold">𝑉&#x1D40;</text>
+
+  <text x="595" y="93" text-anchor="middle" font-size="16" fill="#3d352f">=</text>
+
+  <!-- Result: UV^T -->
+  <rect x="615" y="55" width="55" height="75" rx="4" fill="#b56b6b" fill-opacity="0.12" stroke="#b56b6b" stroke-width="2"/>
+  <text x="642" y="98" text-anchor="middle" font-size="14" fill="#b56b6b" font-weight="bold">𝑈𝑉&#x1D40;</text>
+
+  <!-- Annotation -->
+  <text x="207" y="140" text-anchor="middle" font-size="11" fill="#b8995e">singular values</text>
+  <text x="477" y="140" text-anchor="middle" font-size="11" fill="#7a9a7e">all ones</text>
+
+  <!-- Bottom explanation -->
+  <text x="340" y="180" text-anchor="middle" font-size="12" fill="#3d352f">Update: 𝑊 := 𝑊 - 𝜂 𝑈𝑉&#x1D40; (orthogonal matrix, ||𝑈𝑉&#x1D40;||_op = 1)</text>
+  <text x="340" y="200" text-anchor="middle" font-size="11" fill="#968a80">Uniform step across all singular directions -- no direction dominates</text>
+</svg>

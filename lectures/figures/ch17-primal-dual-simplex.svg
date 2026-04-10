@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 340" width="700" height="340">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr-blue" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#7b97ad"/>
+    </marker>
+    <marker id="arr-rose" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#b56b6b"/>
+    </marker>
+  </defs>
+
+  <text x="350" y="28" text-anchor="middle" font-size="16" font-weight="bold">Primal Simplex vs Dual Simplex</text>
+
+  <!-- === Left: Primal Simplex === -->
+  <text x="175" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#7b97ad">Primal Simplex</text>
+
+  <!-- Polytope -->
+  <polygon points="60,270 50,130 150,70 270,90 290,210 230,280" fill="#7a9a7e" fill-opacity="0.08" stroke="#7a9a7e" stroke-width="1.5"/>
+
+  <!-- Vertices -->
+  <circle cx="60" cy="270" r="4" fill="#968a80"/>
+  <circle cx="50" cy="130" r="4" fill="#968a80"/>
+  <circle cx="150" cy="70" r="5" fill="#b56b6b"/>
+  <circle cx="270" cy="90" r="4" fill="#968a80"/>
+  <circle cx="290" cy="210" r="4" fill="#968a80"/>
+  <circle cx="230" cy="280" r="6" fill="#7b97ad"/>
+
+  <!-- Simplex path -->
+  <polyline points="230,280 290,210 270,90 150,70" fill="none" stroke="#7b97ad" stroke-width="2.5" marker-end="url(#arr-blue)"/>
+
+  <text x="240" y="300" font-size="10" fill="#7b97ad">start (feasible)</text>
+  <text x="145" y="56" text-anchor="middle" font-size="10" fill="#b56b6b" font-weight="bold">𝑥* (optimal)</text>
+
+  <!-- Property box -->
+  <rect x="40" y="290" width="270" height="38" rx="5" fill="#7b97ad" fill-opacity="0.06" stroke="#7b97ad" stroke-width="0.8"/>
+  <text x="175" y="306" text-anchor="middle" font-size="10" fill="#7b97ad">Maintains primal feasibility</text>
+  <text x="175" y="320" text-anchor="middle" font-size="10" fill="#7b97ad">Pivots toward dual feasibility (optimality)</text>
+
+  <!-- Divider -->
+  <line x1="350" y1="45" x2="350" y2="330" stroke="#968a80" stroke-width="0.5" stroke-dasharray="4 3"/>
+
+  <!-- === Right: Dual Simplex === -->
+  <text x="525" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#b56b6b">Dual Simplex</text>
+
+  <!-- Polytope (same shape) -->
+  <polygon points="410,270 400,130 500,70 620,90 640,210 580,280" fill="#7a9a7e" fill-opacity="0.08" stroke="#7a9a7e" stroke-width="1.5"/>
+
+  <!-- Vertices -->
+  <circle cx="410" cy="270" r="4" fill="#968a80"/>
+  <circle cx="400" cy="130" r="4" fill="#968a80"/>
+  <circle cx="500" cy="70" r="5" fill="#7a9a7e"/>
+  <circle cx="620" cy="90" r="6" fill="#b56b6b"/>
+  <circle cx="640" cy="210" r="4" fill="#968a80"/>
+  <circle cx="580" cy="280" r="4" fill="#968a80"/>
+
+  <!-- Dual simplex path (starts from "super-optimal" infeasible basis) -->
+  <polyline points="620,90 500,70" fill="none" stroke="#b56b6b" stroke-width="2.5" marker-end="url(#arr-rose)"/>
+
+  <text x="635" y="80" font-size="10" fill="#b56b6b">start (dual feasible)</text>
+  <text x="495" y="56" text-anchor="middle" font-size="10" fill="#7a9a7e" font-weight="bold">𝑥* (optimal)</text>
+
+  <!-- Property box -->
+  <rect x="390" y="290" width="270" height="38" rx="5" fill="#b56b6b" fill-opacity="0.06" stroke="#b56b6b" stroke-width="0.8"/>
+  <text x="525" y="306" text-anchor="middle" font-size="10" fill="#b56b6b">Maintains dual feasibility (reduced costs)</text>
+  <text x="525" y="320" text-anchor="middle" font-size="10" fill="#b56b6b">Pivots toward primal feasibility</text>
+
+  <!-- Common optimal point label -->
+  <text x="350" y="340" text-anchor="middle" font-size="11" fill="#7a9a7e" font-weight="bold">Both converge to same optimum</text>
+</svg>

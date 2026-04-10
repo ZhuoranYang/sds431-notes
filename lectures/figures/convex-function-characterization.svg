@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 320" width="750" height="320">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#3d352f"/>
+    </marker>
+  </defs>
+
+  <text x="375" y="24" text-anchor="middle" font-size="16" font-weight="bold">Three Characterizations of Convex Functions</text>
+
+  <!-- === (a) First-order: tangent line below === -->
+  <text x="125" y="55" text-anchor="middle" font-size="13" font-weight="bold" fill="#7b97ad">(a) First-order</text>
+
+  <!-- Axes -->
+  <line x1="30" y1="240" x2="220" y2="240" stroke="#3d352f" stroke-width="0.8"/>
+  <line x1="30" y1="240" x2="30" y2="75" stroke="#3d352f" stroke-width="0.8"/>
+
+  <!-- Convex curve -->
+  <path d="M 40,110 Q 100,230 210,90" fill="none" stroke="#7b97ad" stroke-width="2"/>
+
+  <!-- Tangent line at a point -->
+  <line x1="50" y1="210" x2="200" y2="125" stroke="#b8995e" stroke-width="1.2" stroke-dasharray="4 2"/>
+
+  <!-- Point of tangency -->
+  <circle cx="95" cy="185" r="3.5" fill="#7b97ad"/>
+  <text x="80" y="200" font-size="10" fill="#7b97ad">𝑥₀</text>
+
+  <!-- Label -->
+  <text x="125" y="265" text-anchor="middle" font-size="11" fill="#968a80">𝑓(𝑦) >= 𝑓(𝑥) + ∇𝑓(𝑥)&#x1D40;(𝑦-𝑥)</text>
+  <text x="125" y="280" text-anchor="middle" font-size="10" fill="#968a80">tangent always below</text>
+
+  <!-- === (b) Second-order: PSD Hessian === -->
+  <text x="375" y="55" text-anchor="middle" font-size="13" font-weight="bold" fill="#7a9a7e">(b) Second-order</text>
+
+  <!-- Axes -->
+  <line x1="280" y1="240" x2="470" y2="240" stroke="#3d352f" stroke-width="0.8"/>
+  <line x1="280" y1="240" x2="280" y2="75" stroke="#3d352f" stroke-width="0.8"/>
+
+  <!-- Bowl shape (convex function) -->
+  <path d="M 290,130 Q 375,235 460,100" fill="none" stroke="#7a9a7e" stroke-width="2"/>
+
+  <!-- Curvature arrows (upward curving) -->
+  <path d="M 330,195 Q 350,210 370,195" fill="none" stroke="#b8995e" stroke-width="1.5"/>
+  <text x="350" y="225" text-anchor="middle" font-size="10" fill="#b8995e">curves up</text>
+
+  <!-- Minimum point -->
+  <circle cx="375" cy="210" r="3.5" fill="#7a9a7e"/>
+
+  <!-- Label -->
+  <text x="375" y="265" text-anchor="middle" font-size="11" fill="#968a80">∇&#xb2;𝑓(𝑥) ⪰ 0</text>
+  <text x="375" y="280" text-anchor="middle" font-size="10" fill="#968a80">Hessian is PSD</text>
+
+  <!-- === (c) Epigraph is convex set === -->
+  <text x="625" y="55" text-anchor="middle" font-size="13" font-weight="bold" fill="#b56b6b">(c) Epigraph</text>
+
+  <!-- Axes -->
+  <line x1="530" y1="240" x2="720" y2="240" stroke="#3d352f" stroke-width="0.8"/>
+  <line x1="530" y1="240" x2="530" y2="75" stroke="#3d352f" stroke-width="0.8"/>
+
+  <!-- Convex curve -->
+  <path d="M 540,130 Q 625,235 710,100" fill="none" stroke="#b56b6b" stroke-width="2"/>
+
+  <!-- Epigraph shading (above the curve) -->
+  <path d="M 540,130 Q 625,235 710,100 L 710,75 L 540,75 Z" fill="#b56b6b" fill-opacity="0.08"/>
+
+  <!-- Label for epigraph -->
+  <text x="640" y="100" font-size="11" fill="#b56b6b">epi 𝑓</text>
+
+  <!-- Arrow pointing to shaded region -->
+  <text x="625" y="265" text-anchor="middle" font-size="11" fill="#968a80">epi 𝑓 = {(𝑥,𝑡) : 𝑡 >= 𝑓(𝑥)}</text>
+  <text x="625" y="280" text-anchor="middle" font-size="10" fill="#968a80">epigraph is a convex set</text>
+</svg>

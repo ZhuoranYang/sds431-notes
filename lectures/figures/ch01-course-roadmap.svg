@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 620" width="800" height="620">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#968a80"/>
+    </marker>
+  </defs>
+
+  <text x="400" y="28" text-anchor="middle" font-size="18" font-weight="bold">S&amp;DS 431/631 Course Roadmap</text>
+
+  <!-- ============ Part I: Preparation ============ -->
+  <rect x="20" y="48" width="760" height="78" rx="10" fill="#7b97ad" fill-opacity="0.06" stroke="#7b97ad" stroke-width="1"/>
+  <text x="40" y="66" font-size="13" fill="#7b97ad" font-weight="bold">Part I: Preparation</text>
+
+  <rect x="40" y="78" width="170" height="38" rx="6" fill="#f9f6f0" stroke="#7b97ad" stroke-width="1.5"/>
+  <text x="125" y="95" text-anchor="middle" font-size="11" fill="#7b97ad">Ch 1. Introduction</text>
+  <text x="125" y="108" text-anchor="middle" font-size="10" fill="#968a80">course overview</text>
+
+  <rect x="230" y="78" width="190" height="38" rx="6" fill="#f9f6f0" stroke="#7b97ad" stroke-width="1.5"/>
+  <text x="325" y="95" text-anchor="middle" font-size="11" fill="#7b97ad">Ch 2. Math Background</text>
+  <text x="325" y="108" text-anchor="middle" font-size="10" fill="#968a80">linear alg, calculus, prob</text>
+
+  <!-- Arrow within Part I -->
+  <line x1="210" y1="97" x2="228" y2="97" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- ============ Part II: Convex Optimization Basics ============ -->
+  <rect x="20" y="136" width="760" height="78" rx="10" fill="#7a9a7e" fill-opacity="0.06" stroke="#7a9a7e" stroke-width="1"/>
+  <text x="40" y="154" font-size="13" fill="#7a9a7e" font-weight="bold">Part II: Convex Optimization Basics</text>
+
+  <rect x="40" y="166" width="160" height="38" rx="6" fill="#f9f6f0" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="120" y="183" text-anchor="middle" font-size="11" fill="#7a9a7e">Ch 3. Convex Sets</text>
+  <text x="120" y="196" text-anchor="middle" font-size="10" fill="#968a80">polyhedra, cones, hulls</text>
+
+  <rect x="220" y="166" width="190" height="38" rx="6" fill="#f9f6f0" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="315" y="183" text-anchor="middle" font-size="11" fill="#7a9a7e">Ch 4. Convex Functions</text>
+  <text x="315" y="196" text-anchor="middle" font-size="10" fill="#968a80">1st/2nd order, operations</text>
+
+  <rect x="430" y="166" width="220" height="38" rx="6" fill="#f9f6f0" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="540" y="183" text-anchor="middle" font-size="11" fill="#7a9a7e">Ch 5. Convex Optimization</text>
+  <text x="540" y="196" text-anchor="middle" font-size="10" fill="#968a80">LP/QP/SDP, duality, KKT</text>
+
+  <!-- Arrows within Part II -->
+  <line x1="200" y1="185" x2="218" y2="185" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="410" y1="185" x2="428" y2="185" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- ============ Part III: First-Order Methods ============ -->
+  <rect x="20" y="224" width="540" height="78" rx="10" fill="#b8995e" fill-opacity="0.06" stroke="#b8995e" stroke-width="1"/>
+  <text x="40" y="242" font-size="13" fill="#b8995e" font-weight="bold">Part III: First-Order Methods</text>
+
+  <rect x="40" y="254" width="130" height="38" rx="6" fill="#f9f6f0" stroke="#b8995e" stroke-width="1.5"/>
+  <text x="105" y="271" text-anchor="middle" font-size="11" fill="#b8995e">Ch 6. GD</text>
+  <text x="105" y="284" text-anchor="middle" font-size="10" fill="#968a80">convergence rates</text>
+
+  <rect x="190" y="254" width="165" height="38" rx="6" fill="#f9f6f0" stroke="#b8995e" stroke-width="1.5"/>
+  <text x="272" y="271" text-anchor="middle" font-size="11" fill="#b8995e">Ch 7. Momentum/Adam</text>
+  <text x="272" y="284" text-anchor="middle" font-size="10" fill="#968a80">SGD, adaptive, proximal</text>
+
+  <rect x="375" y="254" width="170" height="38" rx="6" fill="#f9f6f0" stroke="#b8995e" stroke-width="1.5"/>
+  <text x="460" y="271" text-anchor="middle" font-size="11" fill="#b8995e">Ch 8. Constrained</text>
+  <text x="460" y="284" text-anchor="middle" font-size="10" fill="#968a80">PGD, Frank-Wolfe</text>
+
+  <!-- Arrows within Part III -->
+  <line x1="170" y1="273" x2="188" y2="273" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="355" y1="273" x2="373" y2="273" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- ============ Part IV: Linear Programming ============ -->
+  <rect x="20" y="312" width="760" height="85" rx="10" fill="#b56b6b" fill-opacity="0.06" stroke="#b56b6b" stroke-width="1"/>
+  <text x="40" y="330" font-size="13" fill="#b56b6b" font-weight="bold">Part IV: Linear Programming</text>
+
+  <rect x="40" y="342" width="115" height="44" rx="6" fill="#f9f6f0" stroke="#b56b6b" stroke-width="1.5"/>
+  <text x="97" y="360" text-anchor="middle" font-size="11" fill="#b56b6b">Ch 9. LP Geom</text>
+  <text x="97" y="374" text-anchor="middle" font-size="10" fill="#968a80">polytopes, BFS</text>
+
+  <rect x="170" y="342" width="115" height="44" rx="6" fill="#f9f6f0" stroke="#b56b6b" stroke-width="1.5"/>
+  <text x="227" y="360" text-anchor="middle" font-size="11" fill="#b56b6b">Ch 10. Simplex</text>
+  <text x="227" y="374" text-anchor="middle" font-size="10" fill="#968a80">pivoting, tableau</text>
+
+  <rect x="300" y="342" width="120" height="44" rx="6" fill="#f9f6f0" stroke="#b56b6b" stroke-width="1.5"/>
+  <text x="360" y="360" text-anchor="middle" font-size="11" fill="#b56b6b">Ch 11. LP Duality</text>
+  <text x="360" y="374" text-anchor="middle" font-size="10" fill="#968a80">strong, complem.</text>
+
+  <rect x="435" y="342" width="135" height="44" rx="6" fill="#f9f6f0" stroke="#b56b6b" stroke-width="1.5"/>
+  <text x="502" y="360" text-anchor="middle" font-size="11" fill="#b56b6b">Ch 12. Dual Simplex</text>
+  <text x="502" y="374" text-anchor="middle" font-size="10" fill="#968a80">dual pivoting</text>
+
+  <rect x="585" y="342" width="180" height="44" rx="6" fill="#f9f6f0" stroke="#b56b6b" stroke-width="1.5"/>
+  <text x="675" y="360" text-anchor="middle" font-size="11" fill="#b56b6b">Ch 13. LP Applications</text>
+  <text x="675" y="374" text-anchor="middle" font-size="10" fill="#968a80">flow, games, robust</text>
+
+  <!-- Arrows within Part IV -->
+  <line x1="155" y1="364" x2="168" y2="364" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="285" y1="364" x2="298" y2="364" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="420" y1="364" x2="433" y2="364" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="570" y1="364" x2="583" y2="364" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- ============ Part V: Second-Order & Interior Point ============ -->
+  <rect x="20" y="407" width="560" height="78" rx="10" fill="#907ea0" fill-opacity="0.06" stroke="#907ea0" stroke-width="1"/>
+  <text x="40" y="425" font-size="13" fill="#907ea0" font-weight="bold">Part V: Second-Order &amp; Interior Point Methods</text>
+
+  <rect x="40" y="437" width="155" height="38" rx="6" fill="#f9f6f0" stroke="#907ea0" stroke-width="1.5"/>
+  <text x="117" y="454" text-anchor="middle" font-size="11" fill="#907ea0">Ch 14. Newton</text>
+  <text x="117" y="467" text-anchor="middle" font-size="10" fill="#968a80">2nd-order, Shampoo</text>
+
+  <rect x="215" y="437" width="160" height="38" rx="6" fill="#f9f6f0" stroke="#907ea0" stroke-width="1.5"/>
+  <text x="295" y="454" text-anchor="middle" font-size="11" fill="#907ea0">Ch 15. Ellipsoid</text>
+  <text x="295" y="467" text-anchor="middle" font-size="10" fill="#968a80">polynomial LP</text>
+
+  <rect x="395" y="437" width="170" height="38" rx="6" fill="#f9f6f0" stroke="#907ea0" stroke-width="1.5"/>
+  <text x="480" y="454" text-anchor="middle" font-size="11" fill="#907ea0">Ch 16. Interior Point</text>
+  <text x="480" y="467" text-anchor="middle" font-size="10" fill="#968a80">barrier method</text>
+
+  <!-- Arrows within Part V -->
+  <line x1="195" y1="456" x2="213" y2="456" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+  <line x1="375" y1="456" x2="393" y2="456" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+
+  <!-- ============ Part VI: Modern Computation Models ============ -->
+  <rect x="20" y="495" width="760" height="78" rx="10" fill="#ad8480" fill-opacity="0.06" stroke="#ad8480" stroke-width="1"/>
+  <text x="40" y="513" font-size="13" fill="#ad8480" font-weight="bold">Part VI: Modern Computation Models</text>
+
+  <rect x="40" y="523" width="215" height="38" rx="6" fill="#f9f6f0" stroke="#ad8480" stroke-width="1.5"/>
+  <text x="147" y="540" text-anchor="middle" font-size="11" fill="#ad8480">Ch 17. Diffusion Models</text>
+  <text x="147" y="553" text-anchor="middle" font-size="10" fill="#968a80">score matching, DDPM</text>
+
+  <rect x="280" y="523" width="210" height="38" rx="6" fill="#f9f6f0" stroke="#ad8480" stroke-width="1.5"/>
+  <text x="385" y="540" text-anchor="middle" font-size="11" fill="#ad8480">Ch 18. Transformers</text>
+  <text x="385" y="553" text-anchor="middle" font-size="10" fill="#968a80">attention, optimization</text>
+
+</svg>

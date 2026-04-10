@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>6&nbsp; Gradient Descent – S&amp;DS 431/631 — Optimization and Computation</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../lectures/07-momentum-adaptive-sgd.html" rel="next">
+<link href="../lectures/05-convex-optimization.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-1db14e1c4cc35bfe1d9badc9e4551eed.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-434abab37f7d394f280d9c89d7fbc13f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html">First-Order Methods</a></li><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">S&amp;DS 431/631 — Optimization and Computation</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Preparation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/01-introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction and Motivation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/02-math-background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Background</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Convex Optimization Basics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/03-convex-sets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Convex Sets</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/04-convex-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Convex Functions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/05-convex-optimization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Convex Optimization</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">First-Order Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Linear Programming</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/09-lp-formulation-geometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">LP Formulation and Geometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/10-simplex-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">The Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/11-lp-duality.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">LP Duality</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/12-dual-simplex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The Dual Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/13-lp-applications.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">LP Applications and Game Theory</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Second-Order and Interior Point Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/15-ellipsoid-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Ellipsoid Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/16-interior-point-methods.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Interior Point Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Modern Computation Models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/17-diffusion-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Diffusion Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/18-transformers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Transformers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/summary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Course Summary</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup"><span class="header-section-number">6.1</span> Unconstrained Optimization Setup</a>
+  <ul class="collapse">
+  <li><a href="#stationary-points" id="toc-stationary-points" class="nav-link" data-scroll-target="#stationary-points"><span class="header-section-number">6.1.1</span> Stationary Points</a></li>
+  <li><a href="#motivation" id="toc-motivation" class="nav-link" data-scroll-target="#motivation"><span class="header-section-number">6.1.2</span> Motivation for Iterative Methods</a></li>
+  <li><a href="#iterative-form" id="toc-iterative-form" class="nav-link" data-scroll-target="#iterative-form"><span class="header-section-number">6.1.3</span> General Iterative Framework</a></li>
+  </ul></li>
+  <li><a href="#gradient-based" id="toc-gradient-based" class="nav-link" data-scroll-target="#gradient-based"><span class="header-section-number">6.2</span> Descent Directions and the Gradient</a>
+  <ul class="collapse">
+  <li><a href="#steepest-descent-lemma" id="toc-steepest-descent-lemma" class="nav-link" data-scroll-target="#steepest-descent-lemma"><span class="header-section-number">6.2.1</span> Why the Negative Gradient?</a></li>
+  <li><a href="#descent-directions" id="toc-descent-directions" class="nav-link" data-scroll-target="#descent-directions"><span class="header-section-number">6.2.2</span> General Descent Directions</a></li>
+  <li><a href="#descent-lemma" id="toc-descent-lemma" class="nav-link" data-scroll-target="#descent-lemma"><span class="header-section-number">6.2.3</span> Descent Condition</a></li>
+  <li><a href="#pd-lemma" id="toc-pd-lemma" class="nav-link" data-scroll-target="#pd-lemma"><span class="header-section-number">6.2.4</span> Positive Definite Scaling</a></li>
+  </ul></li>
+  <li><a href="#choices-directions" id="toc-choices-directions" class="nav-link" data-scroll-target="#choices-directions"><span class="header-section-number">6.3</span> Common Choices of Descent Directions</a>
+  <ul class="collapse">
+  <li><a href="#steepest-l2" id="toc-steepest-l2" class="nav-link" data-scroll-target="#steepest-l2"><span class="header-section-number">6.3.1</span> Steepest Descent with <span class="math inline">\ell_2</span>-norm (Gradient Descent)</a></li>
+  <li><a href="#gd-oscillation" id="toc-gd-oscillation" class="nav-link" data-scroll-target="#gd-oscillation"><span class="header-section-number">6.3.2</span> Oscillation Analysis</a></li>
+  <li><a href="#steepest-l1" id="toc-steepest-l1" class="nav-link" data-scroll-target="#steepest-l1"><span class="header-section-number">6.3.3</span> Steepest Descent with <span class="math inline">\ell_1</span>-norm (Coordinate Descent)</a></li>
+  <li><a href="#sign-gd" id="toc-sign-gd" class="nav-link" data-scroll-target="#sign-gd"><span class="header-section-number">6.3.4</span> Steepest Descent with <span class="math inline">\ell_\infty</span>-norm (Sign Gradient Descent)</a></li>
+  <li><a href="#newton-direction" id="toc-newton-direction" class="nav-link" data-scroll-target="#newton-direction"><span class="header-section-number">6.3.5</span> Newton’s Method</a></li>
+  <li><a href="#diag-scaled" id="toc-diag-scaled" class="nav-link" data-scroll-target="#diag-scaled"><span class="header-section-number">6.3.6</span> Diagonally Scaled Steepest Descent</a></li>
+  </ul></li>
+  <li><a href="#step-sizes" id="toc-step-sizes" class="nav-link" data-scroll-target="#step-sizes"><span class="header-section-number">6.4</span> Choice of Step Sizes</a>
+  <ul class="collapse">
+  <li><a href="#constant-step" id="toc-constant-step" class="nav-link" data-scroll-target="#constant-step"><span class="header-section-number">6.4.1</span> Constant Step Size</a></li>
+  <li><a href="#diminishing-step" id="toc-diminishing-step" class="nav-link" data-scroll-target="#diminishing-step"><span class="header-section-number">6.4.2</span> Diminishing Step Size</a></li>
+  <li><a href="#line-search" id="toc-line-search" class="nav-link" data-scroll-target="#line-search"><span class="header-section-number">6.4.3</span> Line Search</a></li>
+  </ul></li>
+  <li><a href="#convergence-analysis" id="toc-convergence-analysis" class="nav-link" data-scroll-target="#convergence-analysis"><span class="header-section-number">6.5</span> Convergence Analysis of Gradient Descent</a>
+  <ul class="collapse">
+  <li><a href="#smoothness" id="toc-smoothness" class="nav-link" data-scroll-target="#smoothness"><span class="header-section-number">6.5.1</span> Smoothness: Bounding Curvature from Above</a></li>
+  <li><a href="#strong-convexity" id="toc-strong-convexity" class="nav-link" data-scroll-target="#strong-convexity"><span class="header-section-number">6.5.2</span> Strong Convexity: Bounding Curvature from Below</a></li>
+  <li><a href="#condition-number" id="toc-condition-number" class="nav-link" data-scroll-target="#condition-number"><span class="header-section-number">6.5.3</span> The Condition Number</a></li>
+  <li><a href="#descent-lemma-convergence" id="toc-descent-lemma-convergence" class="nav-link" data-scroll-target="#descent-lemma-convergence"><span class="header-section-number">6.5.4</span> The Descent Lemma</a></li>
+  <li><a href="#three-cases" id="toc-three-cases" class="nav-link" data-scroll-target="#three-cases"><span class="header-section-number">6.5.5</span> Three Convergence Cases</a></li>
+  <li><a href="#pl-condition" id="toc-pl-condition" class="nav-link" data-scroll-target="#pl-condition"><span class="header-section-number">6.5.6</span> The Polyak–Łojasiewicz Condition</a></li>
+  </ul></li>
+  <li><a href="#stopping-criteria" id="toc-stopping-criteria" class="nav-link" data-scroll-target="#stopping-criteria"><span class="header-section-number">6.6</span> Stopping Criteria</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html">First-Order Methods</a></li><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>So far we have developed a rich theory of optimization – convexity, duality, KKT conditions – that tells us <em>what</em> an optimal solution looks like. But how do we actually <em>find</em> one? For most problems of practical interest, closed-form solutions do not exist, and we must turn to iterative algorithms that start from an initial guess and progressively improve it.</p>
+<p>The most natural idea is to use the gradient. The gradient of a function at a point tells us the direction of steepest ascent; moving in the opposite direction decreases the function value. This simple principle – “follow the negative gradient” – is the basis of <strong>gradient descent</strong>, one of the most fundamental algorithms in all of computational mathematics. It is the workhorse of modern machine learning (training neural networks), statistics (fitting models), and scientific computing.</p>
+<p>But gradient descent is just one member of a larger family. By choosing different descent directions (coordinate descent, Newton’s method) and different step size strategies (constant, diminishing, line search), we obtain a rich design space of first-order and second-order methods with different tradeoffs between computational cost per iteration and convergence speed. Understanding this design space is essential for choosing the right algorithm in practice.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Companion Notebooks
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.</p>
+<ul>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/09-steepest-descent.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Steepest Descent</strong> — steepest descent on quadratics with varying condition numbers</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/10-gradient-descent-learning-rates.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Learning Rate Analysis</strong> — how learning rate and curvature interact in gradient descent convergence</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/17-gd-visualization.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>GD Visualization</strong> — animated gradient descent trajectories on various objective landscapes</li>
+</ul>
+</div>
+</div>
+<section id="setup" class="level2" data-number="6.1">
+<h2 data-number="6.1" class="anchored" data-anchor-id="setup"><span class="header-section-number">6.1</span> Unconstrained Optimization Setup</h2>
+<p>We consider the unconstrained optimization problem:</p>
+<p><span class="math display">\min_{x \in \mathbb{R}^n} f(x),</span></p>
+<p>where <span class="math inline">f</span> is continuously differentiable (<span class="math inline">f \in C^1</span>).</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Convexity and Local Minima
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>When <span class="math inline">f</span> is <strong>convex</strong>, global minimum = local minimum.</p>
+<p>In the unconstrained case, <span class="math inline">x^*</span> is a local minimum <span class="math inline">\iff</span> <span class="math inline">\nabla f(x^*) = 0</span>.</p>
+</div>
+</div>
+<section id="stationary-points" class="level3" data-number="6.1.1">
+<h3 data-number="6.1.1" class="anchored" data-anchor-id="stationary-points"><span class="header-section-number">6.1.1</span> Stationary Points</h3>
+<p>The key insight that connects calculus to optimization is that, for convex functions, the familiar condition “derivative equals zero” is both necessary and sufficient for optimality. This means that finding the minimum of a convex function reduces to finding a point where the gradient vanishes.</p>
+<div id="thm-optimality-convex" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 6.1 (Theorem 7.1 (Optimality Condition for Convex Functions))</strong></span> Let <span class="math inline">f</span> be convex and differentiable. Then <span class="math inline">x_0</span> is a local minimum of <span class="math inline">f</span> if and only if <span class="math inline">\nabla f(x_0) = 0</span>.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>(<span class="math inline">\Rightarrow</span>):</strong> Define a univariate function <span class="math inline">g(t) = f(x_0 - t \cdot \nabla f(x_0))</span>. Since <span class="math inline">x_0</span> is a local minimum of <span class="math inline">f</span>, <span class="math inline">t = 0</span> is a local minimum of <span class="math inline">g</span>. Therefore:</p>
+<p><span class="math display">0 = g'(t)\big|_{t=0} = -\|\nabla f(x_0)\|^2 \implies \nabla f(x_0) = 0.</span></p>
+<p><strong>(<span class="math inline">\Leftarrow</span>):</strong> On the other hand, if <span class="math inline">\nabla f(x_0) = 0</span>, then by the first-order characterization of convexity:</p>
+<p><span class="math display">f(x) \geq f(x_0) + \langle \nabla f(x_0),\, x - x_0 \rangle = f(x_0) + 0 = f(x_0) \quad \forall\, x \in \mathbb{R}^n,</span></p>
+<p>where the second equality uses <span class="math inline">\nabla f(x_0) = 0</span>. This shows <span class="math inline">x_0</span> is a global minimizer. Hence we conclude the proof. <span class="math inline">\blacksquare</span></p>
+</div>
+<p>For nonconvex functions, the condition <span class="math inline">\nabla f(x) = 0</span> does not guarantee a global minimum – it could also be a local minimum, a local maximum, or a saddle point. Nevertheless, finding stationary points is still the primary goal of first-order algorithms, since it is the best we can guarantee without convexity.</p>
+<div id="def-stationary-point" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 6.1 (Definition 7.2 (Stationary Point))</strong></span> For any differentiable <span class="math inline">f</span> (possibly nonconvex), <span class="math inline">x</span> is called a <strong>stationary point</strong> of <span class="math inline">f</span> if <span class="math inline">\nabla f(x) = 0</span>.</p>
+</div>
+</section>
+<section id="motivation" class="level3" data-number="6.1.2">
+<h3 data-number="6.1.2" class="anchored" data-anchor-id="motivation"><span class="header-section-number">6.1.2</span> Motivation for Iterative Methods</h3>
+<p>To minimize a convex and differentiable <span class="math inline">f</span>, it suffices to find a <strong>stationary point</strong>. Finding a stationary point is equivalent to solving the equation <span class="math inline">\nabla f(x) = 0</span>.</p>
+<p>This can be done by <strong>“local” algorithms</strong> — iterative algorithms that update using “local information” at each iterate:</p>
+<ul>
+<li><strong>Function value</strong> — zeroth-order information</li>
+<li><strong>Gradient</strong> — first-order information</li>
+<li><strong>Hessian</strong> — second-order information</li>
+</ul>
+</section>
+<section id="iterative-form" class="level3" data-number="6.1.3">
+<h3 data-number="6.1.3" class="anchored" data-anchor-id="iterative-form"><span class="header-section-number">6.1.3</span> General Iterative Framework</h3>
+<p>With the goal of finding a stationary point established, we now introduce the general iterative framework that all descent methods share. Every method we study in this chapter—gradient descent, coordinate descent, Newton’s method—is a special case of this template.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>The general form of the iterative algorithm is:</p>
+<p><span id="eq-iterative-update"><span class="math display">x^{k+1} = x^k + \alpha^k \cdot d^k \tag{6.1}</span></span></p>
+</div>
+</div>
+</div>
+<p>where we write <span class="math inline">k</span> as the superscript (iteration index):</p>
+<ul>
+<li><span class="math inline">k \in \{1, 2, \ldots\}</span>: index of the iteration number.</li>
+<li><span class="math inline">x^k \in \mathbb{R}^n</span>: current point (current iterate).</li>
+<li><span class="math inline">x^{k+1} \in \mathbb{R}^n</span>: next point.</li>
+<li><span class="math inline">d^k \in \mathbb{R}^n</span>: direction to move along at iteration <span class="math inline">k</span> (<strong>descent direction</strong>).</li>
+<li><span class="math inline">d^k</span> uses the local information at <span class="math inline">x^k</span>.</li>
+<li><span class="math inline">\alpha^k &gt; 0</span>: step size at iteration <span class="math inline">k</span>.</li>
+</ul>
+<p>The two design choices—the descent direction <span class="math inline">d^k</span> and the step size <span class="math inline">\alpha^k</span>—determine the algorithm’s behavior. The next several sections address these choices in turn: first, which directions guarantee descent; then, specific algorithmic instantiations; and finally, how to pick the step size.</p>
+</section>
+</section>
+<section id="gradient-based" class="level2" data-number="6.2">
+<h2 data-number="6.2" class="anchored" data-anchor-id="gradient-based"><span class="header-section-number">6.2</span> Descent Directions and the Gradient</h2>
+<p>The descent direction <span class="math inline">d^k</span> is based on the gradient <span class="math inline">\nabla f(x^k)</span> (and maybe other information such as the Hessian <span class="math inline">\nabla^2 f(x^k)</span>, previous gradients <span class="math inline">\{\nabla f(x^j)\}_{j &lt; k}</span>, etc.).</p>
+<p>The simplest case: <span class="math inline">d^k = -\nabla f(x^k)</span>. Why look at the gradient?</p>
+<section id="steepest-descent-lemma" class="level3" data-number="6.2.1">
+<h3 data-number="6.2.1" class="anchored" data-anchor-id="steepest-descent-lemma"><span class="header-section-number">6.2.1</span> Why the Negative Gradient?</h3>
+<p>Among all unit-norm directions, which one decreases the function value at the fastest rate? The following lemma shows that the answer is the normalized negative gradient – justifying the name “steepest descent.”</p>
+<div id="thm-steepest-descent" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 6.2 (Lemma 7.3 (Steepest Descent Direction))</strong></span> Assuming <span class="math inline">d \in B_2(1) = \{v \in \mathbb{R}^n \mid \|v\|_2 \leq 1\}</span>, the direction that decreases <span class="math inline">f</span> at the <strong>fastest rate</strong> within <span class="math inline">B_2(1)</span> is given by</p>
+<p><span id="eq-steepest-descent"><span class="math display">d^* = -\frac{\nabla f(x)}{\|\nabla f(x)\|_2}. \tag{6.2}</span></span></p>
+</div>
+<p>This lemma provides the theoretical justification for the gradient descent update (<a href="#eq-gradient-descent" class="quarto-xref">Equation&nbsp;<span>6.5</span></a>): among all unit-norm directions, the negative gradient decreases the function value at the fastest possible rate. This is why gradient descent is also called the “method of steepest descent.”</p>
+<p>The proof uses the Cauchy–Schwarz inequality to identify the minimizer of the directional derivative over the unit ball.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>Consider any search direction <span class="math inline">d</span>. The function value decrease is</p>
+<p><span class="math display">f(x) - f(x + \alpha \cdot d) =: g(\alpha;\, d).</span></p>
+<p>By the chain rule, the instantaneous rate of decrease at <span class="math inline">\alpha = 0</span> is</p>
+<p><span class="math display">g'(0;\, d) = -\langle \nabla f(x),\, d \rangle.</span></p>
+<p>To maximize this rate of decrease, we minimize <span class="math inline">\langle \nabla f(x), d \rangle</span> over unit-norm directions:</p>
+<p><span class="math display">\min_{d \in B_2(1)} \; d^\top \nabla f(x).</span></p>
+<p>By the Cauchy–Schwarz inequality, <span class="math inline">d^\top \nabla f(x) \geq -\|d\|_2 \cdot \|\nabla f(x)\|_2</span>, with equality when <span class="math inline">d</span> is a negative scalar multiple of <span class="math inline">\nabla f(x)</span>. Since <span class="math inline">\|d\|_2 \leq 1</span>, the minimizer is <span class="math inline">d^* = -\nabla f(x) / \|\nabla f(x)\|_2</span>. This completes the proof. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Magnitude of the Direction
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>When we talk about the search direction <span class="math inline">d</span>, its magnitude does not matter. <span class="math inline">5\,\nabla f(x)</span>, <span class="math inline">0.01\,\nabla f(x)</span>, <span class="math inline">\frac{\nabla f(x)}{\|f(x)\|}</span> are all in the same direction. We use the step size <span class="math inline">\alpha</span> to adjust the magnitude.</p>
+</div>
+</div>
+</section>
+<section id="descent-directions" class="level3" data-number="6.2.2">
+<h3 data-number="6.2.2" class="anchored" data-anchor-id="descent-directions"><span class="header-section-number">6.2.2</span> General Descent Directions</h3>
+<p>The negative gradient is the steepest descent direction, but it is not the only direction that decreases the function. Any direction that makes an acute angle with the negative gradient – equivalently, an obtuse angle with the gradient – will also decrease the objective for a sufficiently small step. This flexibility is important because alternative descent directions (such as Newton’s direction) can converge much faster in practice.</p>
+<div id="def-descent-direction" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 6.2 (Definition 7.4 (Descent Direction))</strong></span> For a given point <span class="math inline">x \in \mathbb{R}^n</span>, a direction <span class="math inline">d \in \mathbb{R}^n</span> is called a <strong>descent direction</strong> if there exists <span class="math inline">\bar{\alpha} &gt; 0</span> such that</p>
+<p><span class="math display">f(x + \alpha \cdot d) &lt; f(x) \qquad \forall\, \alpha \in (0, \bar{\alpha}).</span></p>
+<p>Intuitively, <span class="math inline">d</span> is a descent direction means we can move at least a small step along <span class="math inline">d</span> and decrease the objective function.</p>
+</div>
+</section>
+<section id="descent-lemma" class="level3" data-number="6.2.3">
+<h3 data-number="6.2.3" class="anchored" data-anchor-id="descent-lemma"><span class="header-section-number">6.2.3</span> Descent Condition</h3>
+<p>The following lemma gives a simple and checkable condition for a direction to be a descent direction: its inner product with the gradient must be negative.</p>
+<div id="thm-descent-condition" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 6.3 (Lemma 7.5 (Descent Condition))</strong></span> Consider a point <span class="math inline">x \in \mathbb{R}^n</span>. Any direction <span class="math inline">d</span> satisfying</p>
+<p><span id="eq-descent-condition"><span class="math display">\langle d, \nabla f(x) \rangle &lt; 0 \tag{6.3}</span></span></p>
+<p>is a descent direction. Geometrically, <span class="math inline">d</span> and <span class="math inline">\nabla f(x)</span> form an <strong>obtuse angle</strong>.</p>
+</div>
+<p>The descent condition (<a href="#eq-descent-condition" class="quarto-xref">Equation&nbsp;<span>6.3</span></a>) is more general than the steepest descent result (<a href="#eq-steepest-descent" class="quarto-xref">Equation&nbsp;<span>6.2</span></a>): it says that <em>any</em> direction making an obtuse angle with the gradient will decrease the function value. This flexibility is what allows us to use alternative descent directions (such as Newton’s direction or coordinate descent directions) that may converge faster than the steepest descent direction.</p>
+<div class="figure-container">
+  <div id="fig-descent-direction"></div>
+  <div class="figure-caption">Figure 7.1: Any direction forming an obtuse angle with the gradient is a descent direction. The half-space opposite to the gradient contains all descent directions.</div>
+</div>
+<div id="fig-descent-direction-svg" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-descent-direction-svg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch03-descent-direction.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;6.1: Descent directions: any vector d satisfying \langle d, \nabla f(x) \rangle < 0 is a descent direction. The shaded half-space shows all valid descent directions. The negative gradient -\nabla f(x) is the steepest descent direction, but choosing d = -B\nabla f(x) for a positive definite B (such as the inverse Hessian) can yield faster convergence."><img src="figures/ch03-descent-direction.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-descent-direction-svg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.1: Descent directions: any vector <span class="math inline">d</span> satisfying <span class="math inline">\langle d, \nabla f(x) \rangle &lt; 0</span> is a descent direction. The shaded half-space shows all valid descent directions. The negative gradient <span class="math inline">-\nabla f(x)</span> is the steepest descent direction, but choosing <span class="math inline">d = -B\nabla f(x)</span> for a positive definite <span class="math inline">B</span> (such as the inverse Hessian) can yield faster convergence.
+</figcaption>
+</figure>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>Define <span class="math inline">g(\alpha) = f(x + \alpha \cdot d)</span>. By Taylor expansion at <span class="math inline">\alpha = 0</span>:</p>
+<p><span class="math display">g(\alpha) = g(0) + g'(0) \cdot \alpha + o(\alpha) \qquad \text{where } \lim_{\alpha \to 0} \frac{|o(\alpha)|}{\alpha} = 0.</span></p>
+<p>Therefore:</p>
+<p><span class="math display">f(x + \alpha \cdot d) - f(x) = \alpha \cdot \langle d,\, \nabla f(x) \rangle + o(\alpha),</span></p>
+<p>where the leading term <span class="math inline">\alpha \cdot \langle d, \nabla f(x) \rangle</span> is negative by assumption. Since <span class="math inline">\frac{|o(\alpha)|}{\alpha} \to 0</span>, the higher-order remainder becomes negligible for small <span class="math inline">\alpha</span>. Specifically, there exists <span class="math inline">\bar{\alpha} &gt; 0</span> such that</p>
+<p><span class="math display">\frac{|o(\alpha)|}{\alpha} &lt; |\langle d,\, \nabla f(x) \rangle| \qquad \forall\, \alpha \in (0, \bar{\alpha}).</span></p>
+<p>Therefore, for all <span class="math inline">\alpha \in (0, \bar{\alpha})</span>:</p>
+<p><span class="math display">f(x + \alpha \cdot d) - f(x) = \alpha \cdot \langle d,\, \nabla f(x) \rangle + o(\alpha) &lt; 0,</span></p>
+<p>which shows that <span class="math inline">d</span> is a descent direction. This completes the proof. <span class="math inline">\blacksquare</span></p>
+</div>
+</section>
+<section id="pd-lemma" class="level3" data-number="6.2.4">
+<h3 data-number="6.2.4" class="anchored" data-anchor-id="pd-lemma"><span class="header-section-number">6.2.4</span> Positive Definite Scaling</h3>
+<p>A natural way to produce descent directions is to premultiply the gradient by a positive definite matrix. This “reshapes” the gradient to account for the local curvature of the function and is the basis for Newton’s method and quasi-Newton methods.</p>
+<div id="thm-pd-descent" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 6.4 (Lemma 7.6 (Positive Definite Descent))</strong></span> Let <span class="math inline">B \in \mathbb{R}^{n \times n}</span> be a positive definite matrix. For any point <span class="math inline">x</span> with <span class="math inline">\nabla f(x) \neq 0</span>, <span class="math inline">d = -B\,\nabla f(x)</span> is a descent direction.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>With <span class="math inline">d = -B\,\nabla f(x)</span>:</p>
+<p><span class="math display">d^\top \nabla f(x) = -\nabla f(x)^\top B\,\nabla f(x) &lt; 0,</span></p>
+<p>where the strict inequality follows from the definition of positive definiteness (<span class="math inline">v^\top B v &gt; 0</span> for all <span class="math inline">v \neq 0</span>) and the assumption that <span class="math inline">\nabla f(x) \neq 0</span>. By the descent condition (<a href="#eq-descent-condition" class="quarto-xref">Equation&nbsp;<span>6.3</span></a>), <span class="math inline">d</span> is a descent direction. This completes the proof. <span class="math inline">\blacksquare</span></p>
+</div>
+<p>This lemma unifies many optimization algorithms under the general update rule (<a href="#eq-general-update" class="quarto-xref">Equation&nbsp;<span>6.4</span></a>). By choosing different positive definite matrices <span class="math inline">B</span>, we recover gradient descent (<span class="math inline">B = I</span>, giving <a href="#eq-gradient-descent" class="quarto-xref">Equation&nbsp;<span>6.5</span></a>), Newton’s method (<span class="math inline">B = (\nabla^2 f)^{-1}</span>, giving <a href="14-newton-method.html#eq-newton-update" class="quarto-xref">Equation&nbsp;<span>14.1</span></a>), and various preconditioned methods. The positive definiteness of <span class="math inline">B</span> guarantees that the resulting direction is always a descent direction.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>This suggests a <strong>general form of the update rule</strong> using gradient information:</p>
+<p><span id="eq-general-update"><span class="math display">x^{k+1} = x^k - \alpha^k \cdot B^k\, \nabla f(x^k). \tag{6.4}</span></span></p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="choices-directions" class="level2" data-number="6.3">
+<h2 data-number="6.3" class="anchored" data-anchor-id="choices-directions"><span class="header-section-number">6.3</span> Common Choices of Descent Directions</h2>
+<p>Having established that any direction satisfying <a href="#eq-descent-condition" class="quarto-xref">Equation&nbsp;<span>6.3</span></a> is a valid descent direction, we now explore specific choices. Each corresponds to a different norm in the steepest descent problem, or equivalently, a different choice of <span class="math inline">B^k</span> in the general update <a href="#eq-general-update" class="quarto-xref">Equation&nbsp;<span>6.4</span></a>.</p>
+<p>The <strong>steepest descent</strong> approach chooses the descent direction by solving:</p>
+<p><span class="math display">\min_{d:\,\|d\| \leq 1} \langle \nabla f(x),\, d \rangle,</span></p>
+<p>where <span class="math inline">\|\cdot\|</span> is some norm on <span class="math inline">\mathbb{R}^n</span>. The interpretation is that <span class="math inline">f(x + \alpha\, d) \approx f(x) + \alpha \cdot d^\top \nabla f(x) + o(\alpha)</span>, and approximately we minimize <span class="math inline">\min_{d:\,\|d\| \leq 1} f(x + \alpha \cdot d)</span>.</p>
+<section id="steepest-l2" class="level3" data-number="6.3.1">
+<h3 data-number="6.3.1" class="anchored" data-anchor-id="steepest-l2"><span class="header-section-number">6.3.1</span> Steepest Descent with <span class="math inline">\ell_2</span>-norm (Gradient Descent)</h3>
+<p>With the <span class="math inline">\ell_2</span>-norm:</p>
+<p><span class="math display">\operatorname{argmin}_{d:\,\|d\|_2 \leq 1} \langle \nabla f(x),\, d \rangle = -\frac{\nabla f(x)}{\|\nabla f(x)\|_2}.</span></p>
+<p>This corresponds to <span class="math inline">B^k = I</span>, giving the standard <strong>gradient descent</strong> update:</p>
+<p><span id="eq-gradient-descent"><span class="math display">x^{k+1} = x^k - \alpha^k \cdot \nabla f(x^k). \tag{6.5}</span></span></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Sensitivity to Condition Number
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This is the simplest direction but <strong>not always the fastest</strong>. It has poor performance when the <strong>condition number</strong> <span class="math inline">\frac{\lambda_{\max}(\nabla^2 f)}{\lambda_{\min}(\nabla^2 f)}</span> is large. The iterates oscillate in the dimension with the large eigenvalue and make fast progress in the dimension with the small eigenvalue.</p>
+</div>
+</div>
+<div id="fig-condition-number" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-condition-number-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch05-condition-number.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;6.2: Effect of the condition number \kappa = L/\mu on gradient descent convergence. When \kappa is close to 1 (left), the contours are nearly circular and GD converges quickly along a direct path. When \kappa is large (right), the contours are elongated ellipses and GD zig-zags across the narrow valley, making slow progress toward the optimum."><img src="figures/ch05-condition-number.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-condition-number-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.2: Effect of the condition number <span class="math inline">\kappa = L/\mu</span> on gradient descent convergence. When <span class="math inline">\kappa</span> is close to 1 (left), the contours are nearly circular and GD converges quickly along a direct path. When <span class="math inline">\kappa</span> is large (right), the contours are elongated ellipses and GD zig-zags across the narrow valley, making slow progress toward the optimum.
+</figcaption>
+</figure>
+</div>
+<div class="figure-container">
+  <div id="fig-gd-contours"></div>
+  <div class="figure-caption">Figure 7.2: Gradient descent on an ill-conditioned quadratic. The iterates oscillate perpendicular to the valley and make slow progress along it.</div>
+</div>
+</section>
+<section id="gd-oscillation" class="level3" data-number="6.3.2">
+<h3 data-number="6.3.2" class="anchored" data-anchor-id="gd-oscillation"><span class="header-section-number">6.3.2</span> Oscillation Analysis</h3>
+<div id="exm-1d-quadratic" class="theorem example">
+<p><span class="theorem-title"><strong>Example 6.1 (Example: 1D Quadratic)</strong></span> Consider the 1D case: <span class="math inline">f(x) = \tfrac{1}{2}a\,x^2</span>, so <span class="math inline">f'(x) = a\,x</span> and <span class="math inline">f''(x) = a</span>.</p>
+<p>Solution: <span class="math inline">x^* = 0</span>. Gradient descent gives:</p>
+<p><span class="math display">x' = x - \alpha \cdot f'(x) = (1 - a \cdot \alpha) \cdot x.</span></p>
+<p>Therefore <span class="math inline">|x'| = |1 - a \cdot \alpha| \cdot |x|</span>, and after <span class="math inline">k</span> steps:</p>
+<p><span id="eq-1d-gd-convergence"><span class="math display">|x^k| = |1 - a \cdot \alpha|^k \cdot |x^0|. \tag{6.6}</span></span></p>
+<ul>
+<li>If <span class="math inline">\alpha</span> is large such that <span class="math inline">|1 - a \cdot \alpha| \geq 1</span>: <strong>Non-convergence</strong>.</li>
+<li>If <span class="math inline">|1 - a \cdot \alpha| &lt; 1</span>: <strong>Exponential (linear rate) convergence</strong>. To get <span class="math inline">|x^k| \leq \varepsilon</span>, need <span class="math inline">k = O(\log(1/\varepsilon))</span>.</li>
+</ul>
+<p>So we need <span class="math inline">0 &lt; \alpha &lt; 2/a</span>:</p>
+<ul>
+<li>If <span class="math inline">\alpha \in (0, 1/a)</span>: <span class="math inline">1 - a\alpha \in (0,1)</span>, and <span class="math inline">\{x^k\}</span> <strong>monotonically converges</strong> to 0.</li>
+<li>If <span class="math inline">\alpha \in (1/a, 2/a)</span>: <span class="math inline">1 - a\alpha \in (-1,0)</span>, and <span class="math inline">\{x^k\}</span> <strong>oscillates</strong> to 0.</li>
+</ul>
+</div>
+<p>The key takeaway from <a href="#eq-1d-gd-convergence" class="quarto-xref">Equation&nbsp;<span>6.6</span></a> is that the convergence rate of gradient descent is controlled by the contraction factor <span class="math inline">|1 - a \cdot \alpha|</span>, which depends on both the curvature <span class="math inline">a</span> and the step size <span class="math inline">\alpha</span>. This analysis extends to higher dimensions, where the condition number plays the central role.</p>
+<div id="exm-2d-quadratic-zigzag" class="theorem example">
+<p><span class="theorem-title"><strong>Example 6.2 (Example: 2D Quadratic — Zig-Zag Behavior)</strong></span> Consider the 2D case: <span class="math inline">f(x, y) = \tfrac{1}{2}(a\,x^2 + b\,y^2)</span> with <span class="math inline">a &lt; b</span>. GD gives:</p>
+<p><span class="math display">\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} (1 - a \cdot \alpha)\, x \\ (1 - b \cdot \alpha)\, y \end{pmatrix}.</span></p>
+<p>To get convergence, we need <span class="math inline">|1 - a\alpha| &lt; 1</span> and <span class="math inline">|1 - b\alpha| &lt; 1</span>, which gives <span class="math inline">\alpha \in (0, 2/b)</span>.</p>
+<p>If <span class="math inline">\alpha \in (1/b, 2/b)</span>: <span class="math inline">\{x^k\}</span> monotonically converges to 0 (since <span class="math inline">1-a\alpha &gt; 0</span>), while <span class="math inline">\{y^k\}</span> oscillates to 0 (since <span class="math inline">1-b\alpha &lt; 0</span>). This produces a <strong>zig-zag trajectory</strong>.</p>
+</div>
+<div class="figure-container">
+  <div id="fig-zigzag"></div>
+  <div class="figure-caption">Figure 7.3: Zig-zag trajectory of gradient descent on a 2D quadratic with different eigenvalues. The iterate oscillates in the y-direction while progressing monotonically in x.</div>
+</div>
+<div id="fig-gradient-descent-convergence" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-gradient-descent-convergence-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/gradient-descent-convergence.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;6.3: Gradient descent trajectories: smooth convex objective with O(1/k) convergence (left) versus strongly convex objective with linear O(\rho^k) convergence (right). The condition number \kappa = L/\mu controls the eccentricity of the contours."><img src="figures/gradient-descent-convergence.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-gradient-descent-convergence-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.3: Gradient descent trajectories: smooth convex objective with <span class="math inline">O(1/k)</span> convergence (left) versus strongly convex objective with linear <span class="math inline">O(\rho^k)</span> convergence (right). The condition number <span class="math inline">\kappa = L/\mu</span> controls the eccentricity of the contours.
+</figcaption>
+</figure>
+</div>
+<div id="fig-convergence-rates" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-convergence-rates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/convergence-rates-comparison.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;6.4: Comparison of convergence rates encountered in first-order optimization. From slowest to fastest: O(1/\sqrt{k}) for subgradient methods on nonsmooth problems, O(1/k) for GD on smooth convex functions, O(1/k^2) for accelerated methods, and linear O(\rho^k) convergence for strongly convex objectives. The gap between these rates motivates the momentum and adaptive methods studied in subsequent chapters."><img src="figures/convergence-rates-comparison.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-convergence-rates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.4: Comparison of convergence rates encountered in first-order optimization. From slowest to fastest: <span class="math inline">O(1/\sqrt{k})</span> for subgradient methods on nonsmooth problems, <span class="math inline">O(1/k)</span> for GD on smooth convex functions, <span class="math inline">O(1/k^2)</span> for accelerated methods, and linear <span class="math inline">O(\rho^k)</span> convergence for strongly convex objectives. The gap between these rates motivates the momentum and adaptive methods studied in subsequent chapters.
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: GD as Quadratic Upper Bound Minimization
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Note that <span class="math inline">x^{k+1} = \operatorname{argmin}_{x \in \mathbb{R}^n} g_{\alpha^k}(x)</span>, where</p>
+<p><span class="math display">g_{\alpha^k}(x) = f(x^k) + (x - x^k)^\top \nabla f(x^k) + \frac{1}{2\alpha^k} \|x - x^k\|_2^2.</span></p>
+<p>When <span class="math inline">\alpha^k \leq \frac{1}{\lambda_{\max}(\nabla^2 f(x^k))}</span>, we have</p>
+<p><span class="math display">g_\alpha(x) \geq f(x^k) + \langle \nabla f(x^k),\, x - x^k \rangle + \tfrac{1}{2}(x - x^k)^\top \nabla^2 f(x^k)\, (x - x^k),</span></p>
+<p>which is the 2nd-order Taylor expansion. In fact, when <span class="math inline">\alpha</span> is small, <span class="math inline">g_\alpha(x) \geq f(x)</span>. Thus, <strong>GD updates by minimizing a quadratic upper bound of <span class="math inline">f</span></strong>.</p>
+</div>
+</div>
+<div id="fig-quadratic-upper-bound" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-quadratic-upper-bound-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch05-quadratic-upper-bound.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;6.5: Gradient descent as quadratic upper bound minimization. At the current iterate x^k, the quadratic surrogate g_\alpha(x) (dashed) upper-bounds the true objective f(x) (solid). The GD step moves to the minimizer of the surrogate. With a smaller stepsize \alpha, the surrogate is tighter (steeper parabola) and the step is more conservative."><img src="figures/ch05-quadratic-upper-bound.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-quadratic-upper-bound-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.5: Gradient descent as quadratic upper bound minimization. At the current iterate <span class="math inline">x^k</span>, the quadratic surrogate <span class="math inline">g_\alpha(x)</span> (dashed) upper-bounds the true objective <span class="math inline">f(x)</span> (solid). The GD step moves to the minimizer of the surrogate. With a smaller stepsize <span class="math inline">\alpha</span>, the surrogate is tighter (steeper parabola) and the step is more conservative.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="steepest-l1" class="level3" data-number="6.3.3">
+<h3 data-number="6.3.3" class="anchored" data-anchor-id="steepest-l1"><span class="header-section-number">6.3.3</span> Steepest Descent with <span class="math inline">\ell_1</span>-norm (Coordinate Descent)</h3>
+<p>With the <span class="math inline">\ell_1</span>-norm:</p>
+<p><span class="math display">\operatorname{argmin}_{d:\,\|d\|_1 \leq 1} \langle d,\, \nabla f(x) \rangle.</span></p>
+<p><strong>Solution:</strong> <span class="math inline">d^* \in \mathbb{R}^n</span> has only <strong>one nonzero entry</strong>:</p>
+<p><span class="math display">d^*_j = \begin{cases} -\operatorname{sign}\!\bigl(\frac{\partial f}{\partial x_j}(x)\bigr) &amp; \text{if } j = \operatorname{argmax}_j \bigl|\frac{\partial f}{\partial x_j}(x)\bigr| \\[4pt] 0 &amp; \text{otherwise.} \end{cases}</span></p>
+<p>Note that the magnitude does not matter. We can choose <span class="math inline">d^*</span> with magnitude:</p>
+<p><span class="math display">d^*_j = -\bigl|\tfrac{\partial f}{\partial x_j}(x)\bigr| \cdot \operatorname{sign}\!\bigl(\tfrac{\partial f}{\partial x_j}(x)\bigr) = -\tfrac{\partial f}{\partial x_j}(x).</span></p>
+<p>This gives the <strong>coordinate descent</strong> update: pick <span class="math inline">i = \operatorname{argmax}_j \bigl|\frac{\partial f}{\partial x_j}(x^k)\bigr|</span>, then</p>
+<p><span class="math display">(x^{k+1})_i = (x^k)_i - \alpha^k \cdot \frac{\partial f}{\partial x_i}(x^k), \qquad (x^{k+1})_\ell = (x^k)_\ell \quad \forall\, \ell \neq i.</span></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Coordinate Descent
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This algorithm is called <strong>coordinate descent</strong> because we update only one coordinate of <span class="math inline">x</span> at each iteration. In general, at the <span class="math inline">k</span>-th iteration:</p>
+<ul>
+<li>Pick a coordinate <span class="math inline">i \in [n]</span> according to some rule.</li>
+<li>Update: <span class="math inline">(x^{k+1})_i = (x^k)_i - \alpha^k \cdot \frac{\partial f}{\partial x_i}(x^k)</span> (only update coordinate <span class="math inline">x_i</span>).</li>
+</ul>
+<p>This corresponds to <span class="math inline">B^k</span> being a diagonal matrix with a single nonzero entry.</p>
+</div>
+</div>
+</section>
+<section id="sign-gd" class="level3" data-number="6.3.4">
+<h3 data-number="6.3.4" class="anchored" data-anchor-id="sign-gd"><span class="header-section-number">6.3.4</span> Steepest Descent with <span class="math inline">\ell_\infty</span>-norm (Sign Gradient Descent)</h3>
+<p>With the <span class="math inline">\ell_\infty</span>-norm:</p>
+<p><span class="math display">\operatorname{argmin}_{d:\,\|d\|_\infty \leq 1} \langle d,\, \nabla f(x) \rangle = -\operatorname{sign}(\nabla f(x)) = -\begin{pmatrix} \operatorname{sign}\!\bigl(\frac{\partial f}{\partial x_1}(x)\bigr) \\ \operatorname{sign}\!\bigl(\frac{\partial f}{\partial x_2}(x)\bigr) \\ \vdots \\ \operatorname{sign}\!\bigl(\frac{\partial f}{\partial x_n}(x)\bigr) \end{pmatrix} \in \{\pm 1\}^n.</span></p>
+<p>The update is:</p>
+<p><span class="math display">x^{k+1} = x^k - \alpha^k \cdot \operatorname{sign}(\nabla f(x^k)).</span></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Sign Gradient Descent and Adam
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This algorithm is called <strong>sign gradient descent</strong>. It only uses the sign of each partial derivative, ignoring magnitudes. It is related to the Adam optimizer commonly used in deep learning.</p>
+</div>
+</div>
+</section>
+<section id="newton-direction" class="level3" data-number="6.3.5">
+<h3 data-number="6.3.5" class="anchored" data-anchor-id="newton-direction"><span class="header-section-number">6.3.5</span> Newton’s Method</h3>
+<p>The previous methods used only first-order (gradient) information. By incorporating second-order information—the Hessian matrix—Newton’s method adapts the search direction to the local curvature, achieving much faster convergence at the cost of computing and inverting the Hessian at each step.</p>
+<p>Set <span class="math inline">B^k = \bigl(\nabla^2 f(x^k)\bigr)^{-1}</span>, so:</p>
+<p><span class="math display">d^k = \bigl(\nabla^2 f(x^k)\bigr)^{-1} \nabla f(x^k).</span></p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Algorithm: Newton’s Method
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Set step size <span class="math inline">\alpha^k = 1</span>:</p>
+<p><span id="eq-newton-update"><span class="math display">x^{k+1} = x^k - \bigl(\nabla^2 f(x^k)\bigr)^{-1} \nabla f(x^k). \tag{6.7}</span></span></p>
+<p>Properties:</p>
+<ul>
+<li>Uses the <strong>inverse Hessian</strong> to weight <span class="math inline">\nabla f(x^k)</span>.</li>
+<li>More <strong>computationally expensive</strong> per iteration.</li>
+<li><strong>Faster convergence</strong> (quadratic convergence near the solution).</li>
+</ul>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Idea of Newton’s Method
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Newton’s method uses a <strong>local quadratic approximation</strong>. The 2nd-order Taylor approximation at <span class="math inline">x^k</span> is:</p>
+<p><span class="math display">g_{x^k}(x) = f(x^k) + \langle \nabla f(x^k),\, x - x^k \rangle + \tfrac{1}{2}(x - x^k)^\top \nabla^2 f(x^k)\, (x - x^k).</span></p>
+<p>Then <span class="math inline">x^{k+1} = \operatorname{argmin}_{x \in \mathbb{R}^n} g_{x^k}(x)</span>.</p>
+<p><strong>Note:</strong> If <span class="math inline">f</span> is quadratic, Newton’s method solves <span class="math inline">\min_x f(x)</span> in just <strong>1 step</strong>.</p>
+</div>
+</div>
+</section>
+<section id="diag-scaled" class="level3" data-number="6.3.6">
+<h3 data-number="6.3.6" class="anchored" data-anchor-id="diag-scaled"><span class="header-section-number">6.3.6</span> Diagonally Scaled Steepest Descent</h3>
+<p>Set <span class="math inline">B^k = \operatorname{diag}(b_1, b_2, \ldots, b_n)</span>, for example:</p>
+<p><span class="math display">b_j = \Bigl(\frac{\partial^2 f(x^k)}{\partial x_j^2}\Bigr)^{-1},</span></p>
+<p>i.e.,</p>
+<p><span class="math display">d^k = \bigl[\operatorname{diag}\bigl(\nabla^2 f(x^k)\bigr)\bigr]^{-1} \nabla f(x^k).</span></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Diagonal Hessian Approximation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>This approximates <span class="math inline">\nabla^2 f(x^k)</span> using only its <strong>diagonal part</strong>, avoiding the cost of a full matrix inversion. It captures per-coordinate curvature information and is related to adaptive methods like AdaGrad.</p>
+</div>
+</div>
+<p>We have now assembled a toolbox of descent directions—from the simple negative gradient to the curvature-aware Newton direction. But choosing the direction is only half of the update rule <a href="#eq-iterative-update" class="quarto-xref">Equation&nbsp;<span>6.1</span></a>; the other half is the step size <span class="math inline">\alpha^k</span>. A good direction paired with a poor step size can lead to slow convergence or even divergence, as the oscillation analysis in <a href="#exm-2d-quadratic-zigzag" class="quarto-xref">Example&nbsp;<span>6.2</span></a> illustrated. We turn to step size strategies next.</p>
+</section>
+</section>
+<section id="step-sizes" class="level2" data-number="6.4">
+<h2 data-number="6.4" class="anchored" data-anchor-id="step-sizes"><span class="header-section-number">6.4</span> Choice of Step Sizes</h2>
+<p>The step size <span class="math inline">\alpha^k</span> controls how far we move along the descent direction at each iteration. A good step size must balance two competing goals: making enough progress toward the optimum (large <span class="math inline">\alpha</span>) without overshooting and increasing the objective (small <span class="math inline">\alpha</span>). We consider three standard strategies.</p>
+<section id="constant-step" class="level3" data-number="6.4.1">
+<h3 data-number="6.4.1" class="anchored" data-anchor-id="constant-step"><span class="header-section-number">6.4.1</span> Constant Step Size</h3>
+<p><span class="math inline">\alpha^k = \alpha</span> for all <span class="math inline">k \geq 1</span>, for some <span class="math inline">\alpha \in \mathbb{R}</span>.</p>
+<ul>
+<li><strong>Simple to implement.</strong></li>
+<li>May <strong>not converge</strong> if <span class="math inline">\alpha</span> is too large.</li>
+<li>May be <strong>too slow</strong> if <span class="math inline">\alpha</span> is too small.</li>
+</ul>
+</section>
+<section id="diminishing-step" class="level3" data-number="6.4.2">
+<h3 data-number="6.4.2" class="anchored" data-anchor-id="diminishing-step"><span class="header-section-number">6.4.2</span> Diminishing Step Size</h3>
+<p><span class="math inline">\alpha^k \to 0</span> and <span class="math inline">\sum_{k=1}^{\infty} \alpha^k = +\infty</span>. For example, <span class="math inline">\alpha_k = 1/k</span>.</p>
+<ul>
+<li>Good <strong>theoretical guarantees</strong>, but can be slow in practice.</li>
+<li><span class="math inline">\sum \alpha^k = +\infty</span> ensures the algorithm moves far enough to reach the optimum.</li>
+</ul>
+</section>
+<section id="line-search" class="level3" data-number="6.4.3">
+<h3 data-number="6.4.3" class="anchored" data-anchor-id="line-search"><span class="header-section-number">6.4.3</span> Line Search</h3>
+<p><strong>Exact line search:</strong></p>
+<p><span class="math display">\alpha^k = \operatorname{argmin}_{\alpha \geq 0} f(x^k + \alpha \cdot d^k).</span></p>
+<ul>
+<li>Need to solve a <strong>1D optimization</strong> problem at each iteration.</li>
+<li>No need to solve the line search <em>exactly</em>.</li>
+<li>When <span class="math inline">f</span> is convex, the line search problem is also convex (restricting to a line).</li>
+</ul>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Algorithm: Backtracking Line Search
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<pre><code>Start with alpha = 1
+While f(x^k + alpha * d^k) &gt; f(x^k) + (alpha/2) * &lt;d^k, grad f(x^k)&gt;:
+    Set alpha = beta * alpha      // shrink step size, beta in (0,1)
+Return alpha</code></pre>
+<p><strong>Idea:</strong> Try to find the largest step size among <span class="math inline">\{1,\, \beta,\, \beta^2,\, \ldots\}</span>.</p>
+</div>
+</div>
+<p>The following figure lets you see the backtracking procedure in action. We plot the one-dimensional function <span class="math inline">\varphi(\alpha) = f(x^k + \alpha d^k)</span> against the sufficient-decrease line (the Armijo condition). The algorithm tests <span class="math inline">\alpha = 1, \beta, \beta^2, \ldots</span> and accepts the first <span class="math inline">\alpha</span> for which <span class="math inline">\varphi(\alpha)</span> drops below the Armijo line.</p>
+<style>
+  .interactive-figure-container {
+    font-family: 'Palatino Linotype', 'Palatino', 'Book Antiqua', 'Georgia', serif;
+    background: #f0ebe5;
+    border-radius: 8px;
+    padding: 24px 20px 16px 20px;
+    margin: 28px auto;
+    max-width: 900px;
+    box-shadow: 0 2px 12px rgba(61,53,48,0.08);
+  }
+  .interactive-figure-container h3 {
+    font-family: 'Palatino Linotype', 'Palatino', 'Book Antiqua', 'Georgia', serif;
+    color: #3d3530; font-size: 1.15em; font-weight: 600; margin: 0 0 6px 0;
+  }
+  .interactive-figure-container .fig-subtitle {
+    color: #968a80; font-size: 0.92em; margin: 0 0 16px 0; line-height: 1.5;
+  }
+  .interactive-figure-container .slider-row {
+    display: flex; align-items: center; gap: 14px; margin: 14px 0 8px 0; flex-wrap: wrap;
+  }
+  .interactive-figure-container .slider-row label {
+    font-size: 0.95em; color: #3d3530; min-width: 80px;
+  }
+  .interactive-figure-container .slider-row input[type="range"] {
+    flex: 1; min-width: 180px; max-width: 420px; accent-color: #7b97ad; height: 6px;
+  }
+  .interactive-figure-container .slider-row .slider-value {
+    font-size: 0.95em; color: #b8995e; font-weight: 600; min-width: 60px;
+  }
+  .interactive-figure-container .info-box {
+    background: #faf7f3; border-left: 3px solid #7b97ad; border-radius: 0 4px 4px 0;
+    padding: 10px 14px; margin: 10px 0 4px 0; font-size: 0.88em; color: #3d3530; line-height: 1.6;
+  }
+</style>
+
+<div class="interactive-figure-container" id="bt-wrapper">
+  <h3 class="anchored">Backtracking Line Search Explorer</h3>
+  <p class="fig-subtitle">
+    f(x) = e<sup>x/2</sup> + x²  | 
+    x<sub>k</sub> = 1.5,   d<sub>k</sub> = −∇f(x<sub>k</sub>)
+     |  Armijo parameter c = ½
+  </p>
+  <div class="slider-row">
+    <label for="bt-beta">β =</label>
+    <input type="range" id="bt-beta" min="0.2" max="0.9" step="0.01" value="0.5">
+    <span class="slider-value" id="bt-beta-val">0.50</span>
+  </div>
+  <div id="bt-plot"></div>
+  <div class="info-box" id="bt-info">
+    Drag the slider to change the shrinkage factor β.
+  </div>
+</div>
+
+<script>
+(function() {
+  var C = {
+    bg: '#f0ebe5', plotBg: '#faf7f3', text: '#3d3530', grid: '#e0d9d1',
+    axis: '#968a80', blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
+    terracotta: '#c47a6a', lavender: '#907ea0', rosewood: '#ad8480'
+  };
+  var font = {family: "'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif", color: C.text};
+
+  var xk = 1.5;
+  function f(x) { return Math.exp(0.5*x) + x*x; }
+  function gradf(x) { return 0.5*Math.exp(0.5*x) + 2*x; }
+  var gk = gradf(xk);
+  var dk = -gk;
+  var fk = f(xk);
+  var slope = gk * dk;  /* negative */
+  var cArmijo = 0.5;
+
+  /* phi(alpha) = f(xk + alpha*dk) */
+  function phi(a) { return f(xk + a*dk); }
+
+  /* Armijo line: fk + c*alpha*slope */
+  function armijo(a) { return fk + cArmijo*a*slope; }
+
+  /* Precompute curve */
+  var alphaVals = [], phiVals = [], armijoVals = [];
+  for (var a = 0; a <= 1.05; a += 0.005) {
+    alphaVals.push(a);
+    phiVals.push(phi(a));
+    armijoVals.push(armijo(a));
+  }
+
+  var axisStyle = {
+    gridcolor: C.grid, gridwidth: 1, zerolinecolor: C.axis, zerolinewidth: 1.5,
+    linecolor: C.axis, linewidth: 1,
+    tickfont: {size: 13, family: font.family, color: font.color},
+    titlefont: {size: 15, family: font.family, color: font.color}
+  };
+  var plotCfg = {displayModeBar: false, responsive: true};
+
+  function update(beta) {
+    /* Run backtracking */
+    var trials = [];
+    var a = 1.0;
+    var accepted = -1;
+    for (var i = 0; i < 20; i++) {
+      var pa = phi(a);
+      var aa = armijo(a);
+      var ok = pa <= aa;
+      trials.push({alpha: a, phi: pa, armijo: aa, accepted: ok});
+      if (ok && accepted < 0) { accepted = i; break; }
+      a *= beta;
+    }
+
+    var traces = [
+      /* phi(alpha) curve */
+      {x: alphaVals, y: phiVals, mode: 'lines', line: {color: C.blue, width: 3},
+       name: '\u03C6(\u03B1) = f(x\u2096 + \u03B1d\u2096)'},
+      /* Armijo line */
+      {x: alphaVals, y: armijoVals, mode: 'lines',
+       line: {color: C.terracotta, width: 2, dash: 'dash'},
+       name: 'Armijo: f(x\u2096) + c\u03B1\u27E8d,\u2207f\u27E9'}
+    ];
+
+    /* Trial points */
+    var rejX = [], rejY = [], accX = [], accY = [];
+    for (var j = 0; j < trials.length; j++) {
+      if (j === accepted) {
+        accX.push(trials[j].alpha);
+        accY.push(trials[j].phi);
+      } else {
+        rejX.push(trials[j].alpha);
+        rejY.push(trials[j].phi);
+      }
+    }
+    if (rejX.length > 0) {
+      traces.push({x: rejX, y: rejY, mode: 'markers',
+        marker: {size: 10, color: C.rosewood, symbol: 'x', line: {width: 2, color: C.rosewood}},
+        name: 'Rejected'});
+    }
+    if (accX.length > 0) {
+      traces.push({x: accX, y: accY, mode: 'markers',
+        marker: {size: 14, color: C.sage, symbol: 'star', line: {width: 1.5, color: 'white'}},
+        name: 'Accepted: \u03B1 = ' + accX[0].toFixed(4)});
+    }
+
+    /* vertical lines for trial alpha values */
+    var shapes = [];
+    for (var j = 0; j < trials.length; j++) {
+      shapes.push({
+        type: 'line', x0: trials[j].alpha, x1: trials[j].alpha,
+        y0: -2, y1: trials[j].phi,
+        line: {color: j === accepted ? C.sage : C.rosewood, width: 1, dash: 'dot'}
+      });
+    }
+
+    var layout = {
+      paper_bgcolor: C.bg, plot_bgcolor: C.plotBg, font: font, height: 420,
+      margin: {t: 30, b: 58, l: 64, r: 20},
+      xaxis: Object.assign({}, axisStyle, {title: 'Step size \u03B1', range: [-0.02, 1.08]}),
+      yaxis: Object.assign({}, axisStyle, {title: '\u03C6(\u03B1)', range: [-4, 8]}),
+      showlegend: true,
+      legend: {x: 0.50, y: 0.98, bgcolor: 'rgba(250,247,243,0.85)',
+               bordercolor: C.grid, borderwidth: 1,
+               font: {size: 11, family: font.family, color: font.color}},
+      shapes: shapes,
+      hovermode: 'closest'
+    };
+
+    var info;
+    if (accepted >= 0) {
+      info = 'Accepted \u03B1 = ' + trials[accepted].alpha.toFixed(4)
+           + ' after <b>' + (accepted+1) + ' trial' + (accepted > 0 ? 's' : '') + '</b>'
+           + ' &ensp;|&ensp; \u03C6(\u03B1) = ' + trials[accepted].phi.toFixed(3)
+           + ' &le; Armijo = ' + trials[accepted].armijo.toFixed(3);
+    } else {
+      info = 'No step accepted in 20 trials';
+    }
+    document.getElementById('bt-info').innerHTML = info;
+
+    Plotly.react('bt-plot', traces, layout, plotCfg);
+  }
+
+  document.getElementById('bt-beta').addEventListener('input', function() {
+    var beta = parseFloat(this.value);
+    document.getElementById('bt-beta-val').textContent = beta.toFixed(2);
+    update(beta);
+  });
+
+  update(0.5);
+})();
+</script>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Step Size Tuning in Practice
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Tuning step sizes is an art. In practice, when <span class="math inline">f</span> is nonconvex, usually use a constant and small step size, or gradually decrease step sizes.</p>
+<p>When training neural networks (e.g., using PyTorch), <strong>learning rate scheduling</strong> is commonly used:</p>
+<ul>
+<li><strong>StepLR</strong> — decay learning rate by a factor every <span class="math inline">T</span> steps.</li>
+<li><strong>Cosine scheduler</strong> — refine solution using a very small learning rate at end.</li>
+<li><strong>Warmup</strong> — increase the learning rate first, then decay.</li>
+</ul>
+</div>
+</div>
+<div class="figure-container">
+  <div id="fig-lr-schedules"></div>
+  <div class="figure-caption">Figure 7.4: Comparison of common learning rate schedules used in deep learning.</div>
+</div>
+</section>
+</section>
+<section id="convergence-analysis" class="level2" data-number="6.5">
+<h2 data-number="6.5" class="anchored" data-anchor-id="convergence-analysis"><span class="header-section-number">6.5</span> Convergence Analysis of Gradient Descent</h2>
+<p>We have developed the gradient descent algorithm and its variants, along with step size strategies. The central question remains: <strong>how fast does gradient descent converge?</strong> The answer depends entirely on the structural properties of the objective function <span class="math inline">f</span>. In this section, we develop the convergence theory of gradient descent under three progressively stronger assumptions.</p>
+<p>The key insight is that convergence speed is governed by two numbers that bound the <strong>curvature</strong> of <span class="math inline">f</span>:</p>
+<ul>
+<li><strong>Smoothness parameter <span class="math inline">L</span>:</strong> an upper bound on how fast the gradient changes (curvature from above).</li>
+<li><strong>Strong convexity parameter <span class="math inline">\mu</span>:</strong> a lower bound on how much the function curves upward (curvature from below).</li>
+</ul>
+<p>Their ratio <span class="math inline">\kappa = L/\mu</span> is the <strong>condition number</strong>, and it controls how many iterations gradient descent needs.</p>
+<section id="smoothness" class="level3" data-number="6.5.1">
+<h3 data-number="6.5.1" class="anchored" data-anchor-id="smoothness"><span class="header-section-number">6.5.1</span> Smoothness: Bounding Curvature from Above</h3>
+<p>The first structural property we need is <strong>smoothness</strong>, which says that the gradient of <span class="math inline">f</span> does not change too rapidly. Informally, a smooth function has no “sharp bends” in its gradient.</p>
+<div id="def-smoothness" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 6.3 (Definition 7.7 (<span class="math inline">L</span>-Smoothness))</strong></span> A differentiable function <span class="math inline">f</span> is <strong><span class="math inline">L</span>-smooth</strong> if its gradient is <span class="math inline">L</span>-Lipschitz continuous:</p>
+<p><span class="math display">\|\nabla f(x) - \nabla f(y)\|_2 \leq L \cdot \|x - y\|_2 \qquad \forall\, x, y.</span></p>
+</div>
+<p><strong>What does this mean?</strong> If you move from <span class="math inline">x</span> to <span class="math inline">y</span>, the gradient cannot change by more than <span class="math inline">L</span> times the distance you moved. A small <span class="math inline">L</span> means the gradient changes slowly (the function is “gently curved”), while a large <span class="math inline">L</span> means the gradient can change rapidly.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Intuition: Quadratic Upper Bound
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The most important consequence of <span class="math inline">L</span>-smoothness is the <strong>quadratic upper bound</strong>: for all <span class="math inline">x, y</span>,</p>
+<p><span id="eq-quadratic-upper"><span class="math display">f(y) \leq f(x) + \nabla f(x)^\top (y - x) + \frac{L}{2}\|y - x\|_2^2. \tag{6.8}</span></span></p>
+<p>This says that <span class="math inline">f</span> is bounded above by a quadratic that “hugs” it from above. The linear part <span class="math inline">f(x) + \nabla f(x)^\top(y-x)</span> is the tangent-line approximation, and the quadratic term <span class="math inline">\frac{L}{2}\|y-x\|_2^2</span> controls how far <span class="math inline">f</span> can deviate from this tangent. See <a href="#fig-quadratic-upper-bound" class="quarto-xref">Figure&nbsp;<span>6.5</span></a> for an illustration.</p>
+</div>
+</div>
+<p>For twice-differentiable functions, <span class="math inline">L</span>-smoothness is equivalent to requiring that all eigenvalues of the Hessian are at most <span class="math inline">L</span>:</p>
+<p><span class="math display">\nabla^2 f(x) \preceq L \cdot I \qquad \forall\, x.</span></p>
+<div id="exm-quadratic-smooth" class="theorem example">
+<p><span class="theorem-title"><strong>Example 6.3 (Example: Quadratic Function)</strong></span> For <span class="math inline">f(x) = \frac{1}{2}x^\top Q\, x</span> with <span class="math inline">Q \succ 0</span>, we have <span class="math inline">\nabla^2 f(x) = Q</span>, so <span class="math inline">f</span> is <span class="math inline">L</span>-smooth with <span class="math inline">L = \lambda_{\max}(Q)</span>.</p>
+</div>
+</section>
+<section id="strong-convexity" class="level3" data-number="6.5.2">
+<h3 data-number="6.5.2" class="anchored" data-anchor-id="strong-convexity"><span class="header-section-number">6.5.2</span> Strong Convexity: Bounding Curvature from Below</h3>
+<p>While smoothness bounds curvature from above, <strong>strong convexity</strong> bounds it from below. It says that <span class="math inline">f</span> curves upward at least as fast as a quadratic.</p>
+<div id="def-strong-convexity" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 6.4 (Definition 7.8 (<span class="math inline">\mu</span>-Strong Convexity))</strong></span> A differentiable function <span class="math inline">f</span> is <strong><span class="math inline">\mu</span>-strongly convex</strong> (with <span class="math inline">\mu &gt; 0</span>) if for all <span class="math inline">x, y</span>:</p>
+<p><span class="math display">f(y) \geq f(x) + \nabla f(x)^\top (y - x) + \frac{\mu}{2}\|y - x\|_2^2.</span></p>
+</div>
+<p><strong>What does this mean?</strong> Ordinary convexity says that <span class="math inline">f</span> lies above all of its tangent lines. Strong convexity says something stronger: <span class="math inline">f</span> lies above all of its tangent lines <strong>plus a quadratic bowl</strong> of curvature <span class="math inline">\mu</span>. The bigger <span class="math inline">\mu</span> is, the more strongly <span class="math inline">f</span> curves upward.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Intuition: Curvature Sandwich
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>When <span class="math inline">f</span> is both <span class="math inline">\mu</span>-strongly convex and <span class="math inline">L</span>-smooth, the curvature of <span class="math inline">f</span> is <strong>sandwiched</strong> between two quadratics:</p>
+<p><span class="math display">\underbrace{f(x) + \nabla f(x)^\top(y-x) + \frac{\mu}{2}\|y-x\|_2^2}_{\text{quadratic lower bound}} \;\leq\; f(y) \;\leq\; \underbrace{f(x) + \nabla f(x)^\top(y-x) + \frac{L}{2}\|y-x\|_2^2}_{\text{quadratic upper bound}}.</span></p>
+<p>The left side is a “tight-fitting bowl” from strong convexity, and the right side is a “loose-fitting bowl” from smoothness. The function <span class="math inline">f</span> is trapped between them.</p>
+</div>
+</div>
+<p>For twice-differentiable functions, <span class="math inline">\mu</span>-strong convexity is equivalent to <span class="math inline">\nabla^2 f(x) \succeq \mu \cdot I</span> for all <span class="math inline">x</span>. Together with smoothness, this means all Hessian eigenvalues are sandwiched:</p>
+<p><span class="math display">\mu \cdot I \preceq \nabla^2 f(x) \preceq L \cdot I \qquad \forall\, x.</span></p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Strong convexity guarantees two important properties:</p>
+<ol type="1">
+<li><strong>Unique minimizer.</strong> A <span class="math inline">\mu</span>-strongly convex function has exactly one minimizer <span class="math inline">x^*</span>.</li>
+<li><strong>Gradient domination.</strong> <span class="math inline">\frac{1}{2\mu}\|\nabla f(x)\|_2^2 \geq f(x) - f(x^*)</span>. When the gradient is small, the function value must be close to optimal.</li>
+</ol>
+</div>
+</div>
+</div>
+</section>
+<section id="condition-number" class="level3" data-number="6.5.3">
+<h3 data-number="6.5.3" class="anchored" data-anchor-id="condition-number"><span class="header-section-number">6.5.3</span> The Condition Number</h3>
+<p>When <span class="math inline">f</span> is both <span class="math inline">\mu</span>-strongly convex and <span class="math inline">L</span>-smooth, the ratio of these two parameters plays a central role.</p>
+<div id="def-condition-number" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 6.5 (Definition 7.9 (Condition Number))</strong></span> The <strong>condition number</strong> of a <span class="math inline">\mu</span>-strongly convex and <span class="math inline">L</span>-smooth function is</p>
+<p><span class="math display">\kappa = \frac{L}{\mu} \geq 1.</span></p>
+</div>
+<p>The condition number measures how “elongated” the contours of <span class="math inline">f</span> are. When <span class="math inline">\kappa \approx 1</span>, the contours are nearly circular and gradient descent converges quickly in a direct path (<a href="14-newton-method.html#fig-condition-number" class="quarto-xref">Figure&nbsp;<span>14.1</span></a>, left panel). When <span class="math inline">\kappa \gg 1</span>, the contours are elongated ellipses and gradient descent zig-zags slowly toward the optimum (<a href="14-newton-method.html#fig-condition-number" class="quarto-xref">Figure&nbsp;<span>14.1</span></a>, right panel).</p>
+<p>Recall from <a href="#exm-2d-quadratic-zigzag" class="quarto-xref">Example&nbsp;<span>6.2</span></a>: on the quadratic <span class="math inline">f(x,y) = \frac{1}{2}(ax^2 + by^2)</span> with <span class="math inline">a &lt; b</span>, the contraction factors are <span class="math inline">|1-a\alpha|</span> and <span class="math inline">|1-b\alpha|</span>. With the optimal step size <span class="math inline">\alpha = 2/(a+b)</span>, both factors equal <span class="math inline">\frac{b-a}{b+a} = \frac{\kappa-1}{\kappa+1}</span>, where <span class="math inline">\kappa = b/a</span>. This <strong>contraction factor</strong> <span class="math inline">\frac{\kappa-1}{\kappa+1}</span> governs the convergence speed of gradient descent.</p>
+</section>
+<section id="descent-lemma-convergence" class="level3" data-number="6.5.4">
+<h3 data-number="6.5.4" class="anchored" data-anchor-id="descent-lemma-convergence"><span class="header-section-number">6.5.4</span> The Descent Lemma</h3>
+<p>The descent lemma is the engine behind all gradient descent convergence proofs. It says that <strong>every gradient descent step makes guaranteed progress</strong>, provided the step size is small enough.</p>
+<div id="thm-descent-lemma" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 6.5 (Theorem 7.10 (Descent Lemma))</strong></span> If <span class="math inline">f</span> is <span class="math inline">L</span>-smooth and <span class="math inline">x^+ = x - \alpha\,\nabla f(x)</span> with <span class="math inline">\alpha \leq 1/L</span>, then</p>
+<p><span id="eq-descent-lemma"><span class="math display">f(x^+) \leq f(x) - \frac{\alpha}{2}\|\nabla f(x)\|_2^2. \tag{6.9}</span></span></p>
+</div>
+<p>The descent lemma guarantees that each GD step decreases the objective by at least <span class="math inline">\frac{\alpha}{2}\|\nabla f(x)\|_2^2</span>, which is strictly positive whenever <span class="math inline">\nabla f(x) \neq 0</span>. This means gradient descent with step size <span class="math inline">\alpha \leq 1/L</span> is a <strong>monotonically improving</strong> algorithm: <span class="math inline">f(x^0) \geq f(x^1) \geq f(x^2) \geq \cdots</span>.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>Start from the quadratic upper bound (<a href="#eq-quadratic-upper" class="quarto-xref">Equation&nbsp;<span>6.8</span></a>):</p>
+<p><span class="math display">f(x^+) \leq f(x) + \nabla f(x)^\top(x^+ - x) + \frac{L}{2}\|x^+ - x\|_2^2.</span></p>
+<p>Substitute the GD update <span class="math inline">x^+ - x = -\alpha\,\nabla f(x)</span>:</p>
+<p><span class="math display">f(x^+) \leq f(x) - \alpha\|\nabla f(x)\|_2^2 + \frac{L\alpha^2}{2}\|\nabla f(x)\|_2^2 = f(x) - \alpha\!\left(1 - \frac{L\alpha}{2}\right)\|\nabla f(x)\|_2^2.</span></p>
+<p>Since <span class="math inline">\alpha \leq 1/L</span>, we have <span class="math inline">L\alpha/2 \leq 1/2</span>, so <span class="math inline">(1 - L\alpha/2) \geq 1/2</span>:</p>
+<p><span class="math display">f(x^+) \leq f(x) - \frac{\alpha}{2}\|\nabla f(x)\|_2^2. \qquad \blacksquare</span></p>
+</div>
+</section>
+<section id="three-cases" class="level3" data-number="6.5.5">
+<h3 data-number="6.5.5" class="anchored" data-anchor-id="three-cases"><span class="header-section-number">6.5.5</span> Three Convergence Cases</h3>
+<p>With the descent lemma in hand, we can analyze gradient descent under three settings of increasing structure. Each added assumption yields a strictly faster convergence rate.</p>
+<div id="fig-three-cases" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-three-cases-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch05-three-cases.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-6" title="Figure&nbsp;6.6: Convergence rates of gradient descent under three structural assumptions: nonconvex + smooth (finding approximate stationary points), convex + smooth (sublinear O(1/K) convergence to the global minimum), and strongly convex + smooth (linear convergence governed by the condition number \kappa)."><img src="figures/ch05-three-cases.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-three-cases-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.6: Convergence rates of gradient descent under three structural assumptions: nonconvex + smooth (finding approximate stationary points), convex + smooth (sublinear <span class="math inline">O(1/K)</span> convergence to the global minimum), and strongly convex + smooth (linear convergence governed by the condition number <span class="math inline">\kappa</span>).
+</figcaption>
+</figure>
+</div>
+<section id="case1" class="level4" data-number="6.5.5.1">
+<h4 data-number="6.5.5.1" class="anchored" data-anchor-id="case1"><span class="header-section-number">6.5.5.1</span> Case 1: Nonconvex + Smooth</h4>
+<p>When <span class="math inline">f</span> is only smooth (possibly nonconvex), we cannot hope to find a global minimum—the function may have many local minima and saddle points. The best we can guarantee is finding an <strong>approximate stationary point</strong> where <span class="math inline">\|\nabla f(x)\| \leq \varepsilon</span>.</p>
+<div id="thm-nonconvex-smooth" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 6.6 (Theorem 7.11 (GD: Nonconvex + Smooth))</strong></span> If <span class="math inline">f</span> is <span class="math inline">L</span>-smooth and <span class="math inline">\alpha = 1/L</span>, then after <span class="math inline">K</span> iterations:</p>
+<p><span class="math display">\min_{0 \leq k &lt; K} \|\nabla f(x^k)\|_2^2 \leq \frac{2L\bigl(f(x^0) - f(x^*)\bigr)}{K}.</span></p>
+<p>To find an <span class="math inline">\varepsilon</span>-approximate stationary point (<span class="math inline">\|\nabla f(x)\|_2 \leq \varepsilon</span>), we need <span class="math inline">K = O(L/\varepsilon^2)</span> iterations.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>By the descent lemma (<a href="#eq-descent-lemma" class="quarto-xref">Equation&nbsp;<span>6.9</span></a>), each step satisfies <span class="math inline">f(x^{k+1}) \leq f(x^k) - \frac{1}{2L}\|\nabla f(x^k)\|_2^2</span>. Rearranging:</p>
+<p><span class="math display">\frac{1}{2L}\|\nabla f(x^k)\|_2^2 \leq f(x^k) - f(x^{k+1}).</span></p>
+<p>Now sum from <span class="math inline">k = 0</span> to <span class="math inline">K-1</span>. The right-hand side <strong>telescopes</strong>:</p>
+<p><span class="math display">\frac{1}{2L}\sum_{k=0}^{K-1}\|\nabla f(x^k)\|_2^2 \leq \bigl(f(x^0) - f(x^1)\bigr) + \bigl(f(x^1) - f(x^2)\bigr) + \cdots + \bigl(f(x^{K-1}) - f(x^K)\bigr) = f(x^0) - f(x^K) \leq f(x^0) - f(x^*).</span></p>
+<p>Since the minimum is at most the average: <span class="math inline">\min_{k} \|\nabla f(x^k)\|_2^2 \leq \frac{1}{K}\sum_k \|\nabla f(x^k)\|_2^2</span>. Dividing by <span class="math inline">K</span> gives the result. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Intuition
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The descent lemma says each step “uses up” at least <span class="math inline">\frac{1}{2L}\|\nabla f(x^k)\|_2^2</span> of the initial gap <span class="math inline">f(x^0) - f(x^*)</span>. Since this gap is finite, the gradients must eventually become small. After <span class="math inline">K</span> steps, at least one iterate has gradient norm at most <span class="math inline">O(1/\sqrt{K})</span>.</p>
+</div>
+</div>
+</section>
+<section id="case2" class="level4" data-number="6.5.5.2">
+<h4 data-number="6.5.5.2" class="anchored" data-anchor-id="case2"><span class="header-section-number">6.5.5.2</span> Case 2: Convex + Smooth</h4>
+<p>When <span class="math inline">f</span> is convex, every local minimum is a global minimum, so we can track the <strong>function value gap</strong> <span class="math inline">f(x^k) - f(x^*)</span> instead of just the gradient norm. Convexity upgrades the guarantee from “finding a stationary point” to “finding an approximate global minimizer.”</p>
+<div id="thm-convex-smooth" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 6.7 (Theorem 7.12 (GD: Convex + Smooth))</strong></span> If <span class="math inline">f</span> is convex and <span class="math inline">L</span>-smooth, with <span class="math inline">\alpha = 1/L</span>, then:</p>
+<p><span class="math display">f(x^K) - f(x^*) \leq \frac{L\|x^0 - x^*\|_2^2}{2K}.</span></p>
+<p>To achieve <span class="math inline">f(x^K) - f(x^*) \leq \varepsilon</span>, we need <span class="math inline">K = O(L/\varepsilon)</span> iterations.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>The proof combines smoothness with convexity in an elegant telescoping argument.</p>
+<p><strong>Step 1 (Smoothness).</strong> The quadratic upper bound (<a href="#eq-quadratic-upper" class="quarto-xref">Equation&nbsp;<span>6.8</span></a>) gives:</p>
+<p><span class="math display">f(x^{k+1}) \leq f(x^k) + \nabla f(x^k)^\top(x^{k+1} - x^k) + \frac{L}{2}\|x^{k+1} - x^k\|_2^2.</span></p>
+<p><strong>Step 2 (Convexity).</strong> The first-order characterization of convexity gives:</p>
+<p><span class="math display">f(x^*) \geq f(x^k) + \nabla f(x^k)^\top(x^* - x^k).</span></p>
+<p><strong>Step 3 (Combine).</strong> Subtracting Step 2 from Step 1 eliminates <span class="math inline">f(x^k)</span>:</p>
+<p><span class="math display">f(x^{k+1}) - f(x^*) \leq \nabla f(x^k)^\top(x^{k+1} - x^*) + \frac{L}{2}\|x^{k+1} - x^k\|_2^2.</span></p>
+<p>Substituting <span class="math inline">\nabla f(x^k) = \frac{1}{\alpha}(x^k - x^{k+1})</span> and using the algebraic identity <span class="math inline">\langle a - b,\, a - c \rangle = \frac{1}{2}\|a - b\|^2 + \frac{1}{2}\|a - c\|^2 - \frac{1}{2}\|b - c\|^2</span>, this simplifies to a telescoping bound:</p>
+<p><span id="eq-convex-telescope"><span class="math display">f(x^{k+1}) - f(x^*) \leq \frac{1}{2\alpha}\bigl[\|x^k - x^*\|_2^2 - \|x^{k+1} - x^*\|_2^2\bigr]. \tag{6.10}</span></span></p>
+<p><strong>Step 4 (Telescope).</strong> Summing <a href="#eq-convex-telescope" class="quarto-xref">Equation&nbsp;<span>6.10</span></a> over <span class="math inline">k = 0, \ldots, K-1</span>, the right side telescopes:</p>
+<p><span class="math display">\sum_{k=0}^{K-1}\bigl(f(x^{k+1}) - f(x^*)\bigr) \leq \frac{L}{2}\bigl[\|x^0 - x^*\|_2^2 - \|x^K - x^*\|_2^2\bigr] \leq \frac{L}{2}\|x^0 - x^*\|_2^2.</span></p>
+<p>Since <span class="math inline">f(x^k)</span> is monotonically decreasing (by the descent lemma), <span class="math inline">f(x^K)</span> is the smallest value:</p>
+<p><span class="math display">K \cdot \bigl(f(x^K) - f(x^*)\bigr) \leq \sum_{k=0}^{K-1}\bigl(f(x^{k+1}) - f(x^*)\bigr) \leq \frac{L}{2}\|x^0 - x^*\|_2^2.</span></p>
+<p>Dividing by <span class="math inline">K</span> gives the result. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Intuition
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Each GD step reduces the squared distance <span class="math inline">\|x^k - x^*\|_2^2</span> to the optimum. After <span class="math inline">K</span> steps, the total distance “budget” <span class="math inline">\|x^0 - x^*\|_2^2</span> is spread over <span class="math inline">K</span> steps, giving a <span class="math inline">1/K</span> rate for the function value gap.</p>
+</div>
+</div>
+</section>
+<section id="case3" class="level4" data-number="6.5.5.3">
+<h4 data-number="6.5.5.3" class="anchored" data-anchor-id="case3"><span class="header-section-number">6.5.5.3</span> Case 3: Strongly Convex + Smooth</h4>
+<p>The strongest setting gives the best result: <strong>linear convergence</strong> (also called geometric or exponential convergence), where the error contracts by a fixed factor at each step.</p>
+<div id="thm-sc-smooth" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 6.8 (Theorem 7.13 (GD: Strongly Convex + Smooth))</strong></span> If <span class="math inline">f</span> is <span class="math inline">\mu</span>-strongly convex and <span class="math inline">L</span>-smooth, with step size <span class="math inline">\alpha = \frac{2}{\mu + L}</span> and condition number <span class="math inline">\kappa = L/\mu</span>, then:</p>
+<p><span id="eq-sc-rate-iterates"><span class="math display">\|x^k - x^*\|_2 \leq \left(\frac{\kappa - 1}{\kappa + 1}\right)^k \|x^0 - x^*\|_2, \tag{6.11}</span></span></p>
+<p><span id="eq-sc-rate-function"><span class="math display">f(x^k) - f(x^*) \leq \frac{L}{2}\left(\frac{\kappa - 1}{\kappa + 1}\right)^{2k} \|x^0 - x^*\|_2^2. \tag{6.12}</span></span></p>
+<p>To achieve <span class="math inline">f(x^k) - f(x^*) \leq \varepsilon</span>, we need <span class="math inline">K = O(\kappa \log(1/\varepsilon))</span> iterations.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>By the mean value theorem, there exists a point <span class="math inline">\xi</span> on the segment between <span class="math inline">x^k</span> and <span class="math inline">x^*</span> such that <span class="math inline">\nabla f(x^k) - \nabla f(x^*) = \nabla^2 f(\xi)(x^k - x^*)</span>. Since <span class="math inline">\nabla f(x^*) = 0</span>, the GD update gives:</p>
+<p><span class="math display">x^{k+1} - x^* = x^k - x^* - \alpha\,\nabla f(x^k) = \bigl(I - \alpha\,\nabla^2 f(\xi)\bigr)(x^k - x^*).</span></p>
+<p>The eigenvalues of <span class="math inline">\nabla^2 f(\xi)</span> lie in <span class="math inline">[\mu, L]</span> (by strong convexity and smoothness), so the eigenvalues of <span class="math inline">I - \alpha\,\nabla^2 f(\xi)</span> lie in <span class="math inline">[1 - \alpha L,\, 1 - \alpha\mu]</span>.</p>
+<p>With the optimal step size <span class="math inline">\alpha = \frac{2}{\mu + L}</span>:</p>
+<p><span class="math display">\max\{|1 - \alpha\mu|,\, |1 - \alpha L|\} = \frac{L - \mu}{L + \mu} = \frac{\kappa - 1}{\kappa + 1}.</span></p>
+<p>Therefore <span class="math inline">\|x^{k+1} - x^*\|_2 \leq \frac{\kappa - 1}{\kappa + 1}\|x^k - x^*\|_2</span>, and unrolling gives <a href="#eq-sc-rate-iterates" class="quarto-xref">Equation&nbsp;<span>6.11</span></a>. The function value bound <a href="#eq-sc-rate-function" class="quarto-xref">Equation&nbsp;<span>6.12</span></a> follows from the smoothness inequality <span class="math inline">f(x) - f(x^*) \leq \frac{L}{2}\|x - x^*\|_2^2</span>. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Intuition: Why Logarithmic Iterations
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Linear convergence means the error decreases <strong>geometrically</strong>: after <span class="math inline">k</span> steps, the error is multiplied by <span class="math inline">\rho^k</span> where <span class="math inline">\rho = \frac{\kappa-1}{\kappa+1} &lt; 1</span>. To reduce the error from <span class="math inline">\Delta_0</span> to <span class="math inline">\varepsilon</span>, we need <span class="math inline">\rho^k \cdot \Delta_0 \leq \varepsilon</span>, i.e., <span class="math inline">k \geq \frac{\log(\Delta_0/\varepsilon)}{\log(1/\rho)}</span>. Since <span class="math inline">\log(1/\rho) \approx 2/\kappa</span> for large <span class="math inline">\kappa</span>, this gives <span class="math inline">k = O(\kappa \log(1/\varepsilon))</span>.</p>
+<p><strong>Concrete comparison:</strong> Convex + smooth needs <span class="math inline">O(1/\varepsilon)</span> iterations (e.g., 1,000,000 for <span class="math inline">\varepsilon = 10^{-6}</span>), while strongly convex + smooth needs only <span class="math inline">O(\kappa \cdot \log(1/\varepsilon)) \approx 14\kappa</span> iterations for the same accuracy.</p>
+</div>
+</div>
+</section>
+<section id="convergence-summary-table" class="level4" data-number="6.5.5.4">
+<h4 data-number="6.5.5.4" class="anchored" data-anchor-id="convergence-summary-table"><span class="header-section-number">6.5.5.4</span> Convergence Summary</h4>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 25%">
+<col style="width: 18%">
+<col style="width: 7%">
+<col style="width: 36%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Setting</th>
+<th style="text-align: left;">Step size <span class="math inline">\alpha</span></th>
+<th style="text-align: left;">Error measure</th>
+<th style="text-align: left;">Rate</th>
+<th style="text-align: left;">Iterations for <span class="math inline">\varepsilon</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Nonconvex + Smooth</td>
+<td style="text-align: left;"><span class="math inline">1/L</span></td>
+<td style="text-align: left;"><span class="math inline">\min_k\|\nabla f(x^k)\|_2^2</span></td>
+<td style="text-align: left;"><span class="math inline">O(1/K)</span></td>
+<td style="text-align: left;"><span class="math inline">O(1/\varepsilon^2)</span> for <span class="math inline">\|\nabla f\| \leq \varepsilon</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Convex + Smooth</td>
+<td style="text-align: left;"><span class="math inline">1/L</span></td>
+<td style="text-align: left;"><span class="math inline">f(x^K) - f(x^*)</span></td>
+<td style="text-align: left;"><span class="math inline">O(1/K)</span></td>
+<td style="text-align: left;"><span class="math inline">O(1/\varepsilon)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Strongly Convex + Smooth</td>
+<td style="text-align: left;"><span class="math inline">2/(\mu+L)</span></td>
+<td style="text-align: left;"><span class="math inline">\|x^k - x^*\|_2</span></td>
+<td style="text-align: left;"><span class="math inline">\left(\frac{\kappa-1}{\kappa+1}\right)^k</span></td>
+<td style="text-align: left;"><span class="math inline">O(\kappa\log(1/\varepsilon))</span></td>
+</tr>
+</tbody>
+</table>
+<p>Each row adds a structural assumption and gains a faster rate. The jump from <span class="math inline">O(1/K)</span> to linear convergence is the most dramatic: it is the difference between polynomial and logarithmic dependence on the target accuracy <span class="math inline">\varepsilon</span>. See <a href="07-momentum-adaptive-sgd.html#fig-convergence-rates" class="quarto-xref">Figure&nbsp;<span>7.10</span></a> for a visual comparison across different method classes.</p>
+</section>
+</section>
+<section id="pl-condition" class="level3" data-number="6.5.6">
+<h3 data-number="6.5.6" class="anchored" data-anchor-id="pl-condition"><span class="header-section-number">6.5.6</span> The Polyak–Łojasiewicz Condition</h3>
+<p>A remarkable fact is that we do not need strong convexity—or even convexity at all—to achieve linear convergence. The <strong>Polyak–Łojasiewicz (PL) condition</strong> is a weaker assumption that still guarantees the same rate.</p>
+<div id="def-pl" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 6.6 (Definition 7.14 (Polyak–Łojasiewicz Condition))</strong></span> A function <span class="math inline">f</span> satisfies the <strong>PL condition</strong> with parameter <span class="math inline">\mu &gt; 0</span> if</p>
+<p><span class="math display">\|\nabla f(x)\|_2^2 \geq 2\mu \cdot \bigl(f(x) - f(x^*)\bigr) \qquad \forall\, x.</span></p>
+</div>
+<p>The PL condition says: <em>whenever the gradient is small, the function value must be close to optimal</em>. This is automatically satisfied by <span class="math inline">\mu</span>-strongly convex functions (it is their “gradient domination” property), but it can also hold for some <strong>nonconvex</strong> functions.</p>
+<p><strong>PL + smoothness gives linear convergence.</strong> Combining the descent lemma (<a href="#eq-descent-lemma" class="quarto-xref">Equation&nbsp;<span>6.9</span></a>) with the PL condition, and using step size <span class="math inline">\alpha = 1/L</span>:</p>
+<p><span class="math display">f(x^{k+1}) - f(x^*) \leq f(x^k) - f(x^*) - \frac{1}{2L}\|\nabla f(x^k)\|_2^2 \stackrel{\text{PL}}{\leq} \left(1 - \frac{\mu}{L}\right)\bigl(f(x^k) - f(x^*)\bigr).</span></p>
+<p>This gives <span class="math inline">f(x^k) - f(x^*) \leq (1 - \mu/L)^k \cdot (f(x^0) - f(x^*))</span>—the same linear convergence rate, without assuming convexity. The PL condition arises naturally in many practical settings, such as over-parameterized least squares and certain neural network training problems.</p>
+</section>
+</section>
+<section id="stopping-criteria" class="level2" data-number="6.6">
+<h2 data-number="6.6" class="anchored" data-anchor-id="stopping-criteria"><span class="header-section-number">6.6</span> Stopping Criteria</h2>
+<p>The convergence theorems above guarantee that gradient descent <em>eventually</em> finds a good solution, but they do not tell the algorithm when to stop. In practice, we need a computable criterion to decide that the current iterate is “close enough” to optimal. The choice of stopping criterion should reflect the convergence guarantee: for nonconvex problems, monitor the gradient norm; for convex problems, the function value gap or iterate distance may be more appropriate.</p>
+<p>Set <span class="math inline">\varepsilon</span> to be a small number. Common stopping criteria:</p>
+<ol type="1">
+<li><strong>Gradient norm:</strong> <span class="math inline">\|\nabla f(x)\| \leq \varepsilon</span>.
+<ul>
+<li>We find an <span class="math inline">\varepsilon</span>-approximate stationary point. If <span class="math inline">f</span> is convex, stationary point <span class="math inline">\iff</span> optimal solution.</li>
+</ul></li>
+<li><strong>Objective change:</strong> <span class="math inline">|f(x_{k+1}) - f(x_k)| \leq \varepsilon</span> (or <span class="math inline">|f(x_{k+\ell}) - f(x_k)| \leq \varepsilon</span> for some fixed <span class="math inline">\ell</span>).
+<ul>
+<li>The objective does not change much.</li>
+</ul></li>
+<li><strong>Iterate change:</strong> <span class="math inline">\|x_{k+1} - x_k\| \leq \varepsilon</span>.
+<ul>
+<li>The iterates do not change much.</li>
+</ul></li>
+<li><strong>Relative objective change:</strong> <span class="math inline">\displaystyle\frac{|f(x_{k+1}) - f(x_k)|}{\max\{1,\, |f(x_k)|\}} &lt; \varepsilon</span>.
+<ul>
+<li>Removes the effect of the magnitude of <span class="math inline">f</span>.</li>
+</ul></li>
+<li><strong>Relative iterate change:</strong> <span class="math inline">\displaystyle\frac{\|x_{k+1} - x_k\|}{\max\{1,\, \|x_k\|\}} &lt; \varepsilon</span>.</li>
+</ol>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Looking Ahead
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The convergence rates in this chapter—<span class="math inline">O(1/K)</span> for convex functions and <span class="math inline">O(\rho^k)</span> for strongly convex functions—are fundamental baselines, but they can be improved. In the next chapter, we study advanced first-order methods: momentum techniques (Heavy-Ball, Nesterov acceleration) that achieve the optimal <span class="math inline">O(1/K^2)</span> rate for smooth convex functions, and adaptive learning rate methods (AdaGrad, RMSProp, Adam) that automatically tune per-coordinate step sizes.</p>
+</div>
+</div>
+</section>
+<section id="summary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
+<ul>
+<li><strong>Iterative descent framework.</strong> All first-order methods share the update <span class="math inline">x^{k+1} = x^k + \alpha^k d^k</span>; convergence requires <span class="math inline">d^k</span> to be a descent direction (<span class="math inline">\langle d^k, \nabla f(x^k) \rangle &lt; 0</span>) and an appropriate step size <span class="math inline">\alpha^k</span>.</li>
+<li><strong>Steepest descent and its variants.</strong> Choosing different norms in the steepest descent problem yields gradient descent (<span class="math inline">\ell_2</span>), coordinate descent (<span class="math inline">\ell_1</span>), and sign gradient descent (<span class="math inline">\ell_\infty</span>); choosing <span class="math inline">B^k = [\nabla^2 f(x^k)]^{-1}</span> gives Newton’s direction.</li>
+<li><strong>Step size strategies.</strong> Constant step sizes are simple but require tuning; diminishing step sizes (<span class="math inline">\alpha^k \to 0</span>, <span class="math inline">\sum \alpha^k = \infty</span>) guarantee convergence; backtracking line search adaptively finds a step size ensuring sufficient decrease.</li>
+<li><strong>Smoothness and strong convexity.</strong> <span class="math inline">L</span>-smoothness (<span class="math inline">\|\nabla f(x) - \nabla f(y)\| \leq L\|x-y\|</span>) bounds curvature from above; <span class="math inline">\mu</span>-strong convexity bounds curvature from below. Together they sandwich the Hessian eigenvalues in <span class="math inline">[\mu, L]</span>, and their ratio <span class="math inline">\kappa = L/\mu</span> is the condition number.</li>
+<li><strong>Descent lemma.</strong> If <span class="math inline">f</span> is <span class="math inline">L</span>-smooth and <span class="math inline">\alpha \leq 1/L</span>, then <span class="math inline">f(x^+) \leq f(x) - \frac{\alpha}{2}\|\nabla f(x)\|^2</span>: every GD step makes guaranteed progress.</li>
+<li><strong>Three convergence cases.</strong> Nonconvex + smooth: <span class="math inline">\min_k \|\nabla f(x^k)\|^2 = O(1/K)</span>. Convex + smooth: <span class="math inline">f(x^K) - f^* = O(1/K)</span>. Strongly convex + smooth: linear convergence <span class="math inline">O((\frac{\kappa-1}{\kappa+1})^k)</span>, needing <span class="math inline">O(\kappa\log(1/\varepsilon))</span> iterations.</li>
+<li><strong>PL condition.</strong> The Polyak–Łojasiewicz condition <span class="math inline">\|\nabla f(x)\|^2 \geq 2\mu(f(x) - f^*)</span> yields linear convergence without convexity.</li>
+</ul>
+<!-- Plotly.js for interactive figures -->
+<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+
+<style>
+  .figure-container { margin: 2rem 0; background: #f0ebe5; border: 1px solid #d5cdc4; border-radius: 10px; padding: 1.25rem; box-shadow: 0 1px 4px rgba(61,53,48,0.08); }
+  .figure-caption { text-align: center; font-size: 0.88rem; color: #968a80; margin-top: 0.75rem; font-style: italic; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const plotlyConfig = {responsive: true, displayModeBar: false};
+  const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+  const figFontHeading = '"Crimson Pro", Georgia, serif';
+
+  function themeLayout(extra = {}) {
+    return Object.assign({
+      paper_bgcolor: '#f0ebe5',
+      plot_bgcolor: '#faf7f3',
+      font: { family: figFont, color: '#3d3530', size: 14 },
+    }, extra);
+  }
+
+  function themeAxis(title, extra = {}) {
+    return Object.assign({
+      title: {text: title, font: {family: figFont, size: 14}},
+      gridcolor: '#e0d9d1',
+      zerolinecolor: '#e0d9d1',
+      linecolor: '#968a80',
+      tickfont: {family: figFont, size: 12, color: '#968a80'},
+    }, extra);
+  }
+
+  function legendStyle() {
+    return {
+      font: {family: figFont, size: 13, color: '#3d3530'},
+      bgcolor: '#f0ebe5dd',
+      bordercolor: '#e0d9d1',
+      borderwidth: 1,
+    };
+  }
+
+  // ---- Figure 1: Descent Direction ----
+  (function() {
+    const el = document.getElementById('fig-descent-direction');
+    if (!el) return;
+    const traces = [];
+    for (let r = 1; r <= 4; r++) {
+      const theta = Array.from({length: 100}, (_, i) => 2 * Math.PI * i / 99);
+      traces.push({
+        x: theta.map(t => r * Math.cos(t) * 1.5),
+        y: theta.map(t => r * Math.sin(t)),
+        mode: 'lines',
+        line: {color: '#b8995e', width: 1, dash: r === 2 ? 'solid' : 'dot'},
+        showlegend: false, hoverinfo: 'skip'
+      });
+    }
+    traces.push({
+      x: [0], y: [0], mode: 'markers+text',
+      marker: {color: '#8a6e5e', size: 10},
+      text: ['x'], textposition: 'bottom left',
+      textfont: {family: figFont, size: 14, color: '#3d3530'},
+      name: 'Current point x', hoverinfo: 'name'
+    });
+    const gx = 2.5, gy = 1.5;
+    traces.push({
+      x: [0, gx], y: [0, gy], mode: 'lines',
+      line: {color: '#b56b6b', width: 3},
+      name: 'Gradient nabla f(x)'
+    });
+    traces.push({
+      x: [gx], y: [gy], mode: 'markers',
+      marker: {color: '#b56b6b', size: 10, symbol: 'triangle-up'},
+      showlegend: false, hoverinfo: 'skip'
+    });
+    traces.push({
+      x: [0, -gx], y: [0, -gy], mode: 'lines',
+      line: {color: '#7a9a7e', width: 3},
+      name: 'Steepest descent -nabla f(x)'
+    });
+    const perpX = [-gy, gy];
+    const perpY = [gx, -gx];
+    const scale = 2.5 / Math.sqrt(gx*gx + gy*gy);
+    traces.push({
+      x: perpX.map(v => v * scale), y: perpY.map(v => v * scale),
+      mode: 'lines', line: {color: '#968a80', width: 2, dash: 'dash'},
+      name: 'Boundary: d^T nabla f = 0'
+    });
+    const hsX = [perpX[0]*scale, perpX[1]*scale, perpX[1]*scale - gx*2, perpX[0]*scale - gx*2];
+    const hsY = [perpY[0]*scale, perpY[1]*scale, perpY[1]*scale - gy*2, perpY[0]*scale - gy*2];
+    traces.push({
+      x: [...hsX, hsX[0]], y: [...hsY, hsY[0]],
+      fill: 'toself', fillcolor: 'rgba(122,154,126,0.2)',
+      line: {color: 'transparent'}, showlegend: false, hoverinfo: 'skip'
+    });
+    const angles = [-0.6, -0.3, 0, 0.3, 0.6];
+    const baseAngle = Math.atan2(-gy, -gx);
+    angles.forEach(a => {
+      const ang = baseAngle + a;
+      const len = 1.8;
+      traces.push({
+        x: [0, len*Math.cos(ang)], y: [0, len*Math.sin(ang)],
+        mode: 'lines', line: {color: '#7b97ad', width: 1.5},
+        showlegend: false, hoverinfo: 'skip'
+      });
+    });
+    const layout = themeLayout({
+      xaxis: themeAxis('', {range: [-4, 4], zeroline: false}),
+      yaxis: themeAxis('', {range: [-3, 3], zeroline: false, scaleanchor: 'x'}),
+      showlegend: true, legend: Object.assign({x: 0.01, y: 0.99}, legendStyle()),
+      margin: {t: 20, b: 40, l: 45, r: 20},
+    });
+    Plotly.newPlot(el, traces, layout, plotlyConfig);
+  })();
+
+  // ---- Figure 2: GD on ill-conditioned quadratic ----
+  (function() {
+    const el = document.getElementById('fig-gd-contours');
+    if (!el) return;
+    const a = 1, b = 10;
+    const alpha = 0.15;
+    let x = 5.0, y = 5.0;
+    const trajX = [x], trajY = [y];
+    for (let k = 0; k < 25; k++) {
+      x = x - alpha * a * x;
+      y = y - alpha * b * y;
+      trajX.push(x); trajY.push(y);
+    }
+    const traces = [];
+    const levels = [5, 20, 50, 100, 150];
+    levels.forEach(L => {
+      const theta = Array.from({length: 200}, (_, i) => 2*Math.PI*i/199);
+      const r = Math.sqrt(2*L);
+      traces.push({
+        x: theta.map(t => r/Math.sqrt(a)*Math.cos(t)),
+        y: theta.map(t => r/Math.sqrt(b)*Math.sin(t)),
+        mode: 'lines', line: {color: '#b8995e', width: 1},
+        showlegend: false, hoverinfo: 'skip'
+      });
+    });
+    traces.push({
+      x: trajX, y: trajY, mode: 'lines+markers',
+      line: {color: '#7b97ad', width: 2},
+      marker: {color: '#7b97ad', size: 4},
+      name: 'GD trajectory'
+    });
+    traces.push({
+      x: [trajX[0]], y: [trajY[0]], mode: 'markers',
+      marker: {color: '#8a6e5e', size: 10, symbol: 'circle'},
+      name: 'Start'
+    });
+    traces.push({
+      x: [0], y: [0], mode: 'markers',
+      marker: {color: '#b56b6b', size: 12, symbol: 'star'},
+      name: 'Optimum (0,0)'
+    });
+    const layout = themeLayout({
+      title: {text: 'GD on f = 0.5*(1x\u00b2 + 10y\u00b2), \u03b1=0.15', font: {family: figFontHeading, size: 15, color: '#3d3530'}},
+      xaxis: themeAxis('x', {range: [-2, 7]}),
+      yaxis: themeAxis('y', {range: [-6, 7], scaleanchor: 'x'}),
+      showlegend: true, legend: Object.assign({x: 0.6, y: 1}, legendStyle()),
+      margin: {t: 48, b: 50, l: 55, r: 20},
+    });
+    Plotly.newPlot(el, traces, layout, plotlyConfig);
+  })();
+
+  // ---- Figure 3: Zig-zag trajectory ----
+  (function() {
+    const el = document.getElementById('fig-zigzag');
+    if (!el) return;
+    const a = 1, b = 10;
+    const alpha = 0.18;
+    let x = 4.0, y = 3.0;
+    const trajX = [x], trajY = [y];
+    for (let k = 0; k < 20; k++) {
+      x = x - alpha * a * x;
+      y = y - alpha * b * y;
+      trajX.push(x); trajY.push(y);
+    }
+    const traces = [];
+    const levels = [2, 10, 30, 60];
+    levels.forEach(L => {
+      const theta = Array.from({length: 200}, (_, i) => 2*Math.PI*i/199);
+      const r = Math.sqrt(2*L);
+      traces.push({
+        x: theta.map(t => r/Math.sqrt(a)*Math.cos(t)),
+        y: theta.map(t => r/Math.sqrt(b)*Math.sin(t)),
+        mode: 'lines', line: {color: '#b8995e', width: 1, dash: 'dot'},
+        showlegend: false, hoverinfo: 'skip'
+      });
+    });
+    traces.push({
+      x: trajX, y: trajY, mode: 'lines+markers',
+      line: {color: '#ad8480', width: 2},
+      marker: {color: '#ad8480', size: 5},
+      name: 'GD \u03b1=0.18 (zig-zag)'
+    });
+    traces.push({
+      x: [trajX[0]], y: [trajY[0]], mode: 'markers',
+      marker: {color: '#8a6e5e', size: 10}, name: 'Start'
+    });
+    traces.push({
+      x: [0], y: [0], mode: 'markers',
+      marker: {color: '#b56b6b', size: 12, symbol: 'star'}, name: 'Optimum'
+    });
+    const layout = themeLayout({
+      title: {text: 'Zig-Zag: a=1, b=10, \u03b1=0.18 (1/b < \u03b1 < 2/b)', font: {family: figFontHeading, size: 15, color: '#3d3530'}},
+      xaxis: themeAxis('x (monotone convergence)', {range: [-1, 5]}),
+      yaxis: themeAxis('y (oscillates)', {range: [-4, 4], scaleanchor: 'x'}),
+      showlegend: true, legend: Object.assign({x: 0.55, y: 1}, legendStyle()),
+      margin: {t: 48, b: 55, l: 55, r: 20},
+    });
+    Plotly.newPlot(el, traces, layout, plotlyConfig);
+  })();
+
+  // ---- Figure 4: Learning rate schedules ----
+  (function() {
+    const el = document.getElementById('fig-lr-schedules');
+    if (!el) return;
+    const epochs = Array.from({length: 100}, (_, i) => i);
+    const lr0 = 0.1;
+    const stepLR = epochs.map(e => lr0 * Math.pow(0.5, Math.floor(e / 30)));
+    const cosineLR = epochs.map(e => lr0 * 0.5 * (1 + Math.cos(Math.PI * e / 100)));
+    const expLR = epochs.map(e => lr0 * Math.pow(0.95, e));
+    const warmupCosine = epochs.map(e => {
+      if (e < 10) return lr0 * e / 10;
+      return lr0 * 0.5 * (1 + Math.cos(Math.PI * (e - 10) / 90));
+    });
+    const dimLR = epochs.map(e => e === 0 ? lr0 : lr0 / (1 + 0.05 * e));
+    const traces = [
+      {x: epochs, y: stepLR, mode: 'lines', line: {color: '#7b97ad', width: 2.5}, name: 'StepLR'},
+      {x: epochs, y: cosineLR, mode: 'lines', line: {color: '#907ea0', width: 2.5, dash: 'dashdot'}, name: 'Cosine Annealing'},
+      {x: epochs, y: expLR, mode: 'lines', line: {color: '#b8995e', width: 2.5, dash: 'dash'}, name: 'Exponential Decay'},
+      {x: epochs, y: warmupCosine, mode: 'lines', line: {color: '#b56b6b', width: 2.5}, name: 'Warmup + Cosine'},
+      {x: epochs, y: dimLR, mode: 'lines', line: {color: '#7a9a7e', width: 2.5, dash: 'dot'}, name: 'Diminishing (1/k)'},
+    ];
+    const layout = themeLayout({
+      title: {text: 'Comparison of Learning Rate Schedules', font: {family: figFontHeading, size: 16, color: '#3d3530'}},
+      xaxis: themeAxis('Epoch', {range: [0, 100]}),
+      yaxis: themeAxis('Learning Rate', {range: [0, 0.12]}),
+      showlegend: true, legend: Object.assign({x: 0.55, y: 1}, legendStyle()),
+      margin: {t: 48, b: 50, l: 60, r: 20},
+    });
+    Plotly.newPlot(el, traces, layout, plotlyConfig);
+  })();
+
+});
+</script>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../lectures/05-convex-optimization.html" class="pagination-link" aria-label="Convex Optimization">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Convex Optimization</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../lectures/07-momentum-adaptive-sgd.html" class="pagination-link" aria-label="Momentum, Adaptive Methods, SGD, and Proximal Gradient">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+const figFontHeading = '"Crimson Pro", Georgia, serif';
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
+  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
+];
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>
