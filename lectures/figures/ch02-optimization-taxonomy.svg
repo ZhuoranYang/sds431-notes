@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" width="680" height="360">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+  </defs>
+
+  <!-- Vertical dividing line (gold dashed) -->
+  <line x1="378" y1="85" x2="378" y2="300" stroke="#b8995e" stroke-width="1.5" stroke-dasharray="6 4"/>
+
+  <!-- ===== ROW 1: Root ===== -->
+  <rect x="215" y="18" width="250" height="40" rx="6" fill="#f9f6f0" stroke="#968a80" stroke-width="2"/>
+  <text x="340" y="44" font-size="16" text-anchor="middle" font-weight="700">Optimization Problems</text>
+
+  <!-- Lines from root to row 2 -->
+  <line x1="340" y1="58" x2="185" y2="100" stroke="#968a80" stroke-width="1.5"/>
+  <line x1="340" y1="58" x2="500" y2="100" stroke="#968a80" stroke-width="1.5"/>
+
+  <!-- ===== ROW 2: Convex & Nonconvex ===== -->
+  <rect x="110" y="100" width="150" height="40" rx="6" fill="#e8f0e9" stroke="#7a9a7e" stroke-width="2"/>
+  <text x="185" y="126" font-size="15" text-anchor="middle" font-weight="700" fill="#5a7a5e">Convex</text>
+
+  <rect x="420" y="100" width="160" height="40" rx="6" fill="#f0e4e4" stroke="#b56b6b" stroke-width="2"/>
+  <text x="500" y="126" font-size="15" text-anchor="middle" font-weight="700" fill="#8a4b4b">Nonconvex</text>
+
+  <!-- Lines from Convex to children -->
+  <line x1="185" y1="140" x2="65" y2="195" stroke="#7a9a7e" stroke-width="1.2"/>
+  <line x1="185" y1="140" x2="150" y2="195" stroke="#7a9a7e" stroke-width="1.2"/>
+  <line x1="185" y1="140" x2="237" y2="195" stroke="#7a9a7e" stroke-width="1.2"/>
+  <line x1="185" y1="140" x2="322" y2="195" stroke="#7a9a7e" stroke-width="1.2"/>
+
+  <!-- Lines from Nonconvex to children -->
+  <line x1="500" y1="140" x2="437" y2="195" stroke="#b56b6b" stroke-width="1.2"/>
+  <line x1="500" y1="140" x2="535" y2="195" stroke="#b56b6b" stroke-width="1.2"/>
+  <line x1="500" y1="140" x2="632" y2="195" stroke="#b56b6b" stroke-width="1.2"/>
+
+  <!-- ===== ROW 3: Convex children ===== -->
+  <rect x="30" y="195" width="70" height="42" rx="5" fill="#e8f0e9" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="65" y="221" font-size="14" text-anchor="middle" fill="#5a7a5e" font-weight="600">LP</text>
+
+  <rect x="115" y="195" width="70" height="42" rx="5" fill="#e8f0e9" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="150" y="221" font-size="14" text-anchor="middle" fill="#5a7a5e" font-weight="600">QP</text>
+
+  <rect x="200" y="195" width="75" height="42" rx="5" fill="#e8f0e9" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="237" y="221" font-size="14" text-anchor="middle" fill="#5a7a5e" font-weight="600">SOCP</text>
+
+  <rect x="290" y="195" width="65" height="42" rx="5" fill="#e8f0e9" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="322" y="221" font-size="14" text-anchor="middle" fill="#5a7a5e" font-weight="600">SDP</text>
+
+  <!-- ===== ROW 3: Nonconvex children (dashed borders) ===== -->
+  <rect x="392" y="195" width="90" height="42" rx="5" fill="#f0e4e4" stroke="#b56b6b" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="437" y="211" font-size="12" text-anchor="middle" fill="#8a4b4b">Neural</text>
+  <text x="437" y="227" font-size="12" text-anchor="middle" fill="#8a4b4b">Networks</text>
+
+  <rect x="497" y="195" width="78" height="42" rx="5" fill="#f0e4e4" stroke="#b56b6b" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="536" y="211" font-size="12" text-anchor="middle" fill="#8a4b4b">Combi-</text>
+  <text x="536" y="227" font-size="12" text-anchor="middle" fill="#8a4b4b">natorial</text>
+
+  <rect x="590" y="195" width="85" height="42" rx="5" fill="#f0e4e4" stroke="#b56b6b" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="632" y="211" font-size="12" text-anchor="middle" fill="#8a4b4b">Mixed-</text>
+  <text x="632" y="227" font-size="12" text-anchor="middle" fill="#8a4b4b">Integer</text>
+
+  <!-- ===== ROW 4: Tractability labels ===== -->
+  <text x="185" y="280" font-size="14" text-anchor="middle" fill="#7a9a7e" font-style="italic">Tractable (polynomial-time)</text>
+  <text x="535" y="280" font-size="14" text-anchor="middle" fill="#b56b6b" font-style="italic">Hard in general (NP-hard)</text>
+
+  <!-- ===== Bottom label ===== -->
+  <text x="340" y="330" font-size="14" text-anchor="middle" fill="#b8995e" font-weight="600">Convexity: the dividing line between tractable and hard</text>
+</svg>

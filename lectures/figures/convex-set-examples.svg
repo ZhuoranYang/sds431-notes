@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 340" width="750" height="340">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#3d352f"/>
+    </marker>
+  </defs>
+
+  <text x="375" y="24" text-anchor="middle" font-size="16" font-weight="bold">Examples of Convex Sets</text>
+
+  <!-- (a) Halfspace -->
+  <rect x="15" y="65" width="110" height="110" fill="#7b97ad" fill-opacity="0.1" stroke="none"/>
+  <line x1="125" y1="55" x2="125" y2="185" stroke="#7b97ad" stroke-width="2"/>
+  <text x="70" y="125" text-anchor="middle" font-size="11" fill="#7b97ad">𝑎&#x1D40;𝑥 &lt;= 𝑏</text>
+  <line x1="125" y1="120" x2="145" y2="120" stroke="#3d352f" stroke-width="1" marker-end="url(#arr)"/>
+  <text x="150" y="116" font-size="9" fill="#968a80">𝑎</text>
+  <text x="70" y="210" text-anchor="middle" font-size="12" font-weight="bold">(a) Halfspace</text>
+
+  <!-- (b) Polyhedron -->
+  <polygon points="195,80 255,65 285,100 270,165 210,170" fill="#7a9a7e" fill-opacity="0.12" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="240" y="125" text-anchor="middle" font-size="11" fill="#7a9a7e">𝐴𝑥 &lt;= 𝑏</text>
+  <text x="240" y="210" text-anchor="middle" font-size="12" font-weight="bold">(b) Polyhedron</text>
+
+  <!-- (c) Cone -->
+  <polygon points="365,170 395,65 435,170" fill="#b8995e" fill-opacity="0.1" stroke="#b8995e" stroke-width="1.5"/>
+  <line x1="395" y1="170" x2="395" y2="60" stroke="#b8995e" stroke-width="0.6" stroke-dasharray="3 2"/>
+  <text x="400" y="130" font-size="11" fill="#b8995e">cone</text>
+  <text x="400" y="210" text-anchor="middle" font-size="12" font-weight="bold">(c) Cone</text>
+
+  <!-- (d) Ball -->
+  <circle cx="520" cy="120" r="50" fill="#907ea0" fill-opacity="0.1" stroke="#907ea0" stroke-width="1.5"/>
+  <circle cx="520" cy="120" r="2" fill="#907ea0"/>
+  <text x="525" y="116" font-size="10" fill="#907ea0">𝑥₀</text>
+  <line x1="520" y1="120" x2="560" y2="100" stroke="#907ea0" stroke-width="0.8"/>
+  <text x="545" y="100" font-size="9" fill="#907ea0">𝑟</text>
+  <text x="520" y="210" text-anchor="middle" font-size="12" font-weight="bold">(d) Ball</text>
+
+  <!-- (e) Ellipsoid -->
+  <ellipse cx="630" cy="120" rx="55" ry="35" fill="#ad8480" fill-opacity="0.1" stroke="#ad8480" stroke-width="1.5" transform="rotate(-20,630,120)"/>
+  <circle cx="630" cy="120" r="2" fill="#ad8480"/>
+  <text x="630" y="125" text-anchor="middle" font-size="10" fill="#ad8480">𝑥₀</text>
+  <text x="630" y="210" text-anchor="middle" font-size="12" font-weight="bold">(e) Ellipsoid</text>
+
+  <!-- (f) Non-convex set -->
+  <path d="M 50,255 Q 30,270 50,300 Q 80,330 110,300 Q 80,280 110,255 Q 80,230 50,255 Z" fill="#b56b6b" fill-opacity="0.1" stroke="#b56b6b" stroke-width="1.5"/>
+  <!-- Dotted line showing two points and midpoint outside -->
+  <circle cx="55" cy="270" r="3" fill="#b56b6b"/>
+  <circle cx="105" cy="270" r="3" fill="#b56b6b"/>
+  <line x1="55" y1="270" x2="105" y2="270" stroke="#b56b6b" stroke-width="1" stroke-dasharray="3 2"/>
+  <text x="80" y="262" text-anchor="middle" font-size="9" fill="#b56b6b">midpoint outside!</text>
+  <text x="80" y="330" text-anchor="middle" font-size="12" font-weight="bold" fill="#b56b6b">(f) Non-convex</text>
+</svg>

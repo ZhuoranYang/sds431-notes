@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 340" width="680" height="340">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#968a80"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="340" y="30" text-anchor="middle" font-size="16" font-weight="bold">Adam = Momentum + RMSProp</text>
+
+  <!-- Gradient input -->
+  <rect x="280" y="55" width="120" height="36" rx="8" fill="#f9f6f0" stroke="#968a80" stroke-width="1.5"/>
+  <text x="340" y="78" text-anchor="middle" font-size="13">Gradient 𝑔ₜ</text>
+
+  <!-- Split arrows -->
+  <line x1="300" y1="91" x2="170" y2="130" stroke="#968a80" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="380" y1="91" x2="510" y2="130" stroke="#968a80" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <!-- Momentum (first moment) -->
+  <rect x="70" y="135" width="200" height="70" rx="10" fill="#7b97ad" fill-opacity="0.12" stroke="#7b97ad" stroke-width="1.8"/>
+  <text x="170" y="162" text-anchor="middle" font-size="13" font-weight="bold" fill="#7b97ad">First Moment (Momentum)</text>
+  <text x="170" y="184" text-anchor="middle" font-size="12" fill="#7b97ad">𝑚</text>
+  <text x="178" y="188" text-anchor="start" font-size="9" fill="#7b97ad">𝑡</text>
+  <text x="186" y="184" text-anchor="start" font-size="12" fill="#7b97ad"> = 𝛽</text>
+  <text x="216" y="188" text-anchor="start" font-size="9" fill="#7b97ad">1</text>
+  <text x="222" y="184" text-anchor="start" font-size="12" fill="#7b97ad">𝑚</text>
+  <text x="232" y="188" text-anchor="start" font-size="9" fill="#7b97ad">𝑡-1</text>
+  <text x="248" y="184" text-anchor="start" font-size="12" fill="#7b97ad"> + (1-𝛽</text>
+  <text x="308" y="188" text-anchor="start" font-size="9" fill="#7b97ad">1</text>
+  <text x="314" y="184" text-anchor="start" font-size="12" fill="#7b97ad">)𝑔</text>
+  <text x="332" y="188" text-anchor="start" font-size="9" fill="#7b97ad">𝑡</text>
+
+  <!-- RMSProp (second moment) -->
+  <rect x="410" y="135" width="200" height="70" rx="10" fill="#b56b6b" fill-opacity="0.12" stroke="#b56b6b" stroke-width="1.8"/>
+  <text x="510" y="162" text-anchor="middle" font-size="13" font-weight="bold" fill="#b56b6b">Second Moment (RMSProp)</text>
+  <text x="510" y="184" text-anchor="middle" font-size="12" fill="#b56b6b">𝑣</text>
+  <text x="518" y="188" text-anchor="start" font-size="9" fill="#b56b6b">𝑡</text>
+  <text x="526" y="184" text-anchor="start" font-size="12" fill="#b56b6b"> = 𝛽</text>
+  <text x="556" y="188" text-anchor="start" font-size="9" fill="#b56b6b">2</text>
+  <text x="562" y="184" text-anchor="start" font-size="12" fill="#b56b6b">𝑣</text>
+  <text x="572" y="188" text-anchor="start" font-size="9" fill="#b56b6b">𝑡-1</text>
+  <text x="588" y="184" text-anchor="start" font-size="12" fill="#b56b6b"> + (1-𝛽</text>
+  <text x="648" y="188" text-anchor="start" font-size="9" fill="#b56b6b">2</text>
+  <text x="654" y="184" text-anchor="start" font-size="12" fill="#b56b6b">)𝑔</text>
+  <text x="672" y="188" text-anchor="start" font-size="9" fill="#b56b6b">𝑡</text>
+  <text x="679" y="180" text-anchor="start" font-size="9" fill="#b56b6b">2</text>
+
+  <!-- Merge arrows -->
+  <line x1="170" y1="205" x2="300" y2="250" stroke="#968a80" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="510" y1="205" x2="380" y2="250" stroke="#968a80" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <!-- Update rule -->
+  <rect x="230" y="252" width="220" height="55" rx="10" fill="#b8995e" fill-opacity="0.12" stroke="#b8995e" stroke-width="1.8"/>
+  <text x="340" y="275" text-anchor="middle" font-size="13" font-weight="bold" fill="#b8995e">Adam Update</text>
+  <text x="340" y="296" text-anchor="middle" font-size="12" fill="#b8995e">𝑥 <-- 𝑥 - 𝜂 . 𝑚&#x302; / (sqrt(𝑣&#x302;) + 𝜀)</text>
+</svg>

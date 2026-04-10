@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 380" width="600" height="380">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#3d352f"/>
+    </marker>
+  </defs>
+
+  <text x="300" y="28" text-anchor="middle" font-size="16" font-weight="bold">Interior Point Method: Central Path</text>
+
+  <!-- Feasible polytope -->
+  <polygon points="80,320 60,130 200,50 420,70 500,220 400,330" fill="#7a9a7e" fill-opacity="0.1" stroke="#7a9a7e" stroke-width="2"/>
+  <text x="290" y="340" text-anchor="middle" font-size="12" fill="#7a9a7e">feasible region</text>
+
+  <!-- Iso-profit lines -->
+  <line x1="120" y1="50" x2="200" y2="340" stroke="#b8995e" stroke-width="0.6" opacity="0.3"/>
+  <line x1="180" y1="50" x2="260" y2="340" stroke="#b8995e" stroke-width="0.6" opacity="0.3"/>
+  <line x1="240" y1="50" x2="320" y2="340" stroke="#b8995e" stroke-width="0.6" opacity="0.3"/>
+
+  <!-- Central path -->
+  <path d="M 280,200 Q 260,160 240,120 Q 225,85 210,58" fill="none" stroke="#7b97ad" stroke-width="3"/>
+
+  <!-- Points along path with decreasing t -->
+  <circle cx="280" cy="200" r="5" fill="#b8995e"/>
+  <text x="295" y="200" font-size="11" fill="#b8995e">𝑡 small</text>
+
+  <circle cx="255" cy="145" r="4" fill="#7b97ad"/>
+  <text x="270" y="145" font-size="11" fill="#7b97ad">𝑡 medium</text>
+
+  <circle cx="230" cy="100" r="4" fill="#7b97ad"/>
+  <text x="245" y="100" font-size="11" fill="#7b97ad">𝑡 large</text>
+
+  <!-- Optimal vertex -->
+  <circle cx="200" cy="50" r="6" fill="#b56b6b"/>
+  <text x="200" y="40" text-anchor="middle" font-size="13" fill="#b56b6b" font-style="italic">𝑥*</text>
+
+  <!-- Objective direction -->
+  <line x1="440" y1="240" x2="360" y2="120" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+  <text x="450" y="250" font-size="11" fill="#968a80">optimize</text>
+</svg>

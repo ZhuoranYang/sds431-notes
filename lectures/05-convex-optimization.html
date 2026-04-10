@@ -1,0 +1,1675 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>5&nbsp; Convex Optimization – S&amp;DS 431/631 — Optimization and Computation</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../lectures/06-gradient-descent.html" rel="next">
+<link href="../lectures/04-convex-functions.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-1db14e1c4cc35bfe1d9badc9e4551eed.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-434abab37f7d394f280d9c89d7fbc13f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/03-convex-sets.html">Convex Optimization Basics</a></li><li class="breadcrumb-item"><a href="../lectures/05-convex-optimization.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Convex Optimization</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">S&amp;DS 431/631 — Optimization and Computation</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Preparation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/01-introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction and Motivation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/02-math-background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Background</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Convex Optimization Basics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/03-convex-sets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Convex Sets</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/04-convex-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Convex Functions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/05-convex-optimization.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Convex Optimization</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">First-Order Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Linear Programming</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/09-lp-formulation-geometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">LP Formulation and Geometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/10-simplex-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">The Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/11-lp-duality.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">LP Duality</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/12-dual-simplex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The Dual Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/13-lp-applications.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">LP Applications and Game Theory</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Second-Order and Interior Point Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/15-ellipsoid-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Ellipsoid Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/16-interior-point-methods.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Interior Point Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Modern Computation Models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/17-diffusion-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Diffusion Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/18-transformers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Transformers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/summary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Course Summary</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-formulation" id="toc-sec-formulation" class="nav-link active" data-scroll-target="#sec-formulation"><span class="header-section-number">5.1</span> Formulation of Optimization Problems</a>
+  <ul class="collapse">
+  <li><a href="#sec-standard-form" id="toc-sec-standard-form" class="nav-link" data-scroll-target="#sec-standard-form"><span class="header-section-number">5.1.1</span> Standard Form</a></li>
+  <li><a href="#sec-feasibility" id="toc-sec-feasibility" class="nav-link" data-scroll-target="#sec-feasibility"><span class="header-section-number">5.1.2</span> Feasibility and Optimal Value</a></li>
+  <li><a href="#sec-optimal-points" id="toc-sec-optimal-points" class="nav-link" data-scroll-target="#sec-optimal-points"><span class="header-section-number">5.1.3</span> Optimal Points and Local Optimality</a></li>
+  <li><a href="#sec-convex-standard" id="toc-sec-convex-standard" class="nav-link" data-scroll-target="#sec-convex-standard"><span class="header-section-number">5.1.4</span> Convex Optimization in Standard Form</a></li>
+  </ul></li>
+  <li><a href="#sec-properties" id="toc-sec-properties" class="nav-link" data-scroll-target="#sec-properties"><span class="header-section-number">5.2</span> Properties of Convex Optimization</a>
+  <ul class="collapse">
+  <li><a href="#sec-local-is-global" id="toc-sec-local-is-global" class="nav-link" data-scroll-target="#sec-local-is-global"><span class="header-section-number">5.2.1</span> Local Optimality Implies Global Optimality</a></li>
+  </ul></li>
+  <li><a href="#sec-examples" id="toc-sec-examples" class="nav-link" data-scroll-target="#sec-examples"><span class="header-section-number">5.3</span> Examples of Convex Optimization</a>
+  <ul class="collapse">
+  <li><a href="#sec-lp" id="toc-sec-lp" class="nav-link" data-scroll-target="#sec-lp"><span class="header-section-number">5.3.1</span> 1. Linear Program (LP)</a></li>
+  <li><a href="#sec-qp" id="toc-sec-qp" class="nav-link" data-scroll-target="#sec-qp"><span class="header-section-number">5.3.2</span> 2. Quadratic Program (QP)</a></li>
+  <li><a href="#sec-socp" id="toc-sec-socp" class="nav-link" data-scroll-target="#sec-socp"><span class="header-section-number">5.3.3</span> 3. Second-Order Cone Program (SOCP)</a></li>
+  <li><a href="#sec-sdp" id="toc-sec-sdp" class="nav-link" data-scroll-target="#sec-sdp"><span class="header-section-number">5.3.4</span> 4. Semidefinite Program (SDP)</a></li>
+  </ul></li>
+  <li><a href="#sec-transformations" id="toc-sec-transformations" class="nav-link" data-scroll-target="#sec-transformations"><span class="header-section-number">5.4</span> Equivalent Transformations</a>
+  <ul class="collapse">
+  <li><a href="#sec-epigraph" id="toc-sec-epigraph" class="nav-link" data-scroll-target="#sec-epigraph"><span class="header-section-number">5.4.1</span> Epigraph and Piecewise Linear Minimization</a></li>
+  </ul></li>
+  <li><a href="#sec-lagrangian-duality" id="toc-sec-lagrangian-duality" class="nav-link" data-scroll-target="#sec-lagrangian-duality"><span class="header-section-number">5.5</span> Lagrangian Duality</a>
+  <ul class="collapse">
+  <li><a href="#sec-lagrangian" id="toc-sec-lagrangian" class="nav-link" data-scroll-target="#sec-lagrangian"><span class="header-section-number">5.5.1</span> The Lagrangian</a></li>
+  <li><a href="#sec-dual-problem" id="toc-sec-dual-problem" class="nav-link" data-scroll-target="#sec-dual-problem"><span class="header-section-number">5.5.2</span> The Dual Problem</a></li>
+  <li><a href="#sec-weak-strong" id="toc-sec-weak-strong" class="nav-link" data-scroll-target="#sec-weak-strong"><span class="header-section-number">5.5.3</span> Weak and Strong Duality</a></li>
+  <li><a href="#sec-slater" id="toc-sec-slater" class="nav-link" data-scroll-target="#sec-slater"><span class="header-section-number">5.5.4</span> Slater’s Condition</a></li>
+  </ul></li>
+  <li><a href="#sec-kkt" id="toc-sec-kkt" class="nav-link" data-scroll-target="#sec-kkt"><span class="header-section-number">5.6</span> KKT Conditions</a></li>
+  <li><a href="#sec-optimality" id="toc-sec-optimality" class="nav-link" data-scroll-target="#sec-optimality"><span class="header-section-number">5.7</span> Optimality Conditions for Differentiable Problems</a></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a>
+  <ul class="collapse">
+  <li><a href="#optimization-problem-hierarchy" id="toc-optimization-problem-hierarchy" class="nav-link" data-scroll-target="#optimization-problem-hierarchy">Optimization Problem Hierarchy</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/03-convex-sets.html">Convex Optimization Basics</a></li><li class="breadcrumb-item"><a href="../lectures/05-convex-optimization.html"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Convex Optimization</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Convex Optimization</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Optimization is hard in general – a function can have countless local minima, saddle points, and deceptive plateaus. So why is it that many of the optimization problems arising in statistics, machine learning, and engineering can be solved reliably and efficiently? The answer, more often than not, is <strong>convexity</strong>. When both the objective and the constraints are convex, the landscape of the problem simplifies dramatically: every local minimum is automatically a global minimum, and powerful duality theory provides certificates of optimality.</p>
+<p>This chapter develops the theory of convex optimization from the ground up. We define the standard form of a convex program, establish its key structural properties (convexity of suboptimal sets, uniqueness under strict convexity, and the equivalence of local and global optima), and survey the most important classes of convex programs – LP, QP, SOCP, and SDP – which form a nested hierarchy of increasing expressiveness. We then introduce <strong>Lagrangian duality</strong>, a framework that associates every optimization problem with a “dual” problem whose optimal value provides a bound on the original. Under mild conditions (Slater’s constraint qualification), this bound is tight, leading to the celebrated <strong>KKT conditions</strong> – a system of equations and inequalities that completely characterize optimal primal-dual pairs.</p>
+<p>Duality and KKT conditions are not just theoretical tools. They are the engine behind modern solvers (interior-point methods solve the KKT system directly) and the foundation for sensitivity analysis, economic interpretation of constraints, and algorithm design throughout the rest of this course.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Companion Notebooks
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.</p>
+<ul>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/05-convex-optimization-examples.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Convex Optimization Examples</strong> — LP, QP, SDP, robust optimization, and Chebyshev center in CVXPY</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/06-portfolio-optimization.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Portfolio Optimization</strong> — Markowitz mean-variance optimization with leverage constraints</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/07-control-cvxpy.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Optimal Control</strong> — control trajectory optimization with state and input constraints</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/08-logistic-regression.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Logistic Regression</strong> — <span class="math inline">\ell_1</span>-regularized logistic regression with cross-validation</li>
+</ul>
+</div>
+</div>
+<section id="sec-formulation" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="sec-formulation"><span class="header-section-number">5.1</span> Formulation of Optimization Problems</h2>
+<section id="sec-standard-form" class="level3" data-number="5.1.1">
+<h3 data-number="5.1.1" class="anchored" data-anchor-id="sec-standard-form"><span class="header-section-number">5.1.1</span> Standard Form</h3>
+<div id="def-general-optimization" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 5.1 (Definition 5.1 (General Optimization — Standard Form))</strong></span> A general optimization problem in <strong>standard form</strong> is:</p>
+<p><span class="math display">
+\begin{aligned}
+\min_{x \in \mathbb{R}^n} \quad &amp; f_0(x) \\
+\text{subject to} \quad &amp; f_i(x) \leq 0, \quad i = 1, 2, \ldots, m \\
+&amp; h_i(x) = 0, \quad i = 1, 2, \ldots, p.
+\end{aligned}
+</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">x \in \mathbb{R}^n</span> is the <strong>optimization variable</strong> (decision variable)</li>
+<li><span class="math inline">f_0 : \mathbb{R}^n \to \mathbb{R}</span> is the <strong>objective function</strong> (cost function)</li>
+<li><span class="math inline">f_i : \mathbb{R}^n \to \mathbb{R}</span>, <span class="math inline">i \in [m]</span>, are <strong>inequality constraint functions</strong></li>
+<li><span class="math inline">h_i : \mathbb{R}^n \to \mathbb{R}</span>, <span class="math inline">i \in [p]</span>, are <strong>equality constraint functions</strong></li>
+</ul>
+<p>If <span class="math inline">m = p = 0</span>, this reduces to <strong>unconstrained optimization</strong>: <span class="math inline">\min_{x \in \mathbb{R}^n} f_0(x)</span>.</p>
+</div>
+<p>The standard form provides a unified framework for expressing optimization problems. By separating the objective from the inequality and equality constraints, we can develop general-purpose theory and algorithms that apply across a wide range of applications.</p>
+</section>
+<section id="sec-feasibility" class="level3" data-number="5.1.2">
+<h3 data-number="5.1.2" class="anchored" data-anchor-id="sec-feasibility"><span class="header-section-number">5.1.2</span> Feasibility and Optimal Value</h3>
+<div id="def-domain-feasible-set" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 5.2 (Definition 5.2 (Domain, Feasible Set, Optimal Value))</strong></span> The <strong>domain</strong> of the optimization problem is:</p>
+<p><span class="math display">
+\mathcal{D} = \bigcap_{i=0}^{m} \operatorname{dom} f_i \;\cap\; \bigcap_{i=1}^{p} \operatorname{dom} h_i.
+</span></p>
+<p>A point <span class="math inline">x_0 \in \mathcal{D}</span> is <strong>feasible</strong> if <span class="math inline">f_i(x_0) \leq 0</span> for all <span class="math inline">i \in [m]</span> and <span class="math inline">h_i(x_0) = 0</span> for all <span class="math inline">i \in [p]</span>.</p>
+<p>The <strong>feasible set</strong> is <span class="math inline">\Omega = \{x \in \mathcal{D} \mid f_i(x) \leq 0 \;\forall\, i \in [m],\; h_i(x) = 0 \;\forall\, i \in [p]\}</span>.</p>
+<p>The <strong>optimal value</strong> is:</p>
+<p><span class="math display">
+f^* = \inf\{f_0(x) \mid x \in \Omega\}.
+</span></p>
+<ul>
+<li>If <span class="math inline">\Omega = \emptyset</span> (infeasible), we define <span class="math inline">f^* = +\infty</span>.</li>
+<li>If there exists a sequence <span class="math inline">\{x_k\}</span> of feasible points with <span class="math inline">f_0(x_k) \to -\infty</span>, we define <span class="math inline">f^* = -\infty</span> and say the problem is <strong>unbounded (from below)</strong>.</li>
+</ul>
+</div>
+<p>The domain, feasible set, and optimal value characterize the “landscape” of an optimization problem. The distinction between infeasibility (<span class="math inline">f^* = +\infty</span>) and unboundedness (<span class="math inline">f^* = -\infty</span>) is important: both indicate that something is wrong with the problem formulation, but for different reasons.</p>
+</section>
+<section id="sec-optimal-points" class="level3" data-number="5.1.3">
+<h3 data-number="5.1.3" class="anchored" data-anchor-id="sec-optimal-points"><span class="header-section-number">5.1.3</span> Optimal Points and Local Optimality</h3>
+<div id="def-optimal-point" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 5.3 (Definition 5.3 (Optimal Point, Active Constraint, Local Optimality))</strong></span> If <span class="math inline">x_0</span> is feasible and <span class="math inline">f_0(x_0) = f^* &gt; -\infty</span>, then <span class="math inline">x_0</span> is an <strong>optimal point</strong> (solution / minimizer). If an optimal point exists, we say <span class="math inline">f^*</span> is <strong>attained</strong> and the problem is <strong>solvable</strong>.</p>
+<p>For any <span class="math inline">\varepsilon &gt; 0</span>, a feasible point <span class="math inline">x_0</span> satisfying <span class="math inline">f_0(x_0) \leq f^* + \varepsilon</span> is called an <strong><span class="math inline">\varepsilon</span>-optimal solution</strong>.</p>
+<p>If <span class="math inline">x</span> is feasible and <span class="math inline">f_i(x) = 0</span>, we say constraint <span class="math inline">f_i</span> is <strong>active</strong> (binding) at <span class="math inline">x</span>.</p>
+<p>A point <span class="math inline">x_0</span> is <strong>locally optimal</strong> if there exists <span class="math inline">R &gt; 0</span> such that <span class="math inline">x_0</span> solves:</p>
+<p><span class="math display">
+\min f_0(z) \quad \text{s.t.} \quad f_i(z) \leq 0,\; h_i(z) = 0,\; \|z - x_0\| \leq R.
+</span></p>
+</div>
+<div id="exm-unconstrained-optimization" class="theorem example">
+<p><span class="theorem-title"><strong>Example 5.1 (Unconstrained Optimization (<span class="math inline">n=1, m=p=0</span>))</strong></span> &nbsp;</p>
+<ul>
+<li><span class="math inline">f_0 = 1/x</span>, <span class="math inline">\operatorname{dom}(f_0) = \mathbb{R}_{++}</span>. Then <span class="math inline">f^* = 0</span>, no optimal point.</li>
+<li><span class="math inline">f_0 = -\log x</span>, <span class="math inline">\operatorname{dom}(f_0) = \mathbb{R}_{++}</span>. Then <span class="math inline">f^* = -\infty</span>, unbounded.</li>
+<li><span class="math inline">f_0 = x \log x</span>, <span class="math inline">\operatorname{dom}(f_0) = \mathbb{R}_{++}</span>. Then <span class="math inline">f^* = -1/e</span>, <span class="math inline">x^* = 1/e</span>.</li>
+<li><span class="math inline">f_0 = x^3 - 3x</span>, <span class="math inline">\operatorname{dom}(f_0) = \mathbb{R}</span>. Then <span class="math inline">f^* = -\infty</span>, unbounded, local minimum at <span class="math inline">x_0 = 1</span>.</li>
+</ul>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Feasibility Problem
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A <strong>feasibility problem</strong> asks: does there exist <span class="math inline">x</span> with <span class="math inline">f_i(x) \leq 0</span> for all <span class="math inline">i</span> and <span class="math inline">h_i(x) = 0</span> for all <span class="math inline">i</span>? This is equivalent to minimizing <span class="math inline">f_0 = 0</span> subject to the same constraints.</p>
+<ul>
+<li><span class="math inline">f^* = 0</span> if the constraints are feasible.</li>
+<li><span class="math inline">f^* = +\infty</span> if the constraints are infeasible.</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="sec-convex-standard" class="level3" data-number="5.1.4">
+<h3 data-number="5.1.4" class="anchored" data-anchor-id="sec-convex-standard"><span class="header-section-number">5.1.4</span> Convex Optimization in Standard Form</h3>
+<p>With the general framework in place, we now specialize to the setting that will occupy most of this chapter: convex optimization. The key additional requirements are that the objective and inequality constraints are convex functions, and the equality constraints are affine.</p>
+<div id="def-convex-optimization" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 5.4 (Definition 5.4 (Convex Optimization Problem))</strong></span> A <strong>convex optimization problem</strong> is a problem in standard form with three additional requirements (see <a href="../lectures/03-convex-sets.html">Chapter 3</a> and <a href="../lectures/04-convex-functions.html">Chapter 4</a> for definitions and characterizations of convex sets and functions):</p>
+<ol type="1">
+<li>The objective <span class="math inline">f_0</span> is <strong>convex</strong>.</li>
+<li>The inequality constraint functions <span class="math inline">f_i</span> are <strong>convex</strong>.</li>
+<li>The equality constraint functions are <strong>affine</strong>: <span class="math inline">h_i(x) = a_i^\top x - b_i</span>.</li>
+</ol>
+<p><span class="math display">
+\begin{aligned}
+\min \quad &amp; f_0(x) \\
+\text{s.t.} \quad &amp; f_i(x) \leq 0, \quad i = 1,2,\ldots, m \\
+&amp; a_i^\top x = b_i, \quad i = 1,2,\ldots, p.
+\end{aligned}
+</span></p>
+<p>The domain is <span class="math inline">\mathcal{D} = \bigcap_{i=0}^{m} \operatorname{dom} f_i</span>, which is convex (intersection of convex sets).</p>
+</div>
+<p>A convex optimization problem is one where both the objective and the feasible set have a “bowl-shaped” structure. The three requirements – convex objective, convex inequality constraints, and affine equality constraints – together ensure that the feasible set is convex and there are no spurious local minima. This makes convex problems fundamentally easier to solve than general nonconvex problems.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Why the Feasible Set is Convex
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The feasible set of a convex optimization problem is always convex:</p>
+<p><span class="math display">
+\Omega = \mathcal{D} \;\cap\; \bigcap_{i=1}^{m}\{x : f_i(x) \leq 0\} \;\cap\; \bigcap_{i=1}^{p}\{x : a_i^\top x = b_i\}.
+</span></p>
+<p>This is an intersection of convex sets (the domain is convex, sublevel sets of convex functions are convex, and hyperplanes are convex).</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-properties" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="sec-properties"><span class="header-section-number">5.2</span> Properties of Convex Optimization</h2>
+<p>What makes convex optimization fundamentally different from general nonlinear optimization? Three structural properties answer this question: the set of near-optimal solutions is always convex, strictly convex objectives have unique minimizers, and – most importantly – every local minimum is automatically global. Together, these properties explain why convex problems are computationally tractable.</p>
+<div id="thm-convex-suboptimal-sets" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 5.1 (Theorem 5.1 (Convex <span class="math inline">\varepsilon</span>-Suboptimal Sets))</strong></span> For any <span class="math inline">\varepsilon \geq 0</span>, the <strong><span class="math inline">\varepsilon</span>-suboptimal set</strong></p>
+<p><span class="math display">
+\{x : f_0(x) \leq f^* + \varepsilon\} \cap \Omega
+</span></p>
+<p>is a <strong>convex set</strong>.</p>
+</div>
+<p>This means that the set of “nearly optimal” feasible points is always convex. In practice, this implies that if two solutions are both close to optimal, then any convex combination of them is also close to optimal – there are no “gaps” in the set of good solutions.</p>
+<div id="thm-strict-convexity-uniqueness" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 5.2 (Theorem 5.2 (Strict Convexity Implies Uniqueness))</strong></span> If <span class="math inline">f_0</span> is <strong>strictly convex</strong>, then the optimal solution (if it exists) is <strong>unique</strong>. That is,</p>
+<p><span class="math display">
+\{x : f_0(x) = f^*\} \cap \Omega = \{x^*\}.
+</span></p>
+</div>
+<p>Strict convexity means the objective function curves strictly upward in every direction, so there can be at most one point at the bottom of the “bowl.” This is a useful structural property: when the optimizer is unique, there is no ambiguity about the solution and algorithms are guaranteed to converge to the same answer regardless of initialization.</p>
+<div id="exm-lasso" class="theorem example">
+<p><span class="theorem-title"><strong>Example 5.2 (Lasso)</strong></span> Consider the Lasso problem with <span class="math inline">y \in \mathbb{R}^n</span>, <span class="math inline">X \in \mathbb{R}^{n \times d}</span>:</p>
+<p><span class="math display">
+\min_\beta \;\|y - X\beta\|_2^2 \quad \text{s.t.} \quad \|\beta\|_1 \leq s.
+</span></p>
+<ul>
+<li>If <span class="math inline">n \geq d</span> and <span class="math inline">X</span> has full column rank, then <span class="math inline">f_0(\beta) = \|y - X\beta\|_2^2</span> is <strong>strictly convex</strong>, giving a <strong>unique</strong> solution.</li>
+<li>If <span class="math inline">n &lt; d</span> (high-dimensional case), the solution is <strong>not necessarily unique</strong>.</li>
+</ul>
+</div>
+<p>The first two properties tell us about the structure of the set of optimal and near-optimal solutions. The next property is the most consequential: it tells us that local search suffices for global optimization.</p>
+<section id="sec-local-is-global" class="level3" data-number="5.2.1">
+<h3 data-number="5.2.1" class="anchored" data-anchor-id="sec-local-is-global"><span class="header-section-number">5.2.1</span> Local Optimality Implies Global Optimality</h3>
+<div id="thm-local-min-global-min" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 5.3 (Theorem 5.3 (Local Min = Global Min))</strong></span> Any <strong>local optimal point</strong> of a convex problem is also <strong>globally optimal</strong>.</p>
+</div>
+<p>This is arguably the single most important property of convex optimization. It means that any algorithm which converges to a local minimum automatically finds the global minimum. For nonconvex problems, by contrast, algorithms can get “stuck” at suboptimal local minima, making optimization fundamentally harder.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Strategy.</strong> We argue by contradiction. If <span class="math inline">x_0</span> were locally but not globally optimal, there would exist a better feasible point <span class="math inline">y</span>. By convexity, the line segment from <span class="math inline">x_0</span> to <span class="math inline">y</span> stays feasible, and by convexity of <span class="math inline">f_0</span>, every point on this segment (except <span class="math inline">x_0</span>) has strictly lower objective value. But points on this segment close to <span class="math inline">x_0</span> lie inside the ball where <span class="math inline">x_0</span> is locally optimal – a contradiction.</p>
+<p>Suppose <span class="math inline">x_0</span> is a local minimum but not global. Then there exists <span class="math inline">R &gt; 0</span> such that</p>
+<p><span class="math display">
+z \in \Omega,\; \|z - x_0\| \leq R \implies f_0(z) \geq f_0(x_0),
+</span></p>
+<p>and there exists <span class="math inline">y \in \Omega</span> with <span class="math inline">f_0(x_0) &gt; f_0(y)</span>.</p>
+<p>Since <span class="math inline">x_0, y \in \Omega</span> and <span class="math inline">\Omega</span> is convex, <span class="math inline">\lambda x_0 + (1-\lambda) y \in \Omega</span> for all <span class="math inline">\lambda \in [0,1]</span>. Now, applying the definition of convexity of <span class="math inline">f_0</span>:</p>
+<p><span class="math display">
+f_0(\lambda x_0 + (1-\lambda)y) \leq \lambda f_0(x_0) + (1-\lambda) f_0(y) &lt; f_0(x_0) \quad \text{for all } \lambda \in (0,1).
+</span></p>
+<p>But when <span class="math inline">\lambda</span> is close to 1, <span class="math inline">\|\lambda x_0 + (1-\lambda)y - x_0\| = (1-\lambda)\|y - x_0\| \leq R</span>, so the point lies in the ball where <span class="math inline">x_0</span> is locally optimal.</p>
+<p>This gives <span class="math inline">f_0(\lambda x_0 + (1-\lambda)y) \geq f_0(x_0)</span>. <strong>Contradiction.</strong> Therefore <span class="math inline">x_0</span> must be globally optimal. This completes the proof. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>For convex optimization: <strong>every local minimum is a global minimum</strong>. This is the fundamental reason why convex problems are “tractable.”</p>
+</div>
+</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-local-global</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 5.1: A convex function (left) has a single global minimum. A non-convex function (right) can have multiple local minima that are not global."</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotly.subplots <span class="im">import</span> make_subplots</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> np.linspace(<span class="op">-</span><span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">200</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>convex_y <span class="op">=</span> x<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>nonconvex_y <span class="op">=</span> x<span class="op">**</span><span class="dv">4</span> <span class="op">-</span> <span class="dv">3</span><span class="op">*</span>x<span class="op">**</span><span class="dv">2</span> <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> make_subplots(rows<span class="op">=</span><span class="dv">1</span>, cols<span class="op">=</span><span class="dv">2</span>, subplot_titles<span class="op">=</span>[<span class="st">"Convex: f(x) = x²"</span>, <span class="st">"Non-convex: x⁴ − 3x² + 1"</span>])</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>x, y<span class="op">=</span>convex_y, mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7b97ad'</span>, width<span class="op">=</span><span class="dv">3</span>), name<span class="op">=</span><span class="st">'Convex: f(x) = x²'</span>, showlegend<span class="op">=</span><span class="va">False</span>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">0</span>], y<span class="op">=</span>[<span class="dv">0</span>], mode<span class="op">=</span><span class="st">'markers'</span>, marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">12</span>, symbol<span class="op">=</span><span class="st">'star'</span>), name<span class="op">=</span><span class="st">'Global min'</span>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>x, y<span class="op">=</span>nonconvex_y, mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#ad8480'</span>, width<span class="op">=</span><span class="dv">3</span>), name<span class="op">=</span><span class="st">'Non-convex: x⁴ − 3x² + 1'</span>, showlegend<span class="op">=</span><span class="va">False</span>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="op">-</span><span class="fl">1.22</span>, <span class="fl">1.22</span>], y<span class="op">=</span>[<span class="op">-</span><span class="fl">1.25</span>, <span class="op">-</span><span class="fl">1.25</span>], mode<span class="op">=</span><span class="st">'markers'</span>, marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">12</span>, symbol<span class="op">=</span><span class="st">'star'</span>), name<span class="op">=</span><span class="st">'Global minima'</span>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">0</span>], y<span class="op">=</span>[<span class="dv">1</span>], mode<span class="op">=</span><span class="st">'markers'</span>, marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b8995e'</span>, size<span class="op">=</span><span class="dv">10</span>, symbol<span class="op">=</span><span class="st">'diamond'</span>), name<span class="op">=</span><span class="st">'Local max'</span>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>fig.update_xaxes(title_text<span class="op">=</span><span class="st">"x"</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>fig.update_xaxes(title_text<span class="op">=</span><span class="st">"x"</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>fig.update_yaxes(title_text<span class="op">=</span><span class="st">"f(x)"</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>fig.update_yaxes(title_text<span class="op">=</span><span class="st">"f(x)"</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>fig.update_layout(height<span class="op">=</span><span class="dv">400</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">40</span>, b<span class="op">=</span><span class="dv">50</span>, l<span class="op">=</span><span class="dv">55</span>, r<span class="op">=</span><span class="dv">20</span>))</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="sec-examples" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="sec-examples"><span class="header-section-number">5.3</span> Examples of Convex Optimization</h2>
+<p>The structural properties established above – convex suboptimal sets, uniqueness under strict convexity, and the equivalence of local and global optima – apply to <em>all</em> convex programs. In practice, however, most convex problems encountered in statistics, machine learning, and engineering fall into a small number of well-studied classes that form a strict hierarchy: LP <span class="math inline">\subseteq</span> QP <span class="math inline">\subseteq</span> SOCP <span class="math inline">\subseteq</span> SDP. Each class has specialized algorithms that exploit its structure, and recognizing which class a problem belongs to is often the key step in solving it efficiently.</p>
+<section id="sec-lp" class="level3" data-number="5.3.1">
+<h3 data-number="5.3.1" class="anchored" data-anchor-id="sec-lp"><span class="header-section-number">5.3.1</span> 1. Linear Program (LP)</h3>
+<div id="def-linear-program" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 5.5 (Definition 5.5 (Linear Program))</strong></span> A <strong>linear program</strong> (introduced in <a href="#sec-convex-sets" class="quarto-xref"><span class="quarto-unresolved-ref">sec-convex-sets</span></a>) has a linear objective and linear constraints:</p>
+<p><strong>General form:</strong></p>
+<p><span class="math display">
+\min\; c^\top x + d \quad \text{s.t.} \quad Gx \leq h, \; Ax = b.
+</span></p>
+<p><strong>Standard form:</strong> <span class="math inline">\min\; c^\top x \;\;\text{s.t.}\;\; Ax = b.</span></p>
+<p><strong>Canonical form:</strong> <span class="math inline">\min\; c^\top x \;\;\text{s.t.}\;\; Ax \leq b,\; x \geq 0.</span></p>
+</div>
+<p>Linear programs are the simplest class of convex optimization problems. Despite their simplicity, they are remarkably expressive and arise in transportation, scheduling, network flows, and many other applications. Their feasible sets are polyhedra, and their solutions always occur at vertices.</p>
+<div id="exm-transportation" class="theorem example">
+<p><span class="theorem-title"><strong>Example 5.3 (Transportation Problem)</strong></span> Given <span class="math inline">m</span> producers with supply limits <span class="math inline">s_i</span> and <span class="math inline">n</span> consumers with demands <span class="math inline">d_j</span>, and per-unit transport cost <span class="math inline">c_{ij}</span> from producer <span class="math inline">i</span> to consumer <span class="math inline">j</span>:</p>
+<p><span class="math display">
+\min_{\{x_{ij}\}} \sum_{i,j} c_{ij} x_{ij} \quad \text{s.t.} \quad \sum_j x_{ij} \leq s_i,\; \sum_i x_{ij} \geq d_j,\; x_{ij} \geq 0.
+</span></p>
+<p>This is an LP: linear objective, linear inequality constraints.</p>
+</div>
+<div id="exm-max-flow" class="theorem example">
+<p><span class="theorem-title"><strong>Example 5.4 (Maximum Flow Problem)</strong></span> Given a directed graph <span class="math inline">G = (V, E)</span> with edge capacities <span class="math inline">C_{uv}</span>, maximize flow from source (node 1) to sink (node <span class="math inline">n</span>):</p>
+<p><span class="math display">
+\max_{\{x_{uv}\}} \sum_{\substack{v \in V \\ e_{1v} \in E}} x_{1v} \quad \text{s.t.} \quad 0 \leq x_{uv} \leq C_{uv},\; \sum_{u: e_{uv}\in E} x_{uv} = \sum_{w: e_{vw}\in E} x_{vw} \;\;\forall\, v \in V \setminus \{1,n\}.
+</span></p>
+<p>The flow conservation constraint (flow in = flow out) holds at every internal node. This is also an LP.</p>
+</div>
+</section>
+<section id="sec-qp" class="level3" data-number="5.3.2">
+<h3 data-number="5.3.2" class="anchored" data-anchor-id="sec-qp"><span class="header-section-number">5.3.2</span> 2. Quadratic Program (QP)</h3>
+<p>Many problems in statistics and machine learning – least-squares regression, portfolio optimization, support vector machines – naturally involve minimizing a quadratic objective subject to linear constraints. Quadratic programs generalize LPs by allowing a quadratic (but still convex) objective.</p>
+<div id="def-quadratic-program" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 5.6 (Definition 5.6 (Quadratic Program))</strong></span> A <strong>quadratic program</strong> minimizes a convex quadratic objective subject to linear constraints:</p>
+<p><span class="math display">
+\min_x \;\frac{1}{2} x^\top P x + q^\top x + r \quad \text{s.t.} \quad Gx \leq h,\; Ax = b,
+</span></p>
+<p>where <span class="math inline">P \succeq 0</span> (positive semidefinite). If <span class="math inline">P \succ 0</span>, the objective is strictly convex and the solution is unique (if it exists).</p>
+</div>
+<p>The positive semidefiniteness condition <span class="math inline">P \succeq 0</span> is what ensures convexity of the objective. When <span class="math inline">P \succ 0</span> (strictly positive definite), the problem has a unique minimizer, which is the typical situation in regularized regression and portfolio optimization.</p>
+<div id="exm-least-squares-constraints" class="theorem example">
+<p><span class="theorem-title"><strong>Example 5.5 (Least Squares with Constraints)</strong></span> The constrained least-squares problem <span class="math inline">\min \|Ax - b\|_2^2 \;\text{s.t.}\; x \geq 0</span> is a QP with <span class="math inline">P = 2A^\top A</span>, <span class="math inline">q = -2A^\top b</span>.</p>
+</div>
+</section>
+<section id="sec-socp" class="level3" data-number="5.3.3">
+<h3 data-number="5.3.3" class="anchored" data-anchor-id="sec-socp"><span class="header-section-number">5.3.3</span> 3. Second-Order Cone Program (SOCP)</h3>
+<p>Some problems require constraints that bound the Euclidean norm of an affine expression – for example, robust optimization under uncertainty, or placing bounds on prediction errors. These norm constraints are more expressive than the linear constraints of LPs and QPs but still preserve convexity.</p>
+<div id="def-socp" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 5.7 (Definition 5.7 (SOCP))</strong></span> A <strong>second-order cone program</strong> has the form:</p>
+<p><span class="math display">
+\min_x\; f^\top x \quad \text{s.t.} \quad \|A_i x + b_i\|_2 \leq c_i^\top x + d_i, \quad i = 1, \ldots, m,\quad Fx = g.
+</span></p>
+<p>The constraint <span class="math inline">\|Ax+b\|_2 \leq c^\top x + d</span> defines a <strong>second-order cone</strong>. SOCPs generalize both LPs and QPs.</p>
+</div>
+<p>SOCPs allow norm constraints, which are strictly more expressive than linear constraints. They appear in robust optimization (where uncertainty sets are ellipsoidal) and in engineering design problems involving Euclidean distances or magnitudes.</p>
+</section>
+<section id="sec-sdp" class="level3" data-number="5.3.4">
+<h3 data-number="5.3.4" class="anchored" data-anchor-id="sec-sdp"><span class="header-section-number">5.3.4</span> 4. Semidefinite Program (SDP)</h3>
+<p>Semidefinite programs are the most expressive class of convex programs we will study. They arise naturally in combinatorial optimization (relaxations of graph problems), control theory (Lyapunov stability), and statistics (covariance estimation). The key new ingredient is a constraint on the eigenvalues of a matrix, expressed through a linear matrix inequality.</p>
+<div id="def-sdp" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 5.8 (Definition 5.8 (SDP))</strong></span> A <strong>semidefinite program</strong> optimizes a linear objective subject to a linear matrix inequality (LMI):</p>
+<p><span class="math display">
+\min_x\; c^\top x \quad \text{s.t.} \quad x_1 F_1 + x_2 F_2 + \cdots + x_n F_n + G \preceq 0, \quad Ax = b,
+</span></p>
+<p>where <span class="math inline">F_i, G</span> are symmetric matrices. The constraint <span class="math inline">X \preceq 0</span> means <span class="math inline">X</span> is negative semidefinite. SDPs generalize SOCPs (and hence LPs and QPs).</p>
+</div>
+<p>SDPs are the most general class in the standard hierarchy of tractable convex programs. They arise in control theory, combinatorial optimization (as relaxations of hard discrete problems), and quantum information. The ability to constrain eigenvalues of matrices makes SDPs a powerful modeling tool.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Hierarchy of convex programs:</strong> LP <span class="math inline">\subseteq</span> QP <span class="math inline">\subseteq</span> SOCP <span class="math inline">\subseteq</span> SDP <span class="math inline">\subseteq</span> General Convex.</p>
+</div>
+</div>
+</div>
+<div class="interactive-figure-container" style="margin: 1.5em 0;">
+<style>
+.hierarchy-diagram {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5em 0.5em;
+}
+.hierarchy-diagram svg text {
+  font-family: 'Palatino Linotype', 'Palatino', 'Book Antiqua', serif;
+}
+</style>
+<div class="hierarchy-diagram">
+<svg viewbox="0 0 680 320" width="100%" style="max-width: 680px;">
+  <!-- General Convex (outermost) -->
+  <ellipse cx="340" cy="160" rx="330" ry="150" fill="#f0ebe5" stroke="#968a80" stroke-width="2" opacity="0.5"></ellipse>
+  <text x="340" y="30" text-anchor="middle" fill="#968a80" font-size="14" font-style="italic">General Convex</text>
+
+  <!-- SDP -->
+  <ellipse cx="330" cy="165" rx="260" ry="120" fill="#e8dfd8" stroke="#907ea0" stroke-width="2.2" opacity="0.55"></ellipse>
+  <text x="570" y="100" text-anchor="middle" fill="#907ea0" font-size="15" font-weight="600">SDP</text>
+  <text x="570" y="118" text-anchor="middle" fill="#907ea0" font-size="11">X ≽ 0</text>
+
+  <!-- SOCP -->
+  <ellipse cx="315" cy="170" rx="190" ry="95" fill="#dfd8ce" stroke="#c47a6a" stroke-width="2.2" opacity="0.55"></ellipse>
+  <text x="480" y="125" text-anchor="middle" fill="#c47a6a" font-size="15" font-weight="600">SOCP</text>
+  <text x="480" y="143" text-anchor="middle" fill="#c47a6a" font-size="11">‖Ax + b‖ ≤ cᵀx + d</text>
+
+  <!-- QP -->
+  <ellipse cx="300" cy="175" rx="130" ry="72" fill="#d6cfc4" stroke="#b8995e" stroke-width="2.2" opacity="0.55"></ellipse>
+  <text x="405" y="148" text-anchor="middle" fill="#b8995e" font-size="15" font-weight="600">QP</text>
+  <text x="405" y="166" text-anchor="middle" fill="#b8995e" font-size="11">½xᵀPx + qᵀx</text>
+
+  <!-- LP (innermost) -->
+  <ellipse cx="280" cy="180" rx="75" ry="48" fill="#cdc5b8" stroke="#7b97ad" stroke-width="2.5" opacity="0.6"></ellipse>
+  <text x="280" y="175" text-anchor="middle" fill="#7b97ad" font-size="16" font-weight="700">LP</text>
+  <text x="280" y="195" text-anchor="middle" fill="#7b97ad" font-size="11">cᵀx, Ax ≤ b</text>
+
+  <!-- Complexity annotations -->
+  <text x="340" y="308" text-anchor="middle" fill="#3d3530" font-size="12">← more structured &amp; efficient │ more expressive &amp; general →</text>
+</svg>
+</div>
+<div class="figure-caption" style="text-align:center; color:#3d3530; font-size:0.92em; margin-top:0.3em;">Figure 5.3: Nested hierarchy of convex programs. Each inner class is a special case of the outer classes. Moving outward increases modeling power but generally increases computational cost. LP is solvable in polynomial time; QP and SOCP admit efficient interior-point methods; SDP is the most general class with polynomial-time algorithms.</div>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-feasible-region</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 5.2: Feasible region of a 2D LP (polyhedron) and QP (intersection of ellipse with halfplanes), with optimal points marked."</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="co"># LP feasible region</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>lp_x <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">0</span>]</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>lp_y <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">0</span>]</span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>lp_x, y<span class="op">=</span>lp_y, fill<span class="op">=</span><span class="st">'toself'</span>, fillcolor<span class="op">=</span><span class="st">'rgba(123,143,163,0.18)'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7b97ad'</span>, width<span class="op">=</span><span class="fl">2.5</span>), name<span class="op">=</span><span class="st">'LP Feasible Region'</span>, mode<span class="op">=</span><span class="st">'lines'</span>))</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Contours of objective c^T x = -x1 - 2x2</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> c_val <span class="kw">in</span> [<span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">3</span>, <span class="op">-</span><span class="dv">5</span>]:</span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">4</span>], y<span class="op">=</span>[<span class="op">-</span>(c_val)<span class="op">/</span><span class="dv">2</span>, <span class="op">-</span>(c_val<span class="op">+</span><span class="dv">4</span>)<span class="op">/</span><span class="dv">2</span>], mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b8995e'</span>, dash<span class="op">=</span><span class="st">'dot'</span>, width<span class="op">=</span><span class="fl">1.2</span>), showlegend<span class="op">=</span><span class="va">False</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="co"># LP vertices</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">3</span>, <span class="dv">2</span>, <span class="dv">0</span>], y<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>, <span class="dv">3</span>], mode<span class="op">=</span><span class="st">'markers'</span>, marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#8a6e5e'</span>, size<span class="op">=</span><span class="dv">8</span>), name<span class="op">=</span><span class="st">'LP Vertices'</span>, text<span class="op">=</span>[<span class="st">'(0,0)'</span>, <span class="st">'(3,0)'</span>, <span class="st">'(2,2)'</span>, <span class="st">'(0,3)'</span>], hoverinfo<span class="op">=</span><span class="st">'text'</span>))</span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co"># LP optimal</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">0</span>], y<span class="op">=</span>[<span class="dv">3</span>], mode<span class="op">=</span><span class="st">'markers'</span>, marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">14</span>, symbol<span class="op">=</span><span class="st">'star'</span>), name<span class="op">=</span><span class="st">'LP Optimal: (0,3)'</span>))</span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="co"># QP constraint (ellipse)</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>theta <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">2</span><span class="op">*</span>np.pi, <span class="dv">200</span>)</span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>ell_x <span class="op">=</span> <span class="fl">1.2</span> <span class="op">+</span> <span class="fl">0.8</span><span class="op">*</span>np.cos(theta)</span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>ell_y <span class="op">=</span> <span class="fl">1.5</span> <span class="op">+</span> <span class="fl">1.2</span><span class="op">*</span>np.sin(theta)</span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>ell_x, y<span class="op">=</span>ell_y, mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#907ea0'</span>, width<span class="op">=</span><span class="dv">2</span>, dash<span class="op">=</span><span class="st">'dash'</span>), name<span class="op">=</span><span class="st">'QP constraint (ellipse)'</span>))</span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="co"># QP optimal</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="fl">1.2</span>], y<span class="op">=</span>[<span class="fl">1.5</span>], mode<span class="op">=</span><span class="st">'markers'</span>, marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7a9a7e'</span>, size<span class="op">=</span><span class="dv">12</span>, symbol<span class="op">=</span><span class="st">'diamond'</span>), name<span class="op">=</span><span class="st">'QP Optimal (interior)'</span>))</span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>fig.update_xaxes(title_text<span class="op">=</span><span class="st">"x₁"</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="dv">4</span>])</span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>fig.update_yaxes(title_text<span class="op">=</span><span class="st">"x₂"</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="dv">4</span>], scaleanchor<span class="op">=</span><span class="st">'x'</span>)</span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>fig.update_layout(height<span class="op">=</span><span class="dv">500</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">20</span>, b<span class="op">=</span><span class="dv">50</span>, l<span class="op">=</span><span class="dv">55</span>, r<span class="op">=</span><span class="dv">20</span>), legend<span class="op">=</span><span class="bu">dict</span>(x<span class="op">=</span><span class="fl">0.5</span>, y<span class="op">=</span><span class="dv">1</span>))</span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+</section>
+<section id="sec-transformations" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="sec-transformations"><span class="header-section-number">5.4</span> Equivalent Transformations</h2>
+<p>Many optimization problems that do not initially appear to fit the standard form can be reformulated as equivalent convex programs through clever variable substitutions and constraint reformulations. The following examples demonstrate some common transformations.</p>
+<section id="sec-epigraph" class="level3" data-number="5.4.1">
+<h3 data-number="5.4.1" class="anchored" data-anchor-id="sec-epigraph"><span class="header-section-number">5.4.1</span> Epigraph and Piecewise Linear Minimization</h3>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Epigraph Form
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Any convex optimization problem <span class="math inline">\min f_0(x)</span> subject to constraints can be rewritten in <strong>epigraph form</strong>:</p>
+<p><span class="math display">
+\min_t \; t \quad \text{s.t.} \quad f_0(x) \leq t, \;\; \text{(original constraints)}.
+</span></p>
+<p>This transforms a problem with a nonlinear objective into one with a linear objective and an additional constraint.</p>
+</div>
+</div>
+<div id="exm-piecewise-linear" class="theorem example">
+<p><span class="theorem-title"><strong>Example 5.6 (Piecewise Linear Minimization)</strong></span> Minimizing <span class="math inline">f(x) = \max_{i=1,\ldots,m}\{a_i^\top x + b_i\}</span> is equivalent to the LP:</p>
+<p><span class="math display">
+\min_t\; t \quad \text{s.t.} \quad a_i^\top x + b_i \leq t \;\;\forall\, i \in \{1,\ldots,m\}.
+</span></p>
+</div>
+<div id="exm-inscribed-circle" class="theorem example">
+<p><span class="theorem-title"><strong>Example 5.7 (Largest Inscribed Circle in a Polytope)</strong></span> Given a polytope <span class="math inline">P = \{x : a_i^\top x + b_i \geq 0\}</span>, find the largest circle (center <span class="math inline">x_1</span>, radius <span class="math inline">r</span>) inside <span class="math inline">P</span>:</p>
+<p><span class="math display">
+\max_{x_1, r}\; r \quad \text{s.t.} \quad a_i^\top x_1 + b_i \geq r\|a_i\| \;\;\forall\, i.
+</span></p>
+<p>This is an LP in <span class="math inline">(x_1, r)</span>!</p>
+</div>
+<div id="exm-linear-fractional" class="theorem example">
+<p><span class="theorem-title"><strong>Example 5.8 (Linear Fractional Programming)</strong></span> Minimizing <span class="math inline">f_0(x) = \frac{c^\top x + d}{e^\top x + f}</span> (with <span class="math inline">e^\top x + f &gt; 0</span>) subject to <span class="math inline">Gx \leq h,\; Ax = b</span> can be transformed via the substitution <span class="math inline">y = x/(e^\top x + f)</span>, <span class="math inline">z = 1/(e^\top x + f)</span> into the LP:</p>
+<p><span class="math display">
+\min\; c^\top y + d \cdot z \quad \text{s.t.} \quad Gy - hz \leq 0,\; Ay - bz = 0,\; e^\top y + fz = 1,\; z \geq 0.
+</span></p>
+</div>
+</section>
+</section>
+<section id="sec-lagrangian-duality" class="level2" data-number="5.5">
+<h2 data-number="5.5" class="anchored" data-anchor-id="sec-lagrangian-duality"><span class="header-section-number">5.5</span> Lagrangian Duality</h2>
+<p>So far we have established the structural properties of convex problems (local = global optimality, convex suboptimal sets), catalogued the standard classes (LP, QP, SOCP, SDP), and seen how to reformulate problems into equivalent convex programs. These tools tell us <em>what</em> convex problems look like, but they do not yet provide a mechanism for <em>certifying</em> that a candidate solution is optimal or for <em>bounding</em> how far we are from optimal. Lagrangian duality fills this gap: it associates every optimization problem with a “dual” problem whose optimal value provides a lower bound on the primal optimum, and under mild conditions this bound is tight.</p>
+<section id="sec-lagrangian" class="level3" data-number="5.5.1">
+<h3 data-number="5.5.1" class="anchored" data-anchor-id="sec-lagrangian"><span class="header-section-number">5.5.1</span> The Lagrangian</h3>
+<p>Consider the optimization problem in standard form:</p>
+<p><span class="math display">
+\min_{x}\; f_0(x) \quad \text{s.t.} \quad f_i(x) \leq 0,\; i \in [m], \quad h_i(x) = 0,\; i \in [p].
+</span></p>
+<div id="def-lagrangian" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 5.9 (Definition 5.9 (Lagrangian))</strong></span> The <strong>Lagrangian</strong> <span class="math inline">L : \mathbb{R}^n \times \mathbb{R}^m \times \mathbb{R}^p \to \mathbb{R}</span> is defined as:</p>
+<p><span id="eq-lagrangian"><span class="math display">
+L(x, \lambda, \nu) = f_0(x) + \sum_{i=1}^{m} \lambda_i f_i(x) + \sum_{i=1}^{p} \nu_i h_i(x),
+\tag{5.1}</span></span></p>
+<p>where <span class="math inline">\lambda_i \geq 0</span> are <strong>dual variables</strong> (Lagrange multipliers) for the inequality constraints, and <span class="math inline">\nu_i</span> are dual variables for the equality constraints.</p>
+</div>
+<p>The Lagrangian “relaxes” the constraints by incorporating them into the objective via penalty terms. When a constraint is violated (<span class="math inline">f_i(x) &gt; 0</span>), the penalty term <span class="math inline">\lambda_i f_i(x)</span> increases the Lagrangian, discouraging infeasible points. The dual variables <span class="math inline">\lambda_i</span> can be interpreted as “prices” for violating each constraint.</p>
+<div id="def-lagrange-dual-function" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 5.10 (Definition 5.10 (Lagrange Dual Function))</strong></span> The <strong>Lagrange dual function</strong> <span class="math inline">g : \mathbb{R}^m \times \mathbb{R}^p \to \mathbb{R}</span> is the infimum of the Lagrangian over <span class="math inline">x</span>:</p>
+<p><span id="eq-dual-function"><span class="math display">
+g(\lambda, \nu) = \inf_{x \in \mathcal{D}} L(x, \lambda, \nu) = \inf_{x \in \mathcal{D}} \left( f_0(x) + \sum_{i=1}^m \lambda_i f_i(x) + \sum_{i=1}^p \nu_i h_i(x) \right).
+\tag{5.2}</span></span></p>
+<p>The dual function is always <strong>concave</strong> (even if the original problem is not convex), since it is the pointwise infimum of a family of affine functions in <span class="math inline">(\lambda, \nu)</span>.</p>
+</div>
+<p>The dual function (<a href="#eq-dual-function" class="quarto-xref">Equation&nbsp;<span class="quarto-unresolved-ref">eq-dual-function</span></a>) provides a family of lower bounds on the optimal value <span class="math inline">f^*</span>: for any <span class="math inline">\lambda \geq 0</span> and any <span class="math inline">\nu</span>, we have <span class="math inline">g(\lambda, \nu) \leq f^*</span>. The concavity of <span class="math inline">g</span> is a remarkable structural property – it holds regardless of whether the original problem is convex.</p>
+</section>
+<section id="sec-dual-problem" class="level3" data-number="5.5.2">
+<h3 data-number="5.5.2" class="anchored" data-anchor-id="sec-dual-problem"><span class="header-section-number">5.5.2</span> The Dual Problem</h3>
+<div id="def-lagrange-dual-problem" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 5.11 (Definition 5.11 (Lagrange Dual Problem))</strong></span> The <strong>Lagrange dual problem</strong> is:</p>
+<p><span class="math display">
+\max_{\lambda, \nu}\; g(\lambda, \nu) \quad \text{s.t.} \quad \lambda \geq 0.
+</span></p>
+<p>This is always a <strong>convex</strong> optimization problem (maximizing a concave function), regardless of whether the original (primal) problem is convex.</p>
+<p>Let <span class="math inline">d^*</span> denote the optimal value of the dual problem.</p>
+</div>
+<p>The dual problem asks: what is the tightest lower bound on <span class="math inline">f^*</span> that we can obtain from the Lagrangian relaxation? Since maximizing a concave function is a convex optimization problem, the dual is always “easy” in principle, even when the primal problem is nonconvex.</p>
+</section>
+<section id="sec-weak-strong" class="level3" data-number="5.5.3">
+<h3 data-number="5.5.3" class="anchored" data-anchor-id="sec-weak-strong"><span class="header-section-number">5.5.3</span> Weak and Strong Duality</h3>
+<div id="thm-weak-duality" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 5.4 (Theorem 5.4 (Weak Duality))</strong></span> For <strong>any</strong> optimization problem (convex or not):</p>
+<p><span id="eq-weak-duality"><span class="math display">
+d^* \leq f^*.
+\tag{5.3}</span></span></p>
+<p>The difference <span class="math inline">f^* - d^*</span> is called the <strong>duality gap</strong>. Weak duality always holds.</p>
+</div>
+<p>Weak duality tells us that the dual optimal value can never exceed the primal optimal value. This is useful in practice: any feasible dual solution immediately provides a certificate that the primal objective cannot be better than <span class="math inline">g(\lambda, \nu)</span>, giving us a way to bound how far a candidate solution is from optimal.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Strategy.</strong> The argument proceeds in three steps: first, bound the Lagrangian at any feasible point; second, pass to the infimum over <span class="math inline">x</span> to obtain the dual function; third, take the supremum over dual variables to compare <span class="math inline">d^*</span> with <span class="math inline">f^*</span>.</p>
+<p><strong>Step 1 (Lagrangian upper bound).</strong> For any feasible <span class="math inline">x</span> (so <span class="math inline">f_i(x) \leq 0</span>, <span class="math inline">h_i(x) = 0</span>) and any <span class="math inline">\lambda \geq 0</span>:</p>
+<p><span class="math display">
+L(x, \lambda, \nu) = f_0(x) + \sum_i \lambda_i \underbrace{f_i(x)}_{\leq 0} + \sum_i \nu_i \underbrace{h_i(x)}_{=0} \leq f_0(x).
+</span></p>
+<p>The inequality follows because each penalty term <span class="math inline">\lambda_i f_i(x)</span> is nonpositive (a nonnegative multiplier times a nonpositive constraint value) and each equality term vanishes.</p>
+<p><strong>Step 2 (Dual function bound).</strong> Since <span class="math inline">g(\lambda, \nu)</span> is the infimum of <span class="math inline">L(x, \lambda, \nu)</span> over all <span class="math inline">x \in \mathcal{D}</span>, we have <span class="math inline">g(\lambda, \nu) \leq L(x, \lambda, \nu) \leq f_0(x)</span> for every feasible <span class="math inline">x</span>. Taking the infimum over all feasible <span class="math inline">x</span> on the right-hand side gives <span class="math inline">g(\lambda, \nu) \leq f^*</span>.</p>
+<p><strong>Step 3 (Conclusion).</strong> Taking the supremum over all <span class="math inline">(\lambda, \nu)</span> with <span class="math inline">\lambda \geq 0</span> on the left-hand side yields <span class="math inline">d^* \leq f^*</span>. <span class="math inline">\blacksquare</span></p>
+</div>
+<div id="thm-strong-duality" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 5.5 (Theorem 5.5 (Strong Duality))</strong></span> For convex problems, under mild conditions (e.g., <strong>Slater’s condition</strong>), <strong>strong duality</strong> holds:</p>
+<p><span id="eq-strong-duality"><span class="math display">
+d^* = f^*.
+\tag{5.4}</span></span></p>
+<p>That is, the duality gap is <strong>zero</strong>.</p>
+</div>
+<p>Strong duality (<a href="#eq-strong-duality" class="quarto-xref">Equation&nbsp;<span class="quarto-unresolved-ref">eq-strong-duality</span></a>) is a much deeper result than weak duality (<a href="#eq-weak-duality" class="quarto-xref">Equation&nbsp;<span class="quarto-unresolved-ref">eq-weak-duality</span></a>). When it holds, solving the dual problem is equivalent to solving the primal problem – we can recover the primal optimal value from the dual. This is the theoretical foundation for algorithms such as interior-point methods that solve the primal and dual problems simultaneously.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-duality-gap</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 5.3: Visualization of weak duality. The dual function g(lambda) provides a lower bound on the primal optimal f*. Under strong duality, the gap closes."</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>lam <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="dv">5</span>, <span class="dv">200</span>)</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>f_star <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>g_lambda <span class="op">=</span> <span class="op">-</span>(lam <span class="op">-</span> <span class="dv">2</span>)<span class="op">**</span><span class="dv">2</span> <span class="op">/</span> <span class="dv">4</span> <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>g_weak <span class="op">=</span> <span class="op">-</span>(lam <span class="op">-</span> <span class="fl">1.8</span>)<span class="op">**</span><span class="dv">2</span> <span class="op">/</span> <span class="dv">3</span> <span class="op">+</span> <span class="fl">0.6</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">5</span>], y<span class="op">=</span>[f_star, f_star], mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, width<span class="op">=</span><span class="fl">2.5</span>, dash<span class="op">=</span><span class="st">'dash'</span>), name<span class="op">=</span><span class="st">'Primal: f* = 1'</span>))</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>lam, y<span class="op">=</span>g_lambda, mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7b97ad'</span>, width<span class="op">=</span><span class="dv">3</span>), name<span class="op">=</span><span class="st">'Dual: g(λ)'</span>, fill<span class="op">=</span><span class="st">'tozeroy'</span>, fillcolor<span class="op">=</span><span class="st">'rgba(123,143,163,0.18)'</span>))</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">2</span>], y<span class="op">=</span>[<span class="dv">1</span>], mode<span class="op">=</span><span class="st">'markers'</span>, marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">14</span>, symbol<span class="op">=</span><span class="st">'star'</span>), name<span class="op">=</span><span class="st">'d* = f* (strong duality)'</span>))</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>lam, y<span class="op">=</span>g_weak, mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#907ea0'</span>, width<span class="op">=</span><span class="fl">2.5</span>, dash<span class="op">=</span><span class="st">'dot'</span>), name<span class="op">=</span><span class="st">'Weak dual: gap &gt; 0'</span>))</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="fl">1.8</span>], y<span class="op">=</span>[<span class="fl">0.6</span>], mode<span class="op">=</span><span class="st">'markers'</span>, marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#907ea0'</span>, size<span class="op">=</span><span class="dv">10</span>, symbol<span class="op">=</span><span class="st">'diamond'</span>), name<span class="op">=</span><span class="st">'d* = 0.6 (gap = 0.4)'</span>, showlegend<span class="op">=</span><span class="va">False</span>))</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>fig.add_shape(<span class="bu">type</span><span class="op">=</span><span class="st">'line'</span>, x0<span class="op">=</span><span class="fl">1.8</span>, x1<span class="op">=</span><span class="fl">1.8</span>, y0<span class="op">=</span><span class="fl">0.6</span>, y1<span class="op">=</span><span class="fl">1.0</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b8995e'</span>, width<span class="op">=</span><span class="dv">2</span>, dash<span class="op">=</span><span class="st">'dot'</span>))</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">2.1</span>, y<span class="op">=</span><span class="fl">0.8</span>, text<span class="op">=</span><span class="st">'Duality&lt;br&gt;gap'</span>, showarrow<span class="op">=</span><span class="va">False</span>, font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">11</span>, color<span class="op">=</span><span class="st">'#b8995e'</span>))</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>fig.update_xaxes(title_text<span class="op">=</span><span class="st">"λ (dual variable)"</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.2</span>, <span class="fl">5.2</span>])</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>fig.update_yaxes(title_text<span class="op">=</span><span class="st">"Value"</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">1.5</span>, <span class="fl">1.5</span>])</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>fig.update_layout(height<span class="op">=</span><span class="dv">450</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">20</span>, b<span class="op">=</span><span class="dv">50</span>, l<span class="op">=</span><span class="dv">55</span>, r<span class="op">=</span><span class="dv">20</span>), legend<span class="op">=</span><span class="bu">dict</span>(x<span class="op">=</span><span class="fl">0.55</span>, y<span class="op">=</span><span class="fl">0.98</span>))</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</section>
+<section id="sec-slater" class="level3" data-number="5.5.4">
+<h3 data-number="5.5.4" class="anchored" data-anchor-id="sec-slater"><span class="header-section-number">5.5.4</span> Slater’s Condition</h3>
+<p>Weak duality (<a href="#eq-weak-duality" class="quarto-xref">Equation&nbsp;<span class="quarto-unresolved-ref">eq-weak-duality</span></a>) always holds, but when does the duality gap close? The following condition, due to Slater, provides a simple and widely applicable sufficient condition for strong duality (<a href="#eq-strong-duality" class="quarto-xref">Equation&nbsp;<span class="quarto-unresolved-ref">eq-strong-duality</span></a>).</p>
+<div id="thm-slater" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 5.6 (Theorem 5.6 (Slater’s Condition for Strong Duality))</strong></span> If the primal problem is convex and there exists a <strong>strictly feasible</strong> point <span class="math inline">\widetilde{x}</span> satisfying:</p>
+<p><span class="math display">
+f_i(\widetilde{x}) &lt; 0 \quad \forall\, i \in [m], \qquad h_i(\widetilde{x}) = 0 \quad \forall\, i \in [p],
+</span></p>
+<p>then <strong>strong duality holds</strong>: <span class="math inline">d^* = f^*</span>.</p>
+<p>For problems with only <em>affine</em> inequality constraints, Slater’s condition reduces to just feasibility (no strict inequality needed).</p>
+</div>
+<p>Slater’s condition requires the existence of a point that strictly satisfies all inequality constraints – it lies in the “interior” of the feasible set, not on its boundary. This rules out pathological cases where the feasible set is “thin” (e.g., all points sit on constraint boundaries) and ensures the dual problem can fully capture the primal optimal value.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Slater’s condition is a <strong>constraint qualification</strong>: it ensures that the geometry of the feasible set is well-behaved enough for duality to be tight. For LPs, strong duality always holds (assuming feasibility of both primal and dual).</p>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-kkt" class="level2" data-number="5.6">
+<h2 data-number="5.6" class="anchored" data-anchor-id="sec-kkt"><span class="header-section-number">5.6</span> KKT Conditions</h2>
+<p>With the Lagrangian framework and strong duality established, we can now derive the conditions that any optimal primal-dual pair must satisfy. These KKT conditions combine gradient information (stationarity) with constraint satisfaction (feasibility and complementary slackness) into a single optimality certificate.</p>
+<div id="thm-kkt" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 5.7 (Theorem 5.7 (Karush-Kuhn-Tucker Conditions))</strong></span> For a convex problem with differentiable <span class="math inline">f_0, f_1, \ldots, f_m</span> and strong duality, <span class="math inline">x^*</span> is primal optimal and <span class="math inline">(\lambda^*, \nu^*)</span> is dual optimal <strong>if and only if</strong> the following KKT conditions hold:</p>
+<ol type="1">
+<li><strong>Primal feasibility:</strong> <span class="math inline">f_i(x^*) \leq 0</span> for <span class="math inline">i \in [m]</span>, and <span class="math inline">h_i(x^*) = 0</span> for <span class="math inline">i \in [p]</span>.</li>
+<li><strong>Dual feasibility:</strong> <span class="math inline">\lambda_i^* \geq 0</span> for <span class="math inline">i \in [m]</span>.</li>
+<li><strong>Complementary slackness:</strong> <span class="math inline">\lambda_i^* f_i(x^*) = 0</span> for <span class="math inline">i \in [m]</span>.</li>
+<li><strong>Stationarity:</strong></li>
+</ol>
+<p><span id="eq-kkt-stationarity"><span class="math display">
+\nabla f_0(x^*) + \sum_{i=1}^{m} \lambda_i^* \nabla f_i(x^*) + \sum_{i=1}^{p} \nu_i^* \nabla h_i(x^*) = 0.
+\tag{5.5}</span></span></p>
+</div>
+<p>The KKT conditions are the “first-order optimality conditions” for constrained optimization, generalizing the familiar condition <span class="math inline">\nabla f_0(x^*) = 0</span> from unconstrained calculus. The stationarity condition (<a href="#eq-kkt-stationarity" class="quarto-xref">Equation&nbsp;<span class="quarto-unresolved-ref">eq-kkt-stationarity</span></a>) requires that the gradient of the Lagrangian (<a href="#eq-lagrangian" class="quarto-xref">Equation&nbsp;<span class="quarto-unresolved-ref">eq-lagrangian</span></a>) vanishes at the optimal point. Together with primal feasibility, dual feasibility, and complementary slackness, these conditions provide a complete characterization: for convex problems with strong duality (<a href="#eq-strong-duality" class="quarto-xref">Equation&nbsp;<span class="quarto-unresolved-ref">eq-strong-duality</span></a>), they are both necessary and sufficient for optimality.</p>
+<div id="fig-kkt-geometry" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-kkt-geometry-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch06-kkt-geometry.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;5.1: Geometric picture of the KKT conditions. At the optimal point x^* on the boundary of the feasible region \Omega, the negative objective gradient -\nabla f(x^*) is a conic combination of the constraint gradients \nabla g_i(x^*) with multipliers \lambda_i \geq 0."><img src="figures/ch06-kkt-geometry.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-kkt-geometry-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.1: Geometric picture of the KKT conditions. At the optimal point <span class="math inline">x^*</span> on the boundary of the feasible region <span class="math inline">\Omega</span>, the negative objective gradient <span class="math inline">-\nabla f(x^*)</span> is a conic combination of the constraint gradients <span class="math inline">\nabla g_i(x^*)</span> with multipliers <span class="math inline">\lambda_i \geq 0</span>.
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Complementary Slackness
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The complementary slackness condition <span class="math inline">\lambda_i^* f_i(x^*) = 0</span> means: for each inequality constraint, either the constraint is <strong>active</strong> (<span class="math inline">f_i(x^*) = 0</span>) or the corresponding multiplier is zero (<span class="math inline">\lambda_i^* = 0</span>). Intuitively, the dual variable “prices” the constraint, and an inactive constraint has zero price.</p>
+</div>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof Sketch (KKT Necessity).</strong></p>
+<p><strong>Strategy.</strong> Under strong duality, the primal and dual optimal values coincide. Writing out the chain of inequalities that defines the dual function, we show that equality must hold at every step, which forces both complementary slackness and stationarity.</p>
+<p>Under strong duality, if <span class="math inline">x^*</span> is primal optimal and <span class="math inline">(\lambda^*, \nu^*)</span> is dual optimal:</p>
+<p><span class="math display">
+f_0(x^*) = g(\lambda^*, \nu^*) = \inf_x L(x, \lambda^*, \nu^*) \leq L(x^*, \lambda^*, \nu^*) = f_0(x^*) + \sum_i \lambda_i^* f_i(x^*),
+</span></p>
+<p>where the first equality uses strong duality (<span class="math inline">f^* = d^*</span>), the second is the definition of the dual function, the inequality follows because the infimum is at most the value at any particular point, and the last equality expands the Lagrangian at <span class="math inline">x^*</span> (using <span class="math inline">h_i(x^*) = 0</span>). Since <span class="math inline">\lambda_i^* \geq 0</span> and <span class="math inline">f_i(x^*) \leq 0</span>, we have <span class="math inline">\sum_i \lambda_i^* f_i(x^*) \leq 0</span>, so equality must hold throughout. This gives:</p>
+<ol type="1">
+<li><span class="math inline">\lambda_i^* f_i(x^*) = 0</span> for all <span class="math inline">i</span> (complementary slackness).</li>
+<li><span class="math inline">x^*</span> minimizes <span class="math inline">L(x, \lambda^*, \nu^*)</span>, so <span class="math inline">\nabla_x L(x^*, \lambda^*, \nu^*) = 0</span> (stationarity).</li>
+</ol>
+<p>Together with primal and dual feasibility (which hold by assumption), all four KKT conditions are established. This completes the proof. <span class="math inline">\blacksquare</span></p>
+</div>
+</section>
+<section id="sec-optimality" class="level2" data-number="5.7">
+<h2 data-number="5.7" class="anchored" data-anchor-id="sec-optimality"><span class="header-section-number">5.7</span> Optimality Conditions for Differentiable Problems</h2>
+<p>The KKT conditions characterize optimality using dual variables and the Lagrangian. When the problem has a simpler structure – for example, when there are no constraints at all, or when the feasible set is described abstractly as a convex set <span class="math inline">\Omega</span> rather than by explicit inequality and equality constraints – we can state cleaner first-order conditions that reason directly about the gradient. These results connect the abstract theory of convex optimization back to the familiar calculus condition “set the derivative to zero,” and they are the starting point for the gradient-based algorithms developed in subsequent chapters.</p>
+<div id="thm-first-order-unconstrained" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 5.8 (Theorem 5.8 (First-Order Optimality for Unconstrained Convex Problems))</strong></span> If <span class="math inline">f_0</span> is convex and differentiable, then <span class="math inline">x^*</span> is a global minimizer of <span class="math inline">f_0</span> over <span class="math inline">\mathbb{R}^n</span> if and only if:</p>
+<p><span id="eq-unconstrained-optimality"><span class="math display">
+\nabla f_0(x^*) = 0.
+\tag{5.6}</span></span></p>
+</div>
+<p>For unconstrained convex problems, the familiar calculus condition <span class="math inline">\nabla f_0(x^*) = 0</span> is both necessary and sufficient for global optimality – a direct consequence of the fact that convexity ensures every stationary point is a global minimizer. The constrained analog requires a subtler condition.</p>
+<div id="thm-first-order-constrained" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 5.9 (Theorem 5.9 (First-Order Optimality for Constrained Convex Problems))</strong></span> If <span class="math inline">f_0</span> is convex and differentiable, then <span class="math inline">x^*</span> is optimal for <span class="math inline">\min_{x \in \Omega} f_0(x)</span> (where <span class="math inline">\Omega</span> is convex) if and only if:</p>
+<p><span id="eq-constrained-optimality"><span class="math display">
+\nabla f_0(x^*)^\top (y - x^*) \geq 0 \quad \forall\, y \in \Omega.
+\tag{5.7}</span></span></p>
+<p>Geometrically, the negative gradient <span class="math inline">-\nabla f_0(x^*)</span> makes an obtuse angle with every feasible direction from <span class="math inline">x^*</span>.</p>
+</div>
+<div id="fig-constrained-optimality" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-constrained-optimality-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch01-optimality-condition.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;5.2: First-order optimality for constrained convex problems. Left: a non-optimal point where the negative gradient has a component pointing into the feasible set — there exist feasible descent directions. Right: the optimal point x^*, where the negative gradient points away from (or along the boundary of) the feasible set, so no feasible direction can decrease f_0."><img src="figures/ch01-optimality-condition.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-constrained-optimality-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5.2: First-order optimality for constrained convex problems. Left: a non-optimal point where the negative gradient has a component pointing into the feasible set — there exist feasible descent directions. Right: the optimal point <span class="math inline">x^*</span>, where the negative gradient points away from (or along the boundary of) the feasible set, so no feasible direction can decrease <span class="math inline">f_0</span>.
+</figcaption>
+</figure>
+</div>
+<p>The constrained optimality condition (<a href="#eq-constrained-optimality" class="quarto-xref">Equation&nbsp;<span class="quarto-unresolved-ref">eq-constrained-optimality</span></a>) generalizes the unconstrained condition (<a href="#eq-unconstrained-optimality" class="quarto-xref">Equation&nbsp;<span class="quarto-unresolved-ref">eq-unconstrained-optimality</span></a>) to handle constraints. Intuitively, <span class="math inline">x^*</span> is optimal when there is no feasible direction along which <span class="math inline">f_0</span> can decrease. The condition says that the gradient “points outward” from the feasible set at <span class="math inline">x^*</span>, so any step that remains feasible cannot improve the objective.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>The two directions use different tools: sufficiency combines the first-order characterization of convexity with the gradient condition, while necessity constructs a feasible descent direction via a convex combination.</p>
+<p><strong>Sufficiency:</strong> For any <span class="math inline">y \in \Omega</span>, by the first-order characterization of convexity:</p>
+<p><span class="math display">
+f_0(y) \geq f_0(x^*) + \nabla f_0(x^*)^\top (y - x^*) \geq f_0(x^*),
+</span></p>
+<p>where the first inequality uses the convexity of <span class="math inline">f_0</span> and the second uses the assumption <span class="math inline">\nabla f_0(x^*)^\top (y - x^*) \geq 0</span>. Since this holds for every feasible <span class="math inline">y</span>, <span class="math inline">x^*</span> is optimal.</p>
+<p><strong>Necessity:</strong> Suppose <span class="math inline">x^*</span> is optimal but <span class="math inline">\exists\, y \in \Omega</span> with <span class="math inline">\nabla f_0(x^*)^\top (y - x^*) &lt; 0</span>. Then for small <span class="math inline">t &gt; 0</span>, the point <span class="math inline">x^* + t(y - x^*) \in \Omega</span> (by convexity of <span class="math inline">\Omega</span>) and by the first-order Taylor expansion:</p>
+<p><span class="math display">
+f_0(x^* + t(y-x^*)) \approx f_0(x^*) + t \nabla f_0(x^*)^\top(y - x^*) &lt; f_0(x^*),
+</span></p>
+<p>contradicting optimality of <span class="math inline">x^*</span>. Hence we conclude the proof. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Looking Ahead
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Next, we study the geometry of linear programming in detail—vertices, extreme points, basic feasible solutions, and the structure of the LP polytope.</p>
+</div>
+</div>
+</section>
+<section id="summary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
+<ul>
+<li><strong>Standard form and problem hierarchy.</strong> Convex optimization problems are written as <span class="math inline">\min f_0(x)</span> subject to <span class="math inline">f_i(x) \leq 0</span> and <span class="math inline">Ax = b</span>; special cases—LP, QP, SOCP, SDP—form a strict hierarchy of increasing generality and computational cost.</li>
+<li><strong>Lagrangian duality.</strong> Associating multipliers <span class="math inline">\lambda_i \geq 0</span> with each inequality constraint yields the Lagrangian <span class="math inline">L(x,\lambda,\nu) = f_0(x) + \sum_i \lambda_i f_i(x) + \nu^\top(Ax - b)</span>; minimizing over <span class="math inline">x</span> gives the dual function <span class="math inline">g(\lambda,\nu)</span>, which provides a lower bound on the optimal value.</li>
+<li><strong>Weak and strong duality.</strong> Weak duality (<span class="math inline">d^* \leq f^*</span>) always holds; strong duality (<span class="math inline">d^* = f^*</span>) holds under constraint qualifications such as Slater’s condition (existence of a strictly feasible point).</li>
+<li><strong>KKT conditions.</strong> At optimality (with strong duality), the primal-dual pair <span class="math inline">(x^*,\lambda^*,\nu^*)</span> satisfies stationarity, primal feasibility, dual feasibility, and complementary slackness <span class="math inline">\lambda_i^* f_i(x^*) = 0</span>—the central optimality certificate in convex optimization.</li>
+<li><strong>First-order optimality.</strong> For differentiable convex objectives, <span class="math inline">\nabla f_0(x^*) = 0</span> characterizes unconstrained optima; for constrained problems over a convex set <span class="math inline">\Omega</span>, the condition <span class="math inline">\nabla f_0(x^*)^\top(y - x^*) \geq 0</span> for all <span class="math inline">y \in \Omega</span> is necessary and sufficient.</li>
+</ul>
+<section id="optimization-problem-hierarchy" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="optimization-problem-hierarchy">Optimization Problem Hierarchy</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Problem</th>
+<th>Objective</th>
+<th>Constraints</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>LP</strong></td>
+<td><span class="math inline">c^\top x</span></td>
+<td><span class="math inline">Ax \leq b</span></td>
+<td>Transportation, network flow</td>
+</tr>
+<tr class="even">
+<td><strong>QP</strong></td>
+<td><span class="math inline">\tfrac{1}{2}x^\top Q x + c^\top x</span></td>
+<td><span class="math inline">Ax \leq b</span></td>
+<td>Ridge regression, portfolio</td>
+</tr>
+<tr class="odd">
+<td><strong>SOCP</strong></td>
+<td><span class="math inline">c^\top x</span></td>
+<td><span class="math inline">\|A_i x + b_i\|_2 \leq c_i^\top x + d_i</span></td>
+<td>Robust optimization</td>
+</tr>
+<tr class="even">
+<td><strong>SDP</strong></td>
+<td><span class="math inline">\langle C, X \rangle</span></td>
+<td><span class="math inline">\langle A_i, X \rangle = b_i,\; X \succeq 0</span></td>
+<td>Relaxations, control</td>
+</tr>
+<tr class="odd">
+<td><strong>Convex Program</strong></td>
+<td>convex <span class="math inline">f_0(x)</span></td>
+<td>convex <span class="math inline">f_i(x) \leq 0</span></td>
+<td>General convex</td>
+</tr>
+</tbody>
+</table>
+<p>Each row generalizes the rows above it: LP <span class="math inline">\subset</span> QP <span class="math inline">\subset</span> SOCP <span class="math inline">\subset</span> SDP <span class="math inline">\subset</span> Convex Program.</p>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../lectures/04-convex-functions.html" class="pagination-link" aria-label="Convex Functions">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Convex Functions</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../lectures/06-gradient-descent.html" class="pagination-link" aria-label="Gradient Descent">
+        <span class="nav-page-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+const figFontHeading = '"Crimson Pro", Georgia, serif';
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
+  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
+];
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

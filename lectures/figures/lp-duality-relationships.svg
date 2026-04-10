@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 360" width="700" height="360">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#3d352f"/>
+    </marker>
+  </defs>
+
+  <text x="350" y="28" text-anchor="middle" font-size="16" font-weight="bold">Primal-Dual Relationships</text>
+
+  <!-- Primal box -->
+  <rect x="40" y="55" width="250" height="100" rx="10" fill="#7b97ad" fill-opacity="0.1" stroke="#7b97ad" stroke-width="2"/>
+  <text x="165" y="80" text-anchor="middle" font-size="14" fill="#7b97ad" font-weight="bold">Primal (P)</text>
+  <text x="165" y="100" text-anchor="middle" font-size="12" fill="#7b97ad">min 𝑐&#x1D40;𝑥</text>
+  <text x="165" y="118" text-anchor="middle" font-size="12" fill="#7b97ad">s.t. 𝐴𝑥 >= 𝑏, 𝑥 >= 0</text>
+  <text x="165" y="140" text-anchor="middle" font-size="13" fill="#7b97ad">optimal: 𝑐&#x1D40;𝑥*</text>
+
+  <!-- Dual box -->
+  <rect x="410" y="55" width="250" height="100" rx="10" fill="#b56b6b" fill-opacity="0.1" stroke="#b56b6b" stroke-width="2"/>
+  <text x="535" y="80" text-anchor="middle" font-size="14" fill="#b56b6b" font-weight="bold">Dual (D)</text>
+  <text x="535" y="100" text-anchor="middle" font-size="12" fill="#b56b6b">max 𝑏&#x1D40;𝑦</text>
+  <text x="535" y="118" text-anchor="middle" font-size="12" fill="#b56b6b">s.t. 𝐴&#x1D40;𝑦 &lt;= 𝑐, 𝑦 >= 0</text>
+  <text x="535" y="140" text-anchor="middle" font-size="13" fill="#b56b6b">optimal: 𝑏&#x1D40;𝑦*</text>
+
+  <!-- Double arrow between primal and dual -->
+  <line x1="295" y1="105" x2="405" y2="105" stroke="#968a80" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="405" y1="95" x2="295" y2="95" stroke="#968a80" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <!-- === Three key results === -->
+
+  <!-- 1. Weak Duality -->
+  <rect x="40" y="190" width="190" height="70" rx="8" fill="#b8995e" fill-opacity="0.08" stroke="#b8995e" stroke-width="1.5"/>
+  <text x="135" y="212" text-anchor="middle" font-size="13" fill="#b8995e" font-weight="bold">Weak Duality</text>
+  <text x="135" y="232" text-anchor="middle" font-size="12" fill="#b8995e">𝑏&#x1D40;𝑦 &lt;= 𝑐&#x1D40;𝑥</text>
+  <text x="135" y="248" text-anchor="middle" font-size="10" fill="#968a80">always holds</text>
+
+  <!-- 2. Strong Duality -->
+  <rect x="255" y="190" width="190" height="70" rx="8" fill="#7a9a7e" fill-opacity="0.08" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="350" y="212" text-anchor="middle" font-size="13" fill="#7a9a7e" font-weight="bold">Strong Duality</text>
+  <text x="350" y="232" text-anchor="middle" font-size="12" fill="#7a9a7e">𝑏&#x1D40;𝑦* = 𝑐&#x1D40;𝑥*</text>
+  <text x="350" y="248" text-anchor="middle" font-size="10" fill="#968a80">at optimality for LP</text>
+
+  <!-- 3. Complementary Slackness -->
+  <rect x="470" y="190" width="190" height="70" rx="8" fill="#907ea0" fill-opacity="0.08" stroke="#907ea0" stroke-width="1.5"/>
+  <text x="565" y="212" text-anchor="middle" font-size="13" fill="#907ea0" font-weight="bold">Complementary Slack.</text>
+  <text x="565" y="232" text-anchor="middle" font-size="12" fill="#907ea0">𝑥*ᵢ(𝐴&#x1D40;𝑦* - 𝑐)ᵢ = 0</text>
+  <text x="565" y="248" text-anchor="middle" font-size="10" fill="#968a80">links primal and dual</text>
+
+  <!-- Number line showing relationship -->
+  <line x1="100" y1="300" x2="600" y2="300" stroke="#3d352f" stroke-width="1.2"/>
+
+  <!-- Dual objective value (left) -->
+  <circle cx="180" cy="300" r="5" fill="#b56b6b"/>
+  <text x="180" y="325" text-anchor="middle" font-size="11" fill="#b56b6b">𝑏&#x1D40;𝑦</text>
+
+  <!-- Optimal values (equal, middle) -->
+  <circle cx="380" cy="300" r="6" fill="#7a9a7e"/>
+  <text x="380" y="325" text-anchor="middle" font-size="11" fill="#7a9a7e" font-weight="bold">𝑏&#x1D40;𝑦* = 𝑐&#x1D40;𝑥*</text>
+
+  <!-- Primal objective value (right) -->
+  <circle cx="520" cy="300" r="5" fill="#7b97ad"/>
+  <text x="520" y="325" text-anchor="middle" font-size="11" fill="#7b97ad">𝑐&#x1D40;𝑥</text>
+
+  <!-- Duality gap annotation -->
+  <line x1="180" y1="290" x2="520" y2="290" stroke="#b8995e" stroke-width="0.8"/>
+  <line x1="180" y1="287" x2="180" y2="293" stroke="#b8995e" stroke-width="0.8"/>
+  <line x1="520" y1="287" x2="520" y2="293" stroke="#b8995e" stroke-width="0.8"/>
+  <text x="350" y="286" text-anchor="middle" font-size="10" fill="#b8995e">duality gap</text>
+</svg>

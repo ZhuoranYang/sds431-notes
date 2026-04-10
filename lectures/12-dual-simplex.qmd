@@ -1,0 +1,1018 @@
+---
+title: "The Dual Simplex Method"
+---
+
+The [simplex method](10-simplex-method.qmd) solves a linear program by walking along the vertices of the primal feasible region, improving the objective at each step. At every iteration it maintains **primal feasibility** ($\widetilde{b} \geq 0$) and works toward **dual feasibility** ($\widetilde{c} \leq 0$ for maximization, equivalently all reduced costs non-positive). But what if we turned things around? What if we instead maintained dual feasibility and worked toward primal feasibility?
+
+This reversal leads to the **dual simplex method** -- an algorithm that implicitly runs the simplex method on the [dual LP](11-lp-duality.qmd), but does so entirely through the primal dictionary. The key insight is the **negative transpose property**: the dual dictionary is always the negative transpose of the primal dictionary. This elegant algebraic relationship means that every primal pivot corresponds to a dual pivot, and we never need to explicitly form the dual problem.
+
+The dual simplex method is not merely a theoretical curiosity. It is the workhorse algorithm behind modern LP solvers when constraints are added to an already-optimal tableau, when sensitivity analysis modifies the right-hand side, or when branch-and-bound algorithms need to re-optimize after adding cutting planes. Understanding the primal-dual interplay through the dictionary is essential for mastering computational optimization.
+
+## Recap of the Primal Simplex Method {#sec-primal-recap}
+
+Consider the standard-form LP and its dual:
+
+$$
+\text{(P):} \quad \max \; c^\top x \quad \text{s.t.} \quad Ax \leq b, \; x \geq 0, \quad x \in \mathbb{R}^n,
+$$
+
+$$
+\text{(D):} \quad \min \; b^\top y \quad \text{s.t.} \quad A^\top y \geq c, \; y \geq 0.
+$$
+
+We introduce $m$ slack variables $w_i = x_{n+i} \geq 0$ so that (P) becomes:
+
+$$
+\max \; \bar{c}^\top x \quad \text{s.t.} \quad \bar{A} x = b, \; x \geq 0, \quad x \in \mathbb{R}^{n+m},
+$$
+
+where $\bar{A} = (A \mid I_m)$ and $\bar{c} = \begin{pmatrix} c \\ 0 \end{pmatrix}$.
+
+The simplex method partitions the variable indices $[n+m]$ into a **basis** $B$ of size $m$ and **nonbasic** set $N = [n+m] \setminus B$. Given a basis $B$, we compute:
+
+- **Current BFS:** $x_B^* = \bar{A}_B^{-1} b$, $x_N^* = 0$.
+- **Reduced costs:** $\widetilde{c} = \bar{c}_N - \widetilde{A}^\top \bar{c}_B$ where $\widetilde{A} = \bar{A}_B^{-1} \bar{A}_N$.
+- **Transformed RHS:** $\widetilde{b} = \bar{A}_B^{-1} b = x_B^*$.
+- **Objective value:** $\widetilde{\zeta} = \bar{c}_B^\top x_B^*$.
+
+The **primal dictionary** (tableau) is then:
+
+$$
+\begin{array}{c|c}
+\widetilde{\zeta} & \widetilde{c}^\top \\
+\hline
+\widetilde{b} & -\widetilde{A}
+\end{array}
+$$
+
+The primal simplex method maintains $\widetilde{b} \geq 0$ (primal feasibility) and works toward $\widetilde{c} \leq 0$ (dual feasibility / optimality). At each step it chooses an entering variable $q \in N$ with $\widetilde{c}_q > 0$ and a leaving variable $p \in B$ via the minimum ratio test, then pivots $(p, q)$.
+
+The key question is: what happens if we write down the dual dictionary alongside the primal? A remarkably clean algebraic relationship -- the negative transpose property -- connects the two, and understanding it is the gateway to the dual simplex method.
+
+## The Primal-Dual Dictionary Relationship {#sec-primal-dual-dictionary}
+
+Having reviewed the primal simplex method, we now uncover the algebraic structure that connects the primal and dual dictionaries. The relationship between the primal and dual dictionaries is one of the most elegant facts in linear programming. We demonstrate this through a concrete example and then state the general result.
+
+### A Detailed Example {#sec-dictionary-example}
+
+Consider the primal-dual pair:
+
+$$
+\text{(P):} \quad \max \; 4x_1 + x_2 + 3x_3 \quad \text{s.t.} \quad x_1 + 4x_2 \leq 1, \;\; 3x_1 - x_2 + x_3 \leq 3,
+$$
+
+$$
+\text{(D):} \quad \min \; y_1 + 3y_2 \quad \text{s.t.} \quad y_1 + 3y_2 \geq 4, \;\; 4y_1 - y_2 \geq 1, \;\; y_2 \geq 3.
+$$
+
+Introduce slack variables $w_1, w_2$ for the primal constraints. The initial basis is $B = \{w_1, w_2\}$, giving $x_1 = x_2 = x_3 = 0$, $w_1 = 1$, $w_2 = 3$. The primal dictionary is:
+
+$$
+\text{(P):} \quad \zeta = 4x_1 + x_2 + 3x_3,
+$$
+
+$$
+w_1 = 1 - x_1 - 4x_2, \qquad w_2 = 3 - 3x_1 + x_2 - x_3.
+$$
+
+Now write the dual dictionary. The dual has decision variables $y_1, y_2$ and slack variables $z_1, z_2, z_3$. The initial dual dictionary is:
+
+$$
+\text{(D):} \quad -\xi = -y_1 - 3y_2,
+$$
+
+$$
+z_1 = -4 + y_1 + 3y_2, \qquad z_2 = -1 + 4y_1 - y_2, \qquad z_3 = -3 + y_2.
+$$
+
+Write the primal tableau as a matrix:
+
+$$
+\text{(P):} \quad \begin{pmatrix} 0 & 4 & 1 & 3 \\ 1 & -1 & -4 & 0 \\ 3 & -3 & 1 & -1 \end{pmatrix}
+$$
+
+and the dual tableau:
+
+$$
+\text{(D):} \quad \begin{pmatrix} 0 & -1 & -3 \\ -4 & 1 & 3 \\ -1 & 4 & -1 \\ -3 & 0 & 1 \end{pmatrix}.
+$$
+
+::: {.callout-important}
+## The Negative Transpose Property
+
+The dual dictionary is the **negative transpose** of the primal dictionary. That is, if the primal tableau is a matrix $T$, then the dual tableau is $-T^\top$.
+:::
+
+This is not a coincidence for this particular example -- it holds in general and is preserved under pivoting.
+
+```python
+#| label: fig-negative-transpose
+#| fig-cap: "The negative transpose property: the dual tableau is the negative transpose of the primal tableau. Corresponding entries are highlighted."
+#| echo: false
+
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import numpy as np
+
+fig = make_subplots(rows=1, cols=2, subplot_titles=(
+    'Primal Tableau T', 'Dual Tableau = -T<sup>T</sup>'),
+    horizontal_spacing=0.15)
+
+primal = np.array([
+    [0, 4, 1, 3],
+    [1, -1, -4, 0],
+    [3, -3, 1, -1]
+])
+
+dual = -primal.T
+
+primal_text = [[str(int(v)) for v in row] for row in primal]
+dual_text = [[str(int(v)) for v in row] for row in dual]
+
+primal_colors = [
+    ['#f5f0e8', '#e8d5b5', '#e8d5b5', '#e8d5b5'],
+    ['#d5dce5', '#f5f0e8', '#f5f0e8', '#f5f0e8'],
+    ['#d5dce5', '#f5f0e8', '#f5f0e8', '#f5f0e8']
+]
+dual_colors = [
+    ['#f5f0e8', '#d5dce5', '#d5dce5'],
+    ['#e8d5b5', '#f5f0e8', '#f5f0e8'],
+    ['#e8d5b5', '#f5f0e8', '#f5f0e8'],
+    ['#e8d5b5', '#f5f0e8', '#f5f0e8']
+]
+
+fig.add_trace(go.Table(
+    header=dict(values=['', 'x<sub>1</sub>', 'x<sub>2</sub>', 'x<sub>3</sub>'],
+                fill_color='#7b97ad', font=dict(color='white', size=14),
+                align='center', height=32),
+    cells=dict(values=list(zip(*primal_text)),
+               fill_color=list(zip(*primal_colors)),
+               font=dict(size=14), align='center', height=30),
+    columnwidth=[1,1,1,1]), row=1, col=1)
+
+fig.add_trace(go.Table(
+    header=dict(values=['', 'y<sub>1</sub>', 'y<sub>2</sub>'],
+                fill_color='#8a6e5e', font=dict(color='white', size=14),
+                align='center', height=32),
+    cells=dict(values=list(zip(*dual_text)),
+               fill_color=list(zip(*dual_colors)),
+               font=dict(size=14), align='center', height=30),
+    columnwidth=[1,1,1]), row=1, col=2)
+
+fig.update_layout(
+    margin=dict(t=40, b=20, l=20, r=20),
+    height=250)
+fig.show()
+```
+
+### Variable Correspondence {#sec-variable-correspondence}
+
+The negative transpose property reveals a deep symmetry between primal and dual variables:
+
+| Primal | Dual |
+|:------:|:----:|
+| Decision variable $x_j$ | Slack variable $z_j$ |
+| Slack variable $w_i$ ($= x_{n+i}$) | Decision variable $y_i$ ($= z_{n+i}$) |
+| Basic variable | Nonbasic variable |
+| Nonbasic variable | Basic variable |
+
+In the example above, the initial primal basis is $B = \{w_1, w_2\}$ (slack variables basic), so $x_1, x_2, x_3$ are nonbasic. In the dual, this means $y_1, y_2$ are nonbasic (set to zero) and $z_1, z_2, z_3$ are basic.
+
+### Pivoting Preserves the Negative Transpose {#sec-pivot-preserves}
+
+Continuing the example, suppose we pivot in the primal dictionary with entering variable $x_3$ and leaving variable $w_2$. After the pivot:
+
+$$
+\text{(P):} \quad \zeta = 9 - 5x_1 + 4x_2 - 3w_2,
+$$
+
+$$
+w_1 = 1 - x_1 - 4x_2, \qquad x_3 = 3 - 3x_1 + x_2 - w_2.
+$$
+
+The new basis is $B = \{w_1, x_3\}$ with $w_1 = 1$, $x_3 = 3$, and $x_1 = x_2 = w_2 = 0$.
+
+The corresponding dual dictionary (after $y_2$ enters and $z_3$ leaves the dual basis) becomes:
+
+$$
+\text{(D):} \quad -\xi = -9 - y_1 - 3z_3,
+$$
+
+$$
+z_1 = 5 + y_1 + 3z_3, \qquad z_2 = -4 + 4y_1 - z_3, \qquad y_2 = 3 + z_3.
+$$
+
+Write these as matrices:
+
+$$
+\text{(P):} \quad \begin{pmatrix} 9 & -5 & 4 & -3 \\ 1 & -1 & -4 & 0 \\ 3 & -3 & 1 & -1 \end{pmatrix}, \qquad
+\text{(D):} \quad \begin{pmatrix} -9 & -1 & -3 \\ 5 & 1 & 3 \\ -4 & 4 & -1 \\ 3 & 0 & 1 \end{pmatrix}.
+$$
+
+The **negative transpose property still holds** after pivoting. This is a general fact: since the primal pivot and the dual pivot are the same algebraic operation (expressed in transposed form), the structural relationship is preserved at every iteration.
+
+After a second pivot with entering $x_2$ and leaving $w_1$ in the primal:
+
+$$
+\text{(P):} \quad \zeta = 10 - 6x_1 - w_1 - 3w_2, \qquad \text{(primal optimal)}
+$$
+
+$$
+x_2 = 0.25 - 0.25x_1 - 0.25w_1, \qquad x_3 = 3.25 - 3.25x_1 - 0.25w_1 - w_2.
+$$
+
+$$
+\text{(D):} \quad -\xi = -10 - 0.25z_2 - 3.25z_3, \qquad \text{(dual optimal)}
+$$
+
+$$
+z_1 = 6 + 0.25z_2 + 3.25z_3, \qquad y_1 = 1 + 0.25z_2 + 0.25z_3, \qquad y_2 = 3 + z_3.
+$$
+
+Both are now optimal: the primal has $\widetilde{c} \leq 0$ and $\widetilde{b} \geq 0$; the dual has $\widetilde{b}_{\text{dual}} \geq 0$ and $\widetilde{c}_{\text{dual}} \leq 0$. The optimal value is $\zeta^* = 10$ for the primal (max) and $\xi^* = 10$ for the dual (min), confirming strong duality.
+
+The example reveals several structural patterns about how primal and dual dictionaries evolve in tandem. We now distill these into five general observations that underpin the dual simplex method.
+
+## Five Key Observations {#sec-five-observations}
+
+The example above illustrates several fundamental facts about the primal-dual relationship through dictionaries. These observations hold in general and provide the foundation for the dual simplex method. Understanding them is essential before we derive the dual simplex pivot rules in the next section.
+
+::: {#prp-five-observations}
+## Key Observations about Primal-Dual Pivoting
+
+Let (P) and (D) be a primal-dual LP pair, and consider the simplex method applied to (P).
+
+1. **Negative transpose is preserved.** The dual dictionary is always the negative transpose of the primal dictionary, at every iteration.
+
+2. **Basic/nonbasic sets swap.** If $x_j$ is in the primal basis $B$ (resp. nonbasic set $N$), then the corresponding dual variable $z_j$ is in the dual nonbasic set $N_D$ (resp. basis $B_D$). Similarly, if $w_i$ is in $B$ (resp. $N$), then $y_i$ is in $N_D$ (resp. $B_D$).
+
+3. **Pivots correspond.** If $w_i / x_j$ enters/leaves the primal basis $B$, then $y_i / z_j$ leaves/enters the dual basis $B_D$. Complementary slackness is preserved.
+
+4. **Feasibility vs. optimality swap.** During our pivots, the first two dictionaries were infeasible for the dual (some $\widetilde{b}_{\text{dual}} < 0$). But the final dictionary gives the optimal BFS for the dual.
+
+5. **Simplex implicitly solves the dual.** We can solve (D) entirely by running simplex on (P). The simplex method for the primal LP **implicitly solves the dual LP**.
+:::
+
+::: {.callout-tip}
+## Primal Feasibility $\leftrightarrow$ Dual Optimality
+
+Observation 4 reveals a striking symmetry:
+
+- **Primal feasible** ($\widetilde{b} \geq 0$) $\longleftrightarrow$ **Dual optimal** (all dual reduced costs $\leq 0$)
+- **Primal optimal** ($\widetilde{c} \leq 0$) $\longleftrightarrow$ **Dual feasible** ($\widetilde{b}_{\text{dual}} \geq 0$)
+
+This is precisely the content of complementary slackness and strong duality, but observed through the lens of the dictionary.
+:::
+
+## Derivation of the Dual Simplex Method {#sec-derivation}
+
+The five observations above suggest a powerful idea: instead of running simplex on the dual LP directly (which would require explicitly forming the dual), we can run it using the **primal dictionary**. We now make this precise by deriving the pivot rules from the negative transpose property.
+
+### The Idea {#sec-dual-simplex-idea}
+
+Recall the primal tableau structure for a general basis $B$:
+
+$$
+\begin{array}{c|c}
+\widetilde{\zeta} & \widetilde{c}^\top \\
+\hline
+\widetilde{b} & -\widetilde{A}
+\end{array}
+\qquad \longleftrightarrow \qquad
+\begin{array}{c|c}
+\widetilde{\zeta} & -z_N^{*\top} \\
+\hline
+x_B^* & -\widetilde{A}
+\end{array}
+$$
+
+where we have used the correspondence $\widetilde{c} = -z_N^*$ (the reduced costs are the negatives of the dual nonbasic variable values) and $\widetilde{b} = x_B^*$ (the transformed RHS is the primal basic variable values).
+
+The dual dictionary, by the negative transpose property, is:
+
+$$
+\begin{array}{c|c}
+-\widetilde{\zeta} & -\widetilde{b}^\top \\
+\hline
+-\widetilde{c} & \widetilde{A}
+\end{array}
+$$
+
+Running standard simplex on the dual means:
+
+- **Dual feasibility** requires $-\widetilde{c} \geq 0$, i.e., $\widetilde{c} \leq 0$ in the primal. This means all primal reduced costs are non-positive.
+- **Dual optimality** requires $-\widetilde{b} \leq 0$, i.e., $\widetilde{b} \geq 0$ in the primal. This means the primal BFS is feasible.
+
+So from the primal dictionary's perspective:
+
+- **Maintain** $\widetilde{c} \leq 0$ (dual feasibility, equivalently primal optimality condition on reduced costs).
+- **Work toward** $\widetilde{b} \geq 0$ (dual optimality, equivalently primal feasibility).
+
+### Deriving the Pivot Rules {#sec-pivot-rules-derivation}
+
+In the dual simplex method, we work directly with the primal dictionary but follow the dual's logic.
+
+**Choosing the leaving variable** (entering in the dual): We look for a basic variable $x_p$ with $\widetilde{b}_p < 0$. In the dual dictionary, this corresponds to a positive reduced cost ($-\widetilde{b}_p > 0$), so it is the entering variable for the dual simplex. We select:
+
+$$
+p \in \{i \in B : \widetilde{b}_i < 0\}.
+$$
+
+**Choosing the entering variable** (leaving in the dual): We need a ratio test. The row for $x_p$ in the primal dictionary is:
+
+$$
+x_p = \widetilde{b}_p - \sum_{j \in N} \widetilde{A}_{pj} \, x_j.
+$$
+
+When we increase $x_p$ away from its current value (which is $\widetilde{b}_p < 0$), we need to maintain dual feasibility. The new reduced costs after pivoting must remain non-positive. For the dual to remain feasible, we need:
+
+$$
+\widetilde{c}_j - t \cdot \widetilde{A}_{pj} \leq 0 \quad \text{for all } j \in N,
+$$
+
+where $t$ is the step size. When $\widetilde{A}_{pj} < 0$, this becomes $t \leq \frac{\widetilde{c}_j}{\widetilde{A}_{pj}}$. Since $\widetilde{c}_j \leq 0$ and $\widetilde{A}_{pj} < 0$, the ratio $\frac{\widetilde{c}_j}{\widetilde{A}_{pj}} \geq 0$. We choose the tightest bound:
+
+$$
+q = \operatorname*{argmin}_{j \in N} \left\{ \frac{-\widetilde{c}_j}{\widetilde{A}_{pj}} \;\Big|\; \widetilde{A}_{pj} < 0 \right\} = \operatorname*{argmin}_{j \in N} \left\{ \frac{|\widetilde{c}_j|}{|\widetilde{A}_{pj}|} \;\Big|\; \widetilde{A}_{pj} < 0 \right\}.
+$$ {#eq-dual-simplex-ratio}
+
+If no $\widetilde{A}_{pj} < 0$ exists, then the dual is unbounded, which means the **primal is infeasible**.
+
+::: {.callout-tip}
+## Working with Dictionary Coefficients
+
+In practice, it is easier to work directly with the **dictionary coefficients** $a_{pj}$ (the numbers appearing in the dictionary row $x_p = \widetilde{b}_p + \sum_j a_{pj}\,x_j$) rather than the $\widetilde{A}$ entries. Since $\widetilde{A}_{pj} = -a_{pj}$, the condition "$\widetilde{A}_{pj} < 0$" is the same as "$a_{pj} > 0$" (positive dictionary coefficient). The ratio test becomes:
+
+$$q = \operatorname*{argmin}_{j \in N} \left\{ \frac{|\widetilde{c}_j|}{a_{pj}} \;\Big|\; a_{pj} > 0 \right\}.$$
+
+**Rule of thumb:** in the leaving row, look for **positive** dictionary coefficients; compute the ratio of the corresponding **absolute reduced cost** to the coefficient; choose the smallest ratio.
+:::
+
+## The Dual Simplex Algorithm {#sec-dual-simplex-algorithm}
+
+We now state the primal and dual simplex algorithms side by side. Both operate on the same primal dictionary -- the difference is which condition they maintain and which they achieve.
+
+### Side-by-Side Comparison {#sec-side-by-side}
+
+::: {.callout-important}
+## Primal Simplex Algorithm
+
+**Step 0 (Feasibility).** Start with a basis $B$ such that $\widetilde{b} = x_B^* \geq 0$ (primal feasible BFS).
+
+**Step 1 (Optimality check).** If $\widetilde{c} \leq 0$, **STOP** -- current BFS is optimal.
+
+**Step 2 (Select entering variable).** Choose $q \in N$ such that $\widetilde{c}_q > 0$. (Bland's rule: choose smallest index.)
+
+**Step 3 (Select leaving variable).** If $\widetilde{A}_{iq} \leq 0$ for all $i \in B$, **STOP** -- problem is unbounded. Otherwise:
+
+$$p = \operatorname*{argmin}_{i \in B} \left\{ \frac{\widetilde{b}_i}{\widetilde{A}_{iq}} \;\Big|\; \widetilde{A}_{iq} > 0 \right\}.$$
+
+**Step 4 (Pivot).** Pivot on $(p, q)$: $p$ leaves $B$, $q$ enters $B$. Go to Step 1.
+:::
+
+::: {.callout-important}
+## Dual Simplex Algorithm
+
+**Step 0 (Feasibility).** Start with a basis $B$ such that $\widetilde{c} \leq 0$ (dual feasible, i.e., $z_N^* \geq 0$).
+
+**Step 1 (Optimality check).** If $\widetilde{b} \geq 0$, **STOP** -- current basis is both primal and dual feasible, hence optimal.
+
+**Step 2 (Select leaving variable).** Choose $p \in B$ such that $\widetilde{b}_p < 0$. (Choose most negative, or smallest index for Bland's rule.)
+
+**Step 3 (Select entering variable).** If $\widetilde{A}_{pj} \geq 0$ for all $j \in N$, **STOP** -- dual is unbounded, **primal is infeasible**. Otherwise:
+
+$$q = \operatorname*{argmin}_{j \in N} \left\{ \frac{-\widetilde{c}_j}{\widetilde{A}_{pj}} \;\Big|\; \widetilde{A}_{pj} < 0 \right\}.$$
+
+**Step 4 (Pivot).** Pivot on $(p, q)$: $p$ leaves $B$, $q$ enters $B$. Go to Step 1.
+:::
+
+```python
+#| label: fig-primal-vs-dual-simplex
+#| fig-cap: "Comparison of primal and dual simplex: the primal moves through primal feasible bases toward dual feasibility, while the dual moves through dual feasible bases toward primal feasibility."
+#| echo: false
+
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+fig = make_subplots(rows=1, cols=2, subplot_titles=(
+    'Primal Simplex: Walk on Primal Feasible Region',
+    'Dual Simplex: Walk on Dual Feasible Region'),
+    horizontal_spacing=0.08)
+
+# --- Primal feasible region (2D example) ---
+px = [0, 4, 3, 1, 0, 0]
+py = [0, 0, 2, 4, 3, 0]
+
+fig.add_trace(go.Scatter(x=px, y=py, fill='toself',
+    fillcolor='rgba(123,143,163,0.18)', line=dict(color='#7b97ad', width=2.5),
+    name='Primal feasible region', mode='lines'), row=1, col=1)
+
+path_px = [0, 4, 3, 1]
+path_py = [0, 0, 2, 4]
+fig.add_trace(go.Scatter(x=path_px, y=path_py, mode='lines+markers',
+    line=dict(color='#b56b6b', width=2.5, dash='dot'),
+    marker=dict(color='#b56b6b', size=10, symbol='circle',
+    line=dict(width=1.5, color='white')),
+    name='Primal simplex path',
+    text=['Start (feasible)', 'Pivot 1', 'Pivot 2', 'Optimal!'],
+    hoverinfo='text'), row=1, col=1)
+
+fig.add_trace(go.Scatter(x=[1], y=[4], mode='markers',
+    marker=dict(color='#b56b6b', size=15, symbol='star',
+    line=dict(width=1.5, color='white')),
+    name='Optimal vertex', showlegend=False), row=1, col=1)
+
+for i in range(len(path_px)-1):
+    fig.add_annotation(
+        x=path_px[i+1], y=path_py[i+1],
+        ax=path_px[i], ay=path_py[i],
+        xref='x', yref='y', axref='x', ayref='y',
+        showarrow=True, arrowhead=3, arrowsize=1.5,
+        arrowcolor='#b56b6b', arrowwidth=2, row=1, col=1)
+
+# --- Dual feasible region ---
+dx = [0, 5, 4, 2, 0, 0]
+dy = [0, 0, 3, 5, 4, 0]
+
+fig.add_trace(go.Scatter(x=dx, y=dy, fill='toself',
+    fillcolor='rgba(144,126,160,0.18)', line=dict(color='#907ea0', width=2.5),
+    name='Dual feasible region', mode='lines'), row=1, col=2)
+
+path_dx = [5, 4, 2]
+path_dy = [0, 3, 5]
+fig.add_trace(go.Scatter(x=path_dx, y=path_dy, mode='lines+markers',
+    line=dict(color='#8a6e5e', width=2.5, dash='dot'),
+    marker=dict(color='#8a6e5e', size=10, symbol='diamond',
+    line=dict(width=1.5, color='white')),
+    name='Dual simplex path',
+    text=['Start (dual feasible,<br>primal infeasible)', 'Pivot 1', 'Optimal!'],
+    hoverinfo='text'), row=1, col=2)
+
+fig.add_trace(go.Scatter(x=[2], y=[5], mode='markers',
+    marker=dict(color='#8a6e5e', size=15, symbol='star',
+    line=dict(width=1.5, color='white')),
+    name='Optimal vertex', showlegend=False), row=1, col=2)
+
+for i in range(len(path_dx)-1):
+    fig.add_annotation(
+        x=path_dx[i+1], y=path_dy[i+1],
+        ax=path_dx[i], ay=path_dy[i],
+        xref='x2', yref='y2', axref='x2', ayref='y2',
+        showarrow=True, arrowhead=3, arrowsize=1.5,
+        arrowcolor='#8a6e5e', arrowwidth=2, row=1, col=2)
+
+fig.update_xaxes(title='x<sub>1</sub>', range=[-0.5, 5.5], zeroline=True, row=1, col=1)
+fig.update_yaxes(title='x<sub>2</sub>', range=[-0.5, 5.5], zeroline=True,
+    scaleanchor='x', row=1, col=1)
+fig.update_xaxes(title='y<sub>1</sub>', range=[-0.5, 6], zeroline=True, row=1, col=2)
+fig.update_yaxes(title='y<sub>2</sub>', range=[-0.5, 6], zeroline=True,
+    scaleanchor='x2', row=1, col=2)
+fig.update_layout(showlegend=True, margin=dict(t=40, b=50, l=55, r=20),
+    legend=dict(font=dict(size=11)))
+fig.show()
+```
+
+![Side-by-side comparison of primal and dual simplex. The primal simplex (left) starts at a primal feasible vertex and pivots along edges toward optimality. The dual simplex (right) starts at a dual feasible basis and pivots toward primal feasibility. Both converge to the same optimal solution.](figures/ch17-primal-dual-simplex.svg){#fig-primal-dual-simplex}
+
+### Structural Comparison {#sec-structural-comparison}
+
+The following table summarizes the structural differences between primal and dual simplex.
+
+::: {.callout-note appearance="simple"}
+## Primal vs. Dual Simplex at a Glance
+
+| Aspect | Primal Simplex | Dual Simplex |
+|:-------|:---------------|:-------------|
+| **Maintains** | Primal feasibility: $\widetilde{b} \geq 0$ | Dual feasibility: $\widetilde{c} \leq 0$ |
+| **Achieves** | Dual feasibility: $\widetilde{c} \leq 0$ | Primal feasibility: $\widetilde{b} \geq 0$ |
+| **Optimality** | $\widetilde{c} \leq 0$ | $\widetilde{b} \geq 0$ |
+| **Choose first** | Entering $q$ (positive reduced cost) | Leaving $p$ (negative $\widetilde{b}_p$) |
+| **Choose second** | Leaving $p$ (min ratio on $\widetilde{b}/\widetilde{A}$) | Entering $q$ (min ratio on $\widetilde{c}/\widetilde{A}$) |
+| **Unbounded detection** | No positive $\widetilde{A}_{iq}$ in column | No negative $\widetilde{A}_{pj}$ in row |
+| **Unbounded means** | Primal unbounded | Dual unbounded (primal infeasible) |
+| **Objective movement** | Increases (for max) | Decreases (for max) |
+:::
+
+::: {.callout-tip}
+## Intuition
+
+**Primal simplex** moves through primal feasible vertices, improving the objective until dual feasibility is achieved.
+
+**Dual simplex** moves through dual feasible bases (which may correspond to primal infeasible points), **decreasing** the objective until primal feasibility is achieved. The objective starts too good (super-optimal) and comes down to the true optimum.
+:::
+
+With the algorithm stated precisely, we now trace through a complete numerical example to see each step in action.
+
+## Worked Example {#sec-worked-example}
+
+Having derived the dual simplex pivot rules, including the ratio test (@eq-dual-simplex-ratio), we now demonstrate the method on a complete example.
+
+### Problem Setup {#sec-example-setup}
+
+Consider the LP:
+
+$$
+\min \; x_1 + 3x_2 \quad \text{s.t.} \quad x_1 + 3x_2 \geq 4, \;\; 4x_1 - x_2 \geq 1, \;\; x_2 \geq 3.
+$$
+
+To apply the simplex framework, convert to maximization and $\leq$ constraints:
+
+$$
+\max \; -x_1 - 3x_2 \quad \text{s.t.} \quad -x_1 - 3x_2 \leq -4, \;\; -4x_1 + x_2 \leq -1, \;\; -x_2 \leq -3.
+$$
+
+Introduce slack variables $x_3, x_4, x_5 \geq 0$:
+
+$$
+x_3 = x_1 + 3x_2 - 4, \qquad x_4 = 4x_1 - x_2 - 1, \qquad x_5 = x_2 - 3.
+$$
+
+The initial dictionary is:
+
+$$
+\zeta = -x_1 - 3x_2,
+$$
+
+$$
+x_3 = -4 + x_1 + 3x_2, \qquad x_4 = -1 + 4x_1 - x_2, \qquad x_5 = -3 + x_2.
+$$
+
+The initial tableau is:
+
+$$
+\begin{array}{c|rr}
+ & x_1 & x_2 \\
+\hline
+\zeta = 0 & -1 & -3 \\
+x_3 = -4 & 1 & 3 \\
+x_4 = -1 & 4 & -1 \\
+x_5 = -3 & 0 & 1
+\end{array}
+$$
+
+### Checking Initial Conditions {#sec-check-initial}
+
+- **Reduced costs:** $\widetilde{c}_1 = -1 \leq 0$ and $\widetilde{c}_2 = -3 \leq 0$. So $\widetilde{c} \leq 0$: **dual feasibility holds**.
+- **RHS values:** $\widetilde{b}_3 = -4 < 0$, $\widetilde{b}_4 = -1 < 0$, $\widetilde{b}_5 = -3 < 0$. So $\widetilde{b} \not\geq 0$: **primal feasibility fails**.
+
+This is exactly the setup for dual simplex: we have dual feasibility but not primal feasibility.
+
+### Iteration 1 {#sec-iteration-1}
+
+**Step 1:** $\widetilde{b} \not\geq 0$, so we are not optimal. Continue.
+
+**Step 2 (Choose leaving $p$):** We need a basic variable with $\widetilde{b}_p < 0$. All three are negative: $\widetilde{b}_3 = -4$, $\widetilde{b}_4 = -1$, $\widetilde{b}_5 = -3$. We choose $p = x_5$.
+
+::: {.callout-tip}
+## Sign Convention for the Ratio Test
+
+Before applying the ratio test, let us clarify the sign convention. The dictionary row for a basic variable $x_p$ is written as:
+
+$$x_p = \widetilde{b}_p + a_{p1}\,x_1 + a_{p2}\,x_2 + \cdots$$
+
+where $a_{pj}$ are the **dictionary coefficients** (the numbers that appear directly in the equation). In the tableau notation, the $-\widetilde{A}$ block stores these same coefficients with a sign flip: $(-\widetilde{A})_{pj} = a_{pj}$, so $\widetilde{A}_{pj} = -a_{pj}$.
+
+The dual simplex ratio test (@eq-dual-simplex-ratio) requires $\widetilde{A}_{pj} < 0$, which means we look for dictionary coefficients $a_{pj} > 0$ (positive entries in the dictionary row). The ratio is then:
+
+$$q = \operatorname*{argmin}_{j:\, a_{pj} > 0} \frac{|\widetilde{c}_j|}{a_{pj}}.$$
+:::
+
+**Step 3 (Choose entering $q$):** The dictionary row for $x_5$ is:
+
+$$
+x_5 = -3 + 0 \cdot x_1 + 1 \cdot x_2.
+$$
+
+The dictionary coefficient of $x_1$ is $0$ (does not qualify) and the dictionary coefficient of $x_2$ is $+1$ (positive, so it qualifies). Since only $x_2$ qualifies:
+
+$$
+q = x_2, \qquad \text{ratio} = \frac{|\widetilde{c}_2|}{a_{5,2}} = \frac{|-3|}{1} = 3.
+$$
+
+**Step 4: Pivot $(x_5, x_2)$.** Solve for $x_2$ from the $x_5$ row:
+
+$$
+x_5 = -3 + x_2 \implies x_2 = 3 + x_5.
+$$
+
+Substitute into all other rows:
+
+$$
+\zeta = -(x_1) - 3(3 + x_5) = -9 - x_1 - 3x_5,
+$$
+
+$$
+x_3 = -4 + x_1 + 3(3 + x_5) = 5 + x_1 + 3x_5,
+$$
+
+$$
+x_4 = -1 + 4x_1 - (3 + x_5) = -4 + 4x_1 - x_5.
+$$
+
+The new dictionary after Iteration 1:
+
+$$
+\zeta = -9 - x_1 - 3x_5,
+$$
+
+$$
+x_3 = 5 + x_1 + 3x_5, \qquad x_4 = -4 + 4x_1 - x_5, \qquad x_2 = 3 + x_5.
+$$
+
+New tableau:
+
+$$
+\begin{array}{c|rr}
+ & x_1 & x_5 \\
+\hline
+-9 & -1 & -3 \\
+5 & 1 & 3 \\
+-4 & 4 & -1 \\
+3 & 0 & 1
+\end{array}
+$$
+
+**Check:** $\widetilde{c}_1 = -1 \leq 0$, $\widetilde{c}_5 = -3 \leq 0$: dual feasibility is maintained. But $\widetilde{b}_4 = -4 < 0$: not yet primal feasible.
+
+### Iteration 2 {#sec-iteration-2}
+
+**Step 1:** $\widetilde{b} \not\geq 0$ (since $\widetilde{b}_4 = -4$). Continue.
+
+**Step 2 (Choose leaving $p$):** The only negative $\widetilde{b}$ is $\widetilde{b}_4 = -4$, so $p = x_4$.
+
+**Step 3 (Choose entering $q$):** The dictionary row for $x_4$ is:
+
+$$
+x_4 = -4 + 4x_1 - 1 \cdot x_5.
+$$
+
+The dictionary coefficient of $x_1$ is $+4 > 0$ (qualifies) and the dictionary coefficient of $x_5$ is $-1 < 0$ (does not qualify). Only $x_1$ qualifies:
+
+$$
+q = x_1, \qquad \text{ratio} = \frac{|\widetilde{c}_1|}{a_{4,1}} = \frac{|-1|}{4} = 0.25.
+$$
+
+**Step 4: Pivot $(x_4, x_1)$.** Solve for $x_1$ from the $x_4$ row:
+
+$$
+x_4 = -4 + 4x_1 - x_5 \implies x_1 = 1 + 0.25 x_4 + 0.25 x_5.
+$$
+
+Substitute:
+
+$$
+\zeta = -9 - (1 + 0.25x_4 + 0.25x_5) - 3x_5 = -10 - 0.25x_4 - 3.25x_5,
+$$
+
+$$
+x_3 = 5 + (1 + 0.25x_4 + 0.25x_5) + 3x_5 = 6 + 0.25x_4 + 3.25x_5,
+$$
+
+$$
+x_2 = 3 + x_5.
+$$
+
+Final dictionary:
+
+$$
+\zeta = -10 - 0.25 x_4 - 3.25 x_5,
+$$
+
+$$
+x_3 = 6 + 0.25 x_4 + 3.25 x_5, \qquad x_1 = 1 + 0.25 x_4 + 0.25 x_5, \qquad x_2 = 3 + x_5.
+$$
+
+Final tableau:
+
+$$
+\begin{array}{c|rr}
+ & x_4 & x_5 \\
+\hline
+-10 & -0.25 & -3.25 \\
+6 & 0.25 & 3.25 \\
+1 & 0.25 & 0.25 \\
+3 & 0 & 1
+\end{array}
+$$
+
+### Verifying Optimality {#sec-verify-optimality}
+
+- **Reduced costs:** $\widetilde{c}_4 = -0.25 \leq 0$, $\widetilde{c}_5 = -3.25 \leq 0$. Dual feasibility maintained.
+- **RHS values:** $\widetilde{b}_3 = 6 \geq 0$, $\widetilde{b}_1 = 1 \geq 0$, $\widetilde{b}_2 = 3 \geq 0$. **Primal feasibility achieved!**
+
+Both conditions hold, so we have reached optimality. The optimal solution is:
+
+$$
+x_1^* = 1, \quad x_2^* = 3, \quad \zeta^* = -10.
+$$
+
+Since the original problem was $\min \, x_1 + 3x_2$, the minimum value is $\boxed{10}$, achieved at $(x_1, x_2) = (1, 3)$. The dual simplex method reached optimality in just two pivots, maintaining dual feasibility throughout and restoring primal feasibility at termination.
+
+```python
+#| label: fig-dual-simplex-example
+#| fig-cap: "Dual simplex iterations on the worked example. The feasible region (blue) is defined by the three constraints. The dual simplex path (red dashed) starts outside the feasible region and enters it at the optimal vertex."
+#| echo: false
+
+import plotly.graph_objects as go
+import numpy as np
+
+fig = go.Figure()
+
+# Feasible region: x1 + 3*x2 >= 4, 4*x1 - x2 >= 1, x2 >= 3
+# Vertices of the feasible region:
+# x2 = 3, x1 + 9 >= 4 -> x1 >= -5 (not binding with 4x1-x2>=1 -> 4x1>=4 -> x1>=1)
+# Intersection of x1+3x2=4 and 4x1-x2=1: x1+3x2=4, 4x1-x2=1 => x2=1, x1=1/2... check
+# Actually: 4*(4-3x2) - x2 = 1 => 16-12x2-x2=1 => 13x2=15 => x2=15/13, x1=4-45/13=7/13
+# Intersection of 4x1-x2=1 and x2=3: 4x1=4, x1=1 -> (1,3)
+# Intersection of x1+3x2=4 and x2=3: x1=4-9=-5 -> (-5,3) -- far left
+# Region extends to the right and upward
+
+# For plotting, clip to a reasonable window
+# The key vertices near the optimum:
+# (1, 3): intersection of 4x1-x2=1 and x2=3
+# (7/13, 15/13): intersection of x1+3x2=4 and 4x1-x2=1
+
+# Fill a large feasible region (clipped)
+# x2 >= 3 line, x1+3x2 >= 4, 4x1-x2 >= 1
+# For the plot, we'll show a region from x1=-1 to x1=6, x2=0 to x2=6
+
+x_fill = []
+y_fill = []
+
+# Boundary segments of feasible region (within plot window)
+# Bottom-left is bounded by x1+3x2=4 and 4x1-x2=1
+# The feasible region is above x2=3, above x1+3x2=4, above 4x1-x2=1
+
+# Let's trace the boundary:
+# Start at (1, 3) - intersection of 4x1-x2=1 and x2=3
+# Go right along x2=3 to (6, 3)
+# Go up to (6, 6)
+# Go left along top to (-1, 6)
+# Go down along x1+3x2=4 from (-1, 5/3)... but x2>=3 dominates here
+# Actually the binding constraints change
+
+# Simpler: just plot the three constraint boundaries and shade
+# For a clean figure, let's compute carefully
+
+# Constraint boundaries as lines
+x_range = np.linspace(-1, 7, 300)
+
+# x1 + 3*x2 = 4 => x2 = (4-x1)/3
+line1_y = (4 - x_range) / 3
+
+# 4*x1 - x2 = 1 => x2 = 4*x1 - 1
+line2_y = 4 * x_range - 1
+
+# x2 = 3
+line3_y = 3 * np.ones_like(x_range)
+
+# Feasible region vertices (computed):
+v1 = (7/13, 15/13)  # x1+3x2=4 and 4x1-x2=1
+v2 = (1, 3)          # 4x1-x2=1 and x2=3
+
+# The region is unbounded upward and to the right
+# For plotting, clip at x1=7, x2=7
+# Additional boundary points at the clip:
+v3 = (7, 3)           # x2=3, x1=7
+v4 = (7, 7)           # corner of clip
+v5 = (-1, 7)          # left side of clip, x2=7
+# x1+3*7=4 -> x1=-17, so at x2=7, constraint x1+3x2>=4 is satisfied for x1>=-17
+# At x1=-1: x2>=(4-(-1))/3 = 5/3, but x2>=3 dominates
+v6 = (-1, 3)          # but need to check 4*(-1)-3=-7 >= 1? No! So (-1,3) not feasible
+# 4x1-x2>=1 at x1=-1: -4-x2>=1 -> x2<=-5. Not feasible.
+# At x2=7: 4x1-7>=1 -> x1>=2. So (2,7) is on the boundary.
+# At x1=7, x2=3: 4*7-3=25>=1, 7+9=16>=4. Feasible.
+
+# Let's trace the feasible boundary more carefully:
+# The active constraints form a "cone" shape
+# From v1=(7/13, 15/13), go along x1+3x2=4 upward? No, x1+3x2=4 goes down as x1 increases
+# From v1, along 4x1-x2=1 upward to v2=(1,3), then along x2=3 to the right
+
+# For the filled polygon (clipped at [−1,7]x[0,7]):
+poly_x = [7/13, 1, 7, 7, 2, 7/13]
+poly_y = [15/13, 3, 3, 7, 7, 15/13]
+# Check (2,7): 2+21=23>=4, 8-7=1>=1, 7>=3. Yes.
+# But we need the boundary from (7/13,15/13) up to (2,7) along 4x1-x2=1
+# 4x1-x2=1: at x2=7, x1=2. Points along this line from v1 to (2,7).
+# Actually the feasible region boundary goes: v1 along constraint1 to... hmm
+
+# Let me just trace it properly:
+# Bottom vertex: v1 = (7/13, 15/13) -- intersection of constraints 1 and 2
+# From v1, going along constraint 2 (4x1-x2=1) upward: reaches x2=3 at v2=(1,3)
+# From v2, going along constraint 3 (x2=3) to the right: to (7,3)
+# From (7,3) up to (7,7)
+# From (7,7) left to (2,7) -- along constraint 2 boundary? 4*2-7=1, yes
+# From (2,7) down to v1 along constraint 2: 4x1-x2=1
+
+# So polygon: v1 -> v2 along 4x1-x2=1, v2 -> (7,3) along x2=3, (7,3)->(7,7)->(2,7) along clip, (2,7)->v1 along... wait
+# (2,7) to v1: both on 4x1-x2=1? 4*(7/13)-(15/13)=28/13-15/13=13/13=1. Yes!
+# So the boundary from v1 to (2,7) is all along 4x1-x2=1, and from v1 to v2 is also along 4x1-x2=1
+
+# Actually v1 to (2,7) is along 4x1-x2=1. And the other boundary of the region from v1 goes along x1+3x2=4
+# downward. But x2>=3 is also a constraint, so the feasible region is ABOVE all three constraints.
+
+# The feasible region is the intersection of three half-planes:
+# x1+3x2 >= 4  (above the line)
+# 4x1-x2 >= 1  (above the line, since it's 4x1-x2>=1)
+# x2 >= 3       (above the line)
+
+# The vertices of the feasible region are:
+# v2 = (1,3): 4x1-x2=1 and x2=3
+
+# Is x1+3x2=4 ever binding together with x2=3? x1=-5, then 4(-5)-3=-23<1. Not feasible.
+# Is x1+3x2=4 ever binding with 4x1-x2=1? Yes at v1=(7/13,15/13). But x2=15/13<3. So v1 is NOT feasible (violates x2>=3)!
+
+# So the feasible region has only ONE vertex: v2=(1,3)!
+# It extends to the right along x2=3 and upward along 4x1-x2=1.
+
+# Feasible polygon for plotting (clipped):
+poly_x = [1, 7, 7, 2, 1]
+poly_y = [3, 3, 7, 7, 3]
+
+fig.add_trace(go.Scatter(x=poly_x, y=poly_y, fill='toself',
+    fillcolor='rgba(123,143,163,0.18)', line=dict(color='#7b97ad', width=2),
+    name='Feasible region', mode='lines'))
+
+# Constraint lines
+fig.add_trace(go.Scatter(
+    x=list(x_range[line1_y >= 0]),
+    y=list(line1_y[line1_y >= 0]),
+    mode='lines', line=dict(color='#968a80', width=1.5, dash='dash'),
+    name='x<sub>1</sub> + 3x<sub>2</sub> = 4'))
+
+x2_line2 = np.linspace(0, 2.5, 100)
+x1_line2 = (1 + x2_line2) / 4
+fig.add_trace(go.Scatter(
+    x=list(x1_line2), y=list(x2_line2),
+    mode='lines', line=dict(color='#907ea0', width=1.5, dash='dash'),
+    name='4x<sub>1</sub> - x<sub>2</sub> = 1'))
+
+fig.add_trace(go.Scatter(
+    x=[-1, 7], y=[3, 3],
+    mode='lines', line=dict(color='#7a9a7e', width=1.5, dash='dash'),
+    name='x<sub>2</sub> = 3'))
+
+# Objective contours: x1 + 3x2 = k
+for k in [6, 10, 14, 18]:
+    x_obj = np.linspace(-1, 7, 50)
+    y_obj = (k - x_obj) / 3
+    fig.add_trace(go.Scatter(x=list(x_obj), y=list(y_obj),
+        mode='lines', line=dict(color='#b8995e', width=1, dash='dot'),
+        showlegend=(k==6),
+        name='Objective contours' if k==6 else '', hoverinfo='skip'))
+
+# Dual simplex path: the algorithm visits bases that may be primal infeasible
+# Iteration 0: x1=0, x2=0 (infeasible, obj=0)
+# Iteration 1 after pivot (x5,x2): x1=0, x2=3, but x4=-4<0, so x1=0 is the "point"
+# but really (x1,x2)=(0,3) with x4<0
+# Iteration 2 after pivot (x4,x1): x1=1, x2=3 (feasible, optimal)
+
+path_x = [0, 0, 1]
+path_y = [0, 3, 3]
+labels = ['Iter 0: (0,0)<br>obj=0, infeasible',
+          'Iter 1: (0,3)<br>obj=-9, infeasible',
+          'Iter 2: (1,3)<br>obj=-10, OPTIMAL']
+
+fig.add_trace(go.Scatter(x=path_x, y=path_y, mode='lines+markers',
+    line=dict(color='#b56b6b', width=3, dash='dot'),
+    marker=dict(color='#b56b6b', size=11, symbol='circle',
+    line=dict(width=1.5, color='white')),
+    name='Dual simplex path',
+    text=labels, hoverinfo='text'))
+
+# Arrows
+for i in range(len(path_x)-1):
+    fig.add_annotation(
+        x=path_x[i+1], y=path_y[i+1],
+        ax=path_x[i], ay=path_y[i],
+        showarrow=True, arrowhead=3, arrowsize=1.5,
+        arrowcolor='#b56b6b', arrowwidth=2)
+
+# Optimal point
+fig.add_trace(go.Scatter(x=[1], y=[3], mode='markers',
+    marker=dict(color='#b56b6b', size=16, symbol='star',
+    line=dict(width=1.5, color='white')),
+    name='Optimal: (1, 3), min = 10'))
+
+fig.update_layout(
+    xaxis=dict(title='x<sub>1</sub>', range=[-1, 7], zeroline=True),
+    yaxis=dict(title='x<sub>2</sub>', range=[-0.5, 7], zeroline=True, scaleanchor='x'),
+    showlegend=True,
+    legend=dict(font=dict(size=11), x=0.55, y=0.98),
+    margin=dict(t=20, b=50, l=55, r=20))
+fig.show()
+```
+
+### Tracking the Iterations {#sec-tracking-iterations}
+
+The following interactive table tracks the state of the dual simplex method at each iteration.
+
+```python
+#| label: fig-iteration-tracker
+#| fig-cap: "Dual simplex iteration tracker for the worked example. Each row shows the tableau state, the pivot choice, and the feasibility status."
+#| echo: false
+
+import plotly.graph_objects as go
+
+fig = go.Figure(data=[go.Table(
+    columnwidth=[80, 100, 120, 100, 100, 100, 100],
+    header=dict(
+        values=['<b>Iteration</b>', '<b>Basis</b>', '<b>RHS (b&#771;)</b>',
+                '<b>Red. costs (c&#771;)</b>', '<b>Dual feas?</b>',
+                '<b>Primal feas?</b>', '<b>Pivot</b>'],
+        fill_color='#7b97ad',
+        font=dict(color='white', size=13),
+        align='center', height=35),
+    cells=dict(
+        values=[
+            ['0', '1', '2'],
+            ['{x<sub>3</sub>, x<sub>4</sub>, x<sub>5</sub>}',
+             '{x<sub>3</sub>, x<sub>4</sub>, x<sub>2</sub>}',
+             '{x<sub>3</sub>, x<sub>1</sub>, x<sub>2</sub>}'],
+            ['(-4, -1, -3)', '(5, -4, 3)', '(6, 1, 3)'],
+            ['(-1, -3)', '(-1, -3)', '(-0.25, -3.25)'],
+            ['Yes', 'Yes', 'Yes'],
+            ['<b style="color:#b56b6b">No</b>',
+             '<b style="color:#b56b6b">No</b>',
+             '<b style="color:#7a9a7e">Yes -- OPTIMAL</b>'],
+            ['(x<sub>5</sub>, x<sub>2</sub>)', '(x<sub>4</sub>, x<sub>1</sub>)', '--']
+        ],
+        fill_color=[
+            ['#f5f0e8', '#f5f0e8', '#e8f0e8'],
+            ['#f5f0e8', '#f5f0e8', '#e8f0e8'],
+            ['#f5f0e8', '#f5f0e8', '#e8f0e8'],
+            ['#f5f0e8', '#f5f0e8', '#e8f0e8'],
+            ['#e8f0e8', '#e8f0e8', '#e8f0e8'],
+            ['#f5e8e8', '#f5e8e8', '#e8f0e8'],
+            ['#f5f0e8', '#f5f0e8', '#e8f0e8']
+        ],
+        font=dict(size=12),
+        align='center', height=30))
+])
+
+fig.update_layout(
+    margin=dict(t=10, b=10, l=10, r=10),
+    height=200)
+fig.show()
+```
+
+## When to Use the Dual Simplex Method {#sec-when-to-use}
+
+The dual simplex method is not just a theoretical mirror of the primal simplex. It arises naturally in several important practical situations.
+
+### Adding a New Constraint {#sec-adding-constraint}
+
+Suppose you have already solved an LP to optimality and now need to add a new constraint. The current optimal basis satisfies $\widetilde{c} \leq 0$ (optimality / dual feasibility), but the new constraint may violate primal feasibility ($\widetilde{b} \not\geq 0$ for the new row). This is exactly the setting for dual simplex: maintain dual feasibility, pivot to restore primal feasibility.
+
+This situation arises constantly in:
+
+- **Branch-and-bound** for integer programming: each node adds a branching constraint ($x_i \leq k$ or $x_i \geq k+1$) to the parent LP.
+- **Cutting-plane methods**: violated inequalities are added iteratively, and the LP must be re-optimized after each cut.
+- **Sensitivity analysis**: when the right-hand side $b$ changes, the current basis may lose primal feasibility but retain dual feasibility.
+
+### Natural Dual Feasibility {#sec-natural-dual-feasibility}
+
+Some LPs arise with a natural initial basis that is dual feasible but not primal feasible. The worked example above is typical: when all constraints are of the $\geq$ type (converted to $\leq$ by multiplying by $-1$), the initial slack basis often has $\widetilde{c} \leq 0$ but $\widetilde{b} < 0$.
+
+### Warm-Starting After Constraint Changes {#sec-warm-starting}
+
+When solving a sequence of related LPs (as in column generation or Benders decomposition), the dual simplex method allows efficient **warm-starting**: the previous optimal basis provides dual feasibility, and only a few pivots may be needed to restore primal feasibility after the problem is modified.
+
+::: {.callout-note appearance="simple"}
+## Summary
+
+| Situation | Use Primal Simplex | Use Dual Simplex |
+|:----------|:-------------------|:-----------------|
+| Natural starting BFS available | Yes | -- |
+| $\widetilde{c} \leq 0$ but $\widetilde{b} \not\geq 0$ | -- | Yes |
+| Adding constraints to optimal LP | -- | Yes |
+| Branch-and-bound / cutting planes | -- | Yes |
+| RHS perturbation / sensitivity | -- | Yes |
+| Objective change | Yes | -- |
+:::
+
+## Summary of the Primal-Dual Framework {#sec-summary}
+
+::: {.callout-tip}
+## The Big Picture
+
+**Primal simplex:** Maintain a sequence of basic/nonbasic partitions $B / N$ such that:
+
+- $x_B^*$ is primal feasible ($\widetilde{b} \geq 0$)
+- $z_N^*$ eventually becomes dual feasible ($\widetilde{c} \leq 0$) through pivots
+- Complementary slackness is preserved at every step
+
+**Dual simplex:** Maintain a sequence of basic/nonbasic partitions $B / N$ such that:
+
+- $z_N^*$ is dual feasible ($\widetilde{c} \leq 0$)
+- $x_B^*$ eventually becomes primal feasible ($\widetilde{b} \geq 0$) through pivots
+- Complementary slackness is preserved at every step
+
+Both methods terminate at the same optimal solution, where **both** primal and dual feasibility hold simultaneously. This is the algebraic expression of [strong duality](11-lp-duality.qmd). The complementary slackness conditions are maintained as an invariant throughout both algorithms.
+:::
+
+::: {.callout-tip}
+## Looking Ahead
+
+The dual simplex method, combined with the primal simplex, gives us a complete toolkit for solving linear programs and re-optimizing after modifications. These tools are the backbone of modern LP solvers and form the computational engine behind integer programming, robust optimization, and large-scale decomposition methods.
+:::

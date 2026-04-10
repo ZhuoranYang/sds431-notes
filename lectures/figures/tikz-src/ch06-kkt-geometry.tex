@@ -1,0 +1,81 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, decorations.pathreplacing}
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{rwgold}{HTML}{B8995E}
+\definecolor{sage}{HTML}{7A9A7E}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{cream}{HTML}{F9F6F0}
+\definecolor{border}{HTML}{D4C9B8}
+\definecolor{terracotta}{HTML}{C47A6A}
+\definecolor{lavender}{HTML}{907EA0}
+
+\begin{document}
+\begin{tikzpicture}[
+  background rectangle/.style={fill=cream},
+  show background rectangle,
+  every node/.style={text=dkbrown, font=\small},
+  vecstyle/.style={-{Stealth[length=6pt]}, line width=1.3pt},
+]
+
+% Feasible region (intersection of two constraints)
+\fill[stblue!12]
+  (0,0) -- (5,0) -- (5,1.5) -- (3.5,3.5) -- (1,4) -- (0,3) -- cycle;
+\draw[stblue, line width=0.9pt]
+  (0,0) -- (5,0) -- (5,1.5) -- (3.5,3.5) -- (1,4) -- (0,3) -- cycle;
+
+% Label feasible region
+\node[font=\footnotesize, text=stblue!70!black] at (2.5,1.5) {$\Omega$};
+
+% Constraint labels
+\node[font=\footnotesize, text=stblue!70!black, rotate=-30] at (4.7,2.8) {$g_1(x) = 0$};
+\node[font=\footnotesize, text=stblue!70!black, rotate=10] at (2.0,4.2) {$g_2(x) = 0$};
+
+% Optimal point at corner
+\fill[terracotta] (3.5,3.5) circle (3.5pt);
+\node[above right=2pt, font=\small\bfseries, text=terracotta!80!black] at (3.5,3.5) {$x^*$};
+
+% -nabla f (pointing into feasible region)
+\draw[vecstyle, sage!80!black] (3.5,3.5) -- (2.2,2.3)
+  node[pos=1, below left, font=\footnotesize, text=sage!70!black]
+    {$-\nabla f(x^*)$};
+
+% nabla g_1 (pointing outward)
+\draw[vecstyle, lavender!80!black] (3.5,3.5) -- (4.6,4.6)
+  node[pos=1, above right, font=\footnotesize, text=lavender!80!black]
+    {$\nabla g_1(x^*)$};
+
+% nabla g_2 (pointing outward)
+\draw[vecstyle, rwgold!80!black] (3.5,3.5) -- (2.6,4.8)
+  node[pos=1, above left, font=\footnotesize, text=rwgold!80!black]
+    {$\nabla g_2(x^*)$};
+
+% Conic combination illustration (dashed)
+\draw[wmgray, line width=0.6pt, densely dashed]
+  (3.5,3.5) -- (3.8,4.9);
+\node[font=\footnotesize, text=wmgray, right] at (3.9,4.9)
+  {$\lambda_1 \nabla g_1 + \lambda_2 \nabla g_2$};
+
+% KKT box
+\node[draw=border, fill=cream, rounded corners=4pt, inner sep=6pt,
+  font=\footnotesize, text=dkbrown, align=left]
+  at (2.5,-1.2) {%
+  KKT stationarity:
+  $-\nabla f(x^*) = \lambda_1 \nabla g_1(x^*) + \lambda_2 \nabla g_2(x^*)$\\[3pt]
+  Dual feasibility: $\lambda_1 \geq 0, \;\lambda_2 \geq 0$\\[3pt]
+  Complementary slackness: $\lambda_i \, g_i(x^*) = 0$
+  };
+
+% Contour lines of objective
+\foreach \r in {0.8, 1.5, 2.2}{
+  \draw[sage!30, line width=0.4pt]
+    (3.5-\r*0.87, 3.5-\r*0.5) arc[start angle=210, end angle=30, x radius=\r*0.7, y radius=\r*0.5];
+}
+\node[font=\tiny, text=sage!50!black] at (1.5,2.7) {$f = c_1$};
+\node[font=\tiny, text=sage!50!black] at (1.0,2.1) {$f = c_2$};
+
+\end{tikzpicture}
+\end{document}

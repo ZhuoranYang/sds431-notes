@@ -1,0 +1,75 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, decorations.pathreplacing}
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{rwgold}{HTML}{B8995E}
+\definecolor{sage}{HTML}{7A9A7E}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{cream}{HTML}{F9F6F0}
+\definecolor{border}{HTML}{D4C9B8}
+\definecolor{terracotta}{HTML}{C47A6A}
+\definecolor{lavender}{HTML}{907EA0}
+
+\begin{document}
+\begin{tikzpicture}[
+  background rectangle/.style={fill=cream},
+  show background rectangle,
+  node distance=2.4cm,
+  every node/.style={text=dkbrown, font=\small},
+  fwdarrow/.style={-{Stealth[length=6pt]}, sage!80!black, line width=1.2pt},
+  bwdarrow/.style={-{Stealth[length=6pt]}, terracotta!80!black, line width=1.2pt, densely dashed},
+  comp/.style={rounded corners=6pt, minimum width=1.6cm, minimum height=1.1cm,
+    draw=#1, fill=#1!12, line width=0.8pt, text=dkbrown, align=center, font=\small},
+]
+
+% Forward path nodes
+\node[comp=stblue] (x) {$x$};
+\node[comp=sage, right=of x] (w1) {$\times W_1$};
+\node[comp=lavender, right=of w1] (relu) {ReLU};
+\node[comp=sage, right=of relu] (w2) {$\times W_2$};
+\node[comp=terracotta, right=of w2] (loss) {$\mathcal{L}$};
+
+% Forward arrows
+\draw[fwdarrow] (x) -- (w1) node[midway, above, font=\footnotesize, text=sage!70!black] {$h_0{=}x$};
+\draw[fwdarrow] (w1) -- (relu) node[midway, above, font=\footnotesize, text=sage!70!black] {$a_1{=}W_1 x$};
+\draw[fwdarrow] (relu) -- (w2) node[midway, above, font=\footnotesize, text=sage!70!black] {$h_1$};
+\draw[fwdarrow] (w2) -- (loss) node[midway, above, font=\footnotesize, text=sage!70!black] {$\widehat{y}$};
+
+% Labels
+\node[above=0.6cm of relu, font=\normalsize\bfseries, text=dkbrown] {Forward Pass};
+
+% Backward arrows (below)
+\draw[bwdarrow] (loss.south) -- ++(0,-0.7) -| (w2.south)
+  node[pos=0.25, below, font=\footnotesize, text=terracotta!80!black]
+    {$\dfrac{\partial \mathcal{L}}{\partial \widehat{y}}$};
+
+\draw[bwdarrow] (w2.south) ++(0,-0.3) -- ++(0,-0.5) -| (relu.south)
+  node[pos=0.25, below, font=\footnotesize, text=terracotta!80!black]
+    {$\dfrac{\partial \mathcal{L}}{\partial W_2}$};
+
+\draw[bwdarrow] (relu.south) ++(0,-0.3) -- ++(0,-0.9) -| (w1.south)
+  node[pos=0.25, below, font=\footnotesize, text=terracotta!80!black]
+    {$\dfrac{\partial \mathcal{L}}{\partial h_1}$};
+
+\draw[bwdarrow] (w1.south) ++(0,-0.3) -- ++(0,-1.3) -| (x.south)
+  node[pos=0.25, below, font=\footnotesize, text=terracotta!80!black]
+    {$\dfrac{\partial \mathcal{L}}{\partial W_1}$};
+
+% Backward label
+\node[below=2.4cm of relu, font=\normalsize\bfseries, text=terracotta!80!black]
+  {Backward Pass (Backpropagation)};
+
+% Legend
+\node[below=3.2cm of relu, font=\footnotesize, text=wmgray, align=center]
+  {Chain rule:
+   $\dfrac{\partial \mathcal{L}}{\partial W_1}
+   = \dfrac{\partial \mathcal{L}}{\partial \widehat{y}}
+   \cdot \dfrac{\partial \widehat{y}}{\partial h_1}
+   \cdot \dfrac{\partial h_1}{\partial a_1}
+   \cdot \dfrac{\partial a_1}{\partial W_1}$};
+
+\end{tikzpicture}
+\end{document}

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 340" width="600" height="340">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#3d352f"/>
+    </marker>
+  </defs>
+
+  <text x="300" y="28" text-anchor="middle" font-size="16" font-weight="bold">Max-Flow / Min-Cut</text>
+
+  <!-- Network nodes -->
+  <!-- Source s -->
+  <circle cx="60" cy="170" r="22" fill="#7b97ad" fill-opacity="0.15" stroke="#7b97ad" stroke-width="2"/>
+  <text x="60" y="175" text-anchor="middle" font-size="14" fill="#7b97ad" font-weight="bold">𝑠</text>
+
+  <!-- Node a -->
+  <circle cx="200" cy="90" r="18" fill="#f9f6f0" stroke="#968a80" stroke-width="1.5"/>
+  <text x="200" y="95" text-anchor="middle" font-size="13" fill="#3d352f">𝑎</text>
+
+  <!-- Node b -->
+  <circle cx="200" cy="250" r="18" fill="#f9f6f0" stroke="#968a80" stroke-width="1.5"/>
+  <text x="200" y="255" text-anchor="middle" font-size="13" fill="#3d352f">𝑏</text>
+
+  <!-- Node c -->
+  <circle cx="380" cy="90" r="18" fill="#f9f6f0" stroke="#968a80" stroke-width="1.5"/>
+  <text x="380" y="95" text-anchor="middle" font-size="13" fill="#3d352f">𝑐</text>
+
+  <!-- Node d -->
+  <circle cx="380" cy="250" r="18" fill="#f9f6f0" stroke="#968a80" stroke-width="1.5"/>
+  <text x="380" y="255" text-anchor="middle" font-size="13" fill="#3d352f">𝑑</text>
+
+  <!-- Sink t -->
+  <circle cx="520" cy="170" r="22" fill="#b56b6b" fill-opacity="0.15" stroke="#b56b6b" stroke-width="2"/>
+  <text x="520" y="175" text-anchor="middle" font-size="14" fill="#b56b6b" font-weight="bold">𝑡</text>
+
+  <!-- Edges with flow/capacity labels -->
+  <!-- s -> a -->
+  <line x1="82" y1="155" x2="182" y2="100" stroke="#7a9a7e" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="120" y="115" font-size="10" fill="#7a9a7e" font-weight="bold">3/3</text>
+
+  <!-- s -> b -->
+  <line x1="82" y1="185" x2="182" y2="240" stroke="#7a9a7e" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="120" y="225" font-size="10" fill="#7a9a7e" font-weight="bold">2/3</text>
+
+  <!-- a -> c -->
+  <line x1="220" y1="90" x2="360" y2="90" stroke="#7a9a7e" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="290" y="82" font-size="10" fill="#7a9a7e" font-weight="bold">2/2</text>
+
+  <!-- a -> d -->
+  <line x1="212" y1="106" x2="368" y2="236" stroke="#7a9a7e" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="275" y="180" font-size="10" fill="#7a9a7e" font-weight="bold">1/3</text>
+
+  <!-- b -> d -->
+  <line x1="220" y1="250" x2="360" y2="250" stroke="#7a9a7e" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="290" y="268" font-size="10" fill="#7a9a7e" font-weight="bold">2/2</text>
+
+  <!-- c -> t -->
+  <line x1="398" y1="100" x2="500" y2="158" stroke="#7a9a7e" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="460" y="118" font-size="10" fill="#7a9a7e" font-weight="bold">2/4</text>
+
+  <!-- d -> t -->
+  <line x1="398" y1="240" x2="500" y2="182" stroke="#7a9a7e" stroke-width="2" marker-end="url(#arr)"/>
+  <text x="460" y="225" font-size="10" fill="#7a9a7e" font-weight="bold">3/3</text>
+
+  <!-- Min-cut line (dashed) -->
+  <line x1="310" y1="50" x2="310" y2="290" stroke="#b56b6b" stroke-width="2" stroke-dasharray="6 3"/>
+  <text x="310" y="310" text-anchor="middle" font-size="12" fill="#b56b6b" font-weight="bold">min cut</text>
+
+  <!-- Source side / Sink side labels -->
+  <text x="140" y="310" text-anchor="middle" font-size="11" fill="#7b97ad">source side 𝐶</text>
+  <text x="450" y="310" text-anchor="middle" font-size="11" fill="#b56b6b">sink side 𝐶&#x0304;</text>
+
+  <!-- Max flow = Min cut annotation -->
+  <text x="300" y="338" text-anchor="middle" font-size="12" fill="#3d352f" font-weight="bold">max flow = min cut = 5</text>
+</svg>

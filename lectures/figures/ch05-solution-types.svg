@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 320" width="700" height="320">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#968a80"/>
+    </marker>
+  </defs>
+
+  <!-- (a) Unique optimum -->
+  <g transform="translate(10,30)">
+    <text x="75" y="0" text-anchor="middle" font-size="13" font-weight="bold">(a) Unique optimum</text>
+    <!-- Feasible polygon -->
+    <polygon points="20,200 40,60 120,40 150,120 130,210" fill="#7a9a7e" fill-opacity="0.12" stroke="#7a9a7e" stroke-width="1.5"/>
+    <!-- Iso-profit lines -->
+    <line x1="5" y1="80" x2="90" y2="30" stroke="#b8995e" stroke-width="0.8" opacity="0.5"/>
+    <line x1="25" y1="120" x2="110" y2="70" stroke="#b8995e" stroke-width="0.8" opacity="0.5"/>
+    <line x1="45" y1="160" x2="130" y2="110" stroke="#b8995e" stroke-width="0.8" opacity="0.5"/>
+    <!-- Optimal vertex -->
+    <circle cx="120" cy="40" r="5" fill="#b56b6b"/>
+    <text x="135" y="38" font-size="11" fill="#b56b6b" font-style="italic">𝑥*</text>
+    <!-- c arrow -->
+    <line x1="60" y1="150" x2="35" y2="115" stroke="#7b97ad" stroke-width="1.2" marker-end="url(#arr)"/>
+    <text x="30" y="160" font-size="11" fill="#7b97ad" font-style="italic">𝑐</text>
+  </g>
+
+  <!-- (b) Multiple optima -->
+  <g transform="translate(180,30)">
+    <text x="75" y="0" text-anchor="middle" font-size="13" font-weight="bold">(b) Multiple optima</text>
+    <polygon points="20,200 40,60 120,40 150,120 130,210" fill="#7a9a7e" fill-opacity="0.12" stroke="#7a9a7e" stroke-width="1.5"/>
+    <!-- Optimal face highlighted -->
+    <line x1="40" y1="60" x2="120" y2="40" stroke="#b56b6b" stroke-width="3"/>
+    <!-- Iso-profit lines parallel to top edge -->
+    <line x1="15" y1="90" x2="135" y2="55" stroke="#b8995e" stroke-width="0.8" opacity="0.5"/>
+    <line x1="25" y1="120" x2="145" y2="85" stroke="#b8995e" stroke-width="0.8" opacity="0.5"/>
+    <line x1="35" y1="150" x2="155" y2="115" stroke="#b8995e" stroke-width="0.8" opacity="0.5"/>
+    <text x="85" y="32" font-size="11" fill="#b56b6b">optimal face</text>
+    <line x1="60" y1="150" x2="42" y2="110" stroke="#7b97ad" stroke-width="1.2" marker-end="url(#arr)"/>
+    <text x="35" y="160" font-size="11" fill="#7b97ad" font-style="italic">𝑐</text>
+  </g>
+
+  <!-- (c) Unbounded -->
+  <g transform="translate(350,30)">
+    <text x="75" y="0" text-anchor="middle" font-size="13" font-weight="bold">(c) Unbounded</text>
+    <!-- Open feasible region -->
+    <path d="M 30,210 L 20,80 L 80,40 L 140,80 L 150,210" fill="#7a9a7e" fill-opacity="0.12" stroke="#7a9a7e" stroke-width="1.5"/>
+    <!-- Open top (no constraint above) shown as dashed -->
+    <line x1="20" y1="80" x2="20" y2="20" stroke="#7a9a7e" stroke-width="1" stroke-dasharray="4 3"/>
+    <line x1="140" y1="80" x2="140" y2="20" stroke="#7a9a7e" stroke-width="1" stroke-dasharray="4 3"/>
+    <!-- c arrow pointing up -->
+    <line x1="80" y1="150" x2="80" y2="50" stroke="#7b97ad" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="90" y="100" font-size="11" fill="#7b97ad" font-style="italic">𝑐</text>
+    <text x="80" y="190" text-anchor="middle" font-size="11" fill="#b56b6b">obj --> -infinity</text>
+  </g>
+
+  <!-- (d) Infeasible -->
+  <g transform="translate(520,30)">
+    <text x="75" y="0" text-anchor="middle" font-size="13" font-weight="bold">(d) Infeasible</text>
+    <!-- Two non-overlapping halfspaces -->
+    <rect x="10" y="50" width="60" height="100" rx="4" fill="#7b97ad" fill-opacity="0.1" stroke="#7b97ad" stroke-width="1.2"/>
+    <rect x="90" y="80" width="60" height="100" rx="4" fill="#b56b6b" fill-opacity="0.1" stroke="#b56b6b" stroke-width="1.2"/>
+    <!-- X mark -->
+    <text x="75" y="130" text-anchor="middle" font-size="28" fill="#b56b6b" font-weight="bold">X</text>
+    <text x="75" y="190" text-anchor="middle" font-size="11" fill="#b56b6b">no overlap</text>
+  </g>
+</svg>

@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>1&nbsp; Introduction and Motivation – S&amp;DS 431/631 — Optimization and Computation</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../lectures/02-math-background.html" rel="next">
+<link href="../index.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-1db14e1c4cc35bfe1d9badc9e4551eed.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-434abab37f7d394f280d9c89d7fbc13f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/01-introduction.html">Preparation</a></li><li class="breadcrumb-item"><a href="../lectures/01-introduction.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction and Motivation</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">S&amp;DS 431/631 — Optimization and Computation</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Preparation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/01-introduction.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction and Motivation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/02-math-background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Background</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Convex Optimization Basics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/03-convex-sets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Convex Sets</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/04-convex-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Convex Functions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/05-convex-optimization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Convex Optimization</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">First-Order Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Linear Programming</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/09-lp-formulation-geometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">LP Formulation and Geometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/10-simplex-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">The Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/11-lp-duality.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">LP Duality</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/12-dual-simplex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The Dual Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/13-lp-applications.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">LP Applications and Game Theory</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Second-Order and Interior Point Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/15-ellipsoid-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Ellipsoid Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/16-interior-point-methods.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Interior Point Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Modern Computation Models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/17-diffusion-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Diffusion Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/18-transformers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Transformers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/summary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Course Summary</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#sec-motivating-examples" id="toc-sec-motivating-examples" class="nav-link active" data-scroll-target="#sec-motivating-examples"><span class="header-section-number">1.1</span> Motivating Examples</a>
+  <ul class="collapse">
+  <li><a href="#sec-mle" id="toc-sec-mle" class="nav-link" data-scroll-target="#sec-mle"><span class="header-section-number">1.1.1</span> Maximum Likelihood Estimation</a></li>
+  <li><a href="#sec-least-squares" id="toc-sec-least-squares" class="nav-link" data-scroll-target="#sec-least-squares"><span class="header-section-number">1.1.2</span> Least-Squares Regression</a></li>
+  <li><a href="#sec-regression-variants" id="toc-sec-regression-variants" class="nav-link" data-scroll-target="#sec-regression-variants"><span class="header-section-number">1.1.3</span> Variants of Regression</a></li>
+  <li><a href="#sec-linear-programming" id="toc-sec-linear-programming" class="nav-link" data-scroll-target="#sec-linear-programming"><span class="header-section-number">1.1.4</span> Linear Programming (<span class="math inline">\ell_1</span>/<span class="math inline">\ell_\infty</span>-Minimization)</a></li>
+  <li><a href="#sec-sparse-regression" id="toc-sec-sparse-regression" class="nav-link" data-scroll-target="#sec-sparse-regression"><span class="header-section-number">1.1.5</span> Sparse Regression (<span class="math inline">\ell_0</span>-Regularization)</a></li>
+  <li><a href="#sec-erm" id="toc-sec-erm" class="nav-link" data-scroll-target="#sec-erm"><span class="header-section-number">1.1.6</span> Empirical Risk Minimization</a></li>
+  <li><a href="#sec-llm-pretraining" id="toc-sec-llm-pretraining" class="nav-link" data-scroll-target="#sec-llm-pretraining"><span class="header-section-number">1.1.7</span> LLM Pretraining as MLE</a></li>
+  <li><a href="#sec-portfolio" id="toc-sec-portfolio" class="nav-link" data-scroll-target="#sec-portfolio"><span class="header-section-number">1.1.8</span> Markowitz Portfolio Selection</a></li>
+  </ul></li>
+  <li><a href="#sec-general-optimization" id="toc-sec-general-optimization" class="nav-link" data-scroll-target="#sec-general-optimization"><span class="header-section-number">1.2</span> General Form of Optimization</a></li>
+  <li><a href="#sec-convex-optimization" id="toc-sec-convex-optimization" class="nav-link" data-scroll-target="#sec-convex-optimization"><span class="header-section-number">1.3</span> Convex Optimization</a></li>
+  <li><a href="#sec-course-overview" id="toc-sec-course-overview" class="nav-link" data-scroll-target="#sec-course-overview"><span class="header-section-number">1.4</span> Course Overview</a>
+  <ul class="collapse">
+  <li><a href="#what-optimization-problems" id="toc-what-optimization-problems" class="nav-link" data-scroll-target="#what-optimization-problems"><span class="header-section-number">1.4.1</span> 1. What Optimization Problems?</a></li>
+  <li><a href="#what-algorithms" id="toc-what-algorithms" class="nav-link" data-scroll-target="#what-algorithms"><span class="header-section-number">1.4.2</span> 2. What Algorithms?</a></li>
+  <li><a href="#how-do-we-know-we-have-solved-the-problem" id="toc-how-do-we-know-we-have-solved-the-problem" class="nav-link" data-scroll-target="#how-do-we-know-we-have-solved-the-problem"><span class="header-section-number">1.4.3</span> 3. How Do We Know We Have Solved the Problem?</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/01-introduction.html">Preparation</a></li><li class="breadcrumb-item"><a href="../lectures/01-introduction.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction and Motivation</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction and Motivation</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Optimization is the mathematical engine behind nearly every quantitative discipline. Whenever a statistician fits a model, a machine learning engineer trains a neural network, or a financial analyst constructs a portfolio, the core computational task is an optimization problem: find the best decision from a set of alternatives. What distinguishes a good practitioner from a great one is understanding <em>which</em> optimization problem is being solved, <em>what</em> algorithms are available, and <em>how</em> to certify that a solution is correct.</p>
+<p>In this chapter we survey a collection of motivating examples drawn from statistics, machine learning, and finance. The goal is not yet to solve these problems but to see how naturally they arise and to appreciate the common mathematical structure they share. By the end you will have a clear map of the landscape of optimization and know where each topic in the course fits within it.</p>
+<p>The overarching theme is that <strong>convex optimization</strong> occupies a sweet spot: it is rich enough to model a wide range of practical problems, yet structured enough to admit efficient, well-understood algorithms.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Companion Notebooks
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.</p>
+<ul>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/01a-svm-cvxpy-gradient-descent.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>SVM via CVXPY and Gradient Descent</strong> — comparing constrained and regularized formulations of support vector machines</li>
+</ul>
+</div>
+</div>
+<section id="sec-motivating-examples" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="sec-motivating-examples"><span class="header-section-number">1.1</span> Motivating Examples</h2>
+<p>Why study optimization? Because <strong>every</strong> statistical estimation problem involves optimization. We begin with the most fundamental example.</p>
+<section id="sec-mle" class="level3" data-number="1.1.1">
+<h3 data-number="1.1.1" class="anchored" data-anchor-id="sec-mle"><span class="header-section-number">1.1.1</span> Maximum Likelihood Estimation</h3>
+<div id="exm-mle" class="theorem example">
+<p><span class="theorem-title"><strong>Example 1.1 (Maximum Likelihood Estimation)</strong></span> Suppose <span class="math inline">X_1, X_2, \ldots, X_n \stackrel{\text{iid}}{\sim} P_{\theta^*}</span> (e.g., <span class="math inline">\mathcal{N}(\theta^*, I_d)</span>).</p>
+<p>We want to <strong>estimate</strong> <span class="math inline">\theta^*</span> based on data <span class="math inline">\{X_i\}_{i=1}^n</span>.</p>
+<p>The <strong>MLE estimator</strong> is defined as:</p>
+<p><span id="eq-mle"><span class="math display">\widehat{\theta}_{\text{MLE}} = \arg\min_{\theta \in \Theta} \; -\sum_{i=1}^{n} \log P_\theta(X_i). \tag{1.1}</span></span></p>
+<p>From a statistics perspective: how accurate is <span class="math inline">\widehat{\theta}_{\text{MLE}}</span>?</p>
+<p>From an optimization perspective: how do we actually <em>compute</em> <span class="math inline">\widehat{\theta}_{\text{MLE}}</span>?</p>
+</div>
+</section>
+<section id="sec-least-squares" class="level3" data-number="1.1.2">
+<h3 data-number="1.1.2" class="anchored" data-anchor-id="sec-least-squares"><span class="header-section-number">1.1.2</span> Least-Squares Regression</h3>
+<div id="exm-least-squares" class="theorem example">
+<p><span class="theorem-title"><strong>Example 1.2 (Least-Squares Regression)</strong></span> <strong>Model:</strong></p>
+<p><span id="eq-linear-model"><span class="math display">y = X\beta^* + \varepsilon, \qquad \varepsilon \sim \mathcal{N}(0, I_n), \tag{1.2}</span></span></p>
+<p>where <span class="math inline">y \in \mathbb{R}^{n \times 1}</span>, <span class="math inline">X \in \mathbb{R}^{n \times d}</span>, <span class="math inline">\beta^* \in \mathbb{R}^{d}</span>, <span class="math inline">\varepsilon \in \mathbb{R}^{n \times 1}</span>. Here <span class="math inline">n</span> is the number of samples and <span class="math inline">d</span> is the dimension of the parameter.</p>
+<p>To estimate the true parameter <span class="math inline">\beta^*</span>, we compute the conditional log-likelihood. Since</p>
+<p><span class="math display">P_\beta(y \mid X) \propto \exp\!\left(-\frac{\|y - X\beta\|_2^2}{2}\right),</span></p>
+<p>the negative log-likelihood is:</p>
+<p><span class="math display">\mathcal{L}(\beta) = -\log P_\beta(y \mid X) = \tfrac{1}{2}\|y - X\beta\|_2^2 + \text{Constant},</span></p>
+<p>where the constant does not involve <span class="math inline">\beta</span>. Recall <span class="math inline">\|v\|_2^2 = \sum_{i=1}^{n} v_i^2</span>.</p>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Therefore, <strong>MLE</strong> for the linear model is equivalent to <strong>least-squares</strong>:</p>
+<p><span id="eq-least-squares"><span class="math display">\min_\beta \; \|y - X\beta\|_2^2. \tag{1.3}</span></span></p>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-regression-variants" class="level3" data-number="1.1.3">
+<h3 data-number="1.1.3" class="anchored" data-anchor-id="sec-regression-variants"><span class="header-section-number">1.1.3</span> Variants of Regression</h3>
+<p>Ordinary least-squares has a clean closed-form solution, but it breaks down in three common scenarios:</p>
+<ol type="1">
+<li><strong>Multicollinearity.</strong> When features are highly correlated, <span class="math inline">X^\top X</span> is nearly singular and the OLS estimates become wildly unstable — small perturbations in the data produce large swings in <span class="math inline">\widehat{\beta}</span>.</li>
+<li><strong>High dimensionality.</strong> When the number of features <span class="math inline">d</span> exceeds the number of samples <span class="math inline">n</span>, OLS is underdetermined: infinitely many <span class="math inline">\beta</span> achieve zero training loss, and OLS cannot distinguish signal from noise.</li>
+<li><strong>Interpretability.</strong> A practitioner with 500 features wants to know <em>which ones matter</em>. OLS gives a nonzero coefficient to every feature, offering no guidance.</li>
+</ol>
+<p>Each of the following regression variants addresses one or more of these failures by modifying the optimization problem. Crucially, each modification leads to a <em>different class</em> of optimization problem, previewing the algorithmic landscape of this course.</p>
+<div id="def-least-squares-mle" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 1.1 (Least-Squares (MLE))</strong></span> <span class="math display">\arg\min_{\beta \in \mathbb{R}^d} \; \|y - X\beta\|_2^2</span></p>
+<p>Minimizes the <span class="math inline">\ell_2</span>-error. This is a <strong>convex optimization</strong> problem.</p>
+</div>
+<p>Least-squares is our baseline: it has the closed-form solution <span class="math inline">\widehat{\beta} = (X^\top X)^{-1} X^\top y</span> whenever <span class="math inline">X^\top X</span> is invertible. But when features are correlated or <span class="math inline">d</span> is large, we need to go further.</p>
+<div id="def-ridge-regression" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 1.2 (Ridge Regression)</strong></span> <span class="math display">\arg\min_{\beta \in \mathbb{R}^d} \; \|y - X\beta\|_2^2 + \lambda \|\beta\|_2^2</span></p>
+<p>This is a <strong>regularized least-squares</strong> problem. It is <strong>strongly convex</strong>.</p>
+</div>
+<p>Ridge regression directly attacks the multicollinearity problem: the <span class="math inline">\ell_2</span>-penalty <span class="math inline">\lambda \|\beta\|_2^2</span> adds <span class="math inline">\lambda I</span> to <span class="math inline">X^\top X</span>, making the system always invertible and the solution always unique. Geometrically, ridge shrinks all coefficients toward zero, trading a small increase in bias for a large decrease in variance. From an optimization perspective, the <span class="math inline">\ell_2</span>-penalty makes the objective <strong>strongly convex</strong> — a property that guarantees faster convergence rates for iterative algorithms, as we will see in <a href="../lectures/06-gradient-descent.html">Gradient Descent</a>.</p>
+<div id="def-lasso" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 1.3 (Lasso (<span class="math inline">\ell_1</span>-Regularized Least-Squares))</strong></span> <span class="math display">\arg\min_{\beta \in \mathbb{R}^d} \; \|y - X\beta\|_2^2 + \lambda \|\beta\|_1, \qquad \|\beta\|_1 = \sum_{j=1}^{d} |\beta_j|.</span></p>
+<p>This is a <strong>convex</strong> problem, specifically a <strong>cone program</strong>.</p>
+</div>
+<p>The Lasso addresses the high-dimensionality and interpretability problems simultaneously. By replacing the <span class="math inline">\ell_2</span>-penalty with an <span class="math inline">\ell_1</span>-penalty, it encourages <strong>sparsity</strong>: many coefficients are driven to <em>exactly</em> zero, performing automatic feature selection. Why does <span class="math inline">\ell_1</span> produce zeros but <span class="math inline">\ell_2</span> does not? The geometry is the key: the <span class="math inline">\ell_1</span>-ball is a diamond with corners on the coordinate axes, and the level sets of the loss function are far more likely to first touch the constraint boundary at a corner (where some coordinates are zero) than along a smooth face. The Lasso is convex but <strong>non-smooth</strong> — the <span class="math inline">|\beta_j|</span> terms are not differentiable at zero — which means gradient descent does not directly apply. Solving the Lasso efficiently requires <strong>proximal gradient methods</strong>, a topic we develop in detail later in the course.</p>
+<div class="figure-container">
+  <div id="fig-regression-comparison"></div>
+  <div class="figure-caption">Comparison of regression coefficients for OLS, Ridge, and Lasso on a problem with a sparse true parameter vector β* = (3, −1.5, 0, 0, 2). Lasso produces exact zeros for the irrelevant features, performing automatic feature selection.</div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const features = ['\u03B2\u2081', '\u03B2\u2082', '\u03B2\u2083', '\u03B2\u2084', '\u03B2\u2085'];
+  const betaTrue = [3.0, -1.5, 0.0, 0.0, 2.0];
+  const betaOLS = [3.05, -1.52, -0.06, 0.03, 1.97];
+  const betaRidge = [2.58, -1.28, -0.05, 0.02, 1.67];
+  const betaLasso = [2.72, -1.22, 0.0, 0.0, 1.70];
+
+  const traces = [
+    { x: features, y: betaTrue, type: 'bar', name: 'True \u03B2*',
+      marker: {color: css('--fig-axis'), line: {width: 1, color: css('--fig-plot-bg')}}, opacity: 0.5 },
+    { x: features, y: betaOLS, type: 'bar', name: 'OLS',
+      marker: {color: css('--fig-region-stroke'), line: {width: 1, color: css('--fig-plot-bg')}} },
+    { x: features, y: betaRidge, type: 'bar', name: 'Ridge (\u03BB=1)',
+      marker: {color: css('--fig-contour'), line: {width: 1, color: css('--fig-plot-bg')}} },
+    { x: features, y: betaLasso, type: 'bar', name: 'Lasso (\u03BB=5)',
+      marker: {color: css('--fig-sage-stroke'), line: {width: 1, color: css('--fig-plot-bg')}} },
+  ];
+  const layout = themeLayout({
+    xaxis: themeAxis('Coefficient', {type: 'category'}),
+    yaxis: themeAxis('Value', {}),
+    barmode: 'group',
+    showlegend: true, legend: Object.assign({x: 0.6, y: 1}, legendStyle()),
+    margin: {t: 20, b: 50, l: 55, r: 20},
+  });
+  Plotly.newPlot('fig-regression-comparison', traces, layout, plotlyConfig);
+});
+</script>
+</section>
+<section id="sec-linear-programming" class="level3" data-number="1.1.4">
+<h3 data-number="1.1.4" class="anchored" data-anchor-id="sec-linear-programming"><span class="header-section-number">1.1.4</span> Linear Programming (<span class="math inline">\ell_1</span>/<span class="math inline">\ell_\infty</span>-Minimization)</h3>
+<div id="exm-linf-regression" class="theorem example">
+<p><span class="theorem-title"><strong>Example 1.3 (<span class="math inline">\ell_\infty</span>-Regression)</strong></span> Given data points <span class="math inline">(x_i, y_i)</span> for <span class="math inline">i \in [n] = \{1, 2, \ldots, n\}</span>, with <span class="math inline">y = \begin{pmatrix} y_1 \\ \vdots \\ y_n \end{pmatrix}</span> and <span class="math inline">X = \begin{pmatrix} x_1^\top \\ x_2^\top \\ \vdots \\ x_n^\top \end{pmatrix}</span>, the <span class="math inline">\ell_\infty</span>-norm is <span class="math inline">\|v\|_\infty = \max_i |v_i|</span>. Then:</p>
+<p><span class="math display">\|y - X\beta\|_\infty = \max_i |y_i - x_i^\top \beta|.</span></p>
+<p>The <span class="math inline">\ell_\infty</span>-regression problem becomes:</p>
+<p><span id="eq-linf-regression"><span class="math display">\arg\min_\beta \; \left\{\max_i |y_i - x_i^\top \beta|\right\}. \tag{1.4}</span></span></p>
+</div>
+<div id="exm-l1-regression" class="theorem example">
+<p><span class="theorem-title"><strong>Example 1.4 (<span class="math inline">\ell_1</span>-Regression)</strong></span> The <span class="math inline">\ell_1</span>-norm is <span class="math inline">\|v\|_1 = \sum_{i=1}^{n} |v_i|</span>. The <span class="math inline">\ell_1</span>-regression problem is:</p>
+<p><span id="eq-l1-regression"><span class="math display">\arg\min_{\beta \in \mathbb{R}^d} \; \|y - X\beta\|_1 = \arg\min_{\beta \in \mathbb{R}^d} \; \sum_{i=1}^{n} |y_i - x_i^\top \beta|. \tag{1.5}</span></span></p>
+<p>Both <span class="math inline">\ell_1</span>- and <span class="math inline">\ell_\infty</span>-regression can be reformulated as <strong>linear programs</strong>.</p>
+</div>
+<div class="figure-container">
+  <div id="fig-regression-norms"></div>
+  <div class="figure-caption">The ℓ<sub>1</sub>, ℓ<sub>2</sub>, and ℓ<sub>∞</sub> unit balls in 2D. The diamond shape of the ℓ<sub>1</sub>-ball explains why Lasso produces sparse solutions: its corners lie on the coordinate axes, making it likely that the optimal point has zero entries.</div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const N = 200;
+  const l2x = [], l2y = [];
+  for (let i = 0; i <= N; i++) {
+    const t = 2 * Math.PI * i / N;
+    l2x.push(Math.cos(t));
+    l2y.push(Math.sin(t));
+  }
+  const l1x = [1, 0, -1, 0, 1];
+  const l1y = [0, 1, 0, -1, 0];
+  const linfx = [1, 1, -1, -1, 1];
+  const linfy = [1, -1, -1, 1, 1];
+
+  const traces = [
+    { x: l1x, y: l1y, fill: 'toself', fillcolor: css('--fig-lavender'), line: {color: css('--fig-lavender-stroke'), width: 2.5}, name: '\u2113\u2081 ball (diamond)', mode: 'lines' },
+    { x: l2x, y: l2y, fill: 'toself', fillcolor: css('--fig-sage'), line: {color: css('--fig-sage-stroke'), width: 2.5}, name: '\u2113\u2082 ball (circle)', mode: 'lines' },
+    { x: linfx, y: linfy, fill: 'toself', fillcolor: css('--fig-region'), line: {color: css('--fig-region-stroke'), width: 2.5}, name: '\u2113\u221E ball (square)', mode: 'lines' },
+  ];
+  const layout = themeLayout({
+    xaxis: themeAxis('x\u2081', {range: [-1.5, 1.5], zeroline: true, scaleanchor: 'y'}),
+    yaxis: themeAxis('x\u2082', {range: [-1.5, 1.5], zeroline: true}),
+    showlegend: true, legend: Object.assign({x: 0.55, y: 1}, legendStyle()),
+    margin: {t: 20, b: 50, l: 55, r: 20},
+  });
+  Plotly.newPlot('fig-regression-norms', traces, layout, plotlyConfig);
+});
+</script>
+</section>
+<section id="sec-sparse-regression" class="level3" data-number="1.1.5">
+<h3 data-number="1.1.5" class="anchored" data-anchor-id="sec-sparse-regression"><span class="header-section-number">1.1.5</span> Sparse Regression (<span class="math inline">\ell_0</span>-Regularization)</h3>
+<div id="exm-sparse-regression" class="theorem example">
+<p><span class="theorem-title"><strong>Example 1.5 (<span class="math inline">\ell_0</span>-Regularized Least-Squares / Sparse Regression)</strong></span> The <span class="math inline">\ell_0</span>-“norm” counts nonzero entries: <span class="math inline">\|v\|_0 = \#\{i : v_i \neq 0\}</span>.</p>
+<p>The <span class="math inline">\ell_0</span>-regularized least-squares problem is:</p>
+<p><span id="eq-l0-regularized"><span class="math display">\arg\min_{\beta \in \mathbb{R}^d} \; \|y - X\beta\|_2^2 + \lambda \|\beta\|_0. \tag{1.6}</span></span></p>
+<p>This problem is <strong>NP-hard</strong>. We need to relax or approximate it. Two common relaxations are:</p>
+<ul>
+<li><strong>Constrained form:</strong> <span class="math inline">\displaystyle\arg\min_{\beta \in \mathbb{R}^d} \|y - X\beta\|_2 \quad \text{s.t.} \quad \|\beta\|_0 \leq k</span>, where <span class="math inline">k</span> is an integer.</li>
+<li><strong>Inverse form:</strong> <span class="math inline">\displaystyle\arg\min_{\beta \in \mathbb{R}^d} \|\beta\|_0 \quad \text{s.t.} \quad \|y - X\beta\|_2 \leq \varepsilon</span>.</li>
+</ul>
+</div>
+</section>
+<section id="sec-erm" class="level3" data-number="1.1.6">
+<h3 data-number="1.1.6" class="anchored" data-anchor-id="sec-erm"><span class="header-section-number">1.1.6</span> Empirical Risk Minimization</h3>
+<p>All of the regression variants above share a common pattern: choose a loss function, optionally add a regularizer, and minimize the resulting objective over the data. The Empirical Risk Minimization (ERM) framework captures this pattern in full generality, providing a single template that encompasses least-squares, ridge, Lasso, and many other estimators.</p>
+<div id="def-erm" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 1.4 (Empirical Risk Minimization Framework)</strong></span> Given data points <span class="math inline">\{(x_i, y_i)\}_{i \in [n]}</span>, define:</p>
+<ul>
+<li><span class="math inline">h_\theta : \mathbb{R}^d \to \mathbb{R}</span> — hypothesis parameterized by <span class="math inline">\theta \in \Theta</span> (e.g., <span class="math inline">h_\theta(x) = x^\top \theta</span>).</li>
+<li><span class="math inline">\ell : \mathbb{R} \times \mathbb{R} \to \mathbb{R}</span> — loss function (e.g., <span class="math inline">\ell(u, v) = (u - v)^2</span>).</li>
+<li><span class="math inline">R : \Theta \to \mathbb{R}</span> — regularizer.</li>
+</ul>
+<p><strong>Regularized ERM:</strong></p>
+<p><span id="eq-regularized-erm"><span class="math display">\min_{\theta \in \Theta} \; \left\{\sum_{i=1}^{n} \ell\!\left(h_\theta(x_i),\, y_i\right) + \lambda \cdot R(\theta)\right\}. \tag{1.7}</span></span></p>
+<p><strong>Constrained ERM:</strong></p>
+<p><span id="eq-constrained-erm"><span class="math display">\min_{\theta} \; \sum_{i=1}^{n} \ell\!\left(h_\theta(x_i),\, y_i\right) \quad \text{s.t.} \quad R(\theta) \leq \lambda. \tag{1.8}</span></span></p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>All the regression variants above — least-squares, ridge, Lasso, <span class="math inline">\ell_1</span>/<span class="math inline">\ell_\infty</span>-regression — are special cases of the ERM framework with particular choices of loss and regularizer.</p>
+</div>
+</div>
+</section>
+<section id="sec-llm-pretraining" class="level3" data-number="1.1.7">
+<h3 data-number="1.1.7" class="anchored" data-anchor-id="sec-llm-pretraining"><span class="header-section-number">1.1.7</span> LLM Pretraining as MLE</h3>
+<div id="exm-llm-pretraining" class="theorem example">
+<p><span class="theorem-title"><strong>Example 1.6 (Maximum Likelihood Estimation for Language Models)</strong></span> Let <span class="math inline">\mathbf{x}</span> be a document corpus, <span class="math inline">\mathbf{x} = (x_1, x_2, x_3, \ldots, x_T)</span>. An <strong>autoregressive language model</strong> predicts <span class="math inline">x_t</span> given <span class="math inline">x_1, \ldots, x_{t-1}</span> using a neural network <span class="math inline">f_\theta(\,\cdot \mid x_{1:t-1})</span>.</p>
+<p>The MLE objective is:</p>
+<p><span class="math display">\min_\theta \; -\sum_{t=1}^{T} \log f_\theta(x_t \mid x_{1:t-1}).</span></p>
+<p>When <span class="math inline">f_\theta</span> is a <strong>transformer</strong>, this is exactly the <strong>pretraining of LLMs</strong> (Large Language Models).</p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: How Language Models Work
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A language model takes previous words (context) as input and outputs a probability distribution over the next word/token. For example:</p>
+<ul>
+<li>Input context: “The boy went to the”</li>
+<li>Output probabilities: Cafe (0.1), Hospital (0.05), <strong>Playground (0.4)</strong>, Park (0.15), School (0.3)</li>
+</ul>
+<p>The probability <span class="math inline">P(\text{Playground} \mid \text{The boy went to the}) = 0.4</span>.</p>
+</div>
+</div>
+</section>
+<section id="sec-portfolio" class="level3" data-number="1.1.8">
+<h3 data-number="1.1.8" class="anchored" data-anchor-id="sec-portfolio"><span class="header-section-number">1.1.8</span> Markowitz Portfolio Selection</h3>
+<div id="exm-portfolio" class="theorem example">
+<p><span class="theorem-title"><strong>Example 1.7 (Markowitz’s Portfolio Selection Model)</strong></span> Suppose we have 3 assets. Their returns are random variables <span class="math inline">X = (X_1, X_2, X_3)^\top</span> with:</p>
+<p><span class="math display">\mathbb{E}[X] = \mu = \begin{pmatrix} \mu_1 \\ \mu_2 \\ \mu_3 \end{pmatrix}, \quad \text{Cov}(X) = \Sigma = \begin{pmatrix} \Sigma_{11} &amp; \Sigma_{12} &amp; \Sigma_{13} \\ - &amp; - &amp; - \\ - &amp; \cdots &amp; \Sigma_{33}\end{pmatrix}.</span></p>
+<p>Let <span class="math inline">w \in \mathbb{R}^3</span> be a weight vector specifying how we invest in these three assets, with <span class="math inline">\sum_{i=1}^{3} w_i = 1</span> and <span class="math inline">w_i \geq 0</span>. Our portfolio return is:</p>
+<p><span class="math display">Y_w = \sum_{i=1}^{3} w_i \cdot X_i, \quad \mathbb{E}[Y_w] = w^\top \mu, \quad \text{Var}(Y_w) = w^\top \Sigma\, w.</span></p>
+<p><strong>Goal:</strong> Choose the best <span class="math inline">w</span> that minimizes <span class="math inline">\text{Var}(Y_w)</span> while achieving a desired return <span class="math inline">R</span>:</p>
+<p><span class="math display">\begin{aligned}
+\min_{w} \quad &amp; w^\top \Sigma\, w \\
+\text{s.t.} \quad &amp; w^\top \mu \geq R \\
+&amp; \textstyle\sum w_i = 1 \\
+&amp; w_i \geq 0, \quad i = 1, 2, 3.
+\end{aligned}</span></p>
+<p>This is a <strong>constrained quadratic optimization</strong> problem.</p>
+</div>
+<div class="figure-container">
+  <div id="fig-portfolio"></div>
+  <div class="figure-caption">Markowitz efficient frontier. Each point represents a portfolio; the frontier (gold curve) shows the minimum variance achievable for each level of expected return. Diversification allows portfolios that are less risky than any individual asset.</div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const mu = [0.08, 0.12, 0.15];
+  const Sigma = [[0.04, 0.006, 0.002], [0.006, 0.09, 0.018], [0.002, 0.018, 0.16]];
+  function portfolioVar(w) {
+    let v = 0;
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) v += w[i] * w[j] * Sigma[i][j];
+    return v;
+  }
+  function portfolioRet(w) { return w[0]*mu[0] + w[1]*mu[1] + w[2]*mu[2]; }
+
+  const allRet = [], allStd = [];
+  const N = 80;
+  for (let i = 0; i <= N; i++) {
+    for (let j = 0; j <= N - i; j++) {
+      const k = N - i - j;
+      const w = [i/N, j/N, k/N];
+      allRet.push(portfolioRet(w));
+      allStd.push(Math.sqrt(portfolioVar(w)));
+    }
+  }
+
+  const retLevels = [];
+  const frontierStd = [];
+  for (let r = 0.08; r <= 0.151; r += 0.002) {
+    retLevels.push(r);
+    let bestVar = Infinity;
+    for (let i = 0; i <= N; i++) {
+      for (let j = 0; j <= N - i; j++) {
+        const k = N - i - j;
+        const w = [i/N, j/N, k/N];
+        const ret = portfolioRet(w);
+        if (ret >= r - 0.001) {
+          const v = portfolioVar(w);
+          if (v < bestVar) bestVar = v;
+        }
+      }
+    }
+    frontierStd.push(Math.sqrt(bestVar));
+  }
+
+  const traces = [
+    { x: allStd, y: allRet, mode: 'markers', marker: {color: css('--fig-axis'), size: 3, opacity: 0.3}, name: 'All portfolios', hoverinfo: 'skip' },
+    { x: frontierStd, y: retLevels, mode: 'lines+markers', line: {color: css('--fig-optimal'), width: 3}, marker: {color: css('--fig-optimal'), size: 6}, name: 'Efficient frontier' },
+    { x: [Math.sqrt(Sigma[0][0])], y: [mu[0]], mode: 'markers+text', marker: {color: css('--fig-sage-stroke'), size: 12, symbol: 'diamond'}, text: ['Asset 1'], textposition: 'top right', name: 'Asset 1', textfont: {size: 11, color: css('--fig-text')} },
+    { x: [Math.sqrt(Sigma[1][1])], y: [mu[1]], mode: 'markers+text', marker: {color: css('--fig-line2'), size: 12, symbol: 'diamond'}, text: ['Asset 2'], textposition: 'top right', name: 'Asset 2', textfont: {size: 11, color: css('--fig-text')} },
+    { x: [Math.sqrt(Sigma[2][2])], y: [mu[2]], mode: 'markers+text', marker: {color: css('--fig-lavender-stroke'), size: 12, symbol: 'diamond'}, text: ['Asset 3'], textposition: 'top right', name: 'Asset 3', textfont: {size: 11, color: css('--fig-text')} },
+  ];
+  const layout = themeLayout({
+    xaxis: themeAxis('Standard Deviation (Risk)', {range: [0, 0.45]}),
+    yaxis: themeAxis('Expected Return', {range: [0.06, 0.17], tickformat: '.0%'}),
+    showlegend: true, legend: Object.assign({x: 0.55, y: 0.3}, legendStyle()),
+    margin: {t: 20, b: 55, l: 65, r: 20},
+  });
+  Plotly.newPlot('fig-portfolio', traces, layout, plotlyConfig);
+});
+</script>
+</section>
+</section>
+<section id="sec-general-optimization" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="sec-general-optimization"><span class="header-section-number">1.2</span> General Form of Optimization</h2>
+<p>We have seen that statistical estimation, machine learning, and finance all lead to optimization problems with shared mathematical structure. The general form of an optimization problem is:</p>
+<p><span class="math display">\begin{aligned}
+\min_{x} \quad &amp; f(x) &amp; &amp; \text{(objective function)} \\
+\text{s.t.} \quad &amp; g_i(x) \leq b_i, &amp; &amp; i = 1, 2, \ldots, m \\
+&amp; h_j(x) = 0, &amp; &amp; j = 1, 2, \ldots, \ell \\
+&amp; x \in \mathcal{X}
+\end{aligned}</span></p>
+<p>In a more abstract form: <span class="math inline">\min_x \; f(x) \quad \text{s.t.} \quad x \in \text{Constraint}.</span></p>
+<p>But optimization in general is NP-hard — there is no hope of efficiently solving arbitrary problems. The key insight is that a large and practically important class of problems, called <strong>convex optimization</strong> problems, can always be solved efficiently.</p>
+</section>
+<section id="sec-convex-optimization" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="sec-convex-optimization"><span class="header-section-number">1.3</span> Convex Optimization</h2>
+<div id="def-convex-optimization" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 1.5 (General Form of Convex Optimization)</strong></span> A convex optimization problem takes the general form:</p>
+<p><span id="eq-convex-optimization"><span class="math display">\begin{aligned}
+\min_{x} \quad &amp; f(x) &amp;&amp; \text{(convex objective function)} \\
+\text{s.t.} \quad &amp; g_i(x) \leq b_i, &amp;&amp; i = 1, 2, \ldots, m \\
+&amp; h_j(x) = 0, &amp;&amp; j = 1, 2, \ldots, \ell \\
+&amp; x \in \mathcal{X}
+\end{aligned} \tag{1.9}</span></span></p>
+<p>where <span class="math inline">f</span> is a <strong>convex objective function</strong> and the constraints <span class="math inline">g_i(x) \leq b_i</span>, <span class="math inline">h_j(x) = 0</span> define a <strong>convex feasible set</strong>.</p>
+</div>
+<p>A convex optimization problem is one where both the objective function and the feasible region are convex. This structure is powerful because it guarantees that any local minimum is automatically a global minimum, which makes the problem tractable for efficient algorithms.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Why Convexity Matters
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>A key geometric property of convex sets: for any two points <span class="math inline">x, y</span> in a convex set, the line segment connecting them lies entirely within the set. That is, <span class="math inline">\lambda x + (1-\lambda)y</span> is in the set for all <span class="math inline">\lambda \in [0,1]</span>.</p>
+<p>For convex functions: <strong>every local minimum is a global minimum</strong>. This makes convex optimization problems tractable (solvable in polynomial time), while general optimization is typically NP-hard.</p>
+</div>
+</div>
+<div id="fig-optimization-landscape" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-optimization-landscape-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/optimization-landscape.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;1.1: Optimization landscape showing local minimum, local maximum, global minimum, and constrained optimum within a feasible region. In high-dimensional non-convex optimization, most stationary points that appear as local minima or local maxima in 1D are in fact saddle points — critical points where the Hessian has both positive and negative eigenvalues."><img src="figures/optimization-landscape.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-optimization-landscape-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.1: Optimization landscape showing local minimum, local maximum, global minimum, and constrained optimum within a feasible region. In high-dimensional non-convex optimization, most stationary points that appear as local minima or local maxima in 1D are in fact <strong>saddle points</strong> — critical points where the Hessian has both positive and negative eigenvalues.
+</figcaption>
+</figure>
+</div>
+<div id="fig-convex-vs-nonconvex" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-convex-vs-nonconvex-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch01-convex-vs-nonconvex.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;1.2: Left — A convex function with a unique global minimum. Right — A non-convex function with multiple local minima. In convex optimization, any local minimum is a global minimum."><img src="figures/ch01-convex-vs-nonconvex.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-convex-vs-nonconvex-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.2: Left — A convex function with a unique global minimum. Right — A non-convex function with multiple local minima. In convex optimization, any local minimum is a global minimum.
+</figcaption>
+</figure>
+</div>
+<div class="figure-container">
+  <div id="fig-saddle-point-3d"></div>
+  <div class="figure-caption">Figure 1.3: A saddle point of f(x,y) = x² − y² at the origin. Along the x-direction (blue curve), the surface curves upward — the origin is a local minimum. Along the y-direction (red curve), the surface curves downward — the origin is a local maximum. The Hessian at the origin has one positive and one negative eigenvalue.</div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const N = 60;
+  const vals = [];
+  for (let i = 0; i < N; i++) vals.push(-2 + 4 * i / (N - 1));
+
+  // Saddle surface: f(x,y) = x^2 - y^2
+  const zSaddle = [];
+  for (let j = 0; j < N; j++) {
+    const row = [];
+    for (let i = 0; i < N; i++) {
+      row.push(vals[i]*vals[i] - vals[j]*vals[j]);
+    }
+    zSaddle.push(row);
+  }
+
+  // Cross-section along x-axis (y=0): f(x,0) = x^2 (parabola up)
+  const xSlice = [], zXslice = [], yZeros = [];
+  for (let x = -2; x <= 2; x += 0.05) {
+    xSlice.push(x); zXslice.push(x*x); yZeros.push(0);
+  }
+
+  // Cross-section along y-axis (x=0): f(0,y) = -y^2 (parabola down)
+  const ySlice = [], zYslice = [], xZeros = [];
+  for (let y = -2; y <= 2; y += 0.05) {
+    ySlice.push(y); zYslice.push(-y*y); xZeros.push(0);
+  }
+
+  const traces = [
+    {
+      type: 'surface', x: vals, y: vals, z: zSaddle,
+      colorscale: [[0, '#907ea0'], [0.5, '#e0d9d1'], [1, '#b8995e']],
+      showscale: false, opacity: 0.75, name: 'f(x,y) = x² − y²',
+      contours: {x: {show: true, color: '#e0d9d1', width: 1}, y: {show: true, color: '#e0d9d1', width: 1}},
+    },
+    {
+      type: 'scatter3d', x: xSlice, y: yZeros, z: zXslice,
+      mode: 'lines', line: {color: '#7b97ad', width: 6},
+      name: 'Along x (local min)',
+    },
+    {
+      type: 'scatter3d', x: xZeros, y: ySlice, z: zYslice,
+      mode: 'lines', line: {color: '#b56b6b', width: 6},
+      name: 'Along y (local max)',
+    },
+    {
+      type: 'scatter3d', x: [0], y: [0], z: [0],
+      mode: 'markers', marker: {color: '#b8995e', size: 7, symbol: 'diamond'},
+      name: 'Saddle point',
+    },
+  ];
+
+  const layout = themeLayout({
+    scene: {
+      xaxis: {title: 'x', backgroundcolor: css('--fig-plot-bg'), gridcolor: css('--fig-grid'), color: css('--fig-axis')},
+      yaxis: {title: 'y', backgroundcolor: css('--fig-plot-bg'), gridcolor: css('--fig-grid'), color: css('--fig-axis')},
+      zaxis: {title: 'f(x,y)', backgroundcolor: css('--fig-plot-bg'), gridcolor: css('--fig-grid'), color: css('--fig-axis')},
+      camera: {eye: {x: 1.8, y: 1.2, z: 0.9}},
+    },
+    showlegend: true,
+    legend: Object.assign({x: 0.02, y: 0.95}, legendStyle()),
+    margin: {t: 10, b: 10, l: 10, r: 10},
+  });
+
+  Plotly.newPlot('fig-saddle-point-3d', traces, layout, plotlyConfig);
+});
+</script>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Saddle Points in High Dimensions
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In high-dimensional non-convex optimization (e.g., training deep neural networks), most critical points are <strong>saddle points</strong>, not true local minima or maxima. A saddle point is a critical point where the Hessian has both positive and negative eigenvalues — the function curves upward in some directions and downward in others, as shown in the 3D figure above. In <span class="math inline">d</span> dimensions, a random critical point is exponentially more likely to be a saddle point than a local minimum, since each eigenvalue of the Hessian is independently likely to be positive or negative.</p>
+</div>
+</div>
+<div id="fig-optimization-taxonomy" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-optimization-taxonomy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch02-optimization-taxonomy.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;1.3: Optimization problem taxonomy. Convex problems (LP, QP, SOCP, SDP, general convex) are tractable and solvable in polynomial time. Nonconvex problems (neural networks, combinatorial, mixed-integer) are hard in general."><img src="figures/ch02-optimization-taxonomy.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-optimization-taxonomy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1.3: Optimization problem taxonomy. Convex problems (LP, QP, SOCP, SDP, general convex) are tractable and solvable in polynomial time. Nonconvex problems (neural networks, combinatorial, mixed-integer) are hard in general.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-course-overview" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="sec-course-overview"><span class="header-section-number">1.4</span> Course Overview</h2>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Focus:</strong> We will mainly focus on <strong>convex optimization</strong>.</p>
+<ul>
+<li>Optimization is generally <strong>hard</strong> (NP-hard).</li>
+<li>But we can always <strong>solve</strong> convex optimization (in polynomial time).</li>
+</ul>
+</div>
+</div>
+</div>
+<p>What do we mean by “hard” or “solve”? This is formalized through run-time complexity and oracle computation models. The course is organized around three main questions:</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Three main questions:</strong></p>
+<ol type="1">
+<li><strong>What optimization problems?</strong></li>
+<li><strong>What algorithms?</strong></li>
+<li><strong>How do we know we have solved the problem?</strong></li>
+</ol>
+</div>
+</div>
+</div>
+<section id="what-optimization-problems" class="level3" data-number="1.4.1">
+<h3 data-number="1.4.1" class="anchored" data-anchor-id="what-optimization-problems"><span class="header-section-number">1.4.1</span> 1. What Optimization Problems?</h3>
+<ul>
+<li>We will cover <strong>theory &amp; algorithms of convex optimization</strong>.
+<ul>
+<li>Why? This is a class of <strong>tractable</strong> problems that can be solved in a principled fashion.</li>
+</ul></li>
+<li>We will also cover some <strong>nonconvex optimization</strong> problems:
+<ul>
+<li>With important applications in <strong>deep learning &amp; AI</strong></li>
+<li>Interesting phenomena not present in the convex world</li>
+</ul></li>
+</ul>
+</section>
+<section id="what-algorithms" class="level3" data-number="1.4.2">
+<h3 data-number="1.4.2" class="anchored" data-anchor-id="what-algorithms"><span class="header-section-number">1.4.2</span> 2. What Algorithms?</h3>
+<ol type="a">
+<li><strong>Unconstrained optimization</strong>
+<ul>
+<li><strong>First-order methods</strong> (gradient descent, stochastic gradient descent, projected gradient descent)</li>
+<li>Second-order methods</li>
+</ul></li>
+<li><strong>Constrained optimization</strong>
+<ul>
+<li>Linear programming <span class="math inline">\rightarrow</span> Simplex method, Ellipsoid method</li>
+<li>General constrained problems <span class="math inline">\rightarrow</span> Interior point methods</li>
+</ul></li>
+</ol>
+</section>
+<section id="how-do-we-know-we-have-solved-the-problem" class="level3" data-number="1.4.3">
+<h3 data-number="1.4.3" class="anchored" data-anchor-id="how-do-we-know-we-have-solved-the-problem"><span class="header-section-number">1.4.3</span> 3. How Do We Know We Have Solved the Problem?</h3>
+<ul>
+<li><strong>Duality</strong>, <strong>Lagrange multipliers</strong>, <strong>KKT conditions</strong></li>
+</ul>
+<div class="figure-container">
+  <div id="fig-optimization-landscape-plotly"></div>
+  <div class="figure-caption">Figure 0.3: The landscape of optimization problems covered in this course, from linear programs to general convex optimization and beyond.</div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const figFontHeading = '"Crimson Pro", Georgia, serif';
+
+  // ---- Figure: Optimization Landscape ----
+  const traces = [
+    { x: [0, 10, 10, 0, 0], y: [0, 0, 7, 7, 0], fill: 'toself',
+      fillcolor: css('--fig-lavender'), line: {color: css('--fig-lavender-stroke'), width: 2.5},
+      mode: 'lines', hoverinfo: 'none' },
+    { x: [0.5, 9.5, 9.5, 0.5, 0.5], y: [0.3, 0.3, 6, 6, 0.3], fill: 'toself',
+      fillcolor: css('--fig-sage'), line: {color: css('--fig-sage-stroke'), width: 2.5},
+      mode: 'lines', hoverinfo: 'none' },
+    { x: [1, 6, 6, 1, 1], y: [0.6, 0.6, 5.2, 5.2, 0.6], fill: 'toself',
+      fillcolor: css('--fig-region'), line: {color: css('--fig-region-stroke'), width: 2},
+      mode: 'lines', hoverinfo: 'none' },
+    { x: [1.5, 5.5, 5.5, 1.5, 1.5], y: [0.9, 0.9, 4.2, 4.2, 0.9], fill: 'toself',
+      fillcolor: css('--highlight-bg'), line: {color: css('--highlight-border'), width: 2.5},
+      mode: 'lines', hoverinfo: 'none' },
+  ];
+  const layout = themeLayout({
+    xaxis: themeAxis('', {showgrid: false, zeroline: false, showticklabels: false, range: [-0.5, 10.5]}),
+    yaxis: themeAxis('', {showgrid: false, zeroline: false, showticklabels: false, range: [-0.5, 7.5], scaleanchor: 'x'}),
+    showlegend: false,
+    margin: {t: 15, b: 15, l: 15, r: 15},
+    annotations: [
+      {x: 3.5, y: 2.55, text: '<b>LP</b><br>Simplex', showarrow: false, font: {family: figFontHeading, size: 14, color: css('--fig-text')}, align: 'center'},
+      {x: 3.5, y: 4.7, text: '<b>QP / Cone</b>', showarrow: false, font: {family: figFontHeading, size: 13, color: css('--fig-text')}},
+      {x: 8, y: 3.2, text: '<b>Convex</b><br>GD, SGD<br>Ellipsoid, Interior Point', showarrow: false, font: {family: figFontHeading, size: 13, color: css('--fig-text')}, align: 'center'},
+      {x: 5, y: 6.6, text: '<b>General Optimization</b> (NP-hard)', showarrow: false, font: {family: figFontHeading, size: 13, color: css('--fig-text')}, align: 'center'},
+    ]
+  });
+  Plotly.newPlot('fig-optimization-landscape-plotly', traces, layout, plotlyConfig);
+});
+</script>
+</section>
+</section>
+<section id="summary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
+<ul>
+<li><strong>Optimization as a unifying framework.</strong> Many statistical and machine learning problems — maximum likelihood estimation, OLS, Ridge, Lasso regression, LLM pretraining, and portfolio optimization — reduce to minimizing an objective <span class="math inline">\min_{x} f(x)</span> subject to constraints, placing them under the umbrella of mathematical optimization.</li>
+<li><strong>Empirical risk minimization (ERM).</strong> Supervised learning seeks parameters <span class="math inline">\theta</span> that minimize the empirical risk <span class="math inline">\frac{1}{n}\sum_{i=1}^{n}\ell(h_\theta(x_i), y_i)</span>; the choice of loss <span class="math inline">\ell</span> and hypothesis class <span class="math inline">h_\theta</span> determines the optimization landscape.</li>
+<li><strong>Key problem classes.</strong> Linear programs (LP), quadratic programs (QP), and general convex programs each carry different structural guarantees; recognizing the class determines which algorithms and solvers apply.</li>
+<li><strong>Convex vs.&nbsp;nonconvex problems.</strong> Convex problems (e.g., OLS, Ridge, Lasso) admit global solutions efficiently because every local minimum is a global minimum. Nonconvex problems (e.g., neural network training) lack this guarantee and require careful algorithm design.</li>
+<li><strong>Role of regularization.</strong> Adding a penalty term — <span class="math inline">\|\theta\|_2^2</span> for Ridge or <span class="math inline">\|\theta\|_1</span> for Lasso — controls model complexity and induces desirable structure such as sparsity.</li>
+<li><strong>Course roadmap.</strong> The course progresses from convex analysis and duality theory, through first- and second-order algorithms, to LP-specific methods (simplex, interior point) and modern applications (diffusion models, transformers).</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../index.html" class="pagination-link" aria-label="Welcome">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Welcome</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../lectures/02-math-background.html" class="pagination-link" aria-label="Mathematical Background">
+        <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Background</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+const figFontHeading = '"Crimson Pro", Georgia, serif';
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
+  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
+];
+</script>
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

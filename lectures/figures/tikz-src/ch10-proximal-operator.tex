@@ -1,0 +1,74 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, decorations.pathreplacing}
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{rwgold}{HTML}{B8995E}
+\definecolor{sage}{HTML}{7A9A7E}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{cream}{HTML}{F9F6F0}
+\definecolor{border}{HTML}{D4C9B8}
+\definecolor{terracotta}{HTML}{C47A6A}
+\definecolor{lavender}{HTML}{907EA0}
+
+\begin{document}
+\begin{tikzpicture}[
+  background rectangle/.style={fill=cream},
+  show background rectangle,
+  every node/.style={text=dkbrown, font=\small},
+]
+
+% Axes
+\draw[wmgray, -{Stealth[length=5pt]}, line width=0.6pt] (-3.5,0) -- (4.5,0) node[right, font=\footnotesize] {$z$};
+\draw[wmgray, -{Stealth[length=5pt]}, line width=0.6pt] (-3.5,0) -- (-3.5,5) node[above, font=\footnotesize] {};
+
+% g(z) = |z| (the L1 penalty)
+\draw[stblue, line width=1.5pt]
+  (-3,3) -- (0,0) -- (3,3);
+\node[font=\footnotesize, text=stblue!80!black] at (-2.5,3.5) {$g(z) = |z|$};
+
+% Quadratic penalty centered at x_k
+\pgfmathsetmacro{\xk}{2.0}
+\draw[lavender, line width=1.2pt, domain=-2.5:4.2, samples=80]
+  plot (\x, {0.4*(\x-\xk)*(\x-\xk)});
+\node[font=\footnotesize, text=lavender!80!black] at (3.8,2.5) {$\frac{1}{2\eta}\|z-x_k\|^2$};
+
+% Combined: g(z) + quadratic
+\draw[terracotta, line width=1.8pt, domain=-2.8:4.0, samples=120]
+  plot (\x, {abs(\x) + 0.4*(\x-\xk)*(\x-\xk)});
+\node[font=\footnotesize, text=terracotta!80!black, align=left] at (-2.0,4.8)
+  {$g(z) + \frac{1}{2\eta}\|z - x_k\|^2$};
+
+% Mark x_k
+\fill[rwgold] (\xk,0) circle (3pt);
+\node[below, font=\footnotesize, text=rwgold!80!black] at (\xk,-0.1) {$x_k$};
+\draw[rwgold, line width=0.5pt, dashed] (\xk,0) -- (\xk,{abs(\xk)+0.001});
+
+% Mark x_{k+1} = prox result (minimum of combined)
+% The prox of L1 at x_k with parameter eta: soft-threshold
+% With eta=1/(2*0.4)=1.25, lambda=1: prox = sign(x_k)*max(|x_k|-eta, 0)
+% = sign(2)*max(2-1.25,0) = 0.75
+\pgfmathsetmacro{\xnew}{0.75}
+\pgfmathsetmacro{\ynew}{abs(\xnew) + 0.4*(\xnew-\xk)*(\xnew-\xk)}
+\fill[sage] (\xnew,\ynew) circle (3.5pt);
+\fill[sage] (\xnew,0) circle (3pt);
+\node[below, font=\footnotesize, text=sage!70!black] at (\xnew,-0.1) {$x_{k+1}$};
+\draw[sage, line width=0.5pt, dashed] (\xnew,0) -- (\xnew,\ynew);
+
+% Arrow from x_k to x_{k+1}
+\draw[sage!80!black, -{Stealth[length=5pt]}, line width=1pt]
+  (\xk,-0.5) -- (\xnew+0.05,-0.5);
+\node[font=\footnotesize, text=sage!70!black, below] at ({0.5*(\xk+\xnew)},-0.55) {prox step};
+
+% Formula box
+\node[draw=border, fill=cream, rounded corners=4pt, inner sep=5pt,
+  font=\footnotesize, text=dkbrown, align=center]
+  at (0.5,-1.8) {%
+  $\mathrm{prox}_{\eta g}(x_k)
+   = \displaystyle\arg\min_z \left\{g(z) + \frac{1}{2\eta}\|z - x_k\|^2\right\}$
+  };
+
+\end{tikzpicture}
+\end{document}

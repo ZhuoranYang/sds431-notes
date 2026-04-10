@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 360" width="700" height="360">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#3d352f"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="350" y="28" text-anchor="middle" font-size="16" font-weight="bold">Gradient Descent Trajectories</text>
+
+  <!-- === Left panel: smooth convex === -->
+  <text x="175" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#7b97ad">Smooth Convex</text>
+  <text x="175" y="75" text-anchor="middle" font-size="11" fill="#7b97ad">𝑂(1/𝑘) convergence</text>
+
+  <!-- Contour lines (circular - well conditioned) -->
+  <ellipse cx="175" cy="220" rx="120" ry="100" fill="none" stroke="#968a80" stroke-width="0.6" opacity="0.3"/>
+  <ellipse cx="175" cy="220" rx="90" ry="75" fill="none" stroke="#968a80" stroke-width="0.6" opacity="0.3"/>
+  <ellipse cx="175" cy="220" rx="60" ry="50" fill="none" stroke="#968a80" stroke-width="0.6" opacity="0.3"/>
+  <ellipse cx="175" cy="220" rx="30" ry="25" fill="none" stroke="#968a80" stroke-width="0.6" opacity="0.3"/>
+
+  <!-- GD trajectory (spiraling in slowly) -->
+  <polyline points="60,140 110,180 130,250 165,200 170,235 175,215 175,222" fill="none" stroke="#7a9a7e" stroke-width="2"/>
+  <circle cx="60" cy="140" r="4" fill="#7a9a7e"/>
+  <text x="45" y="133" font-size="10" fill="#7a9a7e">𝑥₀</text>
+  <circle cx="175" cy="222" r="4" fill="#b56b6b"/>
+  <text x="182" y="238" font-size="10" fill="#b56b6b">𝑥*</text>
+
+  <!-- Intermediate points -->
+  <circle cx="110" cy="180" r="2.5" fill="#7a9a7e"/>
+  <circle cx="130" cy="250" r="2.5" fill="#7a9a7e"/>
+  <circle cx="165" cy="200" r="2.5" fill="#7a9a7e"/>
+  <circle cx="170" cy="235" r="2.5" fill="#7a9a7e"/>
+
+  <!-- Divider -->
+  <line x1="350" y1="50" x2="350" y2="340" stroke="#968a80" stroke-width="0.5" stroke-dasharray="4 3"/>
+
+  <!-- === Right panel: strongly convex === -->
+  <text x="525" y="58" text-anchor="middle" font-size="14" font-weight="bold" fill="#b56b6b">Strongly Convex</text>
+  <text x="525" y="75" text-anchor="middle" font-size="11" fill="#b56b6b">𝑂(𝜌&#x1D4F;) convergence, 𝜌 = (𝜅-1)/(𝜅+1)</text>
+
+  <!-- Contour lines (elongated ellipses - poor conditioning) -->
+  <ellipse cx="525" cy="220" rx="140" ry="50" fill="none" stroke="#968a80" stroke-width="0.6" opacity="0.3" transform="rotate(-25,525,220)"/>
+  <ellipse cx="525" cy="220" rx="105" ry="37" fill="none" stroke="#968a80" stroke-width="0.6" opacity="0.3" transform="rotate(-25,525,220)"/>
+  <ellipse cx="525" cy="220" rx="70" ry="25" fill="none" stroke="#968a80" stroke-width="0.6" opacity="0.3" transform="rotate(-25,525,220)"/>
+  <ellipse cx="525" cy="220" rx="35" ry="12" fill="none" stroke="#968a80" stroke-width="0.6" opacity="0.3" transform="rotate(-25,525,220)"/>
+
+  <!-- GD trajectory (zigzagging due to condition number) -->
+  <polyline points="410,145 470,270 490,175 510,250 520,200 523,225 525,218" fill="none" stroke="#7b97ad" stroke-width="2"/>
+  <circle cx="410" cy="145" r="4" fill="#7b97ad"/>
+  <text x="395" y="138" font-size="10" fill="#7b97ad">𝑥₀</text>
+  <circle cx="525" cy="218" r="4" fill="#b56b6b"/>
+  <text x="532" y="234" font-size="10" fill="#b56b6b">𝑥*</text>
+
+  <!-- Intermediate points -->
+  <circle cx="470" cy="270" r="2.5" fill="#7b97ad"/>
+  <circle cx="490" cy="175" r="2.5" fill="#7b97ad"/>
+  <circle cx="510" cy="250" r="2.5" fill="#7b97ad"/>
+  <circle cx="520" cy="200" r="2.5" fill="#7b97ad"/>
+
+  <!-- Condition number annotation -->
+  <text x="525" y="320" text-anchor="middle" font-size="11" fill="#b8995e">𝜅 = 𝐿/𝜇 controls eccentricity</text>
+</svg>

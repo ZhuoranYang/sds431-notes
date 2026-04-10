@@ -1,0 +1,111 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, decorations.pathreplacing, patterns}
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{rwgold}{HTML}{B8995E}
+\definecolor{sage}{HTML}{7A9A7E}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{cream}{HTML}{F9F6F0}
+\definecolor{border}{HTML}{D4C9B8}
+\definecolor{terracotta}{HTML}{C47A6A}
+\definecolor{lavender}{HTML}{907EA0}
+
+\begin{document}
+\begin{tikzpicture}[
+  background rectangle/.style={fill=cream},
+  show background rectangle,
+  every node/.style={text=dkbrown, font=\small},
+]
+
+% === Panel (a): Unique optimum ===
+\begin{scope}[shift={(0,0)}]
+  \fill[stblue!12] (0.3,0.3) -- (3,0.3) -- (3.5,1.5) -- (2,3) -- (0.5,2.5) -- cycle;
+  \draw[stblue, line width=0.8pt, rounded corners=1pt]
+    (0.3,0.3) -- (3,0.3) -- (3.5,1.5) -- (2,3) -- (0.5,2.5) -- cycle;
+
+  % Objective direction
+  \draw[rwgold, -{Stealth[length=5pt]}, line width=1pt] (2.2,1.5) -- (1.0,2.6)
+    node[pos=1, above, font=\footnotesize] {$\nabla c^\top\! x$};
+
+  % Optimal vertex
+  \fill[terracotta] (0.5,2.5) circle (3pt);
+  \node[above left, font=\footnotesize, text=terracotta!80!black] at (0.5,2.5) {$x^*$};
+
+  % Contour lines
+  \foreach \d in {0.3, 0.7, 1.1}{
+    \draw[rwgold!50, line width=0.5pt]
+      ({0.5-\d*0.4},{2.5-\d*0.6}) -- ({0.5-\d*0.4+2},{2.5-\d*0.6+1.2});
+  }
+
+  \node[font=\bfseries, below] at (1.9,0) {(a) Unique optimum};
+\end{scope}
+
+% === Panel (b): Multiple optima ===
+\begin{scope}[shift={(5.5,0)}]
+  \fill[stblue!12] (0.3,0.3) -- (3.2,0.3) -- (3.5,1.5) -- (2.2,3) -- (0.5,2.8) -- cycle;
+  \draw[stblue, line width=0.8pt, rounded corners=1pt]
+    (0.3,0.3) -- (3.2,0.3) -- (3.5,1.5) -- (2.2,3) -- (0.5,2.8) -- cycle;
+
+  % Optimal edge
+  \draw[terracotta, line width=2.5pt] (2.2,3) -- (0.5,2.8);
+  \fill[terracotta] (2.2,3) circle (3pt);
+  \fill[terracotta] (0.5,2.8) circle (3pt);
+
+  % Arrow along edge
+  \draw[terracotta!70!black, -{Stealth[length=5pt]}, line width=0.8pt]
+    (1.8,2.95) -- (1.0,2.87);
+
+  \node[above, font=\footnotesize, text=terracotta!80!black] at (1.35,3.05) {optimal face};
+
+  % Contour lines parallel to the optimal edge
+  \foreach \d in {0.5, 1.0, 1.5}{
+    \draw[rwgold!50, line width=0.5pt]
+      ({0.5-\d*0.05},{2.8-\d*0.7}) -- ({2.2-\d*0.05},{3-\d*0.7});
+  }
+
+  \node[font=\bfseries, below] at (1.9,0) {(b) Multiple optima};
+\end{scope}
+
+% === Panel (c): Unbounded ===
+\begin{scope}[shift={(0,-5)}]
+  % Open feasible region
+  \fill[sage!12] (0.3,0.3) -- (3.5,0.3) -- (3.5,3.5) -- (2,3.5) -- (0.3,1.5) -- cycle;
+  \draw[sage, line width=0.8pt]
+    (0.3,0.3) -- (3.5,0.3);
+  \draw[sage, line width=0.8pt]
+    (0.3,0.3) -- (0.3,1.5) -- (2,3.5);
+  \draw[sage, line width=0.8pt, dashed] (3.5,0.3) -- (3.5,3.5) -- (2,3.5);
+
+  % Objective arrow pointing to -infinity
+  \draw[terracotta, -{Stealth[length=6pt]}, line width=1.2pt]
+    (1.5,1.5) -- (3.2,3.2);
+  \node[font=\footnotesize, text=terracotta!80!black, right] at (3.2,3.2) {$f \to -\infty$};
+
+  \node[font=\bfseries, below] at (1.9,0) {(c) Unbounded};
+\end{scope}
+
+% === Panel (d): Infeasible ===
+\begin{scope}[shift={(5.5,-5)}]
+  % First halfspace
+  \fill[stblue!15] (0.3,0.3) -- (3.5,0.3) -- (3.5,1.2) -- (0.3,1.5) -- cycle;
+  \draw[stblue, line width=0.8pt] (0.3,1.5) -- (3.5,1.2);
+  \node[font=\footnotesize, text=stblue!80!black] at (1.9,0.7) {$H_1$};
+
+  % Second halfspace (disjoint)
+  \fill[lavender!15] (0.3,2.2) -- (3.5,1.9) -- (3.5,3.5) -- (0.3,3.5) -- cycle;
+  \draw[lavender, line width=0.8pt] (0.3,2.2) -- (3.5,1.9);
+  \node[font=\footnotesize, text=lavender!80!black] at (1.9,2.9) {$H_2$};
+
+  % Gap label
+  \draw[wmgray, {Stealth[length=4pt]}-{Stealth[length=4pt]}, line width=0.6pt]
+    (4,1.35) -- (4,2.05);
+  \node[font=\footnotesize, text=wmgray, right] at (4,1.7) {gap};
+
+  \node[font=\bfseries, below] at (1.9,0) {(d) Infeasible};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}

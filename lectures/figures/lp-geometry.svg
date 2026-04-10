@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 380" width="600" height="380">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#3d352f"/>
+    </marker>
+  </defs>
+
+  <text x="300" y="28" text-anchor="middle" font-size="16" font-weight="bold">Geometry of a Linear Program</text>
+
+  <!-- Feasible polytope -->
+  <polygon points="100,310 70,160 180,70 350,60 470,140 450,280 300,330" fill="#7a9a7e" fill-opacity="0.12" stroke="#7a9a7e" stroke-width="2"/>
+  <text x="270" y="210" text-anchor="middle" font-size="13" fill="#7a9a7e">feasible polytope</text>
+
+  <!-- Vertices -->
+  <circle cx="100" cy="310" r="4" fill="#968a80"/>
+  <circle cx="70" cy="160" r="4" fill="#968a80"/>
+  <circle cx="180" cy="70" r="4" fill="#968a80"/>
+  <circle cx="350" cy="60" r="4" fill="#968a80"/>
+  <circle cx="470" cy="140" r="4" fill="#968a80"/>
+  <circle cx="450" cy="280" r="4" fill="#968a80"/>
+  <circle cx="300" cy="330" r="4" fill="#968a80"/>
+
+  <!-- Optimal vertex (highlighted) -->
+  <circle cx="350" cy="60" r="7" fill="#b56b6b"/>
+  <text x="355" y="48" font-size="13" fill="#b56b6b" font-style="italic">𝑥* (optimal)</text>
+
+  <!-- Iso-profit lines (perpendicular to objective direction) -->
+  <line x1="130" y1="330" x2="310" y2="120" stroke="#b8995e" stroke-width="0.7" opacity="0.35"/>
+  <line x1="190" y1="340" x2="370" y2="130" stroke="#b8995e" stroke-width="0.7" opacity="0.35"/>
+  <line x1="250" y1="350" x2="430" y2="140" stroke="#b8995e" stroke-width="0.7" opacity="0.35"/>
+  <line x1="310" y1="360" x2="490" y2="150" stroke="#b8995e" stroke-width="0.7" opacity="0.35"/>
+
+  <!-- Tangent iso-profit line at optimal vertex -->
+  <line x1="220" y1="145" x2="480" y2="15" stroke="#b8995e" stroke-width="1.5" stroke-dasharray="6 3"/>
+  <text x="485" y="30" font-size="11" fill="#b8995e">isoprofit 𝑐&#x1D40;𝑥 = 𝑐&#x1D40;𝑥*</text>
+
+  <!-- Objective direction arrow -->
+  <line x1="160" y1="280" x2="230" y2="200" stroke="#7b97ad" stroke-width="1.8" marker-end="url(#arr)"/>
+  <text x="115" y="295" font-size="12" fill="#7b97ad" font-style="italic">𝑐 (objective)</text>
+
+  <!-- Vertex labels -->
+  <text x="48" y="165" font-size="10" fill="#968a80">𝑣₁</text>
+  <text x="165" y="60" font-size="10" fill="#968a80">𝑣₂</text>
+  <text x="478" y="145" font-size="10" fill="#968a80">𝑣₄</text>
+  <text x="458" y="290" font-size="10" fill="#968a80">𝑣₅</text>
+  <text x="305" y="348" font-size="10" fill="#968a80">𝑣₆</text>
+  <text x="80" y="325" font-size="10" fill="#968a80">𝑣₇</text>
+</svg>

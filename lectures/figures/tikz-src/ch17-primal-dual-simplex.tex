@@ -1,0 +1,127 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, decorations.pathreplacing}
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{rwgold}{HTML}{B8995E}
+\definecolor{sage}{HTML}{7A9A7E}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{cream}{HTML}{F9F6F0}
+\definecolor{border}{HTML}{D4C9B8}
+\definecolor{terracotta}{HTML}{C47A6A}
+\definecolor{lavender}{HTML}{907EA0}
+
+\begin{document}
+\begin{tikzpicture}[
+  background rectangle/.style={fill=cream},
+  show background rectangle,
+  every node/.style={text=dkbrown, font=\small},
+  colbox/.style={rounded corners=5pt, draw=#1, fill=#1!8, line width=0.7pt,
+    minimum width=4.8cm, inner sep=8pt, align=center, text=dkbrown},
+  vecstyle/.style={-{Stealth[length=5pt]}, line width=1.1pt},
+]
+
+% =====================
+% LEFT: Primal Simplex
+% =====================
+\begin{scope}[shift={(0,0)}]
+  \node[font=\large\bfseries, text=stblue!80!black] at (2.5,8.5) {Primal Simplex};
+
+  % Primal feasible region
+  \fill[stblue!10] (0.5,0.5) -- (4,0.3) -- (4.5,3) -- (2.5,5) -- (0.8,4) -- cycle;
+  \draw[stblue, line width=0.9pt]
+    (0.5,0.5) -- (4,0.3) -- (4.5,3) -- (2.5,5) -- (0.8,4) -- cycle;
+
+  % Vertices
+  \foreach \p in {(0.5,0.5),(4,0.3),(4.5,3),(2.5,5),(0.8,4)}{
+    \fill[stblue!50] \p circle (2.5pt);
+  }
+
+  % Path: primal simplex walks along feasible vertices
+  \fill[sage] (0.5,0.5) circle (4pt);
+  \node[font=\footnotesize, below left, text=sage!70!black] at (0.5,0.5) {start};
+
+  \draw[vecstyle, sage!80!black] (0.5,0.5) -- (4,0.3);
+  \fill[sage!60] (4,0.3) circle (3pt);
+
+  \draw[vecstyle, sage!80!black] (4,0.3) -- (4.5,3);
+  \fill[sage!60] (4.5,3) circle (3pt);
+
+  \draw[vecstyle, sage!80!black] (4.5,3) -- (2.5,5);
+
+  % Optimal point
+  \fill[terracotta] (2.5,5) circle (4.5pt);
+  \node[font=\footnotesize\bfseries, above, text=terracotta!80!black] at (2.5,5.1)
+    {optimal $x^*$};
+
+  % Annotations
+  \node[colbox=stblue, font=\footnotesize] at (2.5,7.5)
+    {Maintains: $\widetilde{b} \geq 0$\\(primal feasibility)};
+  \node[colbox=sage, font=\footnotesize] at (2.5,6.2)
+    {Achieves: $\widetilde{c} \leq 0$\\(dual feasibility / optimality)};
+
+  % Arrow label
+  \node[font=\tiny, text=sage!60!black, rotate=5] at (2.2,0.1) {improve $z$};
+  \node[font=\tiny, text=sage!60!black, rotate=82] at (4.7,1.6) {improve $z$};
+
+\end{scope}
+
+% =====================
+% RIGHT: Dual Simplex
+% =====================
+\begin{scope}[shift={(7.5,0)}]
+  \node[font=\large\bfseries, text=lavender!80!black] at (2.5,8.5) {Dual Simplex};
+
+  % Dual feasible region (different shape)
+  \fill[lavender!10] (0.3,1.5) -- (3.5,0.3) -- (4.8,2) -- (4,4.5) -- (1.5,5.2) -- cycle;
+  \draw[lavender, line width=0.9pt]
+    (0.3,1.5) -- (3.5,0.3) -- (4.8,2) -- (4,4.5) -- (1.5,5.2) -- cycle;
+
+  % Vertices
+  \foreach \p in {(0.3,1.5),(3.5,0.3),(4.8,2),(4,4.5),(1.5,5.2)}{
+    \fill[lavender!50] \p circle (2.5pt);
+  }
+
+  % Path: dual simplex (starts dual feasible, may be primal infeasible)
+  % The "points" can be outside the primal feasible region
+  \fill[rwgold] (4.8,2) circle (4pt);
+  \node[font=\footnotesize, right, text=rwgold!70!black] at (4.9,2)
+    {start};
+  \node[font=\tiny, text=wmgray, right] at (4.9,1.5)
+    {(may be primal\\infeasible)};
+
+  \draw[vecstyle, rwgold!80!black] (4.8,2) -- (4,4.5);
+  \fill[rwgold!60] (4,4.5) circle (3pt);
+
+  \draw[vecstyle, rwgold!80!black] (4,4.5) -- (1.5,5.2);
+
+  % Optimal point (same as primal optimal)
+  \fill[terracotta] (1.5,5.2) circle (4.5pt);
+  \node[font=\footnotesize\bfseries, above, text=terracotta!80!black] at (1.5,5.3)
+    {optimal};
+
+  % Annotations
+  \node[colbox=lavender, font=\footnotesize] at (2.5,7.5)
+    {Maintains: $\widetilde{c} \leq 0$\\(dual feasibility)};
+  \node[colbox=rwgold, font=\footnotesize] at (2.5,6.2)
+    {Achieves: $\widetilde{b} \geq 0$\\(primal feasibility)};
+
+  % Arrow labels
+  \node[font=\tiny, text=rwgold!60!black, rotate=72] at (4.6,3.2) {decrease $z$};
+
+\end{scope}
+
+% =====================
+% CENTER: "Meet" arrow
+% =====================
+\draw[terracotta, line width=1.5pt, {Stealth[length=6pt]}-{Stealth[length=6pt]}]
+  (5.2,5.2) -- (7.2,5.2);
+\node[font=\footnotesize\bfseries, text=terracotta!80!black, above] at (6.2,5.3)
+  {Both converge};
+\node[font=\footnotesize, text=terracotta!70!black, below] at (6.2,5.1)
+  {to optimum};
+
+\end{tikzpicture}
+\end{document}

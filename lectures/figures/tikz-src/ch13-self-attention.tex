@@ -1,0 +1,78 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta, positioning, calc, fit, decorations.pathreplacing}
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{rwgold}{HTML}{B8995E}
+\definecolor{sage}{HTML}{7A9A7E}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{cream}{HTML}{F9F6F0}
+\definecolor{border}{HTML}{D4C9B8}
+\definecolor{terracotta}{HTML}{C47A6A}
+\definecolor{lavender}{HTML}{907EA0}
+
+\begin{document}
+\begin{tikzpicture}[
+  background rectangle/.style={fill=cream},
+  show background rectangle,
+  every node/.style={text=dkbrown, font=\small},
+  box/.style={rounded corners=5pt, minimum width=2.2cm, minimum height=0.9cm,
+    draw=#1, fill=#1!12, line width=0.7pt, text=dkbrown, align=center, font=\small},
+  arr/.style={-{Stealth[length=5pt]}, line width=1pt, #1},
+]
+
+% Input
+\node[box=stblue] (input) at (0,0) {$X = [x_1, \ldots, x_n]$};
+\node[font=\footnotesize, text=wmgray, below=1pt of input] {Input sequence};
+
+% Three projections
+\node[box=terracotta] (wq) at (-3.5,2.2) {$W_Q$};
+\node[box=sage]       (wk) at (0,2.2)    {$W_K$};
+\node[box=lavender]   (wv) at (3.5,2.2)  {$W_V$};
+
+% Q, K, V outputs
+\node[box=terracotta] (Q) at (-3.5,4) {$Q = XW_Q$};
+\node[box=sage]       (K) at (0,4)    {$K = XW_K$};
+\node[box=lavender]   (V) at (3.5,4)  {$V = XW_V$};
+
+% Arrows: input -> projections -> Q,K,V
+\draw[arr=stblue!70] (input.north) -- ++(0,0.4) -| (wq.south);
+\draw[arr=stblue!70] (input.north) -- (wk.south);
+\draw[arr=stblue!70] (input.north) -- ++(0,0.4) -| (wv.south);
+
+\draw[arr=terracotta!70] (wq) -- (Q);
+\draw[arr=sage!70]       (wk) -- (K);
+\draw[arr=lavender!70]   (wv) -- (V);
+
+% Attention score computation
+\node[box=rwgold, minimum width=3.8cm] (score) at (-1.75,5.8)
+  {$QK^\top / \sqrt{d_k}$};
+\draw[arr=terracotta!70] (Q.north) -- ++(0,0.4) -| (score.south west);
+\draw[arr=sage!70]       (K.north) -- ++(0,0.4) -| (score.south east);
+
+% Softmax
+\node[box=rwgold, minimum width=3.8cm] (softmax) at (-1.75,7.4)
+  {$\mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right)$};
+\draw[arr=rwgold!70] (score) -- (softmax);
+
+% Multiply with V
+\node[box=stblue, minimum width=5cm] (output_mult) at (1,9)
+  {$\mathrm{softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}}\right) V$};
+\draw[arr=rwgold!70] (softmax.north) -- ++(0,0.3) -| (output_mult.south west);
+\draw[arr=lavender!70] (V.north) -- ++(0,3.6) -| (output_mult.south east);
+
+% Output
+\node[box=stblue, minimum width=3cm] (output) at (1,10.8) {Output};
+\draw[arr=stblue!70] (output_mult) -- (output);
+\node[font=\footnotesize, text=wmgray, above=1pt of output] {Context-aware representations};
+
+% Decorative brace for "Scaled Dot-Product Attention"
+\draw[decorate, decoration={brace, amplitude=6pt, mirror}, wmgray, line width=0.6pt]
+  (-4.5,5.4) -- (-4.5,9.5);
+\node[font=\footnotesize, text=wmgray, rotate=90, align=center] at (-5.3,7.4)
+  {Scaled Dot-Product\\Attention};
+
+\end{tikzpicture}
+\end{document}

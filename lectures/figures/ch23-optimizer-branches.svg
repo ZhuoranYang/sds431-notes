@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 320" width="700" height="320">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#968a80"/>
+    </marker>
+  </defs>
+
+  <text x="350" y="28" text-anchor="middle" font-size="16" font-weight="bold">Three Approaches to Matrix Gradient Updates</text>
+
+  <!-- Input: Gradient G -->
+  <rect x="270" y="50" width="160" height="38" rx="8" fill="#f9f6f0" stroke="#3d352f" stroke-width="1.5"/>
+  <text x="350" y="74" text-anchor="middle" font-size="13" font-weight="bold">Gradient 𝐺 ∈ ℝ^{𝑚×𝑛}</text>
+
+  <!-- Three branches -->
+  <line x1="290" y1="88" x2="120" y2="130" stroke="#968a80" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="350" y1="88" x2="350" y2="130" stroke="#968a80" stroke-width="1.2" marker-end="url(#arr)"/>
+  <line x1="410" y1="88" x2="580" y2="130" stroke="#968a80" stroke-width="1.2" marker-end="url(#arr)"/>
+
+  <!-- === GD === -->
+  <rect x="30" y="135" width="180" height="40" rx="8" fill="#7b97ad" fill-opacity="0.12" stroke="#7b97ad" stroke-width="1.8"/>
+  <text x="120" y="160" text-anchor="middle" font-size="13" fill="#7b97ad" font-weight="bold">GD (Flatten)</text>
+
+  <rect x="30" y="190" width="180" height="60" rx="6" fill="#f9f6f0" stroke="#7b97ad" stroke-width="0.8"/>
+  <text x="120" y="210" text-anchor="middle" font-size="11" fill="#7b97ad">𝑊 := 𝑊 - 𝜂 𝐺</text>
+  <text x="120" y="228" text-anchor="middle" font-size="10" fill="#968a80">treat as flat vector</text>
+  <text x="120" y="242" text-anchor="middle" font-size="10" fill="#968a80">no structure exploited</text>
+
+  <!-- === Muon === -->
+  <rect x="260" y="135" width="180" height="40" rx="8" fill="#7a9a7e" fill-opacity="0.12" stroke="#7a9a7e" stroke-width="1.8"/>
+  <text x="350" y="160" text-anchor="middle" font-size="13" fill="#7a9a7e" font-weight="bold">Muon (SVD)</text>
+
+  <rect x="260" y="190" width="180" height="60" rx="6" fill="#f9f6f0" stroke="#7a9a7e" stroke-width="0.8"/>
+  <text x="350" y="210" text-anchor="middle" font-size="11" fill="#7a9a7e">𝑊 := 𝑊 - 𝜂 𝑈𝑉&#x1D40;</text>
+  <text x="350" y="228" text-anchor="middle" font-size="10" fill="#968a80">orthogonalize via SVD</text>
+  <text x="350" y="242" text-anchor="middle" font-size="10" fill="#968a80">steepest on Stiefel manifold</text>
+
+  <!-- === Shampoo === -->
+  <rect x="490" y="135" width="180" height="40" rx="8" fill="#b8995e" fill-opacity="0.12" stroke="#b8995e" stroke-width="1.8"/>
+  <text x="580" y="160" text-anchor="middle" font-size="13" fill="#b8995e" font-weight="bold">Shampoo (Kronecker)</text>
+
+  <rect x="490" y="190" width="180" height="60" rx="6" fill="#f9f6f0" stroke="#b8995e" stroke-width="0.8"/>
+  <text x="580" y="210" text-anchor="middle" font-size="11" fill="#b8995e">𝑊 := 𝑊 - 𝜂 𝐿⁻¹𝐺𝑅⁻¹</text>
+  <text x="580" y="228" text-anchor="middle" font-size="10" fill="#968a80">Kronecker preconditioner</text>
+  <text x="580" y="242" text-anchor="middle" font-size="10" fill="#968a80">approx. natural gradient</text>
+
+  <!-- Bottom comparison -->
+  <text x="120" y="280" text-anchor="middle" font-size="10" fill="#7b97ad">Cost: 𝑂(𝑚𝑛)</text>
+  <text x="350" y="280" text-anchor="middle" font-size="10" fill="#7a9a7e">Cost: 𝑂(𝑚𝑛 min(𝑚,𝑛))</text>
+  <text x="580" y="280" text-anchor="middle" font-size="10" fill="#b8995e">Cost: 𝑂(𝑚²+𝑛²+𝑚𝑛)</text>
+</svg>

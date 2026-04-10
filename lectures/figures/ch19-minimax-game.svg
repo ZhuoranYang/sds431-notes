@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 380" width="680" height="380">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+  </defs>
+
+  <text x="340" y="28" text-anchor="middle" font-size="16" font-weight="bold">Two-Player Zero-Sum Game</text>
+
+  <!-- Payoff matrix -->
+  <rect x="190" y="65" width="300" height="180" rx="8" fill="#f9f6f0" stroke="#968a80" stroke-width="1.5"/>
+
+  <!-- Column headers -->
+  <text x="340" y="55" text-anchor="middle" font-size="13" fill="#b56b6b" font-weight="bold">Column Player (min): 𝑦 ∈ Δ_𝑛</text>
+  <text x="310" y="85" text-anchor="middle" font-size="12" fill="#b56b6b">col 1</text>
+  <text x="390" y="85" text-anchor="middle" font-size="12" fill="#b56b6b">col 2</text>
+  <text x="460" y="85" text-anchor="middle" font-size="12" fill="#b56b6b">col 3</text>
+
+  <!-- Row headers -->
+  <text x="100" y="155" text-anchor="middle" font-size="13" fill="#7b97ad" font-weight="bold" transform="rotate(-90,100,155)">Row Player (max): 𝑥 ∈ Δ_𝑚</text>
+  <text x="230" y="125" text-anchor="middle" font-size="12" fill="#7b97ad">row 1</text>
+  <text x="230" y="170" text-anchor="middle" font-size="12" fill="#7b97ad">row 2</text>
+  <text x="230" y="215" text-anchor="middle" font-size="12" fill="#7b97ad">row 3</text>
+
+  <!-- Grid lines -->
+  <line x1="270" y1="90" x2="270" y2="245" stroke="#968a80" stroke-width="0.5"/>
+  <line x1="350" y1="90" x2="350" y2="245" stroke="#968a80" stroke-width="0.5"/>
+  <line x1="420" y1="90" x2="420" y2="245" stroke="#968a80" stroke-width="0.5"/>
+  <line x1="190" y1="100" x2="490" y2="100" stroke="#968a80" stroke-width="0.5"/>
+  <line x1="190" y1="145" x2="490" y2="145" stroke="#968a80" stroke-width="0.5"/>
+  <line x1="190" y1="190" x2="490" y2="190" stroke="#968a80" stroke-width="0.5"/>
+
+  <!-- Matrix entries -->
+  <text x="310" y="130" text-anchor="middle" font-size="14">3</text>
+  <text x="390" y="130" text-anchor="middle" font-size="14">-1</text>
+  <text x="460" y="130" text-anchor="middle" font-size="14">2</text>
+  <text x="310" y="175" text-anchor="middle" font-size="14">0</text>
+  <text x="390" y="175" text-anchor="middle" font-size="14">4</text>
+  <text x="460" y="175" text-anchor="middle" font-size="14">-2</text>
+  <text x="310" y="220" text-anchor="middle" font-size="14">1</text>
+  <text x="390" y="220" text-anchor="middle" font-size="14">2</text>
+  <text x="460" y="220" text-anchor="middle" font-size="14">1</text>
+
+  <!-- Saddle point highlight -->
+  <rect x="421" y="191" width="68" height="45" rx="4" fill="#7a9a7e" fill-opacity="0.15" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="530" y="218" font-size="11" fill="#7a9a7e" font-weight="bold">saddle point</text>
+
+  <!-- Minimax theorem -->
+  <rect x="100" y="270" width="480" height="50" rx="8" fill="#b8995e" fill-opacity="0.08" stroke="#b8995e" stroke-width="1.5"/>
+  <text x="340" y="293" text-anchor="middle" font-size="13" fill="#b8995e" font-weight="bold">Minimax Theorem (von Neumann)</text>
+  <text x="340" y="311" text-anchor="middle" font-size="12" fill="#b8995e">max_{𝑥∈Δ_𝑚} min_{𝑦∈Δ_𝑛} 𝑥&#x1D40;𝐴𝑦 = min_{𝑦∈Δ_𝑛} max_{𝑥∈Δ_𝑚} 𝑥&#x1D40;𝐴𝑦 = 𝑣*</text>
+
+  <!-- Row max and Col min annotations -->
+  <text x="340" y="345" text-anchor="middle" font-size="11" fill="#968a80">Nash equilibrium exists in mixed strategies; game value 𝑣* via LP duality</text>
+</svg>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360" width="600" height="360">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#3d352f"/>
+    </marker>
+  </defs>
+
+  <text x="300" y="28" text-anchor="middle" font-size="16" font-weight="bold">The Central Path</text>
+
+  <!-- Feasible polytope -->
+  <polygon points="100,300 80,120 250,60 450,80 500,200 420,310" fill="#7a9a7e" fill-opacity="0.1" stroke="#7a9a7e" stroke-width="1.8"/>
+
+  <!-- Analytic center -->
+  <circle cx="280" cy="180" r="5" fill="#b8995e"/>
+  <text x="285" y="170" font-size="11" fill="#b8995e">analytic center</text>
+
+  <!-- Optimal vertex -->
+  <circle cx="250" cy="60" r="6" fill="#b56b6b"/>
+  <text x="250" y="48" text-anchor="middle" font-size="12" fill="#b56b6b" font-style="italic">𝑥*</text>
+  <text x="250" y="38" text-anchor="middle" font-size="10" fill="#b56b6b">(optimal vertex)</text>
+
+  <!-- Central path (curved line from center to optimal vertex) -->
+  <path d="M 280,180 Q 275,140 265,110 Q 258,85 252,65" fill="none" stroke="#7b97ad" stroke-width="2.5"/>
+
+  <!-- Points along central path -->
+  <circle cx="278" cy="160" r="3" fill="#7b97ad"/>
+  <text x="290" y="160" font-size="10" fill="#7b97ad">𝑡 = 1</text>
+  <circle cx="272" cy="130" r="3" fill="#7b97ad"/>
+  <text x="284" y="130" font-size="10" fill="#7b97ad">𝑡 = 10</text>
+  <circle cx="262" cy="95" r="3" fill="#7b97ad"/>
+  <text x="274" y="95" font-size="10" fill="#7b97ad">𝑡 = 100</text>
+
+  <!-- Label -->
+  <text x="340" y="140" font-size="13" fill="#7b97ad" font-weight="bold">central path</text>
+  <line x1="310" y1="137" x2="280" y2="145" stroke="#7b97ad" stroke-width="0.8" stroke-dasharray="3 2"/>
+
+  <!-- t arrow -->
+  <text x="300" y="210" font-size="12" fill="#b8995e">as 𝑡 increases</text>
+  <line x1="295" y1="195" x2="265" y2="105" stroke="#b8995e" stroke-width="1" marker-end="url(#arr)" stroke-dasharray="4 3"/>
+
+  <!-- Objective direction -->
+  <line x1="420" y1="200" x2="350" y2="100" stroke="#968a80" stroke-width="1" marker-end="url(#arr)"/>
+  <text x="430" y="215" font-size="11" fill="#968a80" font-style="italic">-𝑐</text>
+</svg>

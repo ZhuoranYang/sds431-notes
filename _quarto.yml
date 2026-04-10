@@ -1,0 +1,86 @@
+project:
+  type: book
+  output-dir: _book
+
+execute:
+  enabled: false
+
+book:
+  title: "S&DS 431/631 — Optimization and Computation"
+  subtitle: "Lecture notes for S&DS 431/631, covering convex optimization, first-order methods, linear programming, and modern computation models"
+  author:
+    - name: "Zhuoran Yang"
+      url: "https://zhuoranyang.github.io/"
+  chapters:
+    - index.qmd
+    - part: "Preparation"
+      chapters:
+        - lectures/01-introduction.qmd
+        - lectures/02-math-background.qmd
+    - part: "Convex Optimization Basics"
+      chapters:
+        - lectures/03-convex-sets.qmd
+        - lectures/04-convex-functions.qmd
+        - lectures/05-convex-optimization.qmd
+    - part: "First-Order Methods"
+      chapters:
+        - lectures/06-gradient-descent.qmd
+        - lectures/07-momentum-adaptive-sgd.qmd
+        - lectures/08-constrained-first-order.qmd
+    - part: "Linear Programming"
+      chapters:
+        - lectures/09-lp-formulation-geometry.qmd
+        - lectures/10-simplex-method.qmd
+        - lectures/11-lp-duality.qmd
+        - lectures/12-dual-simplex.qmd
+        - lectures/13-lp-applications.qmd
+    - part: "Second-Order and Interior Point Methods"
+      chapters:
+        - lectures/14-newton-method.qmd
+        - lectures/15-ellipsoid-method.qmd
+        - lectures/16-interior-point-methods.qmd
+    - part: "Modern Computation Models"
+      chapters:
+        - lectures/17-diffusion-models.qmd
+        - lectures/18-transformers.qmd
+    - lectures/summary.qmd
+
+  page-navigation: true
+  search: true
+  sidebar:
+    style: floating
+    collapse-level: 2
+
+format:
+  html:
+    theme: [default, _warmtone.scss]
+    code-copy: true
+    code-overflow: wrap
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    html-math-method: katex
+    fig-path: lectures/figures/
+    include-in-header:
+      - text: |
+          <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    include-after-body:
+      - file: _plotly-theme.html
+
+lightbox: auto
+
+language:
+  title-block-author-single: "Instructor"
+
+crossref:
+  chapters: true
+  thm-title: "Theorem"
+  lem-title: "Lemma"
+  cor-title: "Corollary"
+  prp-title: "Proposition"
+  def-title: "Definition"
+  exm-title: "Example"
+  exr-title: "Exercise"

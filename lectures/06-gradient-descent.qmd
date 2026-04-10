@@ -1,0 +1,1236 @@
+---
+title: "Gradient Descent"
+---
+
+So far we have developed a rich theory of optimization -- convexity, duality, KKT conditions -- that tells us *what* an optimal solution looks like. But how do we actually *find* one? For most problems of practical interest, closed-form solutions do not exist, and we must turn to iterative algorithms that start from an initial guess and progressively improve it.
+
+The most natural idea is to use the gradient. The gradient of a function at a point tells us the direction of steepest ascent; moving in the opposite direction decreases the function value. This simple principle -- "follow the negative gradient" -- is the basis of **gradient descent**, one of the most fundamental algorithms in all of computational mathematics. It is the workhorse of modern machine learning (training neural networks), statistics (fitting models), and scientific computing.
+
+But gradient descent is just one member of a larger family. By choosing different descent directions (coordinate descent, Newton's method) and different step size strategies (constant, diminishing, line search), we obtain a rich design space of first-order and second-order methods with different tradeoffs between computational cost per iteration and convergence speed. Understanding this design space is essential for choosing the right algorithm in practice.
+
+::: {.callout-tip}
+## Companion Notebooks
+
+Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.
+
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/09-steepest-descent.ipynb) **Steepest Descent** --- steepest descent on quadratics with varying condition numbers
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/10-gradient-descent-learning-rates.ipynb) **Learning Rate Analysis** --- how learning rate and curvature interact in gradient descent convergence
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/17-gd-visualization.ipynb) **GD Visualization** --- animated gradient descent trajectories on various objective landscapes
+:::
+
+## Unconstrained Optimization Setup {#setup}
+
+We consider the unconstrained optimization problem:
+
+$$\min_{x \in \mathbb{R}^n} f(x),$$
+
+where $f$ is continuously differentiable ($f \in C^1$).
+
+::: {.callout-tip}
+## Remark: Convexity and Local Minima
+
+When $f$ is **convex**, global minimum = local minimum.
+
+In the unconstrained case, $x^*$ is a local minimum $\iff$ $\nabla f(x^*) = 0$.
+:::
+
+### Stationary Points {#stationary-points}
+
+The key insight that connects calculus to optimization is that, for convex functions, the familiar condition "derivative equals zero" is both necessary and sufficient for optimality. This means that finding the minimum of a convex function reduces to finding a point where the gradient vanishes.
+
+::: {#thm-optimality-convex}
+## Theorem 7.1 (Optimality Condition for Convex Functions)
+
+Let $f$ be convex and differentiable. Then $x_0$ is a local minimum of $f$ if and only if $\nabla f(x_0) = 0$.
+:::
+
+::: {.proof}
+**($\Rightarrow$):** Define a univariate function $g(t) = f(x_0 - t \cdot \nabla f(x_0))$. Since $x_0$ is a local minimum of $f$, $t = 0$ is a local minimum of $g$. Therefore:
+
+$$0 = g'(t)\big|_{t=0} = -\|\nabla f(x_0)\|^2 \implies \nabla f(x_0) = 0.$$
+
+**($\Leftarrow$):** On the other hand, if $\nabla f(x_0) = 0$, then by the first-order characterization of convexity:
+
+$$f(x) \geq f(x_0) + \langle \nabla f(x_0),\, x - x_0 \rangle = f(x_0) + 0 = f(x_0) \quad \forall\, x \in \mathbb{R}^n,$$
+
+where the second equality uses $\nabla f(x_0) = 0$. This shows $x_0$ is a global minimizer. Hence we conclude the proof. $\blacksquare$
+:::
+
+For nonconvex functions, the condition $\nabla f(x) = 0$ does not guarantee a global minimum -- it could also be a local minimum, a local maximum, or a saddle point. Nevertheless, finding stationary points is still the primary goal of first-order algorithms, since it is the best we can guarantee without convexity.
+
+::: {#def-stationary-point}
+## Definition 7.2 (Stationary Point)
+
+For any differentiable $f$ (possibly nonconvex), $x$ is called a **stationary point** of $f$ if $\nabla f(x) = 0$.
+:::
+
+### Motivation for Iterative Methods {#motivation}
+
+To minimize a convex and differentiable $f$, it suffices to find a **stationary point**. Finding a stationary point is equivalent to solving the equation $\nabla f(x) = 0$.
+
+This can be done by **"local" algorithms** --- iterative algorithms that update using "local information" at each iterate:
+
+- **Function value** --- zeroth-order information
+- **Gradient** --- first-order information
+- **Hessian** --- second-order information
+
+### General Iterative Framework {#iterative-form}
+
+With the goal of finding a stationary point established, we now introduce the general iterative framework that all descent methods share. Every method we study in this chapter---gradient descent, coordinate descent, Newton's method---is a special case of this template.
+
+::: {.callout-note appearance="simple"}
+The general form of the iterative algorithm is:
+
+$$x^{k+1} = x^k + \alpha^k \cdot d^k$$ {#eq-iterative-update}
+:::
+
+where we write $k$ as the superscript (iteration index):
+
+- $k \in \{1, 2, \ldots\}$: index of the iteration number.
+- $x^k \in \mathbb{R}^n$: current point (current iterate).
+- $x^{k+1} \in \mathbb{R}^n$: next point.
+- $d^k \in \mathbb{R}^n$: direction to move along at iteration $k$ (**descent direction**).
+- $d^k$ uses the local information at $x^k$.
+- $\alpha^k > 0$: step size at iteration $k$.
+
+The two design choices---the descent direction $d^k$ and the step size $\alpha^k$---determine the algorithm's behavior. The next several sections address these choices in turn: first, which directions guarantee descent; then, specific algorithmic instantiations; and finally, how to pick the step size.
+
+## Descent Directions and the Gradient {#gradient-based}
+
+The descent direction $d^k$ is based on the gradient $\nabla f(x^k)$ (and maybe other information such as the Hessian $\nabla^2 f(x^k)$, previous gradients $\{\nabla f(x^j)\}_{j < k}$, etc.).
+
+The simplest case: $d^k = -\nabla f(x^k)$. Why look at the gradient?
+
+### Why the Negative Gradient? {#steepest-descent-lemma}
+
+Among all unit-norm directions, which one decreases the function value at the fastest rate? The following lemma shows that the answer is the normalized negative gradient -- justifying the name "steepest descent."
+
+::: {#thm-steepest-descent}
+## Lemma 7.3 (Steepest Descent Direction)
+
+Assuming $d \in B_2(1) = \{v \in \mathbb{R}^n \mid \|v\|_2 \leq 1\}$, the direction that decreases $f$ at the **fastest rate** within $B_2(1)$ is given by
+
+$$d^* = -\frac{\nabla f(x)}{\|\nabla f(x)\|_2}.$$ {#eq-steepest-descent}
+:::
+
+This lemma provides the theoretical justification for the gradient descent update (@eq-gradient-descent): among all unit-norm directions, the negative gradient decreases the function value at the fastest possible rate. This is why gradient descent is also called the "method of steepest descent."
+
+The proof uses the Cauchy--Schwarz inequality to identify the minimizer of the directional derivative over the unit ball.
+
+::: {.proof}
+Consider any search direction $d$. The function value decrease is
+
+$$f(x) - f(x + \alpha \cdot d) =: g(\alpha;\, d).$$
+
+By the chain rule, the instantaneous rate of decrease at $\alpha = 0$ is
+
+$$g'(0;\, d) = -\langle \nabla f(x),\, d \rangle.$$
+
+To maximize this rate of decrease, we minimize $\langle \nabla f(x), d \rangle$ over unit-norm directions:
+
+$$\min_{d \in B_2(1)} \; d^\top \nabla f(x).$$
+
+By the Cauchy--Schwarz inequality, $d^\top \nabla f(x) \geq -\|d\|_2 \cdot \|\nabla f(x)\|_2$, with equality when $d$ is a negative scalar multiple of $\nabla f(x)$. Since $\|d\|_2 \leq 1$, the minimizer is $d^* = -\nabla f(x) / \|\nabla f(x)\|_2$. This completes the proof. $\blacksquare$
+:::
+
+::: {.callout-tip}
+## Remark: Magnitude of the Direction
+
+When we talk about the search direction $d$, its magnitude does not matter. $5\,\nabla f(x)$, $0.01\,\nabla f(x)$, $\frac{\nabla f(x)}{\|f(x)\|}$ are all in the same direction. We use the step size $\alpha$ to adjust the magnitude.
+:::
+
+### General Descent Directions {#descent-directions}
+
+The negative gradient is the steepest descent direction, but it is not the only direction that decreases the function. Any direction that makes an acute angle with the negative gradient -- equivalently, an obtuse angle with the gradient -- will also decrease the objective for a sufficiently small step. This flexibility is important because alternative descent directions (such as Newton's direction) can converge much faster in practice.
+
+::: {#def-descent-direction}
+## Definition 7.4 (Descent Direction)
+
+For a given point $x \in \mathbb{R}^n$, a direction $d \in \mathbb{R}^n$ is called a **descent direction** if there exists $\bar{\alpha} > 0$ such that
+
+$$f(x + \alpha \cdot d) < f(x) \qquad \forall\, \alpha \in (0, \bar{\alpha}).$$
+
+Intuitively, $d$ is a descent direction means we can move at least a small step along $d$ and decrease the objective function.
+:::
+
+### Descent Condition {#descent-lemma}
+
+The following lemma gives a simple and checkable condition for a direction to be a descent direction: its inner product with the gradient must be negative.
+
+::: {#thm-descent-condition}
+## Lemma 7.5 (Descent Condition)
+
+Consider a point $x \in \mathbb{R}^n$. Any direction $d$ satisfying
+
+$$\langle d, \nabla f(x) \rangle < 0$$ {#eq-descent-condition}
+
+is a descent direction. Geometrically, $d$ and $\nabla f(x)$ form an **obtuse angle**.
+:::
+
+The descent condition (@eq-descent-condition) is more general than the steepest descent result (@eq-steepest-descent): it says that *any* direction making an obtuse angle with the gradient will decrease the function value. This flexibility is what allows us to use alternative descent directions (such as Newton's direction or coordinate descent directions) that may converge faster than the steepest descent direction.
+
+```{=html}
+<div class="figure-container">
+  <div id="fig-descent-direction"></div>
+  <div class="figure-caption">Figure 7.1: Any direction forming an obtuse angle with the gradient is a descent direction. The half-space opposite to the gradient contains all descent directions.</div>
+</div>
+```
+
+![Descent directions: any vector $d$ satisfying $\langle d, \nabla f(x) \rangle < 0$ is a descent direction. The shaded half-space shows all valid descent directions. The negative gradient $-\nabla f(x)$ is the steepest descent direction, but choosing $d = -B\nabla f(x)$ for a positive definite $B$ (such as the inverse Hessian) can yield faster convergence.](figures/ch03-descent-direction.svg){#fig-descent-direction-svg}
+
+::: {.proof}
+Define $g(\alpha) = f(x + \alpha \cdot d)$. By Taylor expansion at $\alpha = 0$:
+
+$$g(\alpha) = g(0) + g'(0) \cdot \alpha + o(\alpha) \qquad \text{where } \lim_{\alpha \to 0} \frac{|o(\alpha)|}{\alpha} = 0.$$
+
+Therefore:
+
+$$f(x + \alpha \cdot d) - f(x) = \alpha \cdot \langle d,\, \nabla f(x) \rangle + o(\alpha),$$
+
+where the leading term $\alpha \cdot \langle d, \nabla f(x) \rangle$ is negative by assumption. Since $\frac{|o(\alpha)|}{\alpha} \to 0$, the higher-order remainder becomes negligible for small $\alpha$. Specifically, there exists $\bar{\alpha} > 0$ such that
+
+$$\frac{|o(\alpha)|}{\alpha} < |\langle d,\, \nabla f(x) \rangle| \qquad \forall\, \alpha \in (0, \bar{\alpha}).$$
+
+Therefore, for all $\alpha \in (0, \bar{\alpha})$:
+
+$$f(x + \alpha \cdot d) - f(x) = \alpha \cdot \langle d,\, \nabla f(x) \rangle + o(\alpha) < 0,$$
+
+which shows that $d$ is a descent direction. This completes the proof. $\blacksquare$
+:::
+
+### Positive Definite Scaling {#pd-lemma}
+
+A natural way to produce descent directions is to premultiply the gradient by a positive definite matrix. This "reshapes" the gradient to account for the local curvature of the function and is the basis for Newton's method and quasi-Newton methods.
+
+::: {#thm-pd-descent}
+## Lemma 7.6 (Positive Definite Descent)
+
+Let $B \in \mathbb{R}^{n \times n}$ be a positive definite matrix. For any point $x$ with $\nabla f(x) \neq 0$, $d = -B\,\nabla f(x)$ is a descent direction.
+:::
+
+::: {.proof}
+With $d = -B\,\nabla f(x)$:
+
+$$d^\top \nabla f(x) = -\nabla f(x)^\top B\,\nabla f(x) < 0,$$
+
+where the strict inequality follows from the definition of positive definiteness ($v^\top B v > 0$ for all $v \neq 0$) and the assumption that $\nabla f(x) \neq 0$. By the descent condition (@eq-descent-condition), $d$ is a descent direction. This completes the proof. $\blacksquare$
+:::
+
+This lemma unifies many optimization algorithms under the general update rule (@eq-general-update). By choosing different positive definite matrices $B$, we recover gradient descent ($B = I$, giving @eq-gradient-descent), Newton's method ($B = (\nabla^2 f)^{-1}$, giving @eq-newton-update), and various preconditioned methods. The positive definiteness of $B$ guarantees that the resulting direction is always a descent direction.
+
+::: {.callout-note appearance="simple"}
+This suggests a **general form of the update rule** using gradient information:
+
+$$x^{k+1} = x^k - \alpha^k \cdot B^k\, \nabla f(x^k).$$ {#eq-general-update}
+:::
+
+## Common Choices of Descent Directions {#choices-directions}
+
+Having established that any direction satisfying @eq-descent-condition is a valid descent direction, we now explore specific choices. Each corresponds to a different norm in the steepest descent problem, or equivalently, a different choice of $B^k$ in the general update @eq-general-update.
+
+The **steepest descent** approach chooses the descent direction by solving:
+
+$$\min_{d:\,\|d\| \leq 1} \langle \nabla f(x),\, d \rangle,$$
+
+where $\|\cdot\|$ is some norm on $\mathbb{R}^n$. The interpretation is that $f(x + \alpha\, d) \approx f(x) + \alpha \cdot d^\top \nabla f(x) + o(\alpha)$, and approximately we minimize $\min_{d:\,\|d\| \leq 1} f(x + \alpha \cdot d)$.
+
+### Steepest Descent with $\ell_2$-norm (Gradient Descent) {#steepest-l2}
+
+With the $\ell_2$-norm:
+
+$$\operatorname{argmin}_{d:\,\|d\|_2 \leq 1} \langle \nabla f(x),\, d \rangle = -\frac{\nabla f(x)}{\|\nabla f(x)\|_2}.$$
+
+This corresponds to $B^k = I$, giving the standard **gradient descent** update:
+
+$$x^{k+1} = x^k - \alpha^k \cdot \nabla f(x^k).$$ {#eq-gradient-descent}
+
+::: {.callout-tip}
+## Remark: Sensitivity to Condition Number
+
+This is the simplest direction but **not always the fastest**. It has poor performance when the **condition number** $\frac{\lambda_{\max}(\nabla^2 f)}{\lambda_{\min}(\nabla^2 f)}$ is large. The iterates oscillate in the dimension with the large eigenvalue and make fast progress in the dimension with the small eigenvalue.
+:::
+
+![Effect of the condition number $\kappa = L/\mu$ on gradient descent convergence. When $\kappa$ is close to 1 (left), the contours are nearly circular and GD converges quickly along a direct path. When $\kappa$ is large (right), the contours are elongated ellipses and GD zig-zags across the narrow valley, making slow progress toward the optimum.](figures/ch05-condition-number.svg){#fig-condition-number}
+
+```{=html}
+<div class="figure-container">
+  <div id="fig-gd-contours"></div>
+  <div class="figure-caption">Figure 7.2: Gradient descent on an ill-conditioned quadratic. The iterates oscillate perpendicular to the valley and make slow progress along it.</div>
+</div>
+```
+
+### Oscillation Analysis {#gd-oscillation}
+
+::: {#exm-1d-quadratic}
+## Example: 1D Quadratic
+
+Consider the 1D case: $f(x) = \tfrac{1}{2}a\,x^2$, so $f'(x) = a\,x$ and $f''(x) = a$.
+
+Solution: $x^* = 0$. Gradient descent gives:
+
+$$x' = x - \alpha \cdot f'(x) = (1 - a \cdot \alpha) \cdot x.$$
+
+Therefore $|x'| = |1 - a \cdot \alpha| \cdot |x|$, and after $k$ steps:
+
+$$|x^k| = |1 - a \cdot \alpha|^k \cdot |x^0|.$$ {#eq-1d-gd-convergence}
+
+- If $\alpha$ is large such that $|1 - a \cdot \alpha| \geq 1$: **Non-convergence**.
+- If $|1 - a \cdot \alpha| < 1$: **Exponential (linear rate) convergence**. To get $|x^k| \leq \varepsilon$, need $k = O(\log(1/\varepsilon))$.
+
+So we need $0 < \alpha < 2/a$:
+
+- If $\alpha \in (0, 1/a)$: $1 - a\alpha \in (0,1)$, and $\{x^k\}$ **monotonically converges** to 0.
+- If $\alpha \in (1/a, 2/a)$: $1 - a\alpha \in (-1,0)$, and $\{x^k\}$ **oscillates** to 0.
+:::
+
+The key takeaway from @eq-1d-gd-convergence is that the convergence rate of gradient descent is controlled by the contraction factor $|1 - a \cdot \alpha|$, which depends on both the curvature $a$ and the step size $\alpha$. This analysis extends to higher dimensions, where the condition number plays the central role.
+
+::: {#exm-2d-quadratic-zigzag}
+## Example: 2D Quadratic --- Zig-Zag Behavior
+
+Consider the 2D case: $f(x, y) = \tfrac{1}{2}(a\,x^2 + b\,y^2)$ with $a < b$. GD gives:
+
+$$\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} (1 - a \cdot \alpha)\, x \\ (1 - b \cdot \alpha)\, y \end{pmatrix}.$$
+
+To get convergence, we need $|1 - a\alpha| < 1$ and $|1 - b\alpha| < 1$, which gives $\alpha \in (0, 2/b)$.
+
+If $\alpha \in (1/b, 2/b)$: $\{x^k\}$ monotonically converges to 0 (since $1-a\alpha > 0$), while $\{y^k\}$ oscillates to 0 (since $1-b\alpha < 0$). This produces a **zig-zag trajectory**.
+:::
+
+```{=html}
+<div class="figure-container">
+  <div id="fig-zigzag"></div>
+  <div class="figure-caption">Figure 7.3: Zig-zag trajectory of gradient descent on a 2D quadratic with different eigenvalues. The iterate oscillates in the y-direction while progressing monotonically in x.</div>
+</div>
+```
+
+![Gradient descent trajectories: smooth convex objective with $O(1/k)$ convergence (left) versus strongly convex objective with linear $O(\rho^k)$ convergence (right). The condition number $\kappa = L/\mu$ controls the eccentricity of the contours.](figures/gradient-descent-convergence.svg){#fig-gradient-descent-convergence}
+
+![Comparison of convergence rates encountered in first-order optimization. From slowest to fastest: $O(1/\sqrt{k})$ for subgradient methods on nonsmooth problems, $O(1/k)$ for GD on smooth convex functions, $O(1/k^2)$ for accelerated methods, and linear $O(\rho^k)$ convergence for strongly convex objectives. The gap between these rates motivates the momentum and adaptive methods studied in subsequent chapters.](figures/convergence-rates-comparison.svg){#fig-convergence-rates}
+
+::: {.callout-tip}
+## Remark: GD as Quadratic Upper Bound Minimization
+
+Note that $x^{k+1} = \operatorname{argmin}_{x \in \mathbb{R}^n} g_{\alpha^k}(x)$, where
+
+$$g_{\alpha^k}(x) = f(x^k) + (x - x^k)^\top \nabla f(x^k) + \frac{1}{2\alpha^k} \|x - x^k\|_2^2.$$
+
+When $\alpha^k \leq \frac{1}{\lambda_{\max}(\nabla^2 f(x^k))}$, we have
+
+$$g_\alpha(x) \geq f(x^k) + \langle \nabla f(x^k),\, x - x^k \rangle + \tfrac{1}{2}(x - x^k)^\top \nabla^2 f(x^k)\, (x - x^k),$$
+
+which is the 2nd-order Taylor expansion. In fact, when $\alpha$ is small, $g_\alpha(x) \geq f(x)$. Thus, **GD updates by minimizing a quadratic upper bound of $f$**.
+:::
+
+![Gradient descent as quadratic upper bound minimization. At the current iterate $x^k$, the quadratic surrogate $g_\alpha(x)$ (dashed) upper-bounds the true objective $f(x)$ (solid). The GD step moves to the minimizer of the surrogate. With a smaller stepsize $\alpha$, the surrogate is tighter (steeper parabola) and the step is more conservative.](figures/ch05-quadratic-upper-bound.svg){#fig-quadratic-upper-bound}
+
+### Steepest Descent with $\ell_1$-norm (Coordinate Descent) {#steepest-l1}
+
+With the $\ell_1$-norm:
+
+$$\operatorname{argmin}_{d:\,\|d\|_1 \leq 1} \langle d,\, \nabla f(x) \rangle.$$
+
+**Solution:** $d^* \in \mathbb{R}^n$ has only **one nonzero entry**:
+
+$$d^*_j = \begin{cases} -\operatorname{sign}\!\bigl(\frac{\partial f}{\partial x_j}(x)\bigr) & \text{if } j = \operatorname{argmax}_j \bigl|\frac{\partial f}{\partial x_j}(x)\bigr| \\[4pt] 0 & \text{otherwise.} \end{cases}$$
+
+Note that the magnitude does not matter. We can choose $d^*$ with magnitude:
+
+$$d^*_j = -\bigl|\tfrac{\partial f}{\partial x_j}(x)\bigr| \cdot \operatorname{sign}\!\bigl(\tfrac{\partial f}{\partial x_j}(x)\bigr) = -\tfrac{\partial f}{\partial x_j}(x).$$
+
+This gives the **coordinate descent** update: pick $i = \operatorname{argmax}_j \bigl|\frac{\partial f}{\partial x_j}(x^k)\bigr|$, then
+
+$$(x^{k+1})_i = (x^k)_i - \alpha^k \cdot \frac{\partial f}{\partial x_i}(x^k), \qquad (x^{k+1})_\ell = (x^k)_\ell \quad \forall\, \ell \neq i.$$
+
+::: {.callout-tip}
+## Remark: Coordinate Descent
+
+This algorithm is called **coordinate descent** because we update only one coordinate of $x$ at each iteration. In general, at the $k$-th iteration:
+
+- Pick a coordinate $i \in [n]$ according to some rule.
+- Update: $(x^{k+1})_i = (x^k)_i - \alpha^k \cdot \frac{\partial f}{\partial x_i}(x^k)$ (only update coordinate $x_i$).
+
+This corresponds to $B^k$ being a diagonal matrix with a single nonzero entry.
+:::
+
+### Steepest Descent with $\ell_\infty$-norm (Sign Gradient Descent) {#sign-gd}
+
+With the $\ell_\infty$-norm:
+
+$$\operatorname{argmin}_{d:\,\|d\|_\infty \leq 1} \langle d,\, \nabla f(x) \rangle = -\operatorname{sign}(\nabla f(x)) = -\begin{pmatrix} \operatorname{sign}\!\bigl(\frac{\partial f}{\partial x_1}(x)\bigr) \\ \operatorname{sign}\!\bigl(\frac{\partial f}{\partial x_2}(x)\bigr) \\ \vdots \\ \operatorname{sign}\!\bigl(\frac{\partial f}{\partial x_n}(x)\bigr) \end{pmatrix} \in \{\pm 1\}^n.$$
+
+The update is:
+
+$$x^{k+1} = x^k - \alpha^k \cdot \operatorname{sign}(\nabla f(x^k)).$$
+
+::: {.callout-tip}
+## Remark: Sign Gradient Descent and Adam
+
+This algorithm is called **sign gradient descent**. It only uses the sign of each partial derivative, ignoring magnitudes. It is related to the Adam optimizer commonly used in deep learning.
+:::
+
+### Newton's Method {#newton-direction}
+
+The previous methods used only first-order (gradient) information. By incorporating second-order information---the Hessian matrix---Newton's method adapts the search direction to the local curvature, achieving much faster convergence at the cost of computing and inverting the Hessian at each step.
+
+Set $B^k = \bigl(\nabla^2 f(x^k)\bigr)^{-1}$, so:
+
+$$d^k = \bigl(\nabla^2 f(x^k)\bigr)^{-1} \nabla f(x^k).$$
+
+::: {.callout-important}
+## Algorithm: Newton's Method
+
+Set step size $\alpha^k = 1$:
+
+$$x^{k+1} = x^k - \bigl(\nabla^2 f(x^k)\bigr)^{-1} \nabla f(x^k).$$ {#eq-newton-update}
+
+Properties:
+
+- Uses the **inverse Hessian** to weight $\nabla f(x^k)$.
+- More **computationally expensive** per iteration.
+- **Faster convergence** (quadratic convergence near the solution).
+:::
+
+::: {.callout-tip}
+## Remark: Idea of Newton's Method
+
+Newton's method uses a **local quadratic approximation**. The 2nd-order Taylor approximation at $x^k$ is:
+
+$$g_{x^k}(x) = f(x^k) + \langle \nabla f(x^k),\, x - x^k \rangle + \tfrac{1}{2}(x - x^k)^\top \nabla^2 f(x^k)\, (x - x^k).$$
+
+Then $x^{k+1} = \operatorname{argmin}_{x \in \mathbb{R}^n} g_{x^k}(x)$.
+
+**Note:** If $f$ is quadratic, Newton's method solves $\min_x f(x)$ in just **1 step**.
+:::
+
+### Diagonally Scaled Steepest Descent {#diag-scaled}
+
+Set $B^k = \operatorname{diag}(b_1, b_2, \ldots, b_n)$, for example:
+
+$$b_j = \Bigl(\frac{\partial^2 f(x^k)}{\partial x_j^2}\Bigr)^{-1},$$
+
+i.e.,
+
+$$d^k = \bigl[\operatorname{diag}\bigl(\nabla^2 f(x^k)\bigr)\bigr]^{-1} \nabla f(x^k).$$
+
+::: {.callout-tip}
+## Remark: Diagonal Hessian Approximation
+
+This approximates $\nabla^2 f(x^k)$ using only its **diagonal part**, avoiding the cost of a full matrix inversion. It captures per-coordinate curvature information and is related to adaptive methods like AdaGrad.
+:::
+
+We have now assembled a toolbox of descent directions---from the simple negative gradient to the curvature-aware Newton direction. But choosing the direction is only half of the update rule @eq-iterative-update; the other half is the step size $\alpha^k$. A good direction paired with a poor step size can lead to slow convergence or even divergence, as the oscillation analysis in @exm-2d-quadratic-zigzag illustrated. We turn to step size strategies next.
+
+## Choice of Step Sizes {#step-sizes}
+
+The step size $\alpha^k$ controls how far we move along the descent direction at each iteration. A good step size must balance two competing goals: making enough progress toward the optimum (large $\alpha$) without overshooting and increasing the objective (small $\alpha$). We consider three standard strategies.
+
+### Constant Step Size {#constant-step}
+
+$\alpha^k = \alpha$ for all $k \geq 1$, for some $\alpha \in \mathbb{R}$.
+
+- **Simple to implement.**
+- May **not converge** if $\alpha$ is too large.
+- May be **too slow** if $\alpha$ is too small.
+
+### Diminishing Step Size {#diminishing-step}
+
+$\alpha^k \to 0$ and $\sum_{k=1}^{\infty} \alpha^k = +\infty$. For example, $\alpha_k = 1/k$.
+
+- Good **theoretical guarantees**, but can be slow in practice.
+- $\sum \alpha^k = +\infty$ ensures the algorithm moves far enough to reach the optimum.
+
+### Line Search {#line-search}
+
+**Exact line search:**
+
+$$\alpha^k = \operatorname{argmin}_{\alpha \geq 0} f(x^k + \alpha \cdot d^k).$$
+
+- Need to solve a **1D optimization** problem at each iteration.
+- No need to solve the line search *exactly*.
+- When $f$ is convex, the line search problem is also convex (restricting to a line).
+
+::: {.callout-important}
+## Algorithm: Backtracking Line Search
+
+```
+Start with alpha = 1
+While f(x^k + alpha * d^k) > f(x^k) + (alpha/2) * <d^k, grad f(x^k)>:
+    Set alpha = beta * alpha      // shrink step size, beta in (0,1)
+Return alpha
+```
+
+**Idea:** Try to find the largest step size among $\{1,\, \beta,\, \beta^2,\, \ldots\}$.
+:::
+
+The following figure lets you see the backtracking procedure in action. We plot the one-dimensional function $\varphi(\alpha) = f(x^k + \alpha d^k)$ against the sufficient-decrease line (the Armijo condition). The algorithm tests $\alpha = 1, \beta, \beta^2, \ldots$ and accepts the first $\alpha$ for which $\varphi(\alpha)$ drops below the Armijo line.
+
+```{=html}
+<style>
+  .interactive-figure-container {
+    font-family: 'Palatino Linotype', 'Palatino', 'Book Antiqua', 'Georgia', serif;
+    background: #f0ebe5;
+    border-radius: 8px;
+    padding: 24px 20px 16px 20px;
+    margin: 28px auto;
+    max-width: 900px;
+    box-shadow: 0 2px 12px rgba(61,53,48,0.08);
+  }
+  .interactive-figure-container h3 {
+    font-family: 'Palatino Linotype', 'Palatino', 'Book Antiqua', 'Georgia', serif;
+    color: #3d3530; font-size: 1.15em; font-weight: 600; margin: 0 0 6px 0;
+  }
+  .interactive-figure-container .fig-subtitle {
+    color: #968a80; font-size: 0.92em; margin: 0 0 16px 0; line-height: 1.5;
+  }
+  .interactive-figure-container .slider-row {
+    display: flex; align-items: center; gap: 14px; margin: 14px 0 8px 0; flex-wrap: wrap;
+  }
+  .interactive-figure-container .slider-row label {
+    font-size: 0.95em; color: #3d3530; min-width: 80px;
+  }
+  .interactive-figure-container .slider-row input[type="range"] {
+    flex: 1; min-width: 180px; max-width: 420px; accent-color: #7b97ad; height: 6px;
+  }
+  .interactive-figure-container .slider-row .slider-value {
+    font-size: 0.95em; color: #b8995e; font-weight: 600; min-width: 60px;
+  }
+  .interactive-figure-container .info-box {
+    background: #faf7f3; border-left: 3px solid #7b97ad; border-radius: 0 4px 4px 0;
+    padding: 10px 14px; margin: 10px 0 4px 0; font-size: 0.88em; color: #3d3530; line-height: 1.6;
+  }
+</style>
+
+<div class="interactive-figure-container" id="bt-wrapper">
+  <h3>Backtracking Line Search Explorer</h3>
+  <p class="fig-subtitle">
+    f(x) = e<sup>x/2</sup> + x&sup2; &ensp;|&ensp;
+    x<sub>k</sub> = 1.5, &ensp; d<sub>k</sub> = &minus;&nabla;f(x<sub>k</sub>)
+    &emsp;|&emsp; Armijo parameter c = &frac12;
+  </p>
+  <div class="slider-row">
+    <label for="bt-beta">&beta; =</label>
+    <input type="range" id="bt-beta" min="0.2" max="0.9" step="0.01" value="0.5">
+    <span class="slider-value" id="bt-beta-val">0.50</span>
+  </div>
+  <div id="bt-plot"></div>
+  <div class="info-box" id="bt-info">
+    Drag the slider to change the shrinkage factor &beta;.
+  </div>
+</div>
+
+<script>
+(function() {
+  var C = {
+    bg: '#f0ebe5', plotBg: '#faf7f3', text: '#3d3530', grid: '#e0d9d1',
+    axis: '#968a80', blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
+    terracotta: '#c47a6a', lavender: '#907ea0', rosewood: '#ad8480'
+  };
+  var font = {family: "'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif", color: C.text};
+
+  var xk = 1.5;
+  function f(x) { return Math.exp(0.5*x) + x*x; }
+  function gradf(x) { return 0.5*Math.exp(0.5*x) + 2*x; }
+  var gk = gradf(xk);
+  var dk = -gk;
+  var fk = f(xk);
+  var slope = gk * dk;  /* negative */
+  var cArmijo = 0.5;
+
+  /* phi(alpha) = f(xk + alpha*dk) */
+  function phi(a) { return f(xk + a*dk); }
+
+  /* Armijo line: fk + c*alpha*slope */
+  function armijo(a) { return fk + cArmijo*a*slope; }
+
+  /* Precompute curve */
+  var alphaVals = [], phiVals = [], armijoVals = [];
+  for (var a = 0; a <= 1.05; a += 0.005) {
+    alphaVals.push(a);
+    phiVals.push(phi(a));
+    armijoVals.push(armijo(a));
+  }
+
+  var axisStyle = {
+    gridcolor: C.grid, gridwidth: 1, zerolinecolor: C.axis, zerolinewidth: 1.5,
+    linecolor: C.axis, linewidth: 1,
+    tickfont: {size: 13, family: font.family, color: font.color},
+    titlefont: {size: 15, family: font.family, color: font.color}
+  };
+  var plotCfg = {displayModeBar: false, responsive: true};
+
+  function update(beta) {
+    /* Run backtracking */
+    var trials = [];
+    var a = 1.0;
+    var accepted = -1;
+    for (var i = 0; i < 20; i++) {
+      var pa = phi(a);
+      var aa = armijo(a);
+      var ok = pa <= aa;
+      trials.push({alpha: a, phi: pa, armijo: aa, accepted: ok});
+      if (ok && accepted < 0) { accepted = i; break; }
+      a *= beta;
+    }
+
+    var traces = [
+      /* phi(alpha) curve */
+      {x: alphaVals, y: phiVals, mode: 'lines', line: {color: C.blue, width: 3},
+       name: '\u03C6(\u03B1) = f(x\u2096 + \u03B1d\u2096)'},
+      /* Armijo line */
+      {x: alphaVals, y: armijoVals, mode: 'lines',
+       line: {color: C.terracotta, width: 2, dash: 'dash'},
+       name: 'Armijo: f(x\u2096) + c\u03B1\u27E8d,\u2207f\u27E9'}
+    ];
+
+    /* Trial points */
+    var rejX = [], rejY = [], accX = [], accY = [];
+    for (var j = 0; j < trials.length; j++) {
+      if (j === accepted) {
+        accX.push(trials[j].alpha);
+        accY.push(trials[j].phi);
+      } else {
+        rejX.push(trials[j].alpha);
+        rejY.push(trials[j].phi);
+      }
+    }
+    if (rejX.length > 0) {
+      traces.push({x: rejX, y: rejY, mode: 'markers',
+        marker: {size: 10, color: C.rosewood, symbol: 'x', line: {width: 2, color: C.rosewood}},
+        name: 'Rejected'});
+    }
+    if (accX.length > 0) {
+      traces.push({x: accX, y: accY, mode: 'markers',
+        marker: {size: 14, color: C.sage, symbol: 'star', line: {width: 1.5, color: 'white'}},
+        name: 'Accepted: \u03B1 = ' + accX[0].toFixed(4)});
+    }
+
+    /* vertical lines for trial alpha values */
+    var shapes = [];
+    for (var j = 0; j < trials.length; j++) {
+      shapes.push({
+        type: 'line', x0: trials[j].alpha, x1: trials[j].alpha,
+        y0: -2, y1: trials[j].phi,
+        line: {color: j === accepted ? C.sage : C.rosewood, width: 1, dash: 'dot'}
+      });
+    }
+
+    var layout = {
+      paper_bgcolor: C.bg, plot_bgcolor: C.plotBg, font: font, height: 420,
+      margin: {t: 30, b: 58, l: 64, r: 20},
+      xaxis: Object.assign({}, axisStyle, {title: 'Step size \u03B1', range: [-0.02, 1.08]}),
+      yaxis: Object.assign({}, axisStyle, {title: '\u03C6(\u03B1)', range: [-4, 8]}),
+      showlegend: true,
+      legend: {x: 0.50, y: 0.98, bgcolor: 'rgba(250,247,243,0.85)',
+               bordercolor: C.grid, borderwidth: 1,
+               font: {size: 11, family: font.family, color: font.color}},
+      shapes: shapes,
+      hovermode: 'closest'
+    };
+
+    var info;
+    if (accepted >= 0) {
+      info = 'Accepted \u03B1 = ' + trials[accepted].alpha.toFixed(4)
+           + ' after <b>' + (accepted+1) + ' trial' + (accepted > 0 ? 's' : '') + '</b>'
+           + ' &ensp;|&ensp; \u03C6(\u03B1) = ' + trials[accepted].phi.toFixed(3)
+           + ' &le; Armijo = ' + trials[accepted].armijo.toFixed(3);
+    } else {
+      info = 'No step accepted in 20 trials';
+    }
+    document.getElementById('bt-info').innerHTML = info;
+
+    Plotly.react('bt-plot', traces, layout, plotCfg);
+  }
+
+  document.getElementById('bt-beta').addEventListener('input', function() {
+    var beta = parseFloat(this.value);
+    document.getElementById('bt-beta-val').textContent = beta.toFixed(2);
+    update(beta);
+  });
+
+  update(0.5);
+})();
+</script>
+```
+
+::: {.callout-tip}
+## Remark: Step Size Tuning in Practice
+
+Tuning step sizes is an art. In practice, when $f$ is nonconvex, usually use a constant and small step size, or gradually decrease step sizes.
+
+When training neural networks (e.g., using PyTorch), **learning rate scheduling** is commonly used:
+
+- **StepLR** --- decay learning rate by a factor every $T$ steps.
+- **Cosine scheduler** --- refine solution using a very small learning rate at end.
+- **Warmup** --- increase the learning rate first, then decay.
+:::
+
+```{=html}
+<div class="figure-container">
+  <div id="fig-lr-schedules"></div>
+  <div class="figure-caption">Figure 7.4: Comparison of common learning rate schedules used in deep learning.</div>
+</div>
+```
+
+## Convergence Analysis of Gradient Descent {#convergence-analysis}
+
+We have developed the gradient descent algorithm and its variants, along with step size strategies. The central question remains: **how fast does gradient descent converge?** The answer depends entirely on the structural properties of the objective function $f$. In this section, we develop the convergence theory of gradient descent under three progressively stronger assumptions.
+
+The key insight is that convergence speed is governed by two numbers that bound the **curvature** of $f$:
+
+- **Smoothness parameter $L$:** an upper bound on how fast the gradient changes (curvature from above).
+- **Strong convexity parameter $\mu$:** a lower bound on how much the function curves upward (curvature from below).
+
+Their ratio $\kappa = L/\mu$ is the **condition number**, and it controls how many iterations gradient descent needs.
+
+### Smoothness: Bounding Curvature from Above {#smoothness}
+
+The first structural property we need is **smoothness**, which says that the gradient of $f$ does not change too rapidly. Informally, a smooth function has no "sharp bends" in its gradient.
+
+::: {#def-smoothness}
+## Definition 7.7 ($L$-Smoothness)
+
+A differentiable function $f$ is **$L$-smooth** if its gradient is $L$-Lipschitz continuous:
+
+$$\|\nabla f(x) - \nabla f(y)\|_2 \leq L \cdot \|x - y\|_2 \qquad \forall\, x, y.$$
+:::
+
+**What does this mean?** If you move from $x$ to $y$, the gradient cannot change by more than $L$ times the distance you moved. A small $L$ means the gradient changes slowly (the function is "gently curved"), while a large $L$ means the gradient can change rapidly.
+
+::: {.callout-tip}
+## Intuition: Quadratic Upper Bound
+
+The most important consequence of $L$-smoothness is the **quadratic upper bound**: for all $x, y$,
+
+$$f(y) \leq f(x) + \nabla f(x)^\top (y - x) + \frac{L}{2}\|y - x\|_2^2.$$ {#eq-quadratic-upper}
+
+This says that $f$ is bounded above by a quadratic that "hugs" it from above. The linear part $f(x) + \nabla f(x)^\top(y-x)$ is the tangent-line approximation, and the quadratic term $\frac{L}{2}\|y-x\|_2^2$ controls how far $f$ can deviate from this tangent. See @fig-quadratic-upper-bound for an illustration.
+:::
+
+For twice-differentiable functions, $L$-smoothness is equivalent to requiring that all eigenvalues of the Hessian are at most $L$:
+
+$$\nabla^2 f(x) \preceq L \cdot I \qquad \forall\, x.$$
+
+::: {#exm-quadratic-smooth}
+## Example: Quadratic Function
+
+For $f(x) = \frac{1}{2}x^\top Q\, x$ with $Q \succ 0$, we have $\nabla^2 f(x) = Q$, so $f$ is $L$-smooth with $L = \lambda_{\max}(Q)$.
+:::
+
+### Strong Convexity: Bounding Curvature from Below {#strong-convexity}
+
+While smoothness bounds curvature from above, **strong convexity** bounds it from below. It says that $f$ curves upward at least as fast as a quadratic.
+
+::: {#def-strong-convexity}
+## Definition 7.8 ($\mu$-Strong Convexity)
+
+A differentiable function $f$ is **$\mu$-strongly convex** (with $\mu > 0$) if for all $x, y$:
+
+$$f(y) \geq f(x) + \nabla f(x)^\top (y - x) + \frac{\mu}{2}\|y - x\|_2^2.$$
+:::
+
+**What does this mean?** Ordinary convexity says that $f$ lies above all of its tangent lines. Strong convexity says something stronger: $f$ lies above all of its tangent lines **plus a quadratic bowl** of curvature $\mu$. The bigger $\mu$ is, the more strongly $f$ curves upward.
+
+::: {.callout-tip}
+## Intuition: Curvature Sandwich
+
+When $f$ is both $\mu$-strongly convex and $L$-smooth, the curvature of $f$ is **sandwiched** between two quadratics:
+
+$$\underbrace{f(x) + \nabla f(x)^\top(y-x) + \frac{\mu}{2}\|y-x\|_2^2}_{\text{quadratic lower bound}} \;\leq\; f(y) \;\leq\; \underbrace{f(x) + \nabla f(x)^\top(y-x) + \frac{L}{2}\|y-x\|_2^2}_{\text{quadratic upper bound}}.$$
+
+The left side is a "tight-fitting bowl" from strong convexity, and the right side is a "loose-fitting bowl" from smoothness. The function $f$ is trapped between them.
+:::
+
+For twice-differentiable functions, $\mu$-strong convexity is equivalent to $\nabla^2 f(x) \succeq \mu \cdot I$ for all $x$. Together with smoothness, this means all Hessian eigenvalues are sandwiched:
+
+$$\mu \cdot I \preceq \nabla^2 f(x) \preceq L \cdot I \qquad \forall\, x.$$
+
+::: {.callout-note appearance="simple"}
+Strong convexity guarantees two important properties:
+
+1. **Unique minimizer.** A $\mu$-strongly convex function has exactly one minimizer $x^*$.
+2. **Gradient domination.** $\frac{1}{2\mu}\|\nabla f(x)\|_2^2 \geq f(x) - f(x^*)$. When the gradient is small, the function value must be close to optimal.
+:::
+
+### The Condition Number {#condition-number}
+
+When $f$ is both $\mu$-strongly convex and $L$-smooth, the ratio of these two parameters plays a central role.
+
+::: {#def-condition-number}
+## Definition 7.9 (Condition Number)
+
+The **condition number** of a $\mu$-strongly convex and $L$-smooth function is
+
+$$\kappa = \frac{L}{\mu} \geq 1.$$
+:::
+
+The condition number measures how "elongated" the contours of $f$ are. When $\kappa \approx 1$, the contours are nearly circular and gradient descent converges quickly in a direct path (@fig-condition-number, left panel). When $\kappa \gg 1$, the contours are elongated ellipses and gradient descent zig-zags slowly toward the optimum (@fig-condition-number, right panel).
+
+Recall from @exm-2d-quadratic-zigzag: on the quadratic $f(x,y) = \frac{1}{2}(ax^2 + by^2)$ with $a < b$, the contraction factors are $|1-a\alpha|$ and $|1-b\alpha|$. With the optimal step size $\alpha = 2/(a+b)$, both factors equal $\frac{b-a}{b+a} = \frac{\kappa-1}{\kappa+1}$, where $\kappa = b/a$. This **contraction factor** $\frac{\kappa-1}{\kappa+1}$ governs the convergence speed of gradient descent.
+
+### The Descent Lemma {#descent-lemma-convergence}
+
+The descent lemma is the engine behind all gradient descent convergence proofs. It says that **every gradient descent step makes guaranteed progress**, provided the step size is small enough.
+
+::: {#thm-descent-lemma}
+## Theorem 7.10 (Descent Lemma)
+
+If $f$ is $L$-smooth and $x^+ = x - \alpha\,\nabla f(x)$ with $\alpha \leq 1/L$, then
+
+$$f(x^+) \leq f(x) - \frac{\alpha}{2}\|\nabla f(x)\|_2^2.$$ {#eq-descent-lemma}
+:::
+
+The descent lemma guarantees that each GD step decreases the objective by at least $\frac{\alpha}{2}\|\nabla f(x)\|_2^2$, which is strictly positive whenever $\nabla f(x) \neq 0$. This means gradient descent with step size $\alpha \leq 1/L$ is a **monotonically improving** algorithm: $f(x^0) \geq f(x^1) \geq f(x^2) \geq \cdots$.
+
+::: {.proof}
+Start from the quadratic upper bound (@eq-quadratic-upper):
+
+$$f(x^+) \leq f(x) + \nabla f(x)^\top(x^+ - x) + \frac{L}{2}\|x^+ - x\|_2^2.$$
+
+Substitute the GD update $x^+ - x = -\alpha\,\nabla f(x)$:
+
+$$f(x^+) \leq f(x) - \alpha\|\nabla f(x)\|_2^2 + \frac{L\alpha^2}{2}\|\nabla f(x)\|_2^2 = f(x) - \alpha\!\left(1 - \frac{L\alpha}{2}\right)\|\nabla f(x)\|_2^2.$$
+
+Since $\alpha \leq 1/L$, we have $L\alpha/2 \leq 1/2$, so $(1 - L\alpha/2) \geq 1/2$:
+
+$$f(x^+) \leq f(x) - \frac{\alpha}{2}\|\nabla f(x)\|_2^2. \qquad \blacksquare$$
+:::
+
+### Three Convergence Cases {#three-cases}
+
+With the descent lemma in hand, we can analyze gradient descent under three settings of increasing structure. Each added assumption yields a strictly faster convergence rate.
+
+![Convergence rates of gradient descent under three structural assumptions: nonconvex + smooth (finding approximate stationary points), convex + smooth (sublinear $O(1/K)$ convergence to the global minimum), and strongly convex + smooth (linear convergence governed by the condition number $\kappa$).](figures/ch05-three-cases.svg){#fig-three-cases}
+
+#### Case 1: Nonconvex + Smooth {#case1}
+
+When $f$ is only smooth (possibly nonconvex), we cannot hope to find a global minimum---the function may have many local minima and saddle points. The best we can guarantee is finding an **approximate stationary point** where $\|\nabla f(x)\| \leq \varepsilon$.
+
+::: {#thm-nonconvex-smooth}
+## Theorem 7.11 (GD: Nonconvex + Smooth)
+
+If $f$ is $L$-smooth and $\alpha = 1/L$, then after $K$ iterations:
+
+$$\min_{0 \leq k < K} \|\nabla f(x^k)\|_2^2 \leq \frac{2L\bigl(f(x^0) - f(x^*)\bigr)}{K}.$$
+
+To find an $\varepsilon$-approximate stationary point ($\|\nabla f(x)\|_2 \leq \varepsilon$), we need $K = O(L/\varepsilon^2)$ iterations.
+:::
+
+::: {.proof}
+By the descent lemma (@eq-descent-lemma), each step satisfies $f(x^{k+1}) \leq f(x^k) - \frac{1}{2L}\|\nabla f(x^k)\|_2^2$. Rearranging:
+
+$$\frac{1}{2L}\|\nabla f(x^k)\|_2^2 \leq f(x^k) - f(x^{k+1}).$$
+
+Now sum from $k = 0$ to $K-1$. The right-hand side **telescopes**:
+
+$$\frac{1}{2L}\sum_{k=0}^{K-1}\|\nabla f(x^k)\|_2^2 \leq \bigl(f(x^0) - f(x^1)\bigr) + \bigl(f(x^1) - f(x^2)\bigr) + \cdots + \bigl(f(x^{K-1}) - f(x^K)\bigr) = f(x^0) - f(x^K) \leq f(x^0) - f(x^*).$$
+
+Since the minimum is at most the average: $\min_{k} \|\nabla f(x^k)\|_2^2 \leq \frac{1}{K}\sum_k \|\nabla f(x^k)\|_2^2$. Dividing by $K$ gives the result. $\blacksquare$
+:::
+
+::: {.callout-tip}
+## Intuition
+
+The descent lemma says each step "uses up" at least $\frac{1}{2L}\|\nabla f(x^k)\|_2^2$ of the initial gap $f(x^0) - f(x^*)$. Since this gap is finite, the gradients must eventually become small. After $K$ steps, at least one iterate has gradient norm at most $O(1/\sqrt{K})$.
+:::
+
+#### Case 2: Convex + Smooth {#case2}
+
+When $f$ is convex, every local minimum is a global minimum, so we can track the **function value gap** $f(x^k) - f(x^*)$ instead of just the gradient norm. Convexity upgrades the guarantee from "finding a stationary point" to "finding an approximate global minimizer."
+
+::: {#thm-convex-smooth}
+## Theorem 7.12 (GD: Convex + Smooth)
+
+If $f$ is convex and $L$-smooth, with $\alpha = 1/L$, then:
+
+$$f(x^K) - f(x^*) \leq \frac{L\|x^0 - x^*\|_2^2}{2K}.$$
+
+To achieve $f(x^K) - f(x^*) \leq \varepsilon$, we need $K = O(L/\varepsilon)$ iterations.
+:::
+
+::: {.proof}
+The proof combines smoothness with convexity in an elegant telescoping argument.
+
+**Step 1 (Smoothness).** The quadratic upper bound (@eq-quadratic-upper) gives:
+
+$$f(x^{k+1}) \leq f(x^k) + \nabla f(x^k)^\top(x^{k+1} - x^k) + \frac{L}{2}\|x^{k+1} - x^k\|_2^2.$$
+
+**Step 2 (Convexity).** The first-order characterization of convexity gives:
+
+$$f(x^*) \geq f(x^k) + \nabla f(x^k)^\top(x^* - x^k).$$
+
+**Step 3 (Combine).** Subtracting Step 2 from Step 1 eliminates $f(x^k)$:
+
+$$f(x^{k+1}) - f(x^*) \leq \nabla f(x^k)^\top(x^{k+1} - x^*) + \frac{L}{2}\|x^{k+1} - x^k\|_2^2.$$
+
+Substituting $\nabla f(x^k) = \frac{1}{\alpha}(x^k - x^{k+1})$ and using the algebraic identity $\langle a - b,\, a - c \rangle = \frac{1}{2}\|a - b\|^2 + \frac{1}{2}\|a - c\|^2 - \frac{1}{2}\|b - c\|^2$, this simplifies to a telescoping bound:
+
+$$f(x^{k+1}) - f(x^*) \leq \frac{1}{2\alpha}\bigl[\|x^k - x^*\|_2^2 - \|x^{k+1} - x^*\|_2^2\bigr].$$ {#eq-convex-telescope}
+
+**Step 4 (Telescope).** Summing @eq-convex-telescope over $k = 0, \ldots, K-1$, the right side telescopes:
+
+$$\sum_{k=0}^{K-1}\bigl(f(x^{k+1}) - f(x^*)\bigr) \leq \frac{L}{2}\bigl[\|x^0 - x^*\|_2^2 - \|x^K - x^*\|_2^2\bigr] \leq \frac{L}{2}\|x^0 - x^*\|_2^2.$$
+
+Since $f(x^k)$ is monotonically decreasing (by the descent lemma), $f(x^K)$ is the smallest value:
+
+$$K \cdot \bigl(f(x^K) - f(x^*)\bigr) \leq \sum_{k=0}^{K-1}\bigl(f(x^{k+1}) - f(x^*)\bigr) \leq \frac{L}{2}\|x^0 - x^*\|_2^2.$$
+
+Dividing by $K$ gives the result. $\blacksquare$
+:::
+
+::: {.callout-tip}
+## Intuition
+
+Each GD step reduces the squared distance $\|x^k - x^*\|_2^2$ to the optimum. After $K$ steps, the total distance "budget" $\|x^0 - x^*\|_2^2$ is spread over $K$ steps, giving a $1/K$ rate for the function value gap.
+:::
+
+#### Case 3: Strongly Convex + Smooth {#case3}
+
+The strongest setting gives the best result: **linear convergence** (also called geometric or exponential convergence), where the error contracts by a fixed factor at each step.
+
+::: {#thm-sc-smooth}
+## Theorem 7.13 (GD: Strongly Convex + Smooth)
+
+If $f$ is $\mu$-strongly convex and $L$-smooth, with step size $\alpha = \frac{2}{\mu + L}$ and condition number $\kappa = L/\mu$, then:
+
+$$\|x^k - x^*\|_2 \leq \left(\frac{\kappa - 1}{\kappa + 1}\right)^k \|x^0 - x^*\|_2,$$ {#eq-sc-rate-iterates}
+
+$$f(x^k) - f(x^*) \leq \frac{L}{2}\left(\frac{\kappa - 1}{\kappa + 1}\right)^{2k} \|x^0 - x^*\|_2^2.$$ {#eq-sc-rate-function}
+
+To achieve $f(x^k) - f(x^*) \leq \varepsilon$, we need $K = O(\kappa \log(1/\varepsilon))$ iterations.
+:::
+
+::: {.proof}
+By the mean value theorem, there exists a point $\xi$ on the segment between $x^k$ and $x^*$ such that $\nabla f(x^k) - \nabla f(x^*) = \nabla^2 f(\xi)(x^k - x^*)$. Since $\nabla f(x^*) = 0$, the GD update gives:
+
+$$x^{k+1} - x^* = x^k - x^* - \alpha\,\nabla f(x^k) = \bigl(I - \alpha\,\nabla^2 f(\xi)\bigr)(x^k - x^*).$$
+
+The eigenvalues of $\nabla^2 f(\xi)$ lie in $[\mu, L]$ (by strong convexity and smoothness), so the eigenvalues of $I - \alpha\,\nabla^2 f(\xi)$ lie in $[1 - \alpha L,\, 1 - \alpha\mu]$.
+
+With the optimal step size $\alpha = \frac{2}{\mu + L}$:
+
+$$\max\{|1 - \alpha\mu|,\, |1 - \alpha L|\} = \frac{L - \mu}{L + \mu} = \frac{\kappa - 1}{\kappa + 1}.$$
+
+Therefore $\|x^{k+1} - x^*\|_2 \leq \frac{\kappa - 1}{\kappa + 1}\|x^k - x^*\|_2$, and unrolling gives @eq-sc-rate-iterates. The function value bound @eq-sc-rate-function follows from the smoothness inequality $f(x) - f(x^*) \leq \frac{L}{2}\|x - x^*\|_2^2$. $\blacksquare$
+:::
+
+::: {.callout-tip}
+## Intuition: Why Logarithmic Iterations
+
+Linear convergence means the error decreases **geometrically**: after $k$ steps, the error is multiplied by $\rho^k$ where $\rho = \frac{\kappa-1}{\kappa+1} < 1$. To reduce the error from $\Delta_0$ to $\varepsilon$, we need $\rho^k \cdot \Delta_0 \leq \varepsilon$, i.e., $k \geq \frac{\log(\Delta_0/\varepsilon)}{\log(1/\rho)}$. Since $\log(1/\rho) \approx 2/\kappa$ for large $\kappa$, this gives $k = O(\kappa \log(1/\varepsilon))$.
+
+**Concrete comparison:** Convex + smooth needs $O(1/\varepsilon)$ iterations (e.g., 1,000,000 for $\varepsilon = 10^{-6}$), while strongly convex + smooth needs only $O(\kappa \cdot \log(1/\varepsilon)) \approx 14\kappa$ iterations for the same accuracy.
+:::
+
+#### Convergence Summary {#convergence-summary-table}
+
+| Setting | Step size $\alpha$ | Error measure | Rate | Iterations for $\varepsilon$ |
+|:--------|:-------------------|:-------------|:-----|:---------------------------|
+| Nonconvex + Smooth | $1/L$ | $\min_k\|\nabla f(x^k)\|_2^2$ | $O(1/K)$ | $O(1/\varepsilon^2)$ for $\|\nabla f\| \leq \varepsilon$ |
+| Convex + Smooth | $1/L$ | $f(x^K) - f(x^*)$ | $O(1/K)$ | $O(1/\varepsilon)$ |
+| Strongly Convex + Smooth | $2/(\mu+L)$ | $\|x^k - x^*\|_2$ | $\left(\frac{\kappa-1}{\kappa+1}\right)^k$ | $O(\kappa\log(1/\varepsilon))$ |
+
+Each row adds a structural assumption and gains a faster rate. The jump from $O(1/K)$ to linear convergence is the most dramatic: it is the difference between polynomial and logarithmic dependence on the target accuracy $\varepsilon$. See @fig-convergence-rates for a visual comparison across different method classes.
+
+### The Polyak--Łojasiewicz Condition {#pl-condition}
+
+A remarkable fact is that we do not need strong convexity---or even convexity at all---to achieve linear convergence. The **Polyak--Łojasiewicz (PL) condition** is a weaker assumption that still guarantees the same rate.
+
+::: {#def-pl}
+## Definition 7.14 (Polyak--Łojasiewicz Condition)
+
+A function $f$ satisfies the **PL condition** with parameter $\mu > 0$ if
+
+$$\|\nabla f(x)\|_2^2 \geq 2\mu \cdot \bigl(f(x) - f(x^*)\bigr) \qquad \forall\, x.$$
+:::
+
+The PL condition says: *whenever the gradient is small, the function value must be close to optimal*. This is automatically satisfied by $\mu$-strongly convex functions (it is their "gradient domination" property), but it can also hold for some **nonconvex** functions.
+
+**PL + smoothness gives linear convergence.** Combining the descent lemma (@eq-descent-lemma) with the PL condition, and using step size $\alpha = 1/L$:
+
+$$f(x^{k+1}) - f(x^*) \leq f(x^k) - f(x^*) - \frac{1}{2L}\|\nabla f(x^k)\|_2^2 \stackrel{\text{PL}}{\leq} \left(1 - \frac{\mu}{L}\right)\bigl(f(x^k) - f(x^*)\bigr).$$
+
+This gives $f(x^k) - f(x^*) \leq (1 - \mu/L)^k \cdot (f(x^0) - f(x^*))$---the same linear convergence rate, without assuming convexity. The PL condition arises naturally in many practical settings, such as over-parameterized least squares and certain neural network training problems.
+
+## Stopping Criteria {#stopping-criteria}
+
+The convergence theorems above guarantee that gradient descent *eventually* finds a good solution, but they do not tell the algorithm when to stop. In practice, we need a computable criterion to decide that the current iterate is "close enough" to optimal. The choice of stopping criterion should reflect the convergence guarantee: for nonconvex problems, monitor the gradient norm; for convex problems, the function value gap or iterate distance may be more appropriate.
+
+Set $\varepsilon$ to be a small number. Common stopping criteria:
+
+1. **Gradient norm:** $\|\nabla f(x)\| \leq \varepsilon$.
+   - We find an $\varepsilon$-approximate stationary point. If $f$ is convex, stationary point $\iff$ optimal solution.
+2. **Objective change:** $|f(x_{k+1}) - f(x_k)| \leq \varepsilon$ (or $|f(x_{k+\ell}) - f(x_k)| \leq \varepsilon$ for some fixed $\ell$).
+   - The objective does not change much.
+3. **Iterate change:** $\|x_{k+1} - x_k\| \leq \varepsilon$.
+   - The iterates do not change much.
+4. **Relative objective change:** $\displaystyle\frac{|f(x_{k+1}) - f(x_k)|}{\max\{1,\, |f(x_k)|\}} < \varepsilon$.
+   - Removes the effect of the magnitude of $f$.
+5. **Relative iterate change:** $\displaystyle\frac{\|x_{k+1} - x_k\|}{\max\{1,\, \|x_k\|\}} < \varepsilon$.
+
+::: {.callout-tip}
+## Looking Ahead
+
+The convergence rates in this chapter---$O(1/K)$ for convex functions and $O(\rho^k)$ for strongly convex functions---are fundamental baselines, but they can be improved. In the next chapter, we study advanced first-order methods: momentum techniques (Heavy-Ball, Nesterov acceleration) that achieve the optimal $O(1/K^2)$ rate for smooth convex functions, and adaptive learning rate methods (AdaGrad, RMSProp, Adam) that automatically tune per-coordinate step sizes.
+:::
+
+## Summary {.unnumbered}
+
+- **Iterative descent framework.** All first-order methods share the update $x^{k+1} = x^k + \alpha^k d^k$; convergence requires $d^k$ to be a descent direction ($\langle d^k, \nabla f(x^k) \rangle < 0$) and an appropriate step size $\alpha^k$.
+- **Steepest descent and its variants.** Choosing different norms in the steepest descent problem yields gradient descent ($\ell_2$), coordinate descent ($\ell_1$), and sign gradient descent ($\ell_\infty$); choosing $B^k = [\nabla^2 f(x^k)]^{-1}$ gives Newton's direction.
+- **Step size strategies.** Constant step sizes are simple but require tuning; diminishing step sizes ($\alpha^k \to 0$, $\sum \alpha^k = \infty$) guarantee convergence; backtracking line search adaptively finds a step size ensuring sufficient decrease.
+- **Smoothness and strong convexity.** $L$-smoothness ($\|\nabla f(x) - \nabla f(y)\| \leq L\|x-y\|$) bounds curvature from above; $\mu$-strong convexity bounds curvature from below. Together they sandwich the Hessian eigenvalues in $[\mu, L]$, and their ratio $\kappa = L/\mu$ is the condition number.
+- **Descent lemma.** If $f$ is $L$-smooth and $\alpha \leq 1/L$, then $f(x^+) \leq f(x) - \frac{\alpha}{2}\|\nabla f(x)\|^2$: every GD step makes guaranteed progress.
+- **Three convergence cases.** Nonconvex + smooth: $\min_k \|\nabla f(x^k)\|^2 = O(1/K)$. Convex + smooth: $f(x^K) - f^* = O(1/K)$. Strongly convex + smooth: linear convergence $O((\frac{\kappa-1}{\kappa+1})^k)$, needing $O(\kappa\log(1/\varepsilon))$ iterations.
+- **PL condition.** The Polyak--Łojasiewicz condition $\|\nabla f(x)\|^2 \geq 2\mu(f(x) - f^*)$ yields linear convergence without convexity.
+
+```{=html}
+<!-- Plotly.js for interactive figures -->
+<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+
+<style>
+  .figure-container { margin: 2rem 0; background: #f0ebe5; border: 1px solid #d5cdc4; border-radius: 10px; padding: 1.25rem; box-shadow: 0 1px 4px rgba(61,53,48,0.08); }
+  .figure-caption { text-align: center; font-size: 0.88rem; color: #968a80; margin-top: 0.75rem; font-style: italic; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const plotlyConfig = {responsive: true, displayModeBar: false};
+  const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+  const figFontHeading = '"Crimson Pro", Georgia, serif';
+
+  function themeLayout(extra = {}) {
+    return Object.assign({
+      paper_bgcolor: '#f0ebe5',
+      plot_bgcolor: '#faf7f3',
+      font: { family: figFont, color: '#3d3530', size: 14 },
+    }, extra);
+  }
+
+  function themeAxis(title, extra = {}) {
+    return Object.assign({
+      title: {text: title, font: {family: figFont, size: 14}},
+      gridcolor: '#e0d9d1',
+      zerolinecolor: '#e0d9d1',
+      linecolor: '#968a80',
+      tickfont: {family: figFont, size: 12, color: '#968a80'},
+    }, extra);
+  }
+
+  function legendStyle() {
+    return {
+      font: {family: figFont, size: 13, color: '#3d3530'},
+      bgcolor: '#f0ebe5dd',
+      bordercolor: '#e0d9d1',
+      borderwidth: 1,
+    };
+  }
+
+  // ---- Figure 1: Descent Direction ----
+  (function() {
+    const el = document.getElementById('fig-descent-direction');
+    if (!el) return;
+    const traces = [];
+    for (let r = 1; r <= 4; r++) {
+      const theta = Array.from({length: 100}, (_, i) => 2 * Math.PI * i / 99);
+      traces.push({
+        x: theta.map(t => r * Math.cos(t) * 1.5),
+        y: theta.map(t => r * Math.sin(t)),
+        mode: 'lines',
+        line: {color: '#b8995e', width: 1, dash: r === 2 ? 'solid' : 'dot'},
+        showlegend: false, hoverinfo: 'skip'
+      });
+    }
+    traces.push({
+      x: [0], y: [0], mode: 'markers+text',
+      marker: {color: '#8a6e5e', size: 10},
+      text: ['x'], textposition: 'bottom left',
+      textfont: {family: figFont, size: 14, color: '#3d3530'},
+      name: 'Current point x', hoverinfo: 'name'
+    });
+    const gx = 2.5, gy = 1.5;
+    traces.push({
+      x: [0, gx], y: [0, gy], mode: 'lines',
+      line: {color: '#b56b6b', width: 3},
+      name: 'Gradient nabla f(x)'
+    });
+    traces.push({
+      x: [gx], y: [gy], mode: 'markers',
+      marker: {color: '#b56b6b', size: 10, symbol: 'triangle-up'},
+      showlegend: false, hoverinfo: 'skip'
+    });
+    traces.push({
+      x: [0, -gx], y: [0, -gy], mode: 'lines',
+      line: {color: '#7a9a7e', width: 3},
+      name: 'Steepest descent -nabla f(x)'
+    });
+    const perpX = [-gy, gy];
+    const perpY = [gx, -gx];
+    const scale = 2.5 / Math.sqrt(gx*gx + gy*gy);
+    traces.push({
+      x: perpX.map(v => v * scale), y: perpY.map(v => v * scale),
+      mode: 'lines', line: {color: '#968a80', width: 2, dash: 'dash'},
+      name: 'Boundary: d^T nabla f = 0'
+    });
+    const hsX = [perpX[0]*scale, perpX[1]*scale, perpX[1]*scale - gx*2, perpX[0]*scale - gx*2];
+    const hsY = [perpY[0]*scale, perpY[1]*scale, perpY[1]*scale - gy*2, perpY[0]*scale - gy*2];
+    traces.push({
+      x: [...hsX, hsX[0]], y: [...hsY, hsY[0]],
+      fill: 'toself', fillcolor: 'rgba(122,154,126,0.2)',
+      line: {color: 'transparent'}, showlegend: false, hoverinfo: 'skip'
+    });
+    const angles = [-0.6, -0.3, 0, 0.3, 0.6];
+    const baseAngle = Math.atan2(-gy, -gx);
+    angles.forEach(a => {
+      const ang = baseAngle + a;
+      const len = 1.8;
+      traces.push({
+        x: [0, len*Math.cos(ang)], y: [0, len*Math.sin(ang)],
+        mode: 'lines', line: {color: '#7b97ad', width: 1.5},
+        showlegend: false, hoverinfo: 'skip'
+      });
+    });
+    const layout = themeLayout({
+      xaxis: themeAxis('', {range: [-4, 4], zeroline: false}),
+      yaxis: themeAxis('', {range: [-3, 3], zeroline: false, scaleanchor: 'x'}),
+      showlegend: true, legend: Object.assign({x: 0.01, y: 0.99}, legendStyle()),
+      margin: {t: 20, b: 40, l: 45, r: 20},
+    });
+    Plotly.newPlot(el, traces, layout, plotlyConfig);
+  })();
+
+  // ---- Figure 2: GD on ill-conditioned quadratic ----
+  (function() {
+    const el = document.getElementById('fig-gd-contours');
+    if (!el) return;
+    const a = 1, b = 10;
+    const alpha = 0.15;
+    let x = 5.0, y = 5.0;
+    const trajX = [x], trajY = [y];
+    for (let k = 0; k < 25; k++) {
+      x = x - alpha * a * x;
+      y = y - alpha * b * y;
+      trajX.push(x); trajY.push(y);
+    }
+    const traces = [];
+    const levels = [5, 20, 50, 100, 150];
+    levels.forEach(L => {
+      const theta = Array.from({length: 200}, (_, i) => 2*Math.PI*i/199);
+      const r = Math.sqrt(2*L);
+      traces.push({
+        x: theta.map(t => r/Math.sqrt(a)*Math.cos(t)),
+        y: theta.map(t => r/Math.sqrt(b)*Math.sin(t)),
+        mode: 'lines', line: {color: '#b8995e', width: 1},
+        showlegend: false, hoverinfo: 'skip'
+      });
+    });
+    traces.push({
+      x: trajX, y: trajY, mode: 'lines+markers',
+      line: {color: '#7b97ad', width: 2},
+      marker: {color: '#7b97ad', size: 4},
+      name: 'GD trajectory'
+    });
+    traces.push({
+      x: [trajX[0]], y: [trajY[0]], mode: 'markers',
+      marker: {color: '#8a6e5e', size: 10, symbol: 'circle'},
+      name: 'Start'
+    });
+    traces.push({
+      x: [0], y: [0], mode: 'markers',
+      marker: {color: '#b56b6b', size: 12, symbol: 'star'},
+      name: 'Optimum (0,0)'
+    });
+    const layout = themeLayout({
+      title: {text: 'GD on f = 0.5*(1x\u00b2 + 10y\u00b2), \u03b1=0.15', font: {family: figFontHeading, size: 15, color: '#3d3530'}},
+      xaxis: themeAxis('x', {range: [-2, 7]}),
+      yaxis: themeAxis('y', {range: [-6, 7], scaleanchor: 'x'}),
+      showlegend: true, legend: Object.assign({x: 0.6, y: 1}, legendStyle()),
+      margin: {t: 48, b: 50, l: 55, r: 20},
+    });
+    Plotly.newPlot(el, traces, layout, plotlyConfig);
+  })();
+
+  // ---- Figure 3: Zig-zag trajectory ----
+  (function() {
+    const el = document.getElementById('fig-zigzag');
+    if (!el) return;
+    const a = 1, b = 10;
+    const alpha = 0.18;
+    let x = 4.0, y = 3.0;
+    const trajX = [x], trajY = [y];
+    for (let k = 0; k < 20; k++) {
+      x = x - alpha * a * x;
+      y = y - alpha * b * y;
+      trajX.push(x); trajY.push(y);
+    }
+    const traces = [];
+    const levels = [2, 10, 30, 60];
+    levels.forEach(L => {
+      const theta = Array.from({length: 200}, (_, i) => 2*Math.PI*i/199);
+      const r = Math.sqrt(2*L);
+      traces.push({
+        x: theta.map(t => r/Math.sqrt(a)*Math.cos(t)),
+        y: theta.map(t => r/Math.sqrt(b)*Math.sin(t)),
+        mode: 'lines', line: {color: '#b8995e', width: 1, dash: 'dot'},
+        showlegend: false, hoverinfo: 'skip'
+      });
+    });
+    traces.push({
+      x: trajX, y: trajY, mode: 'lines+markers',
+      line: {color: '#ad8480', width: 2},
+      marker: {color: '#ad8480', size: 5},
+      name: 'GD \u03b1=0.18 (zig-zag)'
+    });
+    traces.push({
+      x: [trajX[0]], y: [trajY[0]], mode: 'markers',
+      marker: {color: '#8a6e5e', size: 10}, name: 'Start'
+    });
+    traces.push({
+      x: [0], y: [0], mode: 'markers',
+      marker: {color: '#b56b6b', size: 12, symbol: 'star'}, name: 'Optimum'
+    });
+    const layout = themeLayout({
+      title: {text: 'Zig-Zag: a=1, b=10, \u03b1=0.18 (1/b < \u03b1 < 2/b)', font: {family: figFontHeading, size: 15, color: '#3d3530'}},
+      xaxis: themeAxis('x (monotone convergence)', {range: [-1, 5]}),
+      yaxis: themeAxis('y (oscillates)', {range: [-4, 4], scaleanchor: 'x'}),
+      showlegend: true, legend: Object.assign({x: 0.55, y: 1}, legendStyle()),
+      margin: {t: 48, b: 55, l: 55, r: 20},
+    });
+    Plotly.newPlot(el, traces, layout, plotlyConfig);
+  })();
+
+  // ---- Figure 4: Learning rate schedules ----
+  (function() {
+    const el = document.getElementById('fig-lr-schedules');
+    if (!el) return;
+    const epochs = Array.from({length: 100}, (_, i) => i);
+    const lr0 = 0.1;
+    const stepLR = epochs.map(e => lr0 * Math.pow(0.5, Math.floor(e / 30)));
+    const cosineLR = epochs.map(e => lr0 * 0.5 * (1 + Math.cos(Math.PI * e / 100)));
+    const expLR = epochs.map(e => lr0 * Math.pow(0.95, e));
+    const warmupCosine = epochs.map(e => {
+      if (e < 10) return lr0 * e / 10;
+      return lr0 * 0.5 * (1 + Math.cos(Math.PI * (e - 10) / 90));
+    });
+    const dimLR = epochs.map(e => e === 0 ? lr0 : lr0 / (1 + 0.05 * e));
+    const traces = [
+      {x: epochs, y: stepLR, mode: 'lines', line: {color: '#7b97ad', width: 2.5}, name: 'StepLR'},
+      {x: epochs, y: cosineLR, mode: 'lines', line: {color: '#907ea0', width: 2.5, dash: 'dashdot'}, name: 'Cosine Annealing'},
+      {x: epochs, y: expLR, mode: 'lines', line: {color: '#b8995e', width: 2.5, dash: 'dash'}, name: 'Exponential Decay'},
+      {x: epochs, y: warmupCosine, mode: 'lines', line: {color: '#b56b6b', width: 2.5}, name: 'Warmup + Cosine'},
+      {x: epochs, y: dimLR, mode: 'lines', line: {color: '#7a9a7e', width: 2.5, dash: 'dot'}, name: 'Diminishing (1/k)'},
+    ];
+    const layout = themeLayout({
+      title: {text: 'Comparison of Learning Rate Schedules', font: {family: figFontHeading, size: 16, color: '#3d3530'}},
+      xaxis: themeAxis('Epoch', {range: [0, 100]}),
+      yaxis: themeAxis('Learning Rate', {range: [0, 0.12]}),
+      showlegend: true, legend: Object.assign({x: 0.55, y: 1}, legendStyle()),
+      margin: {t: 48, b: 50, l: 60, r: 20},
+    });
+    Plotly.newPlot(el, traces, layout, plotlyConfig);
+  })();
+
+});
+</script>
+```

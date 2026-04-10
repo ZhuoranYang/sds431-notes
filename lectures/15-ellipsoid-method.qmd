@@ -1,0 +1,726 @@
+---
+title: "The Ellipsoid Method"
+---
+
+The [simplex method](10-simplex-method.qmd) is remarkably efficient in practice, but as we saw through the Klee--Minty construction, its worst-case complexity is exponential. This raises a fundamental question: **can linear programs be solved in polynomial time?**
+
+The ellipsoid method, introduced by Khachiyan in 1979, provides an affirmative answer. It was the first algorithm proven to solve linear programs in polynomial time, resolving one of the most important open questions in mathematical optimization. More broadly, the ellipsoid method applies to general convex optimization: any convex problem equipped with a **separation oracle** can be solved efficiently.
+
+The core idea is beautifully geometric. We maintain an ellipsoid that is guaranteed to contain the optimal solution. At each step, we use either a gradient or a separating hyperplane to cut the ellipsoid in half, then enclose the relevant half in a smaller ellipsoid. The volume shrinks by a constant factor at every iteration, so eventually the ellipsoid becomes too small to contain any feasible point far from optimal.
+
+While the ellipsoid method is not practical for large-scale computation (it suffers from numerical issues and large constants), its theoretical significance is profound. It established that LP is in the complexity class P and laid the groundwork for interior point methods, which achieve both polynomial complexity and practical efficiency.
+
+## What Will Be Covered {#sec-overview}
+
+- Historical context: from simplex to polynomial-time algorithms
+- Ellipsoids: definition, geometry, and volume
+- The ellipsoid method for LP feasibility
+- Reduction of LP optimization to feasibility via binary search
+- The minimum volume enclosing ellipsoid (MVEE) update
+- Volume shrinkage and convergence analysis
+- Separation oracles and extension to general convex optimization
+- The ellipsoid method for general convex programs
+- Comparison with simplex and preview of interior point methods
+
+## Historical Context {#sec-history}
+
+::: {.callout-note}
+## A Brief History of LP Algorithms and Convex Optimization
+
+- **1947:** Dantzig introduced the simplex algorithm for LP.
+- **1973:** Klee and Minty proved that the simplex algorithm is **not** a polynomial-time algorithm by constructing a family of LPs on which it visits all $2^n$ vertices.
+- **1976--1977:** Shor and, independently, Nemirovski and Yudin introduced the ellipsoid method for convex programs.
+- **1979:** Khachiyan proved that the ellipsoid method is a polynomial-time algorithm for LP --- the first such algorithm.
+- **1984:** Karmarkar introduced the polynomial-time interior point algorithm for LP.
+- **1988:** Nesterov and Nemirovski extended interior point methods to general convex programs.
+
+The ellipsoid algorithm is **not practical** --- its significance is theoretical. It demonstrated for the first time that LP can be solved in polynomial time. Modern solvers (SeDuMi, SDPT3, MOSEK, Gurobi) all use variants of interior point methods.
+:::
+
+## Preparation: Ellipsoids {#sec-ellipsoids}
+
+Before presenting the algorithm, we need to define the central geometric object: the ellipsoid. An ellipsoid generalizes a ball by allowing different "radii" along different directions, controlled by a positive definite matrix.
+
+::: {#def-ellipsoid}
+## Definition (Ellipsoid)
+
+Let $Q \in \mathbb{R}^{n \times n}$ be a positive definite matrix and $c \in \mathbb{R}^n$. The **ellipsoid** associated with $Q$ and centered at $c$ is defined as
+
+$$\mathcal{E}(c, Q) = \{c + y : y^\top Q^{-1} y \leq 1\} = \{y : (y - c)^\top Q^{-1} (y - c) \leq 1\}.
+$$ {#eq-ellipsoid-def}
+:::
+
+The center $c$ determines where the ellipsoid is located, and the matrix $Q$ determines its shape and orientation. The eigenvectors of $Q$ give the principal axes of the ellipsoid, and the square roots of the eigenvalues give the corresponding semi-axis lengths. A large eigenvalue corresponds to a long axis.
+
+**Example.** The Euclidean ball of radius $R$ centered at $x_0$ is the ellipsoid $B(x_0, R) = \mathcal{E}(x_0, R^2 I)$. Here $Q = R^2 I$ is a scalar multiple of the identity, so all axes have equal length $R$.
+
+```python
+#| label: fig-ellipsoid-shapes
+#| fig-cap: "Ellipsoids in 2D with different shape matrices Q. Left: a ball (Q = I). Center: an axis-aligned ellipse. Right: a rotated ellipse. The eigenvectors of Q determine the principal axes."
+#| echo: false
+
+import numpy as np
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+fig = make_subplots(rows=1, cols=3, subplot_titles=(
+    'Ball: Q = I', 'Axis-aligned: Q = diag(4, 1)', 'Rotated ellipse'))
+
+theta = np.linspace(0, 2 * np.pi, 200)
+circle_x = np.cos(theta)
+circle_y = np.sin(theta)
+
+# Ball: Q = I
+fig.add_trace(go.Scatter(x=circle_x.tolist(), y=circle_y.tolist(), fill='toself',
+    fillcolor='rgba(123,143,163,0.18)', line=dict(color='#7b97ad', width=2.5),
+    name='Q = I', mode='lines'), row=1, col=1)
+fig.add_trace(go.Scatter(x=[0], y=[0], mode='markers',
+    marker=dict(color='#b56b6b', size=8), showlegend=False), row=1, col=1)
+
+# Axis-aligned: Q = diag(4, 1)
+Q2 = np.array([[4, 0], [0, 1]])
+L2 = np.linalg.cholesky(Q2)
+pts2 = L2 @ np.array([circle_x, circle_y])
+fig.add_trace(go.Scatter(x=pts2[0].tolist(), y=pts2[1].tolist(), fill='toself',
+    fillcolor='rgba(122,154,126,0.18)', line=dict(color='#7a9a7e', width=2.5),
+    name='Q = diag(4,1)', mode='lines'), row=1, col=2)
+fig.add_trace(go.Scatter(x=[0], y=[0], mode='markers',
+    marker=dict(color='#b56b6b', size=8), showlegend=False), row=1, col=2)
+# Draw axes
+fig.add_trace(go.Scatter(x=[-2, 2], y=[0, 0], mode='lines',
+    line=dict(color='#b8995e', dash='dash', width=1.2), showlegend=False), row=1, col=2)
+fig.add_trace(go.Scatter(x=[0, 0], y=[-1, 1], mode='lines',
+    line=dict(color='#b8995e', dash='dash', width=1.2), showlegend=False), row=1, col=2)
+
+# Rotated: Q = R diag(4,0.5) R^T
+angle = np.pi / 6
+R_mat = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+D3 = np.diag([4, 0.5])
+Q3 = R_mat @ D3 @ R_mat.T
+L3 = np.linalg.cholesky(Q3)
+pts3 = L3 @ np.array([circle_x, circle_y])
+fig.add_trace(go.Scatter(x=pts3[0].tolist(), y=pts3[1].tolist(), fill='toself',
+    fillcolor='rgba(144,126,160,0.18)', line=dict(color='#907ea0', width=2.5),
+    name='Rotated Q', mode='lines'), row=1, col=3)
+fig.add_trace(go.Scatter(x=[0], y=[0], mode='markers',
+    marker=dict(color='#b56b6b', size=8), showlegend=False), row=1, col=3)
+# Draw principal axes
+v1 = R_mat @ np.array([2, 0])
+v2 = R_mat @ np.array([0, np.sqrt(0.5)])
+fig.add_trace(go.Scatter(x=[-v1[0], v1[0]], y=[-v1[1], v1[1]], mode='lines',
+    line=dict(color='#b8995e', dash='dash', width=1.2), showlegend=False), row=1, col=3)
+fig.add_trace(go.Scatter(x=[-v2[0], v2[0]], y=[-v2[1], v2[1]], mode='lines',
+    line=dict(color='#b8995e', dash='dash', width=1.2), showlegend=False), row=1, col=3)
+
+for col in [1, 2, 3]:
+    fig.update_xaxes(range=[-3, 3], zeroline=False, row=1, col=col)
+    fig.update_yaxes(range=[-2.5, 2.5], zeroline=False, scaleanchor=f'x{col if col > 1 else ""}', row=1, col=col)
+fig.update_layout(showlegend=True, margin=dict(t=40, b=40, l=40, r=20))
+fig.show()
+```
+
+### Volume of an Ellipsoid {#sec-volume}
+
+The volume of an ellipsoid (@eq-ellipsoid-def) has a clean formula in terms of the determinant of the shape matrix.
+
+$$\text{vol}(\mathcal{E}(c, Q)) = \text{vol}(B_1) \cdot \det(Q)^{1/2},$$
+
+where $B_1$ denotes the unit ball in $\mathbb{R}^n$. Since $\det(Q) = \prod_{i=1}^n \lambda_i$ where $\lambda_1, \ldots, \lambda_n$ are the eigenvalues of $Q$, the volume is proportional to the product of the semi-axis lengths. This formula will be crucial for analyzing the convergence of the ellipsoid method: we will show that the volume shrinks by a constant factor at each iteration.
+
+## Ellipsoid Method for LP {#sec-ellipsoid-lp}
+
+Consider the linear program
+
+$$\min_{x} \; c^\top x \quad \text{s.t.} \quad Ax \leq b, \; x \geq 0.$$
+
+We write this compactly as $\min c^\top x$ subject to $x \in P$, where $P$ is the feasible polyhedron. Assume the LP has a finite optimal value $f^* > -\infty$ and that $P$ is bounded (so $P$ is a polytope).
+
+### Reduction to Feasibility via Binary Search {#sec-binary-search}
+
+The key insight is that **optimization can be reduced to feasibility**. Suppose we know that $f^* \in [L^*, u^*]$ for some bounds $L^*, u^* \in \mathbb{R}$. We can perform binary search on the optimal value:
+
+1. Set the midpoint $t = \frac{L^* + u^*}{2}$.
+2. Check whether $\{x : c^\top x \leq t\} \cap P$ is empty or not.
+   - If **empty**: $f^* \in \big(\frac{L^* + u^*}{2},\; u^*\big]$, so update $L^* \leftarrow \frac{L^* + u^*}{2}$.
+   - If **nonempty**: $f^* \in \big[L^*,\; \frac{L^* + u^*}{2}\big]$, so update $u^* \leftarrow \frac{L^* + u^*}{2}$.
+3. Repeat. Each iteration halves the interval.
+
+After $\log\!\big(\frac{u^* - L^*}{\varepsilon}\big) = O\!\big(\log \frac{1}{\varepsilon}\big)$ iterations, $f^*$ is localized to an interval of width $\varepsilon$, yielding an $\varepsilon$-optimal solution.
+
+**What does each iteration of binary search do?** Given a polytope $P \cap \{x : c^\top x \leq t\}$, it solves a **feasibility problem**: either return a point $x \in P \cap \{x : c^\top x \leq t\}$, or declare that $P \cap \{x : c^\top x \leq t\}$ is infeasible.
+
+Therefore, **to solve an LP efficiently, we only need to solve the feasibility problem efficiently**.
+
+### The Feasibility Problem {#sec-feasibility}
+
+To simplify notation, assume the polytope can be written as
+
+$$P = \{x : a_i^\top x \leq b_i, \; i \in [m]\}$$
+
+for some $\{a_i, b_i\}$.
+
+**Goal:** Find a point $x \in P$. If no such $x$ exists, declare $P = \emptyset$.
+
+::: {.callout-tip}
+## Assumption (Bounded Feasible Region)
+
+If $P \neq \emptyset$, there exist $x_0 \in P$ and $R, r > 0$ such that
+
+$$B_2(x_0, r) \subseteq P \subseteq B_2(x_0, R),$$
+
+where $B_2(x_0, r) = \{x : \|x - x_0\|_2 \leq r\}$. In other words, $P$ is "sandwiched" between a small ball of radius $r$ and a large ball of radius $R$. This assumption can be rigorously verified for LP; we omit the technical details.
+:::
+
+![The ellipsoid method: three progressively smaller ellipsoids $\mathcal{E}_0$, $\mathcal{E}_1$, $\mathcal{E}_2$ each containing the feasible region $P$. Separating hyperplanes (dashed) cut each ellipsoid in half, and the volume shrinks by a factor of $e^{-1/(2n+2)}$ per step.](figures/ch20-ellipsoid-method.svg){#fig-ellipsoid-method}
+
+### The Idea: Binary Search in $\mathbb{R}^n$ {#sec-idea}
+
+The ellipsoid method performs a kind of "binary search" in $\mathbb{R}^n$:
+
+1. **Cover** $P$ with an ellipsoid $\mathcal{E}(c, Q)$.
+2. **Check** if the center $c \in P$.
+   - **Yes:** We are done --- return $c$ as a feasible point.
+   - **No:** The center $c$ is outside $P$. Then there exists some violated constraint $i_0 \in [m]$ such that $a_{i_0}^\top c > b_{i_0}$.
+
+When the center is infeasible, the violated constraint gives us a **separating hyperplane** $\{x : a_{i_0}^\top x = a_{i_0}^\top c\}$. Since every $x \in P$ satisfies $a_{i_0}^\top x \leq b_{i_0} < a_{i_0}^\top c$, the entire polytope $P$ lies strictly on one side of this hyperplane:
+
+$$P \subseteq \{x : a_{i_0}^\top x \leq a_{i_0}^\top c\}.$$
+
+We can then discard the other half of the ellipsoid and construct a new, smaller ellipsoid covering the half-ellipsoid $\mathcal{E}(c, Q) \cap \{x : a_{i_0}^\top x \leq a_{i_0}^\top c\}$ that still contains $P$.
+
+```python
+#| label: fig-ellipsoid-cut
+#| fig-cap: "The ellipsoid method for feasibility. The center c is outside P, so a violated constraint provides a separating hyperplane. P lies entirely in the lower half-ellipsoid. The new (green) ellipsoid covers this half and is strictly smaller."
+#| echo: false
+
+import numpy as np
+import plotly.graph_objects as go
+
+theta = np.linspace(0, 2 * np.pi, 300)
+circle_x = np.cos(theta)
+circle_y = np.sin(theta)
+
+# Ellipsoid E(c, Q): centered at (2.5, 2), shape Q
+c0 = np.array([2.5, 2.0])
+Q0 = np.array([[4.0, 0.5], [0.5, 2.0]])
+L0 = np.linalg.cholesky(Q0)
+ell0 = (L0 @ np.array([circle_x, circle_y])).T + c0
+
+# Polytope P
+poly_x = [0, 1.5, 2.0, 1.2, 0.3, 0]
+poly_y = [0.5, 0.3, 1.5, 2.5, 2.2, 0.5]
+
+# Separating hyperplane: a^T x = a^T c, use constraint that c violates
+# Use a = [0.8, 0.3], which separates c from P
+a_sep = np.array([0.8, 0.3])
+a_dot_c = a_sep @ c0
+
+# Half-ellipsoid: E(c, Q) cap {x: a^T x <= a^T c}
+# New ellipsoid (MVEE of half-ellipsoid)
+g = a_sep
+n_dim = 2
+Qg = Q0 @ g
+gQg = g @ Qg
+c1 = c0 - (1.0 / (n_dim + 1)) * Qg / np.sqrt(gQg)
+Q1 = (n_dim**2 / (n_dim**2 - 1)) * (Q0 - (2.0 / (n_dim + 1)) * np.outer(Qg, Qg) / gQg)
+L1 = np.linalg.cholesky(Q1)
+ell1 = (L1 @ np.array([circle_x, circle_y])).T + c1
+
+# Hyperplane line
+hp_dir = np.array([-a_sep[1], a_sep[0]])
+hp_p1 = c0 - 4 * hp_dir
+hp_p2 = c0 + 4 * hp_dir
+
+fig = go.Figure()
+
+# Old ellipsoid
+fig.add_trace(go.Scatter(x=ell0[:, 0].tolist(), y=ell0[:, 1].tolist(), mode='lines',
+    line=dict(color='#ad8480', width=2.5), name='E(c\u2070, Q\u2070)', fill='toself',
+    fillcolor='rgba(173,132,128,0.10)'))
+
+# Polytope
+fig.add_trace(go.Scatter(x=poly_x, y=poly_y, fill='toself',
+    fillcolor='rgba(123,143,163,0.25)', line=dict(color='#7b97ad', width=2.5),
+    name='Polytope P', mode='lines'))
+
+# Separating hyperplane
+fig.add_trace(go.Scatter(x=[hp_p1[0], hp_p2[0]], y=[hp_p1[1], hp_p2[1]], mode='lines',
+    line=dict(color='#b8995e', width=2, dash='dash'),
+    name='Separating hyperplane'))
+
+# New ellipsoid
+fig.add_trace(go.Scatter(x=ell1[:, 0].tolist(), y=ell1[:, 1].tolist(), mode='lines',
+    line=dict(color='#7a9a7e', width=2.5), name='E(c\u00b9, Q\u00b9)', fill='toself',
+    fillcolor='rgba(122,154,126,0.12)'))
+
+# Centers
+fig.add_trace(go.Scatter(x=[c0[0]], y=[c0[1]], mode='markers+text',
+    marker=dict(color='#b56b6b', size=10, symbol='circle'),
+    text=['c\u2070'], textposition='top right', name='Center c\u2070'))
+fig.add_trace(go.Scatter(x=[c1[0]], y=[c1[1]], mode='markers+text',
+    marker=dict(color='#7a9a7e', size=10, symbol='circle'),
+    text=['c\u00b9'], textposition='top right', name='Center c\u00b9'))
+
+# Arrow for separating direction
+fig.add_annotation(x=c0[0] + 0.5 * a_sep[0], y=c0[1] + 0.5 * a_sep[1],
+    ax=c0[0], ay=c0[1], xref='x', yref='y', axref='x', ayref='y',
+    showarrow=True, arrowhead=3, arrowsize=1.5, arrowwidth=2, arrowcolor='#b8995e')
+
+fig.update_layout(
+    xaxis=dict(title='x\u2081', range=[-1.5, 6], zeroline=True),
+    yaxis=dict(title='x\u2082', range=[-1.5, 5], zeroline=True, scaleanchor='x'),
+    showlegend=True, margin=dict(t=20, b=50, l=55, r=20))
+fig.show()
+```
+
+### The Ellipsoid Algorithm for Feasibility {#sec-ellipsoid-feasibility-algo}
+
+::: {.callout-important}
+## Algorithm: Ellipsoid Method for Feasibility
+
+**Input:** Polytope $P = \{x : a_i^\top x \leq b_i, \; i \in [m]\}$, outer radius $R$.
+
+**Initialize:** $\mathcal{E}(c^0, Q^0) = \mathcal{E}(0, R^2 I) \supseteq P$.
+
+**For** $k = 1, 2, \ldots$:
+
+1. **Check** if $c^k \in P$.
+2. **If $c^k \in P$:** Stop. Return $c^k \in P$ (feasible).
+3. **If $c^k \notin P$:**
+   - Find the constraint $a_{i_0}^\top x \leq b_{i_0}$ that $c^k$ violates.
+   - **Update ellipsoid:** Let $\mathcal{E}(c^{k+1}, Q^{k+1})$ be the minimum volume ellipsoid containing $\mathcal{E}(c^k, Q^k) \cap \{x : a_{i_0}^\top x \leq a_{i_0}^\top c^k\}$.
+4. **If** $\text{vol}(\mathcal{E}(c^{k+1}, Q^{k+1})) < \text{vol}(B(0, r))$: Stop. Return "infeasible."
+:::
+
+**Why does the stopping criterion work?** By construction, the ellipsoid always contains $P$: $\mathcal{E}(c^k, Q^k) \supseteq P$ for all $k = 1, 2, \ldots$ (this is an invariant of the algorithm). If $P$ is feasible, then $P$ contains a ball $B(x_0, r)$ of radius $r$. Therefore, if the ellipsoid volume drops below $\text{vol}(B(0, r))$, it can no longer contain such a ball, so $P$ must be infeasible.
+
+## Minimum Volume Enclosing Ellipsoid {#sec-mvee}
+
+The critical step of the algorithm is constructing the minimum volume ellipsoid covering a half-ellipsoid. Given the current ellipsoid $\mathcal{E}(c^k, Q^k)$ and a cutting direction $g$ (the normal vector of the separating hyperplane), we need to find the smallest ellipsoid containing the half-ellipsoid
+
+$$\mathcal{E}(c^k, Q^k) \cap \{y : g^\top(y - c^k) \leq 0\}.$$
+
+::: {#thm-mvee-update}
+## Theorem (MVEE Update Formulas)
+
+Given the half-ellipsoid $\mathcal{E}(c, Q) \cap \{y : g^\top(y - c) \leq 0\}$, the minimum volume enclosing ellipsoid $\mathcal{E}(c^+, Q^+)$ has parameters:
+
+$$c^+ = c - \frac{1}{n+1} \cdot \frac{Qg}{\sqrt{g^\top Q g}},
+$$
+
+$$Q^+ = \frac{n^2}{n^2 - 1} \left[ Q - \frac{2}{n+1} \cdot \frac{Qg \, g^\top Q}{g^\top Q g} \right],
+$$
+
+where $n$ is the dimension.
+:::
+
+The update has an elegant interpretation. The new center $c^+$ shifts from $c$ in the direction $-Qg$ (which accounts for the ellipsoid's shape) by a step proportional to $\frac{1}{n+1}$. The new shape matrix $Q^+$ is obtained by shrinking $Q$ along the cut direction $g$ while slightly expanding in the orthogonal directions. The factor $\frac{n^2}{n^2-1}$ is a mild inflation that ensures the half-ellipsoid is fully enclosed.
+
+```python
+#| label: fig-mvee-update
+#| fig-cap: "The MVEE update. Given a half-ellipsoid (shaded), the minimum volume enclosing ellipsoid (green dashed) is computed using the update formulas. The new center shifts away from the cut."
+#| echo: false
+
+import numpy as np
+import plotly.graph_objects as go
+
+theta = np.linspace(0, 2 * np.pi, 300)
+circle_x = np.cos(theta)
+circle_y = np.sin(theta)
+
+n_dim = 2
+c = np.array([0.0, 0.0])
+Q = np.array([[3.0, 0.8], [0.8, 1.5]])
+g = np.array([1.0, 0.3])
+g = g / np.linalg.norm(g)
+
+L = np.linalg.cholesky(Q)
+ell_pts = (L @ np.array([circle_x, circle_y])).T + c
+
+# Half-ellipsoid: g^T (y - c) <= 0
+half_mask = (ell_pts - c) @ g <= 1e-10
+half_pts = ell_pts[half_mask]
+
+# MVEE update
+Qg = Q @ g
+gQg = g @ Qg
+c_new = c - (1.0 / (n_dim + 1)) * Qg / np.sqrt(gQg)
+Q_new = (n_dim**2 / (n_dim**2 - 1)) * (Q - (2.0 / (n_dim + 1)) * np.outer(Qg, Qg) / gQg)
+L_new = np.linalg.cholesky(Q_new)
+ell_new = (L_new @ np.array([circle_x, circle_y])).T + c_new
+
+# Cutting hyperplane line
+hp_dir = np.array([-g[1], g[0]])
+hp_p1 = c - 3 * hp_dir
+hp_p2 = c + 3 * hp_dir
+
+fig = go.Figure()
+
+# Original ellipsoid
+fig.add_trace(go.Scatter(x=ell_pts[:, 0].tolist(), y=ell_pts[:, 1].tolist(), mode='lines',
+    line=dict(color='#ad8480', width=2), name='E(c, Q)', fill='toself',
+    fillcolor='rgba(173,132,128,0.08)'))
+
+# Half-ellipsoid shading
+# Close the half-ellipsoid path along the cut line
+sorted_half = half_pts.tolist()
+fig.add_trace(go.Scatter(x=[p[0] for p in sorted_half], y=[p[1] for p in sorted_half],
+    fill='toself', fillcolor='rgba(123,143,163,0.22)', line=dict(color='#7b97ad', width=0),
+    name='Half-ellipsoid', mode='lines'))
+
+# Cutting hyperplane
+fig.add_trace(go.Scatter(x=[hp_p1[0], hp_p2[0]], y=[hp_p1[1], hp_p2[1]], mode='lines',
+    line=dict(color='#b8995e', width=2, dash='dash'), name='Cut: g\u1d40(y\u2212c)=0'))
+
+# New ellipsoid (MVEE)
+fig.add_trace(go.Scatter(x=ell_new[:, 0].tolist(), y=ell_new[:, 1].tolist(), mode='lines',
+    line=dict(color='#7a9a7e', width=2.5, dash='dash'), name='E(c\u207a, Q\u207a) [MVEE]',
+    fill='toself', fillcolor='rgba(122,154,126,0.10)'))
+
+# Centers
+fig.add_trace(go.Scatter(x=[c[0]], y=[c[1]], mode='markers+text',
+    marker=dict(color='#ad8480', size=9), text=['c'], textposition='top right',
+    showlegend=False))
+fig.add_trace(go.Scatter(x=[c_new[0]], y=[c_new[1]], mode='markers+text',
+    marker=dict(color='#7a9a7e', size=9), text=['c\u207a'], textposition='top right',
+    showlegend=False))
+
+# Arrow from c to c_new
+fig.add_annotation(x=c_new[0], y=c_new[1], ax=c[0], ay=c[1],
+    xref='x', yref='y', axref='x', ayref='y',
+    showarrow=True, arrowhead=3, arrowsize=1.2, arrowwidth=1.5, arrowcolor='#968a80')
+
+fig.update_layout(
+    xaxis=dict(title='x\u2081', range=[-3, 3], zeroline=True),
+    yaxis=dict(title='x\u2082', range=[-2.5, 2.5], zeroline=True, scaleanchor='x'),
+    showlegend=True, margin=dict(t=20, b=50, l=55, r=20))
+fig.show()
+```
+
+## Analysis of the Ellipsoid Method {#sec-analysis}
+
+### Volume Shrinkage {#sec-volume-shrinkage}
+
+The following theorem is the key to the convergence analysis. It shows that each MVEE update reduces the ellipsoid volume by a fixed multiplicative factor that depends only on the dimension.
+
+::: {#thm-volume-reduction}
+## Theorem (Volume Reduction)
+
+For $k \geq 0$, we have
+
+$$\frac{\text{vol}(\mathcal{E}(c^{k+1}, Q^{k+1}))}{\text{vol}(\mathcal{E}(c^k, Q^k))} \leq \exp\!\left(-\frac{1}{2(n+1)}\right),
+$$ {#eq-volume-shrinkage}
+
+where $n$ is the dimension of $x$.
+:::
+
+This means that after $2(n+1)$ steps, the volume of the ellipsoid shrinks by at least a factor of $\frac{1}{e} \approx 0.368$. The shrinkage is guaranteed regardless of which cutting plane is used --- the geometry of the MVEE update ensures a constant-factor reduction.
+
+```python
+#| label: fig-volume-shrinkage
+#| fig-cap: "Volume shrinkage of the ellipsoid over iterations for different dimensions n. The volume decreases exponentially, with a per-step shrinkage factor of exp(-1/(2(n+1))). Higher dimensions lead to slower per-step shrinkage."
+#| echo: false
+
+import numpy as np
+import plotly.graph_objects as go
+
+fig = go.Figure()
+
+dims = [2, 5, 10, 20]
+colors = ['#7b97ad', '#7a9a7e', '#b8995e', '#907ea0']
+max_iter = 500
+
+for n_dim, color in zip(dims, colors):
+    shrinkage = np.exp(-1.0 / (2 * (n_dim + 1)))
+    iters = np.arange(max_iter + 1)
+    vol_ratio = shrinkage ** iters
+    fig.add_trace(go.Scatter(x=iters.tolist(), y=vol_ratio.tolist(), mode='lines',
+        line=dict(color=color, width=2.5),
+        name=f'n = {n_dim} (shrinkage = {shrinkage:.4f})'))
+
+fig.update_layout(
+    xaxis=dict(title='Iteration k'),
+    yaxis=dict(title='vol(E\u1d4f) / vol(E\u2070)', type='log',
+               range=[-6, 0]),
+    showlegend=True, margin=dict(t=20, b=50, l=60, r=20))
+fig.show()
+```
+
+### Iteration Complexity {#sec-complexity}
+
+::: {#thm-iteration-complexity}
+## Theorem (Iteration Complexity of the Ellipsoid Method)
+
+The ellipsoid method solves the feasibility problem after $O(n^2 \log(R/r))$ iterations.
+:::
+
+The proof is a direct calculation: the volume shrinkage bound (@eq-volume-shrinkage) limits how many halvings are needed before the ellipsoid becomes smaller than the inscribed ball.
+
+::: {.proof}
+Since $\frac{\text{vol}(\mathcal{E}(c^{k+1}, Q^{k+1}))}{\text{vol}(\mathcal{E}(c^k, Q^k))} \leq \exp\!\left(-\frac{1}{2(n+1)}\right)$, the number of iterations needed is at most
+
+$$\frac{\log\!\left(\frac{\text{vol}(B(0, R))}{\text{vol}(B(0, r))}\right)}{\log\!\left(\exp\!\left(\frac{1}{2(n+1)}\right)\right)}.$$
+
+The numerator is $\log\!\left(\frac{R^n}{r^n}\right) = n \log(R/r)$, which is $O(n \log(R/r))$.
+
+The denominator is $\frac{1}{2(n+1)}$.
+
+Therefore, the number of iterations is at most
+
+$$O\!\left(n \log(R/r) \cdot 2(n+1)\right) = O(n^2 \log(R/r)). \qquad \blacksquare$$
+:::
+
+::: {.callout-note}
+## Key Observation
+
+The number of iterations depends only on $n$ (the number of variables) and $\log(R/r)$, and is **independent of the number of constraints** $m$. This is a remarkable feature: the ellipsoid method does not slow down when the polyhedron is described by many constraints.
+:::
+
+**Complexity for LP.** Each iteration requires $O(n^2)$ arithmetic operations (for the matrix update $Q^{k+1}$), so the total arithmetic complexity is $O(n^4 \log(R/r))$. For linear programs, Khachiyan showed that $\log(R/r)$ is polynomial in the input size (the bit lengths of $A$, $b$, and $c$), yielding an overall **polynomial-time** algorithm.
+
+The polynomial iteration bound $O(n^2 \log(R/r))$ was a landmark result: it proved for the first time that LP lies in the complexity class P. Equally remarkable, the bound is independent of the number of constraints $m$. We next show that this framework extends well beyond polyhedra to any convex set equipped with a suitable oracle.
+
+## Separation Oracles and General Convex Sets {#sec-separation-oracle}
+
+The ellipsoid method for LP feasibility relied on a simple observation: when $c^k \notin P$, a violated linear constraint provides a separating hyperplane. This idea generalizes far beyond LP to **any convex set** through the concept of a separation oracle, making the ellipsoid method a universal tool for convex optimization.
+
+### Separating Hyperplane Theorem {#sec-separating-hyperplane}
+
+Recall the separating hyperplane theorem from convex analysis:
+
+::: {#thm-separating-hyperplane}
+## Theorem (Separating Hyperplane Theorem)
+
+Let $\mathcal{C}, \mathcal{D}$ be two disjoint closed convex sets, with $\mathcal{C}$ bounded. Then there exists $a \in \mathbb{R}^n$, $a \neq 0$, and $b \in \mathbb{R}$ such that
+
+$$a^\top x + b < 0 \quad \forall\, x \in \mathcal{C}, \qquad a^\top x + b \geq 0 \quad \forall\, x \in \mathcal{D}.$$
+:::
+
+::: {#cor-point-separation}
+## Corollary (Separating a Point from a Compact Convex Set)
+
+If $x_0 \notin \mathcal{C}$ and $\mathcal{C}$ is compact and convex, then there exists $a \in \mathbb{R}^n$, $a \neq 0$, such that
+
+$$x^\top a < x_0^\top a \quad \forall\, x \in \mathcal{C}.$$
+
+That is, $\mathcal{C} \subseteq \{x : a^\top(x - x_0) < 0\}$.
+:::
+
+### Separation Oracle {#sec-separation-oracle-def}
+
+::: {#def-separation-oracle}
+## Definition (Separation Oracle)
+
+A **separation oracle** for a convex set $\mathcal{C}$ is a procedure that, given a query point $x_0$:
+
+- Returns **"Yes"** if $x_0 \in \mathcal{C}$.
+- Otherwise, returns **"No"** together with a **separating hyperplane** $\{x : a^\top x = a^\top x_0\}$ such that $\mathcal{C} \subseteq \{x : a^\top x < a^\top x_0\}$.
+:::
+
+**For LP,** implementing a separation oracle is straightforward: to check if $c^k \in P = \{x : a_i^\top x \leq b_i\}$, simply evaluate each constraint. If $a_{i_0}^\top c^k > b_{i_0}$ for some $i_0$, use $a_{i_0}$ as the separating direction.
+
+**For general convex sets,** the separating hyperplane theorem guarantees that a separation oracle exists (in principle), though it may be nontrivial to implement. The power of the ellipsoid method is that it works for **any** convex set equipped with a separation oracle.
+
+### Ellipsoid Method for General Convex Feasibility {#sec-general-feasibility}
+
+With the separation oracle, we can derive the ellipsoid method for a general convex set $\mathcal{C}$. The invariant is: $\mathcal{E}(c^k, Q^k) \supseteq \mathcal{C}$ for all $k$.
+
+1. Given $\mathcal{E}(c^k, Q^k) \supseteq \mathcal{C}$, call the separation oracle to check if $c^k \in \mathcal{C}$.
+2. **If Yes:** We are done.
+3. **If No:** The separation oracle gives us a hyperplane that cuts $\mathcal{E}(c^k, Q^k)$ in half, with $\mathcal{C}$ on one side. Then let $\mathcal{E}(c^{k+1}, Q^{k+1})$ be the smallest ellipsoid containing the half-ellipsoid that contains $\mathcal{C}$.
+
+The same volume reduction theorem applies, so the convergence guarantee is identical: $O(n^2 \log(R/r))$ iterations.
+
+## Ellipsoid Method for Convex Optimization {#sec-convex-optimization}
+
+With the separation oracle framework in hand, we now extend the ellipsoid method from feasibility to **general convex optimization**. The key idea is that the gradient of the objective provides a natural cutting plane even when the current point is feasible.
+
+$$\min_{x} \; f(x) \quad \text{s.t.} \quad x \in \Omega,$$
+
+where $f$ is convex and $\Omega$ is a convex feasible set.
+
+### Two Scenarios {#sec-two-scenarios}
+
+Recall the first-order optimality condition for convex optimization: $x^*$ is optimal if and only if
+
+$$\langle x - x^*, \nabla f(x^*) \rangle \geq 0 \quad \forall\, x \in \Omega.$$
+
+This means the gradient $\nabla f(x^*)$ at the optimum provides a separating hyperplane between $x^*$ and the sublevel set $\Omega$. Moreover, if $x$ is **not** optimal, then there exists $y$ such that $y^\top \nabla f(x) < x^\top \nabla f(x)$ --- that is, moving along $-\nabla f(x)$ decreases the objective.
+
+At each iteration, the center $c^k$ of the current ellipsoid falls into one of two scenarios:
+
+**Scenario 1: $c^k \in \Omega$ (feasible) but not optimal.** The gradient $\nabla f(c^k)$ defines a cutting hyperplane. The optimal $x^*$ lies in the halfspace $\{y : (y - c^k)^\top \nabla f(c^k) \leq 0\}$, because moving along $-\nabla f(c^k)$ decreases the objective. We restrict to
+
+$$\Omega \cap \{y : (y - c^k)^\top \nabla f(c^k) \leq 0\}.$$
+
+**Scenario 2: $c^k \notin \Omega$ (infeasible).** Query the separation oracle for $\Omega$: it returns a hyperplane through $c^k$ such that $\Omega$ lies in one halfspace. We restrict to the half-ellipsoid containing $\Omega$.
+
+In both cases, we have a cutting plane through $c^k$, and the next ellipsoid $\mathcal{E}(c^{k+1}, Q^{k+1})$ is the MVEE of the relevant half. We also track the **best feasible point seen so far** as our candidate solution.
+
+```python
+#| label: fig-two-scenarios
+#| fig-cap: "The two scenarios of the ellipsoid method for convex optimization. Left (Scenario 1): the center is feasible but not optimal --- the gradient provides the cutting plane. Right (Scenario 2): the center is infeasible --- the separation oracle provides the cutting plane."
+#| echo: false
+
+import numpy as np
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
+fig = make_subplots(rows=1, cols=2, subplot_titles=(
+    'Scenario 1: Feasible, Gradient Cut', 'Scenario 2: Infeasible, Separation Cut'))
+
+theta = np.linspace(0, 2 * np.pi, 200)
+cx, cy = np.cos(theta), np.sin(theta)
+
+# --- Scenario 1 (left): center inside Omega ---
+# Feasible region (convex set)
+t_omega = np.linspace(0, 2 * np.pi, 100)
+omega1_x = (1.2 * np.cos(t_omega) - 0.5).tolist()
+omega1_y = (1.0 * np.sin(t_omega) + 0.2).tolist()
+
+# Ellipsoid centered inside Omega
+c1 = np.array([-0.2, 0.3])
+Q1 = np.array([[2.5, 0.3], [0.3, 1.2]])
+L1 = np.linalg.cholesky(Q1)
+ell1 = (L1 @ np.array([cx, cy])).T + c1
+
+# Gradient direction
+grad = np.array([0.7, 0.5])
+grad_norm = grad / np.linalg.norm(grad)
+
+fig.add_trace(go.Scatter(x=omega1_x + [omega1_x[0]], y=omega1_y + [omega1_y[0]],
+    fill='toself', fillcolor='rgba(123,143,163,0.20)',
+    line=dict(color='#7b97ad', width=2.5), name='\u03A9', mode='lines'), row=1, col=1)
+fig.add_trace(go.Scatter(x=ell1[:, 0].tolist(), y=ell1[:, 1].tolist(), mode='lines',
+    line=dict(color='#ad8480', width=2), name='E(c\u1d4f, Q\u1d4f)'), row=1, col=1)
+
+# Cutting plane (perpendicular to gradient through c)
+hp_dir1 = np.array([-grad_norm[1], grad_norm[0]])
+fig.add_trace(go.Scatter(
+    x=[c1[0] - 2.5 * hp_dir1[0], c1[0] + 2.5 * hp_dir1[0]],
+    y=[c1[1] - 2.5 * hp_dir1[1], c1[1] + 2.5 * hp_dir1[1]],
+    mode='lines', line=dict(color='#b8995e', width=2, dash='dash'),
+    name='Gradient cut'), row=1, col=1)
+
+fig.add_trace(go.Scatter(x=[c1[0]], y=[c1[1]], mode='markers+text',
+    marker=dict(color='#b56b6b', size=9), text=['c\u1d4f'],
+    textposition='bottom right', showlegend=False), row=1, col=1)
+
+# Gradient arrow
+fig.add_annotation(x=c1[0] + 0.6 * grad_norm[0], y=c1[1] + 0.6 * grad_norm[1],
+    ax=c1[0], ay=c1[1], xref='x', yref='y', axref='x', ayref='y',
+    showarrow=True, arrowhead=3, arrowsize=1.5, arrowwidth=2, arrowcolor='#b56b6b',
+    text='\u2207f', font=dict(size=12, color='#b56b6b'))
+
+# Label
+fig.add_annotation(x=-0.5, y=-1.6, text='c\u1d4f \u2208 \u03A9, use \u2207f(c\u1d4f) to cut',
+    showarrow=False, font=dict(size=11, color='#968a80'), xref='x', yref='y')
+
+# --- Scenario 2 (right): center outside Omega ---
+omega2_x = (1.0 * np.cos(t_omega) - 0.8).tolist()
+omega2_y = (0.8 * np.sin(t_omega) + 0.0).tolist()
+
+c2 = np.array([0.8, 0.4])
+Q2 = np.array([[2.8, 0.5], [0.5, 1.5]])
+L2 = np.linalg.cholesky(Q2)
+ell2 = (L2 @ np.array([cx, cy])).T + c2
+
+# Separating direction
+a_sep2 = np.array([0.9, 0.3])
+a_sep2_norm = a_sep2 / np.linalg.norm(a_sep2)
+hp_dir2 = np.array([-a_sep2_norm[1], a_sep2_norm[0]])
+
+fig.add_trace(go.Scatter(x=omega2_x + [omega2_x[0]], y=omega2_y + [omega2_y[0]],
+    fill='toself', fillcolor='rgba(123,143,163,0.20)',
+    line=dict(color='#7b97ad', width=2.5), showlegend=False, mode='lines'), row=1, col=2)
+fig.add_trace(go.Scatter(x=ell2[:, 0].tolist(), y=ell2[:, 1].tolist(), mode='lines',
+    line=dict(color='#ad8480', width=2), showlegend=False), row=1, col=2)
+
+fig.add_trace(go.Scatter(
+    x=[c2[0] - 2.5 * hp_dir2[0], c2[0] + 2.5 * hp_dir2[0]],
+    y=[c2[1] - 2.5 * hp_dir2[1], c2[1] + 2.5 * hp_dir2[1]],
+    mode='lines', line=dict(color='#907ea0', width=2, dash='dash'),
+    name='Separation cut'), row=1, col=2)
+
+fig.add_trace(go.Scatter(x=[c2[0]], y=[c2[1]], mode='markers+text',
+    marker=dict(color='#b56b6b', size=9), text=['c\u1d4f'],
+    textposition='top right', showlegend=False), row=1, col=2)
+
+fig.add_annotation(x=c2[0] + 0.6 * a_sep2_norm[0], y=c2[1] + 0.6 * a_sep2_norm[1],
+    ax=c2[0], ay=c2[1], xref='x2', yref='y2', axref='x2', ayref='y2',
+    showarrow=True, arrowhead=3, arrowsize=1.5, arrowwidth=2, arrowcolor='#907ea0',
+    text='a', font=dict(size=12, color='#907ea0'))
+
+fig.add_annotation(x=0.5, y=-1.6, text='c\u1d4f \u2209 \u03A9, separation oracle cuts',
+    showarrow=False, font=dict(size=11, color='#968a80'), xref='x2', yref='y2')
+
+for col in [1, 2]:
+    fig.update_xaxes(range=[-3.5, 3.5], zeroline=False, row=1, col=col)
+    fig.update_yaxes(range=[-2.5, 2.5], zeroline=False, scaleanchor=f'x{col if col > 1 else ""}', row=1, col=col)
+fig.update_layout(showlegend=True, margin=dict(t=40, b=55, l=45, r=20))
+fig.show()
+```
+
+### The Full Algorithm {#sec-full-algorithm}
+
+::: {.callout-important}
+## Algorithm: Ellipsoid Method for Convex Optimization
+
+**Input:** Convex function $f$, convex feasible set $\Omega$ (with separation oracle), initial ellipsoid $\mathcal{E}(c^0, Q^0) \supseteq \{x^*\}$.
+
+**Initialize:** $x_{\text{best}} \leftarrow \text{None}$, $f_{\text{best}} \leftarrow +\infty$.
+
+**For** $k = 1, 2, \ldots$:
+
+1. **Check** if $c^k \in \Omega$.
+
+2. **(a) If $c^k \notin \Omega$ (infeasible):**
+   - Query the separation oracle $\to$ get separating direction $a$.
+   - Construct half-ellipsoid: $\mathcal{E}(c^k, Q^k) \cap \{y : a^\top y \leq a^\top c^k\}$.
+   - Set $g \leftarrow a$ and update: $\mathcal{E}(c^{k+1}, Q^{k+1}) \supseteq$ half-ellipsoid.
+
+3. **(b) If $c^k \in \Omega$ (feasible):**
+   - Update best: if $f(c^k) < f_{\text{best}}$, set $x_{\text{best}} \leftarrow c^k$, $f_{\text{best}} \leftarrow f(c^k)$.
+   - Query gradient oracle $\to$ get $\nabla f(c^k)$.
+   - Construct half-ellipsoid: $\mathcal{E}(c^k, Q^k) \cap \{y : (y - c^k)^\top \nabla f(c^k) \leq 0\}$.
+   - Set $g \leftarrow \nabla f(c^k)$ and update: $\mathcal{E}(c^{k+1}, Q^{k+1}) \supseteq$ half-ellipsoid.
+
+4. **Ellipsoid update** (same formulas in both cases):
+
+$$c^{k+1} = c^k - \frac{1}{n+1} \cdot \frac{Q^k g}{\sqrt{g^\top Q^k g}}, \qquad Q^{k+1} = \frac{n^2}{n^2 - 1}\left[Q^k - \frac{2}{n+1} \cdot \frac{Q^k g \, g^\top Q^k}{g^\top Q^k g}\right].$$
+
+**Return:** $x_{\text{best}}$, $f_{\text{best}}$.
+:::
+
+Having developed the full ellipsoid method for convex optimization, we now compare it with the other major approaches to LP and convex programming.
+
+## Comparison: Simplex vs. Ellipsoid vs. Interior Point {#sec-comparison}
+
+| | Simplex | Ellipsoid | Interior Point |
+|---|---|---|---|
+| **Worst-case complexity** | Exponential | **Polynomial** | **Polynomial** |
+| **Practical performance** | **Excellent** | Poor | **Excellent** |
+| **Applies to** | LP only | General convex | General convex |
+| **Year introduced** | 1947 (Dantzig) | 1979 (Khachiyan) | 1984 (Karmarkar) |
+| **Key idea** | Vertex hopping | Volume shrinking | Path following |
+
+::: {.callout-tip}
+## The Bottom Line
+
+- The **simplex method** has exponential worst-case complexity (Klee--Minty) but is the fastest in practice for LP.
+- The **ellipsoid method** was the first polynomial-time algorithm for LP and works for any convex problem with a separation oracle, but it is not practical due to numerical issues and large constants.
+- **Interior point methods** (which we will study next) achieve the best of both worlds: polynomial worst-case complexity *and* excellent practical performance. They are the algorithms behind modern solvers like MOSEK, Gurobi, and SeDuMi.
+:::
+
+::: {.callout-note}
+## Looking Ahead
+
+The ellipsoid method bridges LP theory and general convex optimization. Having established that LP (and convex optimization more broadly) can be solved in polynomial time, we next turn to **interior point methods**, which achieve polynomial complexity with practical efficiency. These methods follow a smooth central path through the interior of the feasible region, combining the theoretical guarantees of the ellipsoid method with the practical speed of the simplex method.
+:::
+
+## Summary {.unnumbered}
+
+- **First polynomial-time LP algorithm.** Khachiyan's ellipsoid method (1979) resolved a major open question by proving that linear programs can be solved in polynomial time, running in $O(n^2 \log(V/\varepsilon))$ iterations where each iteration shrinks the enclosing ellipsoid's volume by a constant factor.
+- **Geometric core idea.** Maintain an ellipsoid $\mathcal{E}(c, Q)$ guaranteed to contain the optimum; at each step, use a separating hyperplane to cut the ellipsoid in half, then compute the minimum-volume ellipsoid enclosing the relevant half-ellipsoid.
+- **Separation oracle framework.** The ellipsoid method applies to any convex optimization problem equipped with a separation oracle---given a point $x$, either certify $x \in C$ or return a hyperplane separating $x$ from $C$---making it far more general than simplex.
+- **Theoretical vs. practical significance.** Despite its polynomial worst-case guarantee, the ellipsoid method is not used in practice due to numerical sensitivity and large constants; its legacy is establishing LP $\in$ P and motivating the development of interior point methods.

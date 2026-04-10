@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 300" width="700" height="300">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arr" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#968a80"/>
+    </marker>
+  </defs>
+
+  <text x="350" y="28" text-anchor="middle" font-size="16" font-weight="bold">Shampoo: Kronecker Factorization</text>
+
+  <!-- Full preconditioner G (huge square) -->
+  <rect x="30" y="55" width="120" height="120" rx="4" fill="#b56b6b" fill-opacity="0.1" stroke="#b56b6b" stroke-width="1.8"/>
+  <text x="90" y="120" text-anchor="middle" font-size="14" fill="#b56b6b" font-weight="bold">𝑮</text>
+  <text x="90" y="195" text-anchor="middle" font-size="10" fill="#b56b6b">full: 𝑚𝑛 x 𝑚𝑛</text>
+  <text x="90" y="210" text-anchor="middle" font-size="10" fill="#b56b6b">𝑂(𝑚²𝑛²) storage</text>
+
+  <!-- Approximately equal -->
+  <text x="180" y="120" text-anchor="middle" font-size="18" fill="#3d352f">≈</text>
+
+  <!-- L (left factor) -->
+  <rect x="210" y="75" width="70" height="70" rx="4" fill="#7b97ad" fill-opacity="0.12" stroke="#7b97ad" stroke-width="1.8"/>
+  <text x="245" y="115" text-anchor="middle" font-size="14" fill="#7b97ad" font-weight="bold">𝑳</text>
+  <text x="245" y="165" text-anchor="middle" font-size="10" fill="#7b97ad">𝑚 x 𝑚</text>
+
+  <!-- Kronecker product symbol -->
+  <text x="300" y="115" text-anchor="middle" font-size="18" fill="#3d352f">⊗</text>
+
+  <!-- R (right factor) -->
+  <rect x="320" y="75" width="70" height="70" rx="4" fill="#b8995e" fill-opacity="0.12" stroke="#b8995e" stroke-width="1.8"/>
+  <text x="355" y="115" text-anchor="middle" font-size="14" fill="#b8995e" font-weight="bold">𝑹</text>
+  <text x="355" y="165" text-anchor="middle" font-size="10" fill="#b8995e">𝑛 x 𝑛</text>
+
+  <!-- Storage savings -->
+  <line x1="410" y1="110" x2="460" y2="110" stroke="#968a80" stroke-width="1.5" marker-end="url(#arr)"/>
+
+  <rect x="470" y="70" width="210" height="80" rx="8" fill="#7a9a7e" fill-opacity="0.08" stroke="#7a9a7e" stroke-width="1.5"/>
+  <text x="575" y="95" text-anchor="middle" font-size="12" fill="#7a9a7e" font-weight="bold">Storage: 𝑂(𝑚² + 𝑛²)</text>
+  <text x="575" y="115" text-anchor="middle" font-size="11" fill="#7a9a7e">vs 𝑂(𝑚²𝑛²) for full</text>
+  <text x="575" y="135" text-anchor="middle" font-size="11" fill="#7a9a7e">Huge savings when 𝑚, 𝑛 large</text>
+
+  <!-- Update formula -->
+  <rect x="120" y="235" width="460" height="40" rx="8" fill="#f9f6f0" stroke="#968a80" stroke-width="1"/>
+  <text x="350" y="260" text-anchor="middle" font-size="12" fill="#3d352f">Shampoo update: 𝑊 := 𝑊 - 𝜂 𝑳⁻¹/² 𝐺 𝑹⁻¹/²  where  𝑳 = 𝐺𝐺&#x1D40;,  𝑹 = 𝐺&#x1D40;𝐺</text>
+</svg>
