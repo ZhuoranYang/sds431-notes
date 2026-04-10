@@ -1,12 +1,25 @@
 ---
 title: "The Dual Simplex Method"
+subtitle: "(Optional)"
 ---
+
+::: {.callout-note appearance="simple"}
+**This chapter is optional.** The dual simplex method is a powerful algorithmic tool used in modern LP solvers, but it is not required for the remainder of the course. It is included for students who want a deeper understanding of the primal-dual interplay and how solvers re-optimize after adding constraints.
+:::
 
 The [simplex method](10-simplex-method.qmd) solves a linear program by walking along the vertices of the primal feasible region, improving the objective at each step. At every iteration it maintains **primal feasibility** ($\widetilde{b} \geq 0$) and works toward **dual feasibility** ($\widetilde{c} \leq 0$ for maximization, equivalently all reduced costs non-positive). But what if we turned things around? What if we instead maintained dual feasibility and worked toward primal feasibility?
 
 This reversal leads to the **dual simplex method** -- an algorithm that implicitly runs the simplex method on the [dual LP](11-lp-duality.qmd), but does so entirely through the primal dictionary. The key insight is the **negative transpose property**: the dual dictionary is always the negative transpose of the primal dictionary. This elegant algebraic relationship means that every primal pivot corresponds to a dual pivot, and we never need to explicitly form the dual problem.
 
 The dual simplex method is not merely a theoretical curiosity. It is the workhorse algorithm behind modern LP solvers when constraints are added to an already-optimal tableau, when sensitivity analysis modifies the right-hand side, or when branch-and-bound algorithms need to re-optimize after adding cutting planes. Understanding the primal-dual interplay through the dictionary is essential for mastering computational optimization.
+
+## What Will Be Covered {.unnumbered}
+
+- Recap of the primal simplex method and optimality conditions
+- The negative transpose property: the dual dictionary is the negative transpose of the primal
+- The dual simplex algorithm: maintaining dual feasibility while restoring primal feasibility
+- Pivoting rules for the dual simplex method
+- Applications: sensitivity analysis, adding constraints, and warm-starting after cuts
 
 ## Recap of the Primal Simplex Method {#sec-primal-recap}
 
@@ -105,64 +118,128 @@ The dual dictionary is the **negative transpose** of the primal dictionary. That
 
 This is not a coincidence for this particular example -- it holds in general and is preserved under pivoting.
 
-```python
-#| label: fig-negative-transpose
-#| fig-cap: "The negative transpose property: the dual tableau is the negative transpose of the primal tableau. Corresponding entries are highlighted."
-#| echo: false
-
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import numpy as np
-
-fig = make_subplots(rows=1, cols=2, subplot_titles=(
-    'Primal Tableau T', 'Dual Tableau = -T<sup>T</sup>'),
-    horizontal_spacing=0.15)
-
-primal = np.array([
-    [0, 4, 1, 3],
-    [1, -1, -4, 0],
-    [3, -3, 1, -1]
-])
-
-dual = -primal.T
-
-primal_text = [[str(int(v)) for v in row] for row in primal]
-dual_text = [[str(int(v)) for v in row] for row in dual]
-
-primal_colors = [
-    ['#f5f0e8', '#e8d5b5', '#e8d5b5', '#e8d5b5'],
-    ['#d5dce5', '#f5f0e8', '#f5f0e8', '#f5f0e8'],
-    ['#d5dce5', '#f5f0e8', '#f5f0e8', '#f5f0e8']
-]
-dual_colors = [
-    ['#f5f0e8', '#d5dce5', '#d5dce5'],
-    ['#e8d5b5', '#f5f0e8', '#f5f0e8'],
-    ['#e8d5b5', '#f5f0e8', '#f5f0e8'],
-    ['#e8d5b5', '#f5f0e8', '#f5f0e8']
-]
-
-fig.add_trace(go.Table(
-    header=dict(values=['', 'x<sub>1</sub>', 'x<sub>2</sub>', 'x<sub>3</sub>'],
-                fill_color='#7b97ad', font=dict(color='white', size=14),
-                align='center', height=32),
-    cells=dict(values=list(zip(*primal_text)),
-               fill_color=list(zip(*primal_colors)),
-               font=dict(size=14), align='center', height=30),
-    columnwidth=[1,1,1,1]), row=1, col=1)
-
-fig.add_trace(go.Table(
-    header=dict(values=['', 'y<sub>1</sub>', 'y<sub>2</sub>'],
-                fill_color='#8a6e5e', font=dict(color='white', size=14),
-                align='center', height=32),
-    cells=dict(values=list(zip(*dual_text)),
-               fill_color=list(zip(*dual_colors)),
-               font=dict(size=14), align='center', height=30),
-    columnwidth=[1,1,1]), row=1, col=2)
-
-fig.update_layout(
-    margin=dict(t=40, b=20, l=20, r=20),
-    height=250)
-fig.show()
+```{=html}
+<style>
+  #ntp-box{font-family:'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif;background:#f0ebe5;border-radius:8px;padding:24px 20px 16px;margin:28px auto;max-width:960px;box-shadow:0 2px 12px rgba(61,53,48,0.08)}
+  #ntp-box h3{color:#3d3530;font-size:1.15em;font-weight:600;margin:0 0 4px;font-family:inherit}
+  #ntp-box .sub{color:#968a80;font-size:0.92em;margin:0 0 14px}
+  #ntp-box .nav{display:flex;align-items:center;justify-content:center;gap:16px;margin:0 0 14px}
+  #ntp-box .nav button{font-family:inherit;font-size:0.9em;padding:6px 14px;background:#faf7f3;border:1px solid #d4c9b8;border-radius:4px;color:#3d3530;cursor:pointer}
+  #ntp-box .nav button:disabled{opacity:0.35;cursor:default}
+  #ntp-box .nav button:not(:disabled):hover{background:#e8e1d8}
+  #ntp-box .slbl{font-weight:600;color:#3d3530;text-align:center}
+  #ntp-box .sdet{color:#968a80;font-size:0.85em;text-align:center}
+  #ntp-box .panels{display:flex;justify-content:center;align-items:flex-start;gap:20px;flex-wrap:wrap;margin:0 0 10px}
+  #ntp-box .ptitle{color:#7b97ad;font-size:0.9em;font-weight:600;margin:0 0 6px;text-align:center;font-family:inherit}
+  #ntp-box .eq{font-size:1.5em;color:#968a80;padding-top:28px}
+  #ntp-box table{border-collapse:collapse;margin:0 auto}
+  #ntp-box table th{padding:5px 10px;font-size:0.82em;color:#968a80;font-weight:600;border-bottom:2px solid #d4c9b8}
+  #ntp-box table th.rh{text-align:right;border-bottom:none;border-right:2px solid #d4c9b8;color:#3d3530}
+  #ntp-box table td{padding:7px 12px;text-align:center;font-size:0.92em;border:1px solid #e0d9d1;transition:all 0.12s;cursor:crosshair}
+  #ntp-box table td.hl{outline:3px solid #7b97ad;outline-offset:-1px;font-weight:700}
+  #ntp-box table td.hlp{outline:3px solid #b8995e;outline-offset:-1px;font-weight:700}
+  #ntp-box .ver{text-align:center;font-size:0.88em;color:#7b97ad;min-height:1.5em;margin:8px 0 4px}
+  #ntp-box .desc{background:#faf7f3;border-left:3px solid #7b97ad;border-radius:0 4px 4px 0;padding:10px 14px;margin:8px 0 0;font-size:0.85em;color:#3d3530;line-height:1.55}
+</style>
+<div id="ntp-box">
+  <h3>Primal–Dual Dictionary Explorer</h3>
+  <p class="sub">Step through the pivots and hover any cell to verify: T[i,j] + (−T<sup>⊤</sup>)[j,i] = 0</p>
+  <div class="nav">
+    <button id="ntp-prev">◀ Previous</button>
+    <span><div class="slbl" id="ntp-lbl"></div><div class="sdet" id="ntp-det"></div></span>
+    <button id="ntp-next">Next ▶</button>
+  </div>
+  <div class="panels">
+    <div><div class="ptitle">Primal Dictionary <b>T</b></div><div id="ntp-pt"></div></div>
+    <div class="eq">= −<b>T</b><sup>⊤</sup></div>
+    <div><div class="ptitle">Dual Dictionary <b>−T<sup>⊤</sup></b></div><div id="ntp-dt"></div></div>
+  </div>
+  <div class="ver" id="ntp-ver">Hover a cell to verify</div>
+  <div class="desc" id="ntp-desc"></div>
+</div>
+<script>
+(function(){
+  var S=[
+    {l:'Initial Dictionary',d:'B = {w₁, w₂}, N = {x₁, x₂, x₃}',
+     pr:['ζ','w₁','w₂'],pc:['','x₁','x₂','x₃'],
+     P:[[0,4,1,3],[1,-1,-4,0],[3,-3,1,-1]],
+     dr:['−ξ','z₁','z₂','z₃'],dc:['','y₁','y₂'],
+     D:[[0,-1,-3],[-4,1,3],[-1,4,-1],[-3,0,1]],
+     t:'Basic ↔ nonbasic swap: primal basis {w₁, w₂} corresponds to dual nonbasic {y₁, y₂}. Primal nonbasic {x₁, x₂, x₃} correspond to dual basic {z₁, z₂, z₃}. Hover any matching cells to verify the negative transpose!'},
+    {l:'After Pivot 1',d:'x₃ enters B, w₂ leaves → B = {w₁, x₃}',
+     pr:['ζ','w₁','x₃'],pc:['','x₁','x₂','w₂'],
+     P:[[9,-5,4,-3],[1,-1,-4,0],[3,-3,1,-1]],
+     dr:['−ξ','z₁','z₂','y₂'],dc:['','y₁','z₃'],
+     D:[[-9,-1,-3],[5,1,3],[-4,4,-1],[3,0,1]],
+     t:'Pivot (w₂ ↔ x₃) in primal corresponds to (y₂ ↔ z₃) in dual. The negative transpose property is preserved after pivoting — verify by hovering! Complementary slackness: w₂ left the primal basis, so y₂ entered the dual basis.'},
+    {l:'Optimal Dictionary',d:'x₂ enters B, w₁ leaves → B = {x₂, x₃}',
+     pr:['ζ','x₂','x₃'],pc:['','x₁','w₁','w₂'],
+     P:[[10,-6,-1,-3],[0.25,-0.25,-0.25,0],[3.25,-3.25,-0.25,-1]],
+     dr:['−ξ','z₁','y₁','y₂'],dc:['','z₂','z₃'],
+     D:[[-10,-0.25,-3.25],[6,0.25,3.25],[1,0.25,0.25],[3,0,1]],
+     t:'Both optimal! Primal has c̃ ≤ 0 and b̃ ≥ 0. Dual satisfies the same via the negative transpose. Optimal value: ζ* = ξ* = 10, confirming strong duality.'}
+  ];
+  var k=0;
+  function fmt(v){
+    if(v===0)return '0';
+    var a=Math.abs(v),s;
+    if(Number.isInteger(v))s=String(a);
+    else s=a.toFixed(2).replace(/0+$/,'').replace(/\.$/,'');
+    return v<0?'−'+s:s;
+  }
+  function bg(v){return v>0?'rgba(122,154,126,0.18)':v<0?'rgba(196,122,106,0.18)':'rgba(212,201,184,0.2)';}
+  function tbl(el,rh,ch,M,pfx){
+    var h='<table><tr><th></th>';
+    for(var j=0;j<ch.length;j++)h+='<th>'+ch[j]+'</th>';
+    h+='</tr>';
+    for(var i=0;i<M.length;i++){
+      h+='<tr><th class="rh">'+rh[i]+'</th>';
+      for(var j=0;j<M[i].length;j++)
+        h+='<td id="'+pfx+i+'_'+j+'" data-i="'+i+'" data-j="'+j+'" data-p="'+pfx+'" style="background:'+bg(M[i][j])+'">'+fmt(M[i][j])+'</td>';
+      h+='</tr>';
+    }
+    h+='</table>';
+    document.getElementById(el).innerHTML=h;
+  }
+  function render(){
+    var s=S[k];
+    document.getElementById('ntp-lbl').textContent='Step '+k+': '+s.l;
+    document.getElementById('ntp-det').textContent=s.d;
+    document.getElementById('ntp-desc').textContent=s.t;
+    document.getElementById('ntp-ver').textContent='Hover a cell to verify';
+    document.getElementById('ntp-prev').disabled=k===0;
+    document.getElementById('ntp-next').disabled=k===S.length-1;
+    tbl('ntp-pt',s.pr,s.pc,s.P,'p');
+    tbl('ntp-dt',s.dr,s.dc,s.D,'d');
+    document.querySelectorAll('#ntp-box td').forEach(function(c){
+      c.onmouseenter=function(){
+        var i=+c.dataset.i,j=+c.dataset.j,p=c.dataset.p;
+        c.classList.add('hl');
+        var o=document.getElementById((p==='p'?'d':'p')+j+'_'+i);
+        if(o)o.classList.add('hlp');
+        var pv,dv;
+        if(p==='p'){pv=s.P[i][j];dv=(s.D[j]&&s.D[j][i]!==undefined)?s.D[j][i]:null;}
+        else{dv=s.D[i][j];pv=(s.P[j]&&s.P[j][i]!==undefined)?s.P[j][i]:null;}
+        if(pv!==null&&dv!==null){
+          var sum=Math.abs(pv+dv)<1e-9;
+          document.getElementById('ntp-ver').innerHTML=
+            '<span style="color:#7b97ad"><b>T</b>['+( p==='p'?i:j)+','+( p==='p'?j:i)+'] = '+fmt(pv)+'</span>'+
+            ' &ensp;+&ensp; '+
+            '<span style="color:#b8995e"><b>(−T<sup>⊤</sup>)</b>['+( p==='p'?j:i)+','+( p==='p'?i:j)+'] = '+fmt(dv)+'</span>'+
+            ' &ensp;=&ensp; <b>0</b> '+(sum?'✓':'✗');
+        }
+      };
+      c.onmouseleave=function(){
+        document.querySelectorAll('#ntp-box .hl,#ntp-box .hlp').forEach(function(e){e.classList.remove('hl');e.classList.remove('hlp');});
+        document.getElementById('ntp-ver').textContent='Hover a cell to verify';
+      };
+    });
+  }
+  document.getElementById('ntp-prev').onclick=function(){if(k>0){k--;render();}};
+  document.getElementById('ntp-next').onclick=function(){if(k<S.length-1){k++;render();}};
+  render();
+})();
+</script>
 ```
 
 ### Variable Correspondence {#sec-variable-correspondence}
@@ -240,7 +317,7 @@ The example above illustrates several fundamental facts about the primal-dual re
 ::: {#prp-five-observations}
 ## Key Observations about Primal-Dual Pivoting
 
-Let (P) and (D) be a primal-dual LP pair, and consider the simplex method applied to (P).
+Let (P) and (D) be a primal-dual LP pair, and consider the simplex method applied to (P). The following five properties describe how the primal and dual dictionaries evolve in lockstep:
 
 1. **Negative transpose is preserved.** The dual dictionary is always the negative transpose of the primal dictionary, at every iteration.
 
@@ -256,7 +333,7 @@ Let (P) and (D) be a primal-dual LP pair, and consider the simplex method applie
 ::: {.callout-tip}
 ## Primal Feasibility $\leftrightarrow$ Dual Optimality
 
-Observation 4 reveals a striking symmetry:
+Observation 4 reveals a striking symmetry between the primal and dual dictionaries:
 
 - **Primal feasible** ($\widetilde{b} \geq 0$) $\longleftrightarrow$ **Dual optimal** (all dual reduced costs $\leq 0$)
 - **Primal optimal** ($\widetilde{c} \leq 0$) $\longleftrightarrow$ **Dual feasible** ($\widetilde{b}_{\text{dual}} \geq 0$)
@@ -386,93 +463,7 @@ $$q = \operatorname*{argmin}_{j \in N} \left\{ \frac{-\widetilde{c}_j}{\widetild
 **Step 4 (Pivot).** Pivot on $(p, q)$: $p$ leaves $B$, $q$ enters $B$. Go to Step 1.
 :::
 
-```python
-#| label: fig-primal-vs-dual-simplex
-#| fig-cap: "Comparison of primal and dual simplex: the primal moves through primal feasible bases toward dual feasibility, while the dual moves through dual feasible bases toward primal feasibility."
-#| echo: false
-
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
-fig = make_subplots(rows=1, cols=2, subplot_titles=(
-    'Primal Simplex: Walk on Primal Feasible Region',
-    'Dual Simplex: Walk on Dual Feasible Region'),
-    horizontal_spacing=0.08)
-
-# --- Primal feasible region (2D example) ---
-px = [0, 4, 3, 1, 0, 0]
-py = [0, 0, 2, 4, 3, 0]
-
-fig.add_trace(go.Scatter(x=px, y=py, fill='toself',
-    fillcolor='rgba(123,143,163,0.18)', line=dict(color='#7b97ad', width=2.5),
-    name='Primal feasible region', mode='lines'), row=1, col=1)
-
-path_px = [0, 4, 3, 1]
-path_py = [0, 0, 2, 4]
-fig.add_trace(go.Scatter(x=path_px, y=path_py, mode='lines+markers',
-    line=dict(color='#b56b6b', width=2.5, dash='dot'),
-    marker=dict(color='#b56b6b', size=10, symbol='circle',
-    line=dict(width=1.5, color='white')),
-    name='Primal simplex path',
-    text=['Start (feasible)', 'Pivot 1', 'Pivot 2', 'Optimal!'],
-    hoverinfo='text'), row=1, col=1)
-
-fig.add_trace(go.Scatter(x=[1], y=[4], mode='markers',
-    marker=dict(color='#b56b6b', size=15, symbol='star',
-    line=dict(width=1.5, color='white')),
-    name='Optimal vertex', showlegend=False), row=1, col=1)
-
-for i in range(len(path_px)-1):
-    fig.add_annotation(
-        x=path_px[i+1], y=path_py[i+1],
-        ax=path_px[i], ay=path_py[i],
-        xref='x', yref='y', axref='x', ayref='y',
-        showarrow=True, arrowhead=3, arrowsize=1.5,
-        arrowcolor='#b56b6b', arrowwidth=2, row=1, col=1)
-
-# --- Dual feasible region ---
-dx = [0, 5, 4, 2, 0, 0]
-dy = [0, 0, 3, 5, 4, 0]
-
-fig.add_trace(go.Scatter(x=dx, y=dy, fill='toself',
-    fillcolor='rgba(144,126,160,0.18)', line=dict(color='#907ea0', width=2.5),
-    name='Dual feasible region', mode='lines'), row=1, col=2)
-
-path_dx = [5, 4, 2]
-path_dy = [0, 3, 5]
-fig.add_trace(go.Scatter(x=path_dx, y=path_dy, mode='lines+markers',
-    line=dict(color='#8a6e5e', width=2.5, dash='dot'),
-    marker=dict(color='#8a6e5e', size=10, symbol='diamond',
-    line=dict(width=1.5, color='white')),
-    name='Dual simplex path',
-    text=['Start (dual feasible,<br>primal infeasible)', 'Pivot 1', 'Optimal!'],
-    hoverinfo='text'), row=1, col=2)
-
-fig.add_trace(go.Scatter(x=[2], y=[5], mode='markers',
-    marker=dict(color='#8a6e5e', size=15, symbol='star',
-    line=dict(width=1.5, color='white')),
-    name='Optimal vertex', showlegend=False), row=1, col=2)
-
-for i in range(len(path_dx)-1):
-    fig.add_annotation(
-        x=path_dx[i+1], y=path_dy[i+1],
-        ax=path_dx[i], ay=path_dy[i],
-        xref='x2', yref='y2', axref='x2', ayref='y2',
-        showarrow=True, arrowhead=3, arrowsize=1.5,
-        arrowcolor='#8a6e5e', arrowwidth=2, row=1, col=2)
-
-fig.update_xaxes(title='x<sub>1</sub>', range=[-0.5, 5.5], zeroline=True, row=1, col=1)
-fig.update_yaxes(title='x<sub>2</sub>', range=[-0.5, 5.5], zeroline=True,
-    scaleanchor='x', row=1, col=1)
-fig.update_xaxes(title='y<sub>1</sub>', range=[-0.5, 6], zeroline=True, row=1, col=2)
-fig.update_yaxes(title='y<sub>2</sub>', range=[-0.5, 6], zeroline=True,
-    scaleanchor='x2', row=1, col=2)
-fig.update_layout(showlegend=True, margin=dict(t=40, b=50, l=55, r=20),
-    legend=dict(font=dict(size=11)))
-fig.show()
-```
-
-![Side-by-side comparison of primal and dual simplex. The primal simplex (left) starts at a primal feasible vertex and pivots along edges toward optimality. The dual simplex (right) starts at a dual feasible basis and pivots toward primal feasibility. Both converge to the same optimal solution.](figures/ch17-primal-dual-simplex.svg){#fig-primal-dual-simplex}
+![Comparison of primal and dual simplex: the primal simplex (left) moves through primal feasible bases toward dual feasibility, while the dual simplex (right) moves through dual feasible bases toward primal feasibility. Both converge to the same optimal solution.](figures/primal-vs-dual-simplex.svg){#fig-primal-dual-simplex}
 
 ### Structural Comparison {#sec-structural-comparison}
 
@@ -708,252 +699,138 @@ $$
 
 Since the original problem was $\min \, x_1 + 3x_2$, the minimum value is $\boxed{10}$, achieved at $(x_1, x_2) = (1, 3)$. The dual simplex method reached optimality in just two pivots, maintaining dual feasibility throughout and restoring primal feasibility at termination.
 
-```python
-#| label: fig-dual-simplex-example
-#| fig-cap: "Dual simplex iterations on the worked example. The feasible region (blue) is defined by the three constraints. The dual simplex path (red dashed) starts outside the feasible region and enters it at the optimal vertex."
-#| echo: false
+```{=html}
+<style>
+  #dsv-box{font-family:'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif;background:#f0ebe5;border-radius:8px;padding:24px 20px 16px;margin:28px auto;max-width:900px;box-shadow:0 2px 12px rgba(61,53,48,0.08)}
+  #dsv-box h3{color:#3d3530;font-size:1.15em;font-weight:600;margin:0 0 4px;font-family:inherit}
+  #dsv-box .sub{color:#968a80;font-size:0.92em;margin:0 0 14px}
+  #dsv-box .nav{display:flex;align-items:center;justify-content:center;gap:16px;margin:0 0 12px}
+  #dsv-box .nav button{font-family:inherit;font-size:0.9em;padding:6px 14px;background:#faf7f3;border:1px solid #d4c9b8;border-radius:4px;color:#3d3530;cursor:pointer}
+  #dsv-box .nav button:disabled{opacity:0.35;cursor:default}
+  #dsv-box .nav button:not(:disabled):hover{background:#e8e1d8}
+  #dsv-box .slbl{font-weight:600;color:#3d3530}
+  #dsv-box .info{background:#faf7f3;border-radius:6px;padding:14px 16px;margin:12px 0 0;font-size:0.88em;color:#3d3530;line-height:1.6}
+  #dsv-box .info .row{margin:3px 0}
+  #dsv-box .info .status-ok{color:#27ae60;font-weight:600}
+  #dsv-box .info .status-bad{color:#d45d5d;font-weight:600}
+  #dsv-box .info .action{background:#f0ebe5;border-left:3px solid #b8995e;border-radius:0 4px 4px 0;padding:8px 12px;margin:8px 0 0;font-size:0.95em}
+  #dsv-box .legend-hint{text-align:center;font-size:0.82em;color:#968a80;margin:6px 0 0}
+</style>
+<div id="dsv-box">
+  <h3>Dual Simplex Iteration Visualizer</h3>
+  <p class="sub">The dual simplex starts at a super-optimal (infeasible) point and pivots toward the feasible region</p>
+  <div class="nav">
+    <button id="dsv-prev">◀ Previous</button>
+    <span class="slbl" id="dsv-lbl">Iteration 0</span>
+    <button id="dsv-next">Next ▶</button>
+  </div>
+  <div id="dsv-plot" style="width:100%"></div>
+  <div class="legend-hint">Terracotta = infeasible &ensp;|&ensp; Green = feasible &ensp;|&ensp; Dashed gold = optimal contour x₁+3x₂ = 10</div>
+  <div class="info" id="dsv-info"></div>
+</div>
+<script>
+(function(){
+  var C={bg:'#f0ebe5',pbg:'#faf7f3',text:'#3d3530',grid:'#e0d9d1',axis:'#968a80',
+    blue:'#2e86c1',sage:'#27ae60',terra:'#d45d5d',gold:'#b8995e'};
+  var font="'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif";
+  var steps=[
+    {pt:[0,0],obj:0,feas:false,label:'Start (infeasible)',
+     basis:'B = {x₃, x₄, x₅}',
+     rhs:'b̃ = [−4, −1, −3] — all negative',
+     rc:'c̃ = [−1, −3] ≤ 0 ✓ (dual feasible)',
+     status:'Primal infeasible — all b̃ᵢ < 0',ok:false,
+     action:'Choose leaving: p = x₅ (b̃₅ = −3 < 0). Row of x₅: coefficients [0, 1]. Only x₂ has positive coefficient → q = x₂ enters.'},
+    {pt:[0,3],obj:9,feas:false,label:'After Iteration 1',
+     basis:'B = {x₃, x₄, x₂}',
+     rhs:'b̃ = [5, −4, 3] — x₄ still negative',
+     rc:'c̃ = [−1, −3] ≤ 0 ✓ (dual feasible maintained)',
+     status:'Primal infeasible — b̃₄ = −4 < 0',ok:false,
+     action:'Choose leaving: p = x₄ (b̃₄ = −4 < 0). Row of x₄: coefficients [4, −1]. Only x₁ has positive coefficient → q = x₁ enters.'},
+    {pt:[1,3],obj:10,feas:true,label:'Optimal!',
+     basis:'B = {x₃, x₁, x₂}',
+     rhs:'b̃ = [6, 1, 3] ≥ 0 ✓',
+     rc:'c̃ = [−0.25, −3.25] ≤ 0 ✓ (dual feasible)',
+     status:'Both primal and dual feasible → OPTIMAL',ok:true,
+     action:'Solution: (x₁, x₂) = (1, 3), min x₁ + 3x₂ = 10. Reached optimality in just 2 pivots!'}
+  ];
+  var cur=0,cfg={responsive:true,displayModeBar:false};
 
-import plotly.graph_objects as go
-import numpy as np
+  function buildTraces(){
+    var tr=[];
+    /* 0: Feasible region */
+    tr.push({x:[1,5,5,2,1],y:[3,3,7,7,3],fill:'toself',fillcolor:'rgba(39,174,96,0.1)',
+      line:{color:'rgba(39,174,96,0.3)',width:1},showlegend:false,hoverinfo:'skip'});
+    /* 1: C1 x1+3x2=4 */
+    tr.push({x:[-0.5,5],y:[1.5,-1/3],mode:'lines',line:{color:C.axis,width:1.2,dash:'dot'},
+      showlegend:false,hoverinfo:'skip'});
+    /* 2: C2 4x1-x2=1 */
+    tr.push({x:[0.25,2],y:[0,7],mode:'lines',line:{color:C.axis,width:1.2,dash:'dot'},
+      showlegend:false,hoverinfo:'skip'});
+    /* 3: C3 x2=3 */
+    tr.push({x:[-0.5,5],y:[3,3],mode:'lines',line:{color:C.axis,width:1.2,dash:'dot'},
+      showlegend:false,hoverinfo:'skip'});
+    /* 4: Optimal contour x1+3x2=10 */
+    tr.push({x:[-0.5,5],y:[3.5,5/3],mode:'lines',line:{color:C.gold,width:1.8,dash:'dash'},
+      showlegend:false,hoverinfo:'skip'});
+    /* 5: Sub-optimal contours */
+    [3,6,14].forEach(function(c){
+      tr.push({x:[-0.5,5],y:[(c+0.5)/3,(c-5)/3],mode:'lines',
+        line:{color:C.grid,width:0.8,dash:'dash'},showlegend:false,hoverinfo:'skip'});
+    });
+    /* 8: Path line */
+    tr.push({x:[0,0,1],y:[0,3,3],mode:'lines',line:{color:C.blue,width:2.5,dash:'dash'},
+      showlegend:false,hoverinfo:'skip'});
+    /* 9-11: Path markers */
+    for(var i=0;i<3;i++){
+      var s=steps[i],isCur=i===cur;
+      tr.push({x:[s.pt[0]],y:[s.pt[1]],mode:'markers+text',
+        marker:{size:isCur?18:10,color:s.feas?C.sage:C.terra,opacity:isCur?1:0.35,
+          symbol:isCur?'diamond':'circle',line:{width:isCur?2.5:1,color:'white'}},
+        text:isCur?['  '+s.label]:[''],textposition:'top right',
+        textfont:{family:font,size:12,color:C.text},showlegend:false,hoverinfo:'skip'});
+    }
+    /* 12-14: Constraint labels */
+    tr.push({x:[3.5],y:[0.17],mode:'text',text:['x₁+3x₂ = 4'],
+      textfont:{family:font,size:11,color:C.axis},showlegend:false,hoverinfo:'skip'});
+    tr.push({x:[1.65],y:[5.8],mode:'text',text:['4x₁−x₂ = 1'],
+      textfont:{family:font,size:11,color:C.axis},showlegend:false,hoverinfo:'skip'});
+    tr.push({x:[4.2],y:[3.25],mode:'text',text:['x₂ = 3'],
+      textfont:{family:font,size:11,color:C.axis},showlegend:false,hoverinfo:'skip'});
+    return tr;
+  }
 
-fig = go.Figure()
+  var layout={
+    paper_bgcolor:C.bg,plot_bgcolor:C.pbg,
+    font:{family:font,color:C.text,size:13},
+    xaxis:{title:{text:'x₁',font:{size:14}},range:[-0.8,5],gridcolor:C.grid,
+      zerolinecolor:C.axis,linecolor:C.axis,tickfont:{size:12,color:C.axis}},
+    yaxis:{title:{text:'x₂',font:{size:14}},range:[-0.8,7],gridcolor:C.grid,
+      zerolinecolor:C.axis,linecolor:C.axis,tickfont:{size:12,color:C.axis}},
+    margin:{l:50,r:20,t:10,b:50},height:420,
+    annotations:[{x:3.8,y:2,text:'x₁+3x₂ = 10',showarrow:false,
+      font:{family:font,size:11,color:C.gold}}]
+  };
 
-# Feasible region: x1 + 3*x2 >= 4, 4*x1 - x2 >= 1, x2 >= 3
-# Vertices of the feasible region:
-# x2 = 3, x1 + 9 >= 4 -> x1 >= -5 (not binding with 4x1-x2>=1 -> 4x1>=4 -> x1>=1)
-# Intersection of x1+3x2=4 and 4x1-x2=1: x1+3x2=4, 4x1-x2=1 => x2=1, x1=1/2... check
-# Actually: 4*(4-3x2) - x2 = 1 => 16-12x2-x2=1 => 13x2=15 => x2=15/13, x1=4-45/13=7/13
-# Intersection of 4x1-x2=1 and x2=3: 4x1=4, x1=1 -> (1,3)
-# Intersection of x1+3x2=4 and x2=3: x1=4-9=-5 -> (-5,3) -- far left
-# Region extends to the right and upward
+  function draw(){
+    Plotly.react('dsv-plot',buildTraces(),layout,cfg);
+    var s=steps[cur];
+    document.getElementById('dsv-lbl').textContent='Iteration '+cur+(cur===2?' — Optimal':'');
+    document.getElementById('dsv-prev').disabled=cur===0;
+    document.getElementById('dsv-next').disabled=cur===steps.length-1;
+    document.getElementById('dsv-info').innerHTML=
+      '<div class="row"><b>Point:</b> (x₁, x₂) = ('+s.pt[0]+', '+s.pt[1]+') &ensp;→&ensp; <b>Objective:</b> x₁ + 3x₂ = '+s.obj+(s.feas?' (optimal)':' (super-optimal)')+'</div>'+
+      '<div class="row"><b>Basis:</b> '+s.basis+'</div>'+
+      '<div class="row"><b>RHS values:</b> '+s.rhs+'</div>'+
+      '<div class="row"><b>Reduced costs:</b> '+s.rc+'</div>'+
+      '<div class="row '+(s.ok?'status-ok':'status-bad')+'">'+(s.ok?'✓ ':'✗ ')+s.status+'</div>'+
+      '<div class="action"><b>Action:</b> '+s.action+'</div>';
+  }
 
-# For plotting, clip to a reasonable window
-# The key vertices near the optimum:
-# (1, 3): intersection of 4x1-x2=1 and x2=3
-# (7/13, 15/13): intersection of x1+3x2=4 and 4x1-x2=1
-
-# Fill a large feasible region (clipped)
-# x2 >= 3 line, x1+3x2 >= 4, 4x1-x2 >= 1
-# For the plot, we'll show a region from x1=-1 to x1=6, x2=0 to x2=6
-
-x_fill = []
-y_fill = []
-
-# Boundary segments of feasible region (within plot window)
-# Bottom-left is bounded by x1+3x2=4 and 4x1-x2=1
-# The feasible region is above x2=3, above x1+3x2=4, above 4x1-x2=1
-
-# Let's trace the boundary:
-# Start at (1, 3) - intersection of 4x1-x2=1 and x2=3
-# Go right along x2=3 to (6, 3)
-# Go up to (6, 6)
-# Go left along top to (-1, 6)
-# Go down along x1+3x2=4 from (-1, 5/3)... but x2>=3 dominates here
-# Actually the binding constraints change
-
-# Simpler: just plot the three constraint boundaries and shade
-# For a clean figure, let's compute carefully
-
-# Constraint boundaries as lines
-x_range = np.linspace(-1, 7, 300)
-
-# x1 + 3*x2 = 4 => x2 = (4-x1)/3
-line1_y = (4 - x_range) / 3
-
-# 4*x1 - x2 = 1 => x2 = 4*x1 - 1
-line2_y = 4 * x_range - 1
-
-# x2 = 3
-line3_y = 3 * np.ones_like(x_range)
-
-# Feasible region vertices (computed):
-v1 = (7/13, 15/13)  # x1+3x2=4 and 4x1-x2=1
-v2 = (1, 3)          # 4x1-x2=1 and x2=3
-
-# The region is unbounded upward and to the right
-# For plotting, clip at x1=7, x2=7
-# Additional boundary points at the clip:
-v3 = (7, 3)           # x2=3, x1=7
-v4 = (7, 7)           # corner of clip
-v5 = (-1, 7)          # left side of clip, x2=7
-# x1+3*7=4 -> x1=-17, so at x2=7, constraint x1+3x2>=4 is satisfied for x1>=-17
-# At x1=-1: x2>=(4-(-1))/3 = 5/3, but x2>=3 dominates
-v6 = (-1, 3)          # but need to check 4*(-1)-3=-7 >= 1? No! So (-1,3) not feasible
-# 4x1-x2>=1 at x1=-1: -4-x2>=1 -> x2<=-5. Not feasible.
-# At x2=7: 4x1-7>=1 -> x1>=2. So (2,7) is on the boundary.
-# At x1=7, x2=3: 4*7-3=25>=1, 7+9=16>=4. Feasible.
-
-# Let's trace the feasible boundary more carefully:
-# The active constraints form a "cone" shape
-# From v1=(7/13, 15/13), go along x1+3x2=4 upward? No, x1+3x2=4 goes down as x1 increases
-# From v1, along 4x1-x2=1 upward to v2=(1,3), then along x2=3 to the right
-
-# For the filled polygon (clipped at [−1,7]x[0,7]):
-poly_x = [7/13, 1, 7, 7, 2, 7/13]
-poly_y = [15/13, 3, 3, 7, 7, 15/13]
-# Check (2,7): 2+21=23>=4, 8-7=1>=1, 7>=3. Yes.
-# But we need the boundary from (7/13,15/13) up to (2,7) along 4x1-x2=1
-# 4x1-x2=1: at x2=7, x1=2. Points along this line from v1 to (2,7).
-# Actually the feasible region boundary goes: v1 along constraint1 to... hmm
-
-# Let me just trace it properly:
-# Bottom vertex: v1 = (7/13, 15/13) -- intersection of constraints 1 and 2
-# From v1, going along constraint 2 (4x1-x2=1) upward: reaches x2=3 at v2=(1,3)
-# From v2, going along constraint 3 (x2=3) to the right: to (7,3)
-# From (7,3) up to (7,7)
-# From (7,7) left to (2,7) -- along constraint 2 boundary? 4*2-7=1, yes
-# From (2,7) down to v1 along constraint 2: 4x1-x2=1
-
-# So polygon: v1 -> v2 along 4x1-x2=1, v2 -> (7,3) along x2=3, (7,3)->(7,7)->(2,7) along clip, (2,7)->v1 along... wait
-# (2,7) to v1: both on 4x1-x2=1? 4*(7/13)-(15/13)=28/13-15/13=13/13=1. Yes!
-# So the boundary from v1 to (2,7) is all along 4x1-x2=1, and from v1 to v2 is also along 4x1-x2=1
-
-# Actually v1 to (2,7) is along 4x1-x2=1. And the other boundary of the region from v1 goes along x1+3x2=4
-# downward. But x2>=3 is also a constraint, so the feasible region is ABOVE all three constraints.
-
-# The feasible region is the intersection of three half-planes:
-# x1+3x2 >= 4  (above the line)
-# 4x1-x2 >= 1  (above the line, since it's 4x1-x2>=1)
-# x2 >= 3       (above the line)
-
-# The vertices of the feasible region are:
-# v2 = (1,3): 4x1-x2=1 and x2=3
-
-# Is x1+3x2=4 ever binding together with x2=3? x1=-5, then 4(-5)-3=-23<1. Not feasible.
-# Is x1+3x2=4 ever binding with 4x1-x2=1? Yes at v1=(7/13,15/13). But x2=15/13<3. So v1 is NOT feasible (violates x2>=3)!
-
-# So the feasible region has only ONE vertex: v2=(1,3)!
-# It extends to the right along x2=3 and upward along 4x1-x2=1.
-
-# Feasible polygon for plotting (clipped):
-poly_x = [1, 7, 7, 2, 1]
-poly_y = [3, 3, 7, 7, 3]
-
-fig.add_trace(go.Scatter(x=poly_x, y=poly_y, fill='toself',
-    fillcolor='rgba(123,143,163,0.18)', line=dict(color='#7b97ad', width=2),
-    name='Feasible region', mode='lines'))
-
-# Constraint lines
-fig.add_trace(go.Scatter(
-    x=list(x_range[line1_y >= 0]),
-    y=list(line1_y[line1_y >= 0]),
-    mode='lines', line=dict(color='#968a80', width=1.5, dash='dash'),
-    name='x<sub>1</sub> + 3x<sub>2</sub> = 4'))
-
-x2_line2 = np.linspace(0, 2.5, 100)
-x1_line2 = (1 + x2_line2) / 4
-fig.add_trace(go.Scatter(
-    x=list(x1_line2), y=list(x2_line2),
-    mode='lines', line=dict(color='#907ea0', width=1.5, dash='dash'),
-    name='4x<sub>1</sub> - x<sub>2</sub> = 1'))
-
-fig.add_trace(go.Scatter(
-    x=[-1, 7], y=[3, 3],
-    mode='lines', line=dict(color='#7a9a7e', width=1.5, dash='dash'),
-    name='x<sub>2</sub> = 3'))
-
-# Objective contours: x1 + 3x2 = k
-for k in [6, 10, 14, 18]:
-    x_obj = np.linspace(-1, 7, 50)
-    y_obj = (k - x_obj) / 3
-    fig.add_trace(go.Scatter(x=list(x_obj), y=list(y_obj),
-        mode='lines', line=dict(color='#b8995e', width=1, dash='dot'),
-        showlegend=(k==6),
-        name='Objective contours' if k==6 else '', hoverinfo='skip'))
-
-# Dual simplex path: the algorithm visits bases that may be primal infeasible
-# Iteration 0: x1=0, x2=0 (infeasible, obj=0)
-# Iteration 1 after pivot (x5,x2): x1=0, x2=3, but x4=-4<0, so x1=0 is the "point"
-# but really (x1,x2)=(0,3) with x4<0
-# Iteration 2 after pivot (x4,x1): x1=1, x2=3 (feasible, optimal)
-
-path_x = [0, 0, 1]
-path_y = [0, 3, 3]
-labels = ['Iter 0: (0,0)<br>obj=0, infeasible',
-          'Iter 1: (0,3)<br>obj=-9, infeasible',
-          'Iter 2: (1,3)<br>obj=-10, OPTIMAL']
-
-fig.add_trace(go.Scatter(x=path_x, y=path_y, mode='lines+markers',
-    line=dict(color='#b56b6b', width=3, dash='dot'),
-    marker=dict(color='#b56b6b', size=11, symbol='circle',
-    line=dict(width=1.5, color='white')),
-    name='Dual simplex path',
-    text=labels, hoverinfo='text'))
-
-# Arrows
-for i in range(len(path_x)-1):
-    fig.add_annotation(
-        x=path_x[i+1], y=path_y[i+1],
-        ax=path_x[i], ay=path_y[i],
-        showarrow=True, arrowhead=3, arrowsize=1.5,
-        arrowcolor='#b56b6b', arrowwidth=2)
-
-# Optimal point
-fig.add_trace(go.Scatter(x=[1], y=[3], mode='markers',
-    marker=dict(color='#b56b6b', size=16, symbol='star',
-    line=dict(width=1.5, color='white')),
-    name='Optimal: (1, 3), min = 10'))
-
-fig.update_layout(
-    xaxis=dict(title='x<sub>1</sub>', range=[-1, 7], zeroline=True),
-    yaxis=dict(title='x<sub>2</sub>', range=[-0.5, 7], zeroline=True, scaleanchor='x'),
-    showlegend=True,
-    legend=dict(font=dict(size=11), x=0.55, y=0.98),
-    margin=dict(t=20, b=50, l=55, r=20))
-fig.show()
-```
-
-### Tracking the Iterations {#sec-tracking-iterations}
-
-The following interactive table tracks the state of the dual simplex method at each iteration.
-
-```python
-#| label: fig-iteration-tracker
-#| fig-cap: "Dual simplex iteration tracker for the worked example. Each row shows the tableau state, the pivot choice, and the feasibility status."
-#| echo: false
-
-import plotly.graph_objects as go
-
-fig = go.Figure(data=[go.Table(
-    columnwidth=[80, 100, 120, 100, 100, 100, 100],
-    header=dict(
-        values=['<b>Iteration</b>', '<b>Basis</b>', '<b>RHS (b&#771;)</b>',
-                '<b>Red. costs (c&#771;)</b>', '<b>Dual feas?</b>',
-                '<b>Primal feas?</b>', '<b>Pivot</b>'],
-        fill_color='#7b97ad',
-        font=dict(color='white', size=13),
-        align='center', height=35),
-    cells=dict(
-        values=[
-            ['0', '1', '2'],
-            ['{x<sub>3</sub>, x<sub>4</sub>, x<sub>5</sub>}',
-             '{x<sub>3</sub>, x<sub>4</sub>, x<sub>2</sub>}',
-             '{x<sub>3</sub>, x<sub>1</sub>, x<sub>2</sub>}'],
-            ['(-4, -1, -3)', '(5, -4, 3)', '(6, 1, 3)'],
-            ['(-1, -3)', '(-1, -3)', '(-0.25, -3.25)'],
-            ['Yes', 'Yes', 'Yes'],
-            ['<b style="color:#b56b6b">No</b>',
-             '<b style="color:#b56b6b">No</b>',
-             '<b style="color:#7a9a7e">Yes -- OPTIMAL</b>'],
-            ['(x<sub>5</sub>, x<sub>2</sub>)', '(x<sub>4</sub>, x<sub>1</sub>)', '--']
-        ],
-        fill_color=[
-            ['#f5f0e8', '#f5f0e8', '#e8f0e8'],
-            ['#f5f0e8', '#f5f0e8', '#e8f0e8'],
-            ['#f5f0e8', '#f5f0e8', '#e8f0e8'],
-            ['#f5f0e8', '#f5f0e8', '#e8f0e8'],
-            ['#e8f0e8', '#e8f0e8', '#e8f0e8'],
-            ['#f5e8e8', '#f5e8e8', '#e8f0e8'],
-            ['#f5f0e8', '#f5f0e8', '#e8f0e8']
-        ],
-        font=dict(size=12),
-        align='center', height=30))
-])
-
-fig.update_layout(
-    margin=dict(t=10, b=10, l=10, r=10),
-    height=200)
-fig.show()
+  document.getElementById('dsv-prev').onclick=function(){if(cur>0){cur--;draw();}};
+  document.getElementById('dsv-next').onclick=function(){if(cur<steps.length-1){cur++;draw();}};
+  draw();
+})();
+</script>
 ```
 
 ## When to Use the Dual Simplex Method {#sec-when-to-use}
@@ -996,15 +873,17 @@ When solving a sequence of related LPs (as in column generation or Benders decom
 ::: {.callout-tip}
 ## The Big Picture
 
-**Primal simplex:** Maintain a sequence of basic/nonbasic partitions $B / N$ such that:
+The two simplex variants are mirror images of each other, differing only in which feasibility condition is maintained as an invariant and which is achieved through pivoting:
 
-- $x_B^*$ is primal feasible ($\widetilde{b} \geq 0$)
+**Primal simplex** maintains primal feasibility and drives toward dual feasibility:
+
+- $x_B^*$ is primal feasible ($\widetilde{b} \geq 0$) at every iteration
 - $z_N^*$ eventually becomes dual feasible ($\widetilde{c} \leq 0$) through pivots
 - Complementary slackness is preserved at every step
 
-**Dual simplex:** Maintain a sequence of basic/nonbasic partitions $B / N$ such that:
+**Dual simplex** maintains dual feasibility and drives toward primal feasibility:
 
-- $z_N^*$ is dual feasible ($\widetilde{c} \leq 0$)
+- $z_N^*$ is dual feasible ($\widetilde{c} \leq 0$) at every iteration
 - $x_B^*$ eventually becomes primal feasible ($\widetilde{b} \geq 0$) through pivots
 - Complementary slackness is preserved at every step
 

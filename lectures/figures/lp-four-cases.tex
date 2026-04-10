@@ -1,0 +1,139 @@
+\documentclass[border=8pt]{standalone}
+\usepackage{mathpazo}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{patterns,arrows.meta,decorations.markings,calc}
+
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{rwgold}{HTML}{B8995E}
+\definecolor{sage}{HTML}{7A9A7E}
+\definecolor{terracotta}{HTML}{C47A6A}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{lavender}{HTML}{907EA0}
+\definecolor{goldfill}{HTML}{F5EFE4}
+\definecolor{bluefill}{HTML}{E8EDF2}
+\definecolor{sagefill}{HTML}{E8F0E9}
+\definecolor{lavfill}{HTML}{EDE8F0}
+\definecolor{terrafill}{HTML}{F2E6E3}
+
+\begin{document}
+\begin{tikzpicture}
+
+% ===== Panel 1: Infeasible (top-left) =====
+\begin{scope}[shift={(0,5.8)}]
+  % Title
+  \node[font=\bfseries\small,dkbrown] at (2.2,4.8) {Case 1: Infeasible ($\Omega = \emptyset$)};
+
+  % Axes
+  \draw[->,wmgray,thick] (-0.3,0) -- (4.8,0) node[right,font=\small] {$x_1$};
+  \draw[->,wmgray,thick] (0,-0.3) -- (0,4.5) node[above,font=\small] {$x_2$};
+
+  % Region x2 >= 3 (upper strip)
+  \fill[bluefill,opacity=0.6] (-0.2,2.5) rectangle (4.5,4.3);
+  \draw[stblue,thick] (-0.2,2.5) -- (4.5,2.5);
+  \node[stblue,font=\small] at (2.2,3.5) {$x_2 \geq 3$};
+
+  % Region x2 <= 1 (lower strip)
+  \fill[lavfill,opacity=0.6] (-0.2,-0.1) rectangle (4.5,1.0);
+  \draw[lavender,thick] (-0.2,1.0) -- (4.5,1.0);
+  \node[lavender,font=\small] at (2.2,0.4) {$x_2 \leq 1$};
+
+  % Infeasible label
+  \node[terracotta,font=\Large] at (2.2,1.75) {$\Omega = \emptyset$};
+\end{scope}
+
+% ===== Panel 2: Unbounded (top-right) =====
+\begin{scope}[shift={(7,5.8)}]
+  % Title
+  \node[font=\bfseries\small,dkbrown] at (2.2,4.8) {Case 2: Unbounded ($f^* \to -\infty$)};
+
+  % Axes
+  \draw[->,wmgray,thick] (-0.3,0) -- (4.8,0) node[right,font=\small] {$x_1$};
+  \draw[->,wmgray,thick] (0,-0.3) -- (0,4.5) node[above,font=\small] {$x_2$};
+
+  % Feasible region: x1 >= 0, x2 >= 0, -x1+x2 <= 2
+  \fill[sagefill,opacity=0.6] (0,0) -- (4.5,0) -- (4.5,4.3) -- (0,2) -- cycle;
+  \draw[sage,thick] (0,0) -- (4.5,0);
+  \draw[sage,thick] (0,0) -- (0,2);
+  \draw[sage,thick] (0,2) -- (4.5,4.3);
+  \node[sage,font=\small] at (1.8,2.8) {$\Omega$};
+
+  % Vertical contours (objective min -x1)
+  \draw[rwgold,dashed,thick] (0.8,-0.2) -- (0.8,4.3);
+  \draw[rwgold,dashed,thick] (2.0,-0.2) -- (2.0,4.3);
+  \draw[rwgold,dashed,thick] (3.2,-0.2) -- (3.2,4.3);
+
+  % -c arrow pointing right
+  \draw[-{Stealth[length=5pt]},rwgold,very thick] (2.8,2.0) -- (4.0,2.0);
+  \node[rwgold,font=\small] at (3.2,2.4) {$-c$};
+
+  % f* label
+  \node[terracotta,font=\small\bfseries] at (3.8,0.6) {$f^* \to -\infty$};
+\end{scope}
+
+% ===== Panel 3: Infinite Optima (bottom-left) =====
+\begin{scope}[shift={(0,0)}]
+  % Title
+  \node[font=\bfseries\small,dkbrown] at (2.2,4.8) {Case 3: Infinite Optima};
+
+  % Axes
+  \draw[->,wmgray,thick] (-0.3,0) -- (4.8,0) node[right,font=\small] {$x_1$};
+  \draw[->,wmgray,thick] (0,-0.3) -- (0,4.5) node[above,font=\small] {$x_2$};
+
+  % Polytope: (0,0) (4,0) (5,2) (2,4) (0,3)
+  % Scale: multiply by 0.8
+  \fill[bluefill,opacity=0.5] (0,0) -- (3.2,0) -- (4.0,1.6) -- (1.6,3.2) -- (0,2.4) -- cycle;
+  \draw[stblue,thick] (0,0) -- (3.2,0) -- (4.0,1.6) -- (1.6,3.2) -- (0,2.4) -- cycle;
+
+  % Contours (slope 1/2): y = 0.5x + c_val
+  \draw[rwgold,dashed] (-0.3,0.35) -- (4.5,2.75);
+  \draw[rwgold,dashed] (-0.3,-0.65) -- (4.5,1.75);
+  \draw[rwgold,dashed] (-0.3,1.35) -- (4.5,3.75);
+
+  % Optimal face (edge from (0,3) to (2,4) -> (0,2.4) to (1.6,3.2))
+  \draw[terracotta,line width=3pt] (0,2.4) -- (1.6,3.2);
+  \fill[terracotta] (0,2.4) circle (3pt);
+  \fill[terracotta] (1.6,3.2) circle (3pt);
+
+  % Label
+  \node[terracotta,font=\footnotesize,anchor=south] at (1.2,3.6) {optimal face};
+  \draw[->,wmgray,thin] (1.2,3.55) -- (0.9,2.9);
+
+  % -c arrow (direction (-1,2) normalized, pointing upper-left)
+  \draw[-{Stealth[length=5pt]},rwgold,very thick] (2.8,1.2) -- (2.2,2.4);
+  \node[rwgold,font=\small] at (2.0,1.5) {$-c$};
+\end{scope}
+
+% ===== Panel 4: Unique Optimum (bottom-right) =====
+\begin{scope}[shift={(7,0)}]
+  % Title
+  \node[font=\bfseries\small,dkbrown] at (2.2,4.8) {Case 4: Unique Optimum};
+
+  % Axes
+  \draw[->,wmgray,thick] (-0.3,0) -- (4.8,0) node[right,font=\small] {$x_1$};
+  \draw[->,wmgray,thick] (0,-0.3) -- (0,4.5) node[above,font=\small] {$x_2$};
+
+  % Polytope: (0,0) (4,0) (5,1) (3,4) (0,3) scaled by 0.8
+  \fill[sagefill,opacity=0.5] (0,0) -- (3.2,0) -- (4.0,0.8) -- (2.4,3.2) -- (0,2.4) -- cycle;
+  \draw[sage,thick] (0,0) -- (3.2,0) -- (4.0,0.8) -- (2.4,3.2) -- (0,2.4) -- cycle;
+
+  % Contours (slope -1): y = -x + c_val
+  \draw[rwgold,dashed] (-0.3,4.3) -- (4.5,-0.5);
+  \draw[rwgold,dashed] (-0.3,2.3) -- (2.5,-0.5);
+  \draw[rwgold,dashed] (-0.3,0.8) -- (1.0,-0.5);
+
+  % Optimal vertex at origin
+  \node[terracotta,star,star points=5,star point ratio=2.2,fill=terracotta,minimum size=10pt,inner sep=0pt] at (0,0) {};
+
+  % Label
+  \node[terracotta,font=\small\bfseries] at (0.6,-0.4) {$x^*$};
+
+  % -c arrow (direction (-1,-1) normalized, pointing lower-left)
+  \draw[-{Stealth[length=5pt]},rwgold,very thick] (2.4,2.0) -- (1.4,1.0);
+  \node[rwgold,font=\small] at (2.2,1.0) {$-c$};
+\end{scope}
+
+\end{tikzpicture}
+\end{document}

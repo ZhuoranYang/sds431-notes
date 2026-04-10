@@ -1,0 +1,806 @@
+---
+title: "SGD, Proximal Gradient, and Frank-Wolfe"
+---
+
+The momentum and adaptive methods from the previous chapter dramatically accelerate gradient descent, but they assume two favorable conditions: that computing the full gradient is feasible, and that the objective is smooth. In practice, these assumptions often fail. This chapter addresses three fundamental challenges that arise in real-world optimization:
+
+- **What if the data is too large?** When the objective is a sum over millions of data points, computing the full gradient at each iteration is prohibitively expensive. Stochastic gradient descent (SGD) replaces the exact gradient with a cheap, noisy estimate from a single data point or small batch, making optimization on massive datasets tractable.
+- **What if the objective is nonsmooth?** Many important objectives in statistics and machine learning involve nonsmooth terms such as the $\ell_1$ penalty (for sparsity) or indicator functions (for constraints). Proximal gradient methods elegantly handle these by splitting the objective into a smooth part and a "simple" nonsmooth part, achieving the same convergence rate as gradient descent on purely smooth problems.
+- **What if there are constraints?** For constrained optimization, projected gradient descent is a natural approach, but projection can be expensive for structured constraint sets (polytopes, nuclear norm balls). The Frank-Wolfe (conditional gradient) method avoids projection entirely by solving a linear minimization at each step --- a much cheaper operation for many important constraint sets.
+
+Together with the momentum and adaptive methods of the previous chapter, these three techniques complete the first-order optimization toolkit.
+
+::: {.callout-tip}
+## Companion Notebooks
+
+Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.
+
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/08a-subgradient-proximal-gradient.ipynb) **Proximal Gradient** --- solving the Lasso with proximal operators
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/08b-projected-gradient-frank-wolfe.ipynb) **Projected Gradient and Frank-Wolfe** --- constrained optimization on $\ell_1$-balls with signal recovery
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/08c-tv-denoising.ipynb) **TV Denoising** --- total variation image denoising via proximal gradient in PyTorch
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/08d-coordinate-descent.ipynb) **Coordinate Descent** --- coordinate descent methods and comparisons
+:::
+
+## What Will Be Covered {.unnumbered}
+
+This chapter develops the following topics:
+
+- Stochastic gradient descent for finite-sum objectives and minibatch variants
+- Proximal gradient methods for composite (smooth + nonsmooth) objectives
+- Frank-Wolfe (conditional gradient) method for constrained optimization
+
+## Stochastic Gradient Descent {#sgd}
+
+The momentum and adaptive methods developed in the previous chapter still assume that computing the full gradient $\nabla f(x)$ is feasible at every iteration. In modern machine learning, however, the objective is typically a sum over millions of data points, $f(x) = \frac{1}{m}\sum_{i=1}^{m} f_i(x)$, and evaluating the full gradient is prohibitively expensive. Stochastic gradient descent (SGD) addresses this by replacing the exact gradient with a cheap, noisy estimate obtained from a single randomly sampled data point. This simple idea --- trading accuracy per step for computational savings --- is what makes it possible to train models on massive datasets. In practice, stochastic gradients are combined with the momentum and adaptive scaling techniques from the previous chapter (e.g., SGD with momentum, Adam) to achieve both computational efficiency and fast convergence.
+
+### Finite-Sum Objectives {#finite-sum}
+
+In machine learning problems, the objective functions often have a **"finite-sum" form**. That is,
+
+$$f(x) = \frac{1}{m} \sum_{i=1}^{m} f_i(x), \quad \text{where } f_1, \ldots, f_m : \mathbb{R}^n \to \mathbb{R}.$$ {#eq-finite-sum}
+
+#### Empirical Risk Minimization {#erm}
+
+::: {#exm-erm}
+## Empirical Risk Minimization
+
+$(X, Y)$: some random variables satisfying some statistical relationship ("statistical model").
+
+- $X$: input
+- $Y$: output / label
+
+To estimate the model, we collect data $\mathcal{D} = \{(x_i, y_i),\, i \in [m]\}$ and estimate the underlying model within some model class.
+
+**Model class:** $f_\theta : \mathcal{X} \mapsto \mathcal{Y}$. The function $f_\theta(x)$ predicts the output associated with $x$.
+
+**Loss function:** $\ell : \mathcal{Y} \times \mathcal{Y} \to \mathbb{R}$ measures how good the prediction is.
+
+- Least-squares loss: $\ell(y, y') = (y - y')^2$
+- Log-loss (cross entropy): $\ell(y, y') = -y \cdot \log(y') - (1-y) \log(1-y')$
+
+Then ERM wants to find the model that best fits the data:
+
+$$\mathcal{L}_n(\theta) = \frac{1}{m} \sum_{i=1}^{m} \ell\bigl(y_i,\, f_\theta(x_i)\bigr), \quad \widehat{\theta}_{\text{ERM}} = \min_{\theta} \mathcal{L}_n(\theta).$$
+
+This is a finite-sum objective with $f_i(\theta) = \ell\bigl(y_i,\, f_\theta(x_i)\bigr)$. Each term $f_i$ depends on only one data point $(x_i, y_i)$, which makes it possible to estimate the gradient cheaply by sampling a single data point rather than evaluating the entire sum.
+:::
+
+#### Examples of ERM {#erm-examples}
+
+::: {#exm-regression-classification}
+## Regression and Classification
+
+**1. Linear regression:**
+
+$$\ell(y, y') = (y - y')^2, \quad f_\theta(x) = x^\top \theta.$$
+
+**2. Neural network regression:**
+
+$$\ell(y, y') = (y - y')^2, \quad f_\theta(x) = W_2 \sigma(W_1 x).$$
+
+**3. Logistic regression (classification):**
+
+$$\ell(y, y') = -\bigl(y \log(y') + (1-y) \log(1-y')\bigr), \quad f_\theta(x) = \frac{1}{1 - \exp(\theta^\top x)}.$$
+:::
+
+### The SGD Algorithm {#sgd-algorithm}
+
+Consider the finite-sum objective $f(x) = \frac{1}{m}\sum_{i=1}^m f_i(x)$.
+
+::: {.callout-important}
+## Algorithm: Stochastic Gradient Descent (SGD)
+
+**Update:** At each iteration $k$, sample $i^k \sim \text{Unif}([m])$ and update:
+$$x^{k+1} = x^k - \alpha^k \cdot g(x^k, i^k),$$
+where $g(x, i) = \nabla f_i(x)$ is the **stochastic gradient** (the gradient of a single randomly chosen component).
+:::
+
+#### Unbiased Gradient Estimate {#sgd-unbiased}
+
+Why is this correct? Because the stochastic gradient is an **unbiased** estimator of the full gradient:
+
+$$\mathbb{E}\bigl[g(x, i^k)\bigr] = \frac{1}{m} \sum_{i=1}^{m} \nabla f_i(x) = \nabla f(x), \quad i^k \sim \text{Unif}([m]).$$
+
+#### Noise and Cumulative Error {#sgd-noise}
+
+Intuitively, the descent direction of SGD is
+
+$$\nabla f_i(x^k) = \nabla f(x^k) + \varepsilon^k,$$
+
+where $\varepsilon^k$ is a noise term with $\mathbb{E}[\varepsilon^k] = 0$ and $\text{Var}(\varepsilon^k) \leq \sigma^2$ for some $\sigma > 0$.
+
+After $K$ iterations, the update becomes approximately
+
+$$x^{k+1} \approx x^k - \alpha^k \cdot \nabla f(x^k) - \alpha^k \cdot \varepsilon^k.$$
+
+The **cumulative noise** after $K$ steps is approximately $\sum_{k=1}^{K} \alpha^k \cdot \varepsilon^k$.
+
+::: {.callout-tip}
+## Remark: Controlling Cumulative Noise
+
+If $\varepsilon^k \sim N(0, \sigma^2)$, then $\sum_{k=1}^{K} \alpha^k \varepsilon^k \sim N\!\left(0, \sigma^2 \sum_{k=1}^{K} (\alpha^k)^2\right)$.
+
+Two competing requirements on the step sizes:
+
+- We want the cumulative noise to be finite: $\sum_{k=1}^{\infty} (\alpha^k)^2 < \infty$.
+- We want SGD to move sufficiently far: $\sum_{k=1}^{\infty} \alpha^k = +\infty$.
+:::
+
+![SGD noise and convergence. Full gradient descent (green) converges smoothly to $x^*$. SGD with batch size $b = 1$ (terracotta) oscillates in a noise ball proportional to $\sigma^2/b$. Mini-batch SGD (blue) reduces noise and interpolates between the two.](figures/ch08-sgd-noise.svg){#fig-sgd-noise}
+
+### Convergence of SGD {#sgd-convergence}
+
+The key question for SGD is: how fast does it converge despite the noise in each gradient estimate? Since each stochastic gradient $\nabla f_i(x^k)$ deviates from the true gradient $\nabla f(x^k)$, we need a decaying step size to ensure that the cumulative noise remains controlled. The following theorem quantifies the resulting convergence rate.
+
+::: {#thm-sgd-convergence}
+## Convergence of SGD
+
+When $f$ is an $L$-Lipschitz continuous convex function, with step size $\alpha^k = O\!\left(\frac{1}{\sqrt{k}}\right)$, we have
+
+$$\mathbb{E}\bigl[f(\bar{x}^K)\bigr] \leq f(x^*) + C \sqrt{\frac{\sigma^2 \cdot \|x^1 - x^*\|^2}{K}}$$ {#eq-sgd-convergence}
+
+for some constant $C$, where $\bar{x}^K = \frac{1}{K}\sum_{k=1}^{K} x^k$ and the expectation is with respect to the randomness of stochastic gradients.
+:::
+
+This theorem establishes that SGD converges at a rate of $O(1/\sqrt{K})$ in expectation (@eq-sgd-convergence), which is slower than the $O(1/K)$ rate of full gradient descent. The slower rate is the price we pay for the cheaper per-iteration cost of sampling a single gradient. Notice that the bound depends on the gradient noise variance $\sigma^2$: when $\sigma^2 = 0$ (no noise, i.e., full GD), the bound recovers the standard GD rate.
+
+::: {.callout-note appearance="simple"}
+Setting $\alpha^k = O\!\left(\frac{1}{\sqrt{k}}\right)$ (decaying stepsizes):
+
+- SGD converges at a rate $\frac{1}{\sqrt{K}}$ in expectation.
+- To get an $\varepsilon$-approximate solution, we need $O\!\left(\frac{1}{\varepsilon^2}\right)$ iterations.
+:::
+
+### Minibatch SGD {#minibatch}
+
+#### GD vs. SGD Trade-off {#gd-vs-sgd}
+
+The SGD convergence rate (@eq-sgd-convergence) raises a natural question: can we interpolate between the low per-iteration cost of SGD and the fast convergence of full GD? Consider the finite-sum objective (@eq-finite-sum) $f = \frac{1}{m}\sum_{i=1}^m f_i$.
+
+::: {.callout-tip}
+## Remark: SGD vs. GD
+
+**SGD:** Sample 1 random function ($\nabla f_i$, $i \sim \text{Unif}([m])$) --- large randomness.
+
+- Use decaying stepsize $\alpha_k = O(1/\sqrt{k})$ to control the noise.
+- Low computational cost per iteration.
+- High iteration complexity (slow convergence).
+
+**GD:** Use all functions to compute gradient. No randomness.
+(See [Part 5.1](06-gradient-descent.qmd) for gradient descent fundamentals.)
+
+- Constant stepsize $\alpha^k = 1/M$ where $\nabla^2 f \preceq M \cdot I_n$.
+- High computational cost per iteration.
+- Low iteration complexity (fast convergence).
+:::
+
+Is there anything in between? Yes --- **Minibatch SGD** provides exactly this interpolation. Instead of using a single random sample ($B=1$, pure SGD) or all $m$ samples ($B=m$, full GD), we average the gradients of a small random subset of size $B$. Averaging over $B$ samples reduces the variance of the stochastic gradient by a factor of $B$, which allows a larger step size and faster convergence, while keeping the per-iteration cost at $O(B)$ gradient evaluations instead of $O(m)$.
+
+#### Minibatch SGD Algorithm {#minibatch-algo}
+
+::: {.callout-important}
+## Algorithm: Minibatch SGD
+
+Let $B \in [m]$ be the **batch size**. At each iteration $k$:
+
+1. Sample $B$ indices $\{i_1, \ldots, i_B\}$ uniformly at random from $[m]$.
+2. Compute the minibatch gradient and update:
+
+$$x^{k+1} = x^k - \alpha^k \cdot \frac{1}{B}\sum_{l=1}^{B} \nabla f_{i_l}(x^k).$$
+
+The two extremes recover familiar algorithms: $B = m$ gives full-batch GD, and $B = 1$ gives standard SGD.
+:::
+
+::: {.callout-tip}
+## Remark
+
+Several practical points are worth noting:
+
+1. Minibatch SGD is very popular in deep learning (it balances the noise reduction of full-batch GD with the speed of single-sample SGD).
+2. $\alpha^k$ is often chosen to be a small constant (or decayed according to a schedule such as cosine annealing).
+3. Minibatch stochastic gradient can be combined with momentum, Adagrad, RMSprop, Adam, etc., yielding the optimizers most commonly used in practice.
+:::
+
+## Proximal Gradient Methods {#proximal}
+
+The SGD and minibatch methods of the previous section address the challenge of *scale* --- what to do when computing the full gradient is too expensive. We now turn to a fundamentally different challenge: what happens when the objective function is **not smooth**, or when the optimization problem has **constraints**?
+
+These situations arise constantly in practice. Many of the most important formulations in statistics and machine learning involve nonsmooth terms --- $\ell_1$-penalties for sparsity, nuclear norm penalties for low-rank structure, or hard constraints on the feasible region. Standard gradient descent requires a differentiable objective, so it cannot be applied directly.
+
+::: {#exm-lasso}
+## Non-smooth Optimization --- Lasso
+
+The Lasso is the prototypical example of a nonsmooth optimization problem in statistics:
+
+$$\min_{\theta \in \mathbb{R}^d} \; L(\theta) = \underbrace{\|y - X\theta\|_2^2}_{\text{smooth (least squares)}} + \underbrace{\lambda \|\theta\|_1}_{\text{nonsmooth (sparsity penalty)}}.$$
+
+The $\ell_1$-norm $\|\theta\|_1$ is **not differentiable** at any point where some coordinate $\theta_j = 0$. Since the entire purpose of the $\ell_1$-penalty is to drive coordinates to zero, the nonsmoothness occurs precisely where the action is.
+:::
+
+::: {#exm-constrained-ls}
+## Constrained Optimization --- Least Squares under an $\ell_p$-Ball
+
+$$\min_{\theta} \; \|y - X\theta\|_2^2 \quad \text{s.t.} \quad \theta \in \mathcal{C} = \bigl\{w \in \mathbb{R}^d : \|w\| \leq R\bigr\}.$$
+
+Here the objective itself is smooth, but the constraint $\theta \in \mathcal{C}$ prevents us from simply following the gradient --- a gradient step may leave the feasible region.
+:::
+
+The key observation is that both problems share a common structure: the objective can be decomposed into a **smooth part** that we know how to optimize and a **nonsmooth part** that encodes the difficulty (sparsity, constraints, etc.). Proximal gradient methods exploit this decomposition.
+
+### Composite Objective Functions {#composite}
+
+::: {#def-composite-objective}
+## Composite Objective
+
+**Composite objective functions** have the form
+
+$$f(x) = g(x) + h(x),$$
+
+where:
+
+- $g$ is convex and **differentiable** (often $M$-smooth).
+- $h$ is convex but possibly **nonsmooth** --- however, it must be "simple" in the sense that its proximal mapping (defined below) can be evaluated efficiently.
+:::
+
+This decomposition is surprisingly versatile. Many problems that appear very different on the surface --- sparse regression, constrained optimization, matrix completion --- all fit into this composite framework:
+
+::: {#exm-composite-problems}
+## Lasso and Constrained Least Squares as Composite Problems
+
+**Lasso:** $g(\theta) = \|y - A\theta\|_2^2$ (smooth), $\;h(\theta) = \lambda\|\theta\|_1$ (nonsmooth but simple).
+
+**Constrained least squares:** $g(\theta) = \|y - A\theta\|_2^2$ (smooth), $\;h(\theta) = \mathcal{I}_\mathcal{C}(\theta) = \begin{cases} \infty & \theta \notin \mathcal{C}, \\ 0 & \theta \in \mathcal{C} \end{cases}$ (nonsmooth but simple).
+
+In both cases, $g$ is a standard least-squares loss with Lipschitz-continuous gradient, and $h$ encodes the structural requirement (sparsity or feasibility).
+:::
+
+### From GD to Proximal Gradient: The Key Idea {#proximal-idea}
+
+Since $f = g + h$ is not differentiable, we cannot directly run GD on $f$. But $g$ alone *is* smooth, so the idea is to handle $g$ and $h$ separately.
+
+Recall that a gradient descent step on the smooth part $g$ can be written as a **minimization of a quadratic surrogate**:
+
+$$x - \alpha \nabla g(x) = \operatorname*{arg\,min}_{z \in \mathbb{R}^n} \left\{ g(x) + \nabla g(x)^\top (z - x) + \frac{1}{2\alpha}\|z - x\|_2^2 \right\}.$$
+
+The expression inside the argmin is a quadratic upper bound on $g(z)$ (using the first-order Taylor expansion plus a proximity term). Now, to account for $h$, we simply **add $h(z)$ to the surrogate**:
+
+$$\begin{aligned}
+&\operatorname*{arg\,min}_{z} \left\{ g(x) + \nabla g(x)^\top (z - x) + \frac{1}{2\alpha}\|z - x\|_2^2 + h(z) \right\} \\
+&= \operatorname*{arg\,min}_{z} \left\{ \frac{1}{2\alpha}\|z - \underbrace{[x - \alpha \nabla g(x)]}_{\text{gradient step}}\|_2^2 + h(z) \right\},
+\end{aligned}$$
+
+where the second line follows by completing the square (dropping terms that do not depend on $z$). This gives us the proximal gradient update: first take a gradient step on $g$, then solve a simple optimization problem involving $h$ alone.
+
+### Proximal Mapping {#proximal-mapping}
+
+The optimization problem that appears in the second line above motivates a fundamental definition.
+
+::: {#def-proximal-mapping}
+## Proximal Mapping
+
+The **proximal mapping** (or **proximal operator**) induced by a function $h$ with parameter $\alpha > 0$ is:
+
+$$\text{prox}_{\alpha, h}(x) = \operatorname*{arg\,min}_{z} \left\{ \frac{1}{2\alpha}\|x - z\|_2^2 + h(z) \right\}.$$ {#eq-proximal-mapping}
+:::
+
+The proximal mapping balances two competing objectives: staying close to the input $x$ (the quadratic penalty $\frac{1}{2\alpha}\|x-z\|^2$) and minimizing $h(z)$. The parameter $\alpha$ controls the trade-off --- a larger $\alpha$ puts more weight on minimizing $h$, allowing the output to move further from $x$; a smaller $\alpha$ keeps the output close to $x$, making only a small adjustment toward reducing $h$.
+
+@fig-proximal-operator illustrates this trade-off geometrically for $h(z) = |z|$: the proximal operator finds the point that minimizes the sum of $h$ and the quadratic penalty centered at $x_k$.
+
+![Geometric picture of the proximal operator for $h(z) = |z|$. The proximal step minimizes the sum of $h(z)$ and a quadratic penalty centered at the current iterate $x_k$, yielding the new iterate $x_{k+1}$.](figures/ch08-proximal-operator.svg){#fig-proximal-operator}
+
+### Proximal Gradient Descent {#proximal-gd}
+
+With the proximal mapping in hand, the proximal gradient algorithm is simply the two-step procedure we derived above: take a gradient step on the smooth part $g$, then apply the proximal operator for the nonsmooth part $h$.
+
+![Proximal gradient decomposition: the composite objective $f = g + h$ is split into a smooth part $g$ (handled by a gradient step) and a nonsmooth part $h$ (handled by the proximal operator). Each iteration first takes a gradient step on $g$, then applies the proximal mapping for $h$. This splitting exploits the structure of both components simultaneously.](figures/ch08-proximal-decomposition.svg){#fig-proximal-decomposition}
+
+::: {.callout-important}
+## Algorithm: Proximal Gradient Descent
+
+For $k = 0, 1, 2, \ldots$:
+
+**Step 1 (Gradient step on $g$):**
+$$z^{k+1} = x^k - \alpha^k \nabla g(x^k).$$
+
+**Step 2 (Proximal step for $h$):**
+$$x^{k+1} = \text{prox}_{\alpha^k h}(z^{k+1}) = \arg\min_{u}\;\Bigl\{h(u) + \frac{1}{2\alpha^k}\|u - z^{k+1}\|_2^2\Bigr\}.$$
+
+**Choice of $\alpha^k$:** if $g$ is $M$-smooth, set $\alpha^k = 1/M$.
+:::
+
+Each iteration costs one gradient evaluation of $g$ plus one proximal evaluation of $h$. The algorithm is practical whenever the proximal mapping of $h$ can be computed efficiently --- and for many important choices of $h$, it has a closed-form solution.
+
+### Convergence {#proximal-convergence}
+
+A natural concern is whether introducing the nonsmooth term $h$ slows down convergence compared to standard gradient descent on a smooth objective. Remarkably, the answer is **no**: the proximal gradient method achieves exactly the same convergence rates as gradient descent applied to a purely smooth function. The nonsmooth part $h$ comes entirely for free --- it does not degrade the rate at all, as long as we can evaluate the proximal mapping.
+
+To state the result precisely, we need a notion of "gradient" for the composite objective $F = g + h$, since $F$ may not be differentiable. The **gradient mapping** (or **proximal gradient**) serves this role:
+$$g_h(x) = \frac{1}{\alpha}\bigl(x - \text{prox}_{\alpha, h}(x - \alpha \nabla g(x))\bigr),$$
+which reduces to $\nabla g(x)$ when $h = 0$. This quantity measures how far the current point $x$ is from satisfying the optimality condition for the composite problem: $g_h(x^*) = 0$ if and only if $x^*$ is a minimizer of $F$.
+
+::: {#thm-proximal-convergence}
+## Convergence of Proximal Gradient Descent
+
+Let $F(x) = g(x) + h(x)$ where $g$ is $M$-smooth and $h$ is convex. With step size $\alpha = 1/M$, the proximal gradient method satisfies:
+
+**Case 1 (Convex $g$).** Sublinear rate on function values:
+$$F(x^k) - F(x^*) \leq \frac{M}{2k}\|x^0 - x^*\|_2^2.$$ {#eq-proximal-convergence}
+This is an $O(1/k)$ rate --- the same as gradient descent on a smooth convex function.
+
+**Case 2 ($m$-strongly convex $g$).** Linear rate on iterates:
+$$\|x^k - x^*\|_2^2 \leq \Bigl(1 - \frac{m}{M}\Bigr)^k \|x^0 - x^*\|_2^2.$$
+This is an $O\!\bigl((1 - 1/\kappa)^k\bigr)$ rate, i.e., $O(\kappa \log(1/\varepsilon))$ iterations --- the same as gradient descent on a smooth strongly convex function.
+:::
+
+::: {.callout-tip}
+## Key Insight: Smoothness for Free
+
+Comparing with the gradient descent convergence rates ([Chapter 6](06-gradient-descent.qmd)):
+
+| Setting | GD on smooth $f$ | Proximal GD on $g + h$ |
+|---|---|---|
+| Convex | $O(1/k)$ | $O(1/k)$ |
+| Strongly convex ($\kappa = M/m$) | $O\bigl((1 - 1/\kappa)^k\bigr)$ | $O\bigl((1 - 1/\kappa)^k\bigr)$ |
+
+The rates are **identical**. The nonsmooth term $h$ is entirely absorbed by the proximal step. This is the central appeal of the proximal framework: we can handle nonsmoothness (sparsity penalties, constraints) without paying any price in convergence speed, as long as the proximal mapping of $h$ is cheap to evaluate.
+:::
+
+This insight has a powerful practical consequence: to solve a nonsmooth or constrained problem, we do not need specialized algorithms with slower convergence. Instead, we decompose the objective as $g + h$, run proximal gradient descent, and achieve the same convergence rate as if the problem were purely smooth. The two most important instantiations of $h$ --- the $\ell_1$-norm (for sparsity) and the indicator function (for constraints) --- both have closed-form proximal mappings, as we now show.
+
+### Examples of Simple $h$ {#simple-h}
+
+The convergence guarantee above is only useful in practice if the proximal mapping (@eq-proximal-mapping) can be computed efficiently. After all, the proximal mapping itself is an optimization problem --- if it were as hard as the original problem, we would have gained nothing.
+
+Fortunately, for many important choices of $h$ that arise in statistics and machine learning, the proximal mapping has a **closed-form solution**. We call such functions "simple":
+
+::: {.callout-note appearance="simple"}
+A function $h$ is called **"simple"** (or **proximable**) if its proximal mapping $\text{prox}_{\alpha, h}(x)$ can be evaluated in closed form or in $O(n)$ time.
+:::
+
+#### 1. Soft Thresholding ($\ell_1$-norm) {#soft-threshold}
+
+The most important example of a proximal operator arises from the $\ell_1$-norm penalty $h(x) = \lambda\|x\|_1$, which is central to sparse estimation. The resulting proximal mapping has a beautiful closed-form solution that shrinks each coordinate toward zero, producing exact sparsity.
+
+::: {#def-soft-thresholding}
+## Soft Thresholding Operator
+
+For $h(x) = \lambda \|x\|_1$, the proximal mapping is
+
+$$\text{prox}_{\alpha, h}(x) = S_{\lambda\alpha}(x),$$
+
+where $S_{\lambda\alpha} : \mathbb{R}^n \to \mathbb{R}^n$ is the **soft thresholding operator**:
+
+$$[S_{\lambda\alpha}(x)]_j = \begin{cases} x_j - \lambda\alpha & \text{if } x_j > \lambda\alpha, \\ 0 & \text{if } |x_j| \leq \lambda\alpha, \\ x_j + \lambda\alpha & \text{if } x_j < -\lambda\alpha. \end{cases}$$ {#eq-soft-threshold}
+:::
+
+The soft thresholding operator (@eq-soft-threshold) shrinks each coordinate toward zero and sets small coordinates exactly to zero. This is what produces the sparsity-inducing effect of the $\ell_1$ penalty: coordinates with magnitude below the threshold $\lambda\alpha$ are driven to exactly zero.
+
+::: {.callout-tip}
+## Remark: Solving Lasso via Proximal Gradient
+
+The derivation of soft thresholding involves subgradients, which is not covered in this course.
+
+Then, the Lasso problem can be solved via:
+
+$$\theta^{k+1} = S_{\alpha\lambda}\!\left(\theta^k + \alpha \cdot X^\top (y - X \theta^k)\right).$$
+:::
+
+#### 2. Projection (Indicator Function) {#projection}
+
+When the nonsmooth term $h$ is the indicator function of a constraint set $\mathcal{C}$, the proximal mapping reduces to a familiar geometric operation: Euclidean projection. This connection shows that constrained optimization is a special case of the proximal framework.
+
+::: {#def-projection-proximal}
+## Projection as Proximal Mapping
+
+For the indicator function $h(x) = \mathcal{I}_\mathcal{C}(x) = \begin{cases} \infty & x \notin \mathcal{C}, \\ 0 & x \in \mathcal{C}, \end{cases}$
+
+the proximal mapping becomes
+
+$$\text{prox}_{\alpha, h}(x) = \operatorname*{arg\,min}_{z} \left\{ \frac{1}{2\alpha}\|x - z\|_2^2 + \mathcal{I}_\mathcal{C}(z) \right\} = \operatorname*{arg\,min}_{z \in \mathcal{C}} \|x - z\|_2^2 =: P_\mathcal{C}(x),$$
+
+the **projection** of $x$ onto $\mathcal{C}$.
+:::
+
+This shows that projection onto a convex set is a special case of the proximal mapping. When $h$ is the indicator function for a constraint set $\mathcal{C}$, the proximal step simply finds the closest feasible point.
+
+Combining the projection interpretation of the proximal mapping with the proximal gradient algorithm immediately yields one of the most widely used constrained optimization methods.
+
+::: {#cor-projected-gd}
+## Projected Gradient Descent
+
+When $h = \mathcal{I}_\mathcal{C}$, proximal gradient descent becomes:
+
+$$x^{k+1} = P_\mathcal{C}\!\left(x^k - \alpha \cdot \nabla g(x^k)\right),$$
+
+also known as the **projected gradient descent**.
+:::
+
+Projected gradient descent has a natural two-step interpretation: first take a gradient step as if the problem were unconstrained, then project back onto the feasible set $\mathcal{C}$. This is one of the most widely used algorithms for constrained convex optimization.
+
+## Frank-Wolfe (Conditional Gradient) {#frank-wolfe}
+
+Projected gradient descent (@cor-projected-gd) handles constrained optimization by projecting each iterate back onto the feasible set $\mathcal{C}$. However, for many structured constraint sets (polytopes, nuclear norm balls, spectrahedra), projection is computationally expensive. The Frank-Wolfe method avoids projection entirely by instead solving a linear minimization over $\mathcal{C}$.
+
+![Comparison of projected gradient descent (left) and Frank-Wolfe (right). PGD takes a gradient step that may leave the feasible set $\mathcal{C}$, then projects back. Frank-Wolfe linearizes the objective, minimizes the linear surrogate over $\mathcal{C}$ to find a vertex $y^k$, then takes a convex combination step.](figures/ch08-frank-wolfe.svg){#fig-pgd-vs-fw}
+
+**Setup:** Constrained optimization
+
+$$\min_{x \in \mathcal{C}} f(x),$$
+
+where $\mathcal{C}$ is a convex set and $f$ is differentiable.
+
+### Algorithm {#fw-algorithm}
+
+::: {.callout-important}
+## Algorithm: Frank-Wolfe (Conditional Gradient)
+
+For $k = 1, 2, \ldots, K$:
+
+**Step 1 (Linear minimization oracle).** Find the direction that minimizes the linearization of $f$ over $\mathcal{C}$:
+$$y^k = \arg\min_{y \in \mathcal{C}}\; \langle \nabla f(x^k),\, y \rangle.$$
+
+**Step 2 (Convex combination).** Move toward $y^k$ with step size $\alpha^k$:
+$$x^{k+1} = (1 - \alpha^k)\,x^k + \alpha^k\, y^k.$$
+:::
+
+### Fixed Point Interpretation {#fw-fixed-point}
+
+**Why is this reasonable?** Suppose $x^k = x^*$ (optimal). Then $x^* = y^k \Rightarrow x^{k+1} = x^*$. That is, $x^*$ is a **fixed point** of Frank-Wolfe.
+
+To see this: by first-order optimality, $\langle \nabla f(x^*),\, y - x^* \rangle \geq 0$ for all $y \in \mathcal{C}$. Thus $\langle \nabla f(x^*),\, y \rangle \geq \langle \nabla f(x^*),\, x^* \rangle$ for all $y \in \mathcal{C}$, which implies
+
+$$\arg\min_{y \in \mathcal{C}} \langle \nabla f(x^*),\, y \rangle = x^*.$$
+
+**Another interpretation** of the Frank-Wolfe descent direction:
+
+$$y^k = \arg\min_{v \in \mathcal{C}} \bigl\{\underbrace{f(x^k) + \langle \nabla f(x^k),\, v - x^k \rangle}_{\text{linear surrogate of } f(v)}\bigr\}.$$
+
+```{=html}
+<div class="figure-container">
+  <div id="fig-fw-illustration"></div>
+  <div class="figure-caption">Frank-Wolfe iteration: linearize f at x^k, minimize the linear surrogate over C to get y^k, then take a convex combination step.</div>
+</div>
+```
+
+### Convergence {#fw-convergence}
+
+Frank-Wolfe converges at a sublinear rate that depends on the smoothness of $f$ (through the Hessian bound $L$) and the "size" of the constraint set (through its diameter $d_{\mathcal{C}}$).
+
+::: {#thm-frank-wolfe-convergence}
+## Frank-Wolfe Convergence
+
+Let $d_{\mathcal{C}} = \sup_{x, y \in \mathcal{C}} \|x - y\|$ be the diameter of $\mathcal{C}$. Set $\alpha^k = \frac{2}{k+2}$ for $k \geq 0$.
+
+When $\nabla^2 f$ is bounded in the sense that $\lambda_{\max}(\nabla^2 f(x)) \leq L$, then
+
+$$f(x^K) - f(x^*) \;\leq\; \frac{2L\,d_{\mathcal{C}}^2}{K + 2}.$$ {#eq-fw-convergence}
+:::
+
+The Frank-Wolfe method converges at a rate of $O(1/K)$ (@eq-fw-convergence). The key advantage over projected gradient descent is that Frank-Wolfe only requires solving a linear optimization problem over $\mathcal{C}$ at each step (rather than a projection), which can be much cheaper for structured constraint sets such as polytopes or nuclear norm balls.
+
+::: {.callout-tip}
+## Remarks on Frank-Wolfe
+
+- Even when $f$ is strongly convex, we **cannot** achieve linear convergence with Frank-Wolfe.
+- Frank-Wolfe can be applied **beyond convex functions**.
+:::
+
+The interactive figure below compares PGD and Frank-Wolfe on the problem $\min \frac{1}{2}\|x - p\|^2$ subject to $\|x\|_1 \leq 1$ (the $\ell_1$-ball in 2D, a diamond). Both methods start at the origin and try to reach the closest point to $p$ inside the diamond. The key difference in behavior:
+
+- **PGD** takes a gradient step toward $p$ (which may leave the diamond), then projects back. It converges quickly and can land *anywhere* on the boundary.
+- **Frank-Wolfe** can only move toward a **vertex** of the diamond at each step, producing iterates that are convex combinations of vertices. It converges more slowly and its iterates "zig-zag" between vertices.
+
+Drag the slider to move $p$ around the ball. At 45°, the optimum is a vertex and both methods find it easily. At other angles, the optimum lies on an *edge* --- Frank-Wolfe must approximate it as a convex combination of the two adjacent vertices, which reveals its $O(1/k)$ limitation.
+
+```{=html}
+<style>
+  .interactive-figure-container {
+    font-family: 'Palatino Linotype', 'Palatino', 'Book Antiqua', 'Georgia', serif;
+    background: #f0ebe5; border-radius: 8px; padding: 24px 20px 16px 20px;
+    margin: 28px auto; max-width: 1100px;
+    box-shadow: 0 2px 12px rgba(61,53,48,0.08);
+  }
+  .interactive-figure-container h3 {
+    font-family: 'Palatino Linotype', 'Palatino', 'Book Antiqua', 'Georgia', serif;
+    color: #3d3530; font-size: 1.15em; font-weight: 600; margin: 0 0 6px 0;
+  }
+  .interactive-figure-container .fig-subtitle {
+    color: #968a80; font-size: 0.92em; margin: 0 0 16px 0; line-height: 1.5;
+  }
+  .interactive-figure-container .slider-row {
+    display: flex; align-items: center; gap: 14px; margin: 14px 0 8px 0; flex-wrap: wrap;
+  }
+  .interactive-figure-container .slider-row label {
+    font-size: 0.95em; color: #3d3530; min-width: 110px;
+  }
+  .interactive-figure-container .slider-row input[type="range"] {
+    flex: 1; min-width: 180px; max-width: 420px; accent-color: #7b97ad; height: 6px;
+  }
+  .interactive-figure-container .slider-row .slider-value {
+    font-size: 0.95em; color: #b8995e; font-weight: 600; min-width: 60px;
+  }
+  .interactive-figure-container .panels {
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .interactive-figure-container .panels > div {
+    flex: 1; min-width: 300px;
+  }
+  .interactive-figure-container .info-box {
+    background: #faf7f3; border-left: 3px solid #7b97ad; border-radius: 0 4px 4px 0;
+    padding: 10px 14px; margin: 10px 0 4px 0; font-size: 0.88em; color: #3d3530; line-height: 1.6;
+  }
+</style>
+
+<div class="interactive-figure-container" id="fwpgd-wrapper">
+  <h3>Projected Gradient vs. Frank-Wolfe on the &ell;<sub>1</sub>-Ball</h3>
+  <p class="fig-subtitle">
+    min &frac12;&Vert;x &minus; p&Vert;&sup2; &ensp; s.t. &Vert;x&Vert;<sub>1</sub> &le; 1
+    &emsp;|&emsp; <span style="color:#c47a6a">&starf;</span> = target p (outside the ball)
+    &emsp;|&emsp; 30 iterations from origin
+  </p>
+  <div class="slider-row">
+    <label for="fwpgd-angle">Target angle =</label>
+    <input type="range" id="fwpgd-angle" min="5" max="85" step="1" value="55">
+    <span class="slider-value" id="fwpgd-angle-val">55&deg;</span>
+  </div>
+  <div class="panels">
+    <div id="fwpgd-left"></div>
+    <div id="fwpgd-right"></div>
+  </div>
+  <div class="info-box" id="fwpgd-info">
+    Drag the slider to move the target point p around the ball.
+  </div>
+</div>
+
+<script>
+(function() {
+  var C = {
+    bg: '#f0ebe5', plotBg: '#faf7f3', text: '#3d3530', grid: '#e0d9d1',
+    axis: '#968a80', blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
+    terracotta: '#c47a6a', lavender: '#907ea0', rosewood: '#ad8480'
+  };
+  var font = {family: "'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif", color: C.text};
+  var plotCfg = {displayModeBar: false, responsive: true};
+  var nIter = 30;
+
+  var ballX = [1, 0, -1, 0, 1];
+  var ballY = [0, 1, 0, -1, 0];
+
+  function projL1(x) {
+    var s = Math.abs(x[0]) + Math.abs(x[1]);
+    if (s <= 1) return [x[0], x[1]];
+    var a = [Math.abs(x[0]), Math.abs(x[1])];
+    var sorted = a.slice().sort(function(u,v){return v-u;});
+    var theta = (sorted[0] + sorted[1] - 1) / 2;
+    if (theta < 0) theta = 0;
+    if (sorted[1] - theta < 0) theta = sorted[0] - 1;
+    return [Math.sign(x[0])*Math.max(Math.abs(x[0]) - theta, 0),
+            Math.sign(x[1])*Math.max(Math.abs(x[1]) - theta, 0)];
+  }
+
+  function lmoL1(g) {
+    if (Math.abs(g[0]) >= Math.abs(g[1])) {
+      return [g[0] > 0 ? -1 : 1, 0];
+    } else {
+      return [0, g[1] > 0 ? -1 : 1];
+    }
+  }
+
+  function runPGD(p) {
+    var eta = 1.0;
+    var x = [0, 0];
+    var path = [[x[0], x[1]]];
+    for (var k = 0; k < nIter; k++) {
+      var g = [x[0] - p[0], x[1] - p[1]];
+      var xnew = [x[0] - eta*g[0], x[1] - eta*g[1]];
+      x = projL1(xnew);
+      path.push([x[0], x[1]]);
+    }
+    return path;
+  }
+
+  function runFW(p) {
+    var x = [0, 0];
+    var path = [[x[0], x[1]]];
+    for (var k = 0; k < nIter; k++) {
+      var g = [x[0] - p[0], x[1] - p[1]];
+      var v = lmoL1(g);
+      var ak = 2.0 / (k + 2);
+      x = [(1-ak)*x[0] + ak*v[0], (1-ak)*x[1] + ak*v[1]];
+      path.push([x[0], x[1]]);
+    }
+    return path;
+  }
+
+  function fval(x, p) {
+    return 0.5*((x[0]-p[0])*(x[0]-p[0]) + (x[1]-p[1])*(x[1]-p[1]));
+  }
+
+  function makeLayout(title) {
+    var axStyle = {gridcolor: C.grid, zerolinecolor: C.axis, linecolor: C.axis,
+                   tickfont: {size: 12, family: font.family, color: font.color},
+                   titlefont: {size: 14, family: font.family, color: font.color}};
+    return {
+      paper_bgcolor: C.bg, plot_bgcolor: C.plotBg, font: font, height: 430,
+      margin: {t: 38, b: 50, l: 50, r: 16},
+      title: {text: title, font: {size: 14, family: font.family, color: font.color}},
+      xaxis: Object.assign({}, axStyle, {range: [-1.6, 1.8], title: 'x\u2081'}),
+      yaxis: Object.assign({}, axStyle, {range: [-1.6, 1.8], title: 'x\u2082', scaleanchor: 'x'}),
+      showlegend: false, hovermode: 'closest'
+    };
+  }
+
+  function update(angleDeg) {
+    var rad = angleDeg * Math.PI / 180;
+    var p = [1.5*Math.cos(rad), 1.5*Math.sin(rad)];
+    var pstar = projL1(p);
+
+    var pgd = runPGD(p);
+    var fw = runFW(p);
+
+    var pgdX = pgd.map(function(v){return v[0];}), pgdY = pgd.map(function(v){return v[1];});
+    var fwX = fw.map(function(v){return v[0];}), fwY = fw.map(function(v){return v[1];});
+
+    var commonTraces = function(pathX, pathY, col, name) {
+      return [
+        {x: ballX, y: ballY, mode: 'lines', fill: 'toself',
+         fillcolor: 'rgba(122,154,126,0.10)', line: {color: C.sage, width: 2},
+         hoverinfo: 'skip'},
+        {x: pathX, y: pathY, mode: 'lines+markers',
+         line: {color: col, width: 2.5}, marker: {size: 5, color: col}, name: name},
+        {x: [p[0]], y: [p[1]], mode: 'markers+text',
+         marker: {size: 12, color: C.terracotta, symbol: 'star', line: {width: 1.5, color: 'white'}},
+         text: ['p'], textposition: 'top right',
+         textfont: {size: 12, family: font.family, color: C.terracotta}, showlegend: false},
+        {x: [pstar[0]], y: [pstar[1]], mode: 'markers+text',
+         marker: {size: 9, color: C.sage, symbol: 'diamond', line: {width: 1.5, color: 'white'}},
+         text: ['x*'], textposition: 'bottom left',
+         textfont: {size: 12, family: font.family, color: C.sage}, showlegend: false},
+        {x: [0], y: [0], mode: 'markers',
+         marker: {size: 7, color: C.axis, symbol: 'circle'}, showlegend: false}
+      ];
+    };
+
+    var fPGD = fval(pgd[nIter], p);
+    var fFW = fval(fw[nIter], p);
+    var info = 'Target p = (' + p[0].toFixed(2) + ', ' + p[1].toFixed(2) + ')'
+             + ' &ensp;|&ensp; Optimum x* = (' + pstar[0].toFixed(2) + ', ' + pstar[1].toFixed(2) + ')'
+             + ' &ensp;|&ensp; <span style="color:' + C.blue + '"><b>PGD</b>: f = ' + fPGD.toExponential(2) + '</span>'
+             + ' &ensp; <span style="color:' + C.gold + '"><b>FW</b>: f = ' + fFW.toExponential(2) + '</span>';
+    document.getElementById('fwpgd-info').innerHTML = info;
+
+    Plotly.react('fwpgd-left', commonTraces(pgdX, pgdY, C.blue, 'PGD'), makeLayout('Projected Gradient Descent'), plotCfg);
+    Plotly.react('fwpgd-right', commonTraces(fwX, fwY, C.gold, 'Frank-Wolfe'), makeLayout('Frank-Wolfe'), plotCfg);
+  }
+
+  document.getElementById('fwpgd-angle').addEventListener('input', function() {
+    var a = parseInt(this.value);
+    document.getElementById('fwpgd-angle-val').textContent = a + '\u00B0';
+    update(a);
+  });
+
+  update(55);
+})();
+</script>
+```
+
+### Nonconvex Example: Leading Eigenvector {#fw-nonconvex}
+
+Consider the nonconvex problem (with $\mathbf{Q} \succ 0$):
+
+$$\min_{x} \;-x^\top \mathbf{Q}\,x \quad \text{s.t.} \quad \|x\|_2 \leq 1.$$
+
+The solution is $f^* = -\lambda_{\max}(\mathbf{Q})$ and $x^*$ is the leading eigenvector.
+
+The Frank-Wolfe linear subproblem becomes:
+
+$$y^k = \arg\min_{\|v\|_2 \leq 1} \langle -2\mathbf{Q}x^k,\, v\rangle = \frac{\mathbf{Q}x^k}{\|\mathbf{Q}x^k\|_2}.$$
+
+The update becomes:
+
+$$x^{k+1} = (1 - \alpha^k)\,x^k + \alpha^k \cdot \frac{\mathbf{Q}x^k}{\|\mathbf{Q}x^k\|_2}.$$
+
+::: {.callout-tip}
+## Remark: Connection to Power Iteration
+
+If we set $\alpha^k = 1$, then $x^{k+1} = \frac{\mathbf{Q}x^k}{\|\mathbf{Q}x^k\|_2}$, which is exactly **power iteration**.
+
+Even when $\alpha^k \neq 1$, Frank-Wolfe still finds the leading eigenvector.
+:::
+
+With projected gradient descent and the Frank-Wolfe method in hand, we have two complementary approaches to constrained optimization. Projected gradient descent (@cor-projected-gd) is simple and broadly applicable, but requires computing a projection at each step. Frank-Wolfe avoids projections entirely and converges at $O(1/K)$ for smooth objectives, making it the method of choice when linear minimization over the constraint set is cheap but projection is expensive.
+
+```{=html}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const plotlyConfig = {responsive: true, displayModeBar: false};
+  const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+
+  function legendStyle() {
+    return {
+      font: {family: figFont, size: 13},
+      bgcolor: '#f0ebe5dd',
+      bordercolor: '#e0d9d1',
+      borderwidth: 1,
+    };
+  }
+
+  function themeLayout(extra) {
+    return Object.assign({
+      paper_bgcolor: '#f0ebe5',
+      plot_bgcolor: '#faf7f3',
+      font: { family: figFont, color: '#3d3530', size: 14 },
+    }, extra || {});
+  }
+
+  function themeAxis(title, extra) {
+    return Object.assign({
+      title: {text: title, font: {family: figFont, size: 14}},
+      gridcolor: '#e0d9d1',
+      zerolinecolor: '#e0d9d1',
+      linecolor: '#968a80',
+      tickfont: {family: figFont, size: 12, color: '#968a80'},
+    }, extra || {});
+  }
+
+  // Frank-Wolfe illustration
+  (function() {
+    const theta = [];
+    for (let t = 0; t <= 2 * Math.PI; t += 0.02) theta.push(t);
+    const cx = theta.map(t => 2 * Math.cos(t) + 1);
+    const cy = theta.map(t => 1.2 * Math.sin(t) + 1);
+    const xk = [1.8, 1.6]; const grad = [1.5, 0.8]; const yk = [-0.7, 0.5];
+    const traces = [
+      { x: cx, y: cy, fill: 'toself', fillcolor: 'rgba(123,143,163,0.18)', line: {color: '#7b97ad', width: 2.5}, name: 'Constraint set C', mode: 'lines' },
+      { x: [xk[0]], y: [xk[1]], mode: 'markers+text', marker: {color: '#8a6e5e', size: 10},
+        text: ['x<sup>k</sup>'], textposition: 'top right', textfont: {family: figFont, size: 13, color: '#8a6e5e'},
+        showlegend: false },
+      { x: [yk[0]], y: [yk[1]], mode: 'markers+text', marker: {color: '#7a9a7e', size: 10, symbol: 'diamond'},
+        text: ['y<sup>k</sup>'], textposition: 'bottom left', textfont: {family: figFont, size: 13, color: '#7a9a7e'},
+        showlegend: false },
+      { x: [xk[0], yk[0]], y: [xk[1], yk[1]], mode: 'lines', line: {color: '#b8995e', dash: 'dash', width: 2},
+        name: 'FW direction' },
+      { x: [0.4*xk[0]+0.6*yk[0]], y: [0.4*xk[1]+0.6*yk[1]], mode: 'markers+text',
+        marker: {color: '#b56b6b', size: 10, symbol: 'star'},
+        text: ['x<sup>k+1</sup>'], textposition: 'bottom right', textfont: {family: figFont, size: 13, color: '#b56b6b'},
+        showlegend: false },
+    ];
+    Plotly.newPlot('fig-fw-illustration', traces, themeLayout({
+      xaxis: themeAxis('', {range: [-2, 4], zeroline: false}),
+      yaxis: themeAxis('', {range: [-1, 3], zeroline: false, scaleanchor: 'x'}),
+      showlegend: true, legend: Object.assign({x: 0.55, y: 1}, legendStyle()),
+      margin: {t: 20, b: 40, l: 45, r: 20},
+      annotations: [{
+        ax: xk[0], ay: xk[1], x: xk[0] + 0.8*grad[0], y: xk[1] + 0.8*grad[1],
+        xref: 'x', yref: 'y', axref: 'x', ayref: 'y',
+        showarrow: true, arrowhead: 3, arrowsize: 1.5, arrowcolor: '#ad8480',
+        text: '\u2207f', font: {family: figFont, size: 12, color: '#ad8480'}
+      }]
+    }), plotlyConfig);
+  })();
+
+});
+</script>
+```
+
+## Summary {.unnumbered}
+
+- **Stochastic gradient descent (SGD).** For finite-sum objectives $f(\theta) = \frac{1}{n}\sum_{i=1}^{n} f_i(\theta)$, SGD replaces the full gradient with a single-sample (or minibatch) estimate, reducing per-iteration cost from $O(n)$ to $O(1)$ at the expense of variance. Minibatch SGD with batch size $B$ reduces gradient variance by a factor of $B$ while increasing per-iteration cost by $B$.
+- **Proximal gradient descent.** For composite objectives $g(\theta) + h(\theta)$ where $g$ is smooth and $h$ is convex but non-smooth (e.g., $h = \lambda\|\theta\|_1$), the proximal operator handles the non-smooth part exactly, recovering the same $O(1/k)$ rate as smooth gradient descent.
+- **Soft thresholding.** The proximal operator of the $\ell_1$ penalty is the soft-thresholding operator $\mathcal{S}_{\alpha\lambda}(x) = \operatorname{sign}(x)\max(|x| - \alpha\lambda, 0)$, which drives small coefficients to exactly zero---enabling sparse solutions for Lasso.
+- **Frank-Wolfe (conditional gradient) method.** Instead of projecting, Frank-Wolfe linearizes the objective and solves $\min_{s \in C} \nabla f(x^k)^\top s$ at each step, then moves toward the minimizer. This avoids projections entirely---a major advantage when projection is expensive but linear optimization over $C$ is cheap. Convergence is $O(1/K)$ for smooth objectives over compact sets.
+
+### First-Order Methods Comparison {.unnumbered}
+
+| Method | Update rule (key idea) | Iteration complexity | Strengths |
+|---|---|---|---|
+| **SGD** | stochastic gradient estimate | $O(1/\varepsilon^2)$ | Scalable to large datasets |
+| **Proximal GD** | gradient step + proximal step | $O(1/\varepsilon)$ | Handles nonsmooth $h$ |
+| **Frank-Wolfe** | linear minimization over $\mathcal{C}$ | $O(1/\varepsilon)$ | Avoids projections |
+
+::: {.callout-tip}
+## Looking Ahead
+Having developed first-order methods for both unconstrained and constrained problems, we now shift to **linear programming**. The next chapter introduces the LP formulation, the geometry of polyhedra, and the key equivalence between vertices, extreme points, and basic feasible solutions --- the foundation for the simplex method.
+:::

@@ -2,15 +2,17 @@
 title: "The Simplex Method"
 ---
 
-The simplex method is the most celebrated algorithm for solving linear programs. Rather than enumerating all vertices of the feasible polyhedron -- which we showed in [Part 6](09-lp-formulation-geometry.qmd) requires checking up to $\binom{m+n}{n}$ candidates -- the simplex method *smartly navigates* from one vertex to an adjacent one, improving the objective at every step. Each move is called a **pivot**, and the algorithm terminates when no further improvement is possible, certifying optimality.
+The simplex method is the most celebrated algorithm for solving linear programs. In the [previous chapter](09-lp-formulation-geometry.qmd), the Algebraic Fundamental Theorem of LP revealed that vertices of the feasible polyhedron are exactly the basic feasible solutions (BFS), and that if an optimal solution exists, it can be found at a BFS. This transforms the LP from a continuous optimization problem into a combinatorial search over at most $\binom{n+m}{m}$ candidates. Rather than enumerating all of them, the simplex method *smartly navigates* from one BFS to an adjacent one, improving the objective at every step. Each move is called a **pivot**, and the algorithm terminates when no further improvement is possible, certifying optimality.
 
-In this chapter we develop the full simplex algorithm from scratch. We begin by reformulating the LP using the **simplex tableau**, a compact bookkeeping device that encodes the current basic feasible solution and all the information needed to decide the next pivot. We then describe the **pivoting** mechanism: how to choose an entering variable (which non-basic variable should become basic?) and a leaving variable (which basic variable should exit the basis?). We assemble these pieces into the complete **five-step simplex algorithm**, illustrate it on a worked numerical example, and address the critical question of **initialization** -- how to find a starting BFS when one is not immediately available. Finally, we discuss **pivoting rules** (Dantzig's rule and Bland's rule), the phenomenon of **degeneracy** and cycling, and the **oracle complexity** of the simplex method.
+In this chapter we develop the full simplex algorithm from scratch. We begin by deriving the method from first principles: starting at a BFS, we use the algebra of the equational form to discover **reduced costs** (which tell us whether the current solution is optimal), the **pivot mechanism** (how to move to a better neighboring BFS), and the conditions for **unboundedness**. We then introduce the **simplex tableau** as a compact bookkeeping device that organizes these quantities for efficient computation. We assemble these pieces into the complete **five-step simplex algorithm**, illustrate it on a worked numerical example, and address the critical question of **initialization** -- how to find a starting BFS when one is not immediately available. Finally, we discuss **pivoting rules** (Dantzig's rule and Bland's rule), the phenomenon of **degeneracy** and cycling, and the **oracle complexity** of the simplex method.
 
-## What Will Be Covered {#sec-overview}
+## What Will Be Covered {.unnumbered}
 
-- The simplex tableau: dictionary form, relative costs, and transformed constraints
-- The pivoting mechanism: entering variable, leaving variable, and the ratio test
-- The full five-step simplex algorithm
+This chapter builds the simplex algorithm piece by piece, from first-principles derivation to practical pivoting strategies:
+
+- Deriving the simplex method: reduced costs, optimality condition, and the pivot mechanism
+- The simplex tableau: a compact bookkeeping device for efficient implementation
+- The full five-step simplex algorithm in tableau form
 - A detailed worked example tracing the simplex method through multiple iterations
 - Initialization via the Auxiliary LP (Aux-LP)
 - Pivoting rules: Dantzig's rule and Bland's rule
@@ -21,7 +23,7 @@ In this chapter we develop the full simplex algorithm from scratch. We begin by 
 
 ## From Canonical to Equational Form {#sec-equational-form}
 
-Recall from [Part 6](09-lp-formulation-geometry.qmd) that a linear program in **canonical form** is:
+Recall from the [previous chapter](09-lp-formulation-geometry.qmd) that a linear program in **canonical form** is:
 
 $$\min \sum_{j=1}^{n} c_j x_j \quad \text{s.t.} \quad \sum_{j=1}^{n} a_{ij} x_j \leq b_i \;\; \forall\, i \in [m], \quad x_j \geq 0 \;\; \forall\, j \in [n].$$
 
@@ -39,129 +41,253 @@ $$c = \begin{pmatrix} c_1 \\ \vdots \\ c_n \\ 0 \\ \vdots \\ 0 \end{pmatrix} \in
 
 The $m$ columns corresponding to slack variables form an identity matrix, which will play a crucial role in initialization.
 
+
+## Deriving the Simplex Method {#sec-derivation}
+
+Before introducing the simplex tableau (a compact bookkeeping device), let us derive the simplex method from first principles. The key idea is simple: **start at a BFS and move to a neighboring BFS with a lower objective value, repeating until no improvement is possible.**
+
+### Setup and Notation {#sec-setup}
+
+Let $B$ and $N$ denote the sets of **basic** and **non-basic** variable indices, respectively, with $|B| = m$. We partition:
+
+$$A = \begin{pmatrix} A_B & A_N \end{pmatrix}, \qquad x = \begin{pmatrix} x_B \\ x_N \end{pmatrix}, \qquad c = \begin{pmatrix} c_B \\ c_N \end{pmatrix}.$$
+
+The LP becomes:
+
+$$\min \; z = c_B^\top x_B + c_N^\top x_N \quad \text{s.t.} \quad A_B x_B + A_N x_N = b, \;\; x_B \geq 0, \; x_N \geq 0.$$ {#eq-simplex-lp}
+
+### Starting from a BFS {#sec-starting-bfs}
+
+Assume that the current basis $B$ gives a BFS. That is, $x_B^* = A_B^{-1}b \geq 0$ and $x_N^* = 0$.
+
+::: {.callout-tip}
+## Initial BFS When $b \geq 0$
+
+If $b \geq 0$, an initial BFS is immediate: set $B = \{n+1, n+2, \ldots, n+m\}$ (the slack variables). Then $A_B = I_m$, so $x_B^* = b \geq 0$, and the original variables $x_1 = x_2 = \cdots = x_n = 0$. When $b \not\geq 0$, finding an initial BFS is itself nontrivial -- we address this in @sec-initialization.
+:::
+
+Since $A_B$ is invertible, we can express the basic variables in terms of the non-basic ones:
+
+$$x_B = A_B^{-1}b - A_B^{-1}A_N x_N = x_B^* - A_B^{-1}A_N x_N.$$ {#eq-basic-from-nonbasic}
+
+This is the key equation: it tells us exactly how the basic variables respond when we perturb the non-basic variables away from zero.
+
+### Reduced Costs {#sec-reduced-costs}
+
+Substituting @eq-basic-from-nonbasic into the objective of @eq-simplex-lp:
+
+$$z = c_B^\top(x_B^* - A_B^{-1}A_N x_N) + c_N^\top x_N = c_B^\top x_B^* + \left(c_N - (A_B^{-1}A_N)^\top c_B\right)^\top x_N.$$
+
+The coefficient of $x_N$ in this expression is so important that it gets its own name.
+
+::: {#def-reduced-cost}
+## Definition (Reduced Cost Vector)
+
+The **reduced cost vector** for the non-basic variables is
+
+$$r_N = c_N - (A_B^{-1}A_N)^\top c_B = c_N - A_N^\top (A_B^{-1})^\top c_B \;\in \mathbb{R}^n.$$
+
+The $j$-th component $r_j$ (for $j \in N$) represents the **rate of change of the objective** when $x_j$ increases from zero, holding other non-basic variables at zero.
+:::
+
+The objective can thus be written as:
+
+$$z = \underbrace{c_B^\top A_B^{-1} b}_{z^* \text{ (current value)}} + r_N^\top x_N.$$ {#eq-objective-reduced}
+
+Since $x_N = 0$ at the current BFS, the current objective value is $z^* = c_B^\top A_B^{-1}b$.
+
+### Optimality Condition {#sec-optimality}
+
+From @eq-objective-reduced, we can read off the optimality condition immediately.
+
+::: {.callout-important}
+## Optimality Condition
+
+If $r_N \geq 0$ (all reduced costs are nonneg), the current BFS is **optimal**. **STOP.**
+
+**Why?** Since $x_N \geq 0$ (feasibility) and $r_N \geq 0$, we have $z = z^* + r_N^\top x_N \geq z^*$ for every feasible point. The current BFS achieves the minimum.
+:::
+
+### The Pivot Mechanism {#sec-pivot-mechanism}
+
+This is the heart of the simplex method. The reduced cost equation @eq-objective-reduced tells us $z = z^* + r_N^\top x_N$, and we want to decrease $z$. Currently all non-basic variables are zero. The entire strategy reduces to two questions.
+
+#### Question 1: Which non-basic variable should we increase? {.unnumbered}
+
+Scan the reduced cost vector $r_N$. If some component $r_q < 0$, then increasing $x_q$ from zero will decrease the objective (since the contribution is $r_q \cdot x_q < 0$). We select such a $q$ as the **entering variable**.
+
+If no such $q$ exists -- that is, $r_N \geq 0$ -- then increasing *any* non-basic variable can only increase or maintain the objective. **We are already at the optimum.** This is the optimality condition from @sec-optimality.
+
+#### Question 2: How far can we increase $x_q$? {.unnumbered}
+
+We want to push $x_q$ as large as possible (to decrease $z$ as much as possible), but we must maintain feasibility: all basic variables must stay nonneg. Setting $x_q = t > 0$ and keeping all other non-basic variables at zero, @eq-basic-from-nonbasic gives:
+
+$$x_B = x_B^* - t \cdot d_q, \qquad \text{where } d_q = A_B^{-1} a_q \in \mathbb{R}^m$$
+
+is the **pivot column** ($a_q$ is the $q$-th column of $A$). The $i$-th entry $d_{iq}$ tells us how much basic variable $x_i$ decreases when $x_q$ increases by one unit.
+
+The feasibility requirement $x_B \geq 0$ -- i.e., $x_i^* - t \cdot d_{iq} \geq 0$ for all $i \in B$ -- determines how far we can go:
+
+- **If $d_{iq} \leq 0$ for all $i \in B$:** No basic variable decreases when $x_q$ grows. We can push $t \to \infty$, and the objective $z = z^* + r_q \cdot t \to -\infty$. The LP is **unbounded**.
+
+- **If some $d_{iq} > 0$:** These basic variables *do* decrease as $x_q$ grows. The tightest constraint determines the maximum step:
+
+$$t^* = \min_{i \in B : d_{iq} > 0} \frac{x_i^*}{d_{iq}}.$$
+
+The basic variable that hits zero first is the **leaving variable** -- it exits the basis to make room for $x_q$:
+
+$$p = \arg\min_{i \in B : d_{iq} > 0} \frac{x_i^*}{d_{iq}}.$$
+
+#### The Pivot {.unnumbered}
+
+We swap $q$ into the basis and $p$ out:
+
+$$B' = B \cup \{q\} \setminus \{p\}, \qquad N' = N \cup \{p\} \setminus \{q\}.$$
+
+The new BFS has $x_q = t^* > 0$, $x_p = 0$, and the objective has strictly decreased:
+
+$$z_{\text{new}} = z^* + r_q \cdot t^* < z^* \quad (\text{since } r_q < 0 \text{ and } t^* > 0).$$
+
+::: {.callout-note}
+## Summary of the Pivot Logic
+
+$$\boxed{r_q < 0 \text{ ?}} \;\xrightarrow{\;\text{yes}\;}\; \boxed{\text{increase } x_q} \;\xrightarrow{\;x_i^* = 0\;}\; \boxed{\text{swap } q \leftrightarrow p} \;\rightarrow\; \text{better BFS}$$
+
+- No $r_q < 0$ exists $\;\Rightarrow\;$ **optimal** (stop).
+- No basic variable blocks the increase $\;\Rightarrow\;$ **unbounded** (stop).
+:::
+
+### The Simplex Algorithm {#sec-simplex-algorithm}
+
+Putting it all together:
+
+::: {.callout-important}
+## The Simplex Method
+
+**Input:** An initial BFS with basis $B$, $x_B^* = A_B^{-1}b \geq 0$.
+
+**Repeat:**
+
+1. **Compute reduced costs:** $r_N = c_N - A_N^\top (A_B^{-1})^\top c_B$.
+
+2. **Optimality test:** If $r_N \geq 0$, **STOP** -- the current BFS is optimal.
+
+3. **Select entering variable:** Choose $q \in N$ with $r_q < 0$.
+
+4. **Compute pivot column:** $d_q = A_B^{-1} a_q$.
+
+5. **Unboundedness test:** If $d_q \leq 0$, **STOP** -- the LP is unbounded.
+
+6. **Compute step size and leaving variable:**
+
+$$t^* = \min_{i \in B : d_{iq} > 0} \frac{x_i^*}{d_{iq}}, \qquad p = \arg\min_{i \in B : d_{iq} > 0} \frac{x_i^*}{d_{iq}}.$$
+
+7. **Pivot:** Update $B \leftarrow B \cup \{q\} \setminus \{p\}$, $N \leftarrow N \cup \{p\} \setminus \{q\}$. Recompute $x_B^* = A_B^{-1}b$.
+:::
+
+Each iteration moves from one BFS to an **adjacent** BFS (one that differs by exactly one basic variable) while strictly decreasing the objective (assuming nondegeneracy). Since there are finitely many BFS, the algorithm terminates.
+
+### Why the Simplex Method Works {#sec-why-simplex}
+
+The correctness of the simplex method rests on three pillars:
+
+1. **Finiteness of BFS.** There are at most $\binom{n+m}{m}$ basic feasible solutions. If each pivot strictly decreases the objective (which happens when the LP is nondegenerate), the algorithm cannot revisit a BFS and must terminate.
+
+2. **Optimality certificate.** When $r_N \geq 0$, the current BFS is provably optimal: @eq-objective-reduced shows that $z = z^* + r_N^\top x_N \geq z^*$ for all feasible $x_N \geq 0$.
+
+3. **Unboundedness detection.** When $d_q \leq 0$ for some $q$ with $r_q < 0$, we can construct a feasible ray along which the objective decreases without bound.
+
 ## The Simplex Tableau {#sec-tableau}
 
-The simplex tableau is the central data structure of the simplex method. It compactly represents the current basic feasible solution and all the information needed to decide the next pivot.
+The derivation in @sec-derivation gives us everything we need to run the simplex method. But look at what each iteration requires: computing $A_B^{-1}b$, $A_B^{-1}A_N$, and $r_N$ -- all involving $A_B^{-1}$, which changes at every pivot. Rather than recomputing these from scratch, we organize them into a single data structure -- the **simplex tableau** -- that can be updated cheaply after each pivot.
 
-### Setting Up the Tableau {#sec-tableau-setup}
+### Tableau Quantities {#sec-tableau-setup}
 
-Let $B \subseteq [n+m]$ be a set of $m$ indices. If $B$ yields a **basic feasible solution** (BFS), we denote:
+In @sec-reduced-costs we derived two key equations. The **constraint equation** (@eq-basic-from-nonbasic):
 
-$$x_B^* = A_B^{-1} b \geq 0,$$
+$$x_B = \underbrace{A_B^{-1}b}_{\text{current BFS}} - \underbrace{A_B^{-1}A_N}_{\text{exchange rates}} \, x_N,$$
 
-where $A_B$ is the $m \times m$ submatrix of $A$ formed by the columns indexed by $B$. Feasibility requires $x_B^* \geq 0$. The full BFS is $x = (x_B^*, 0)$ -- basic variables take the values $x_B^*$, non-basic variables are zero.
+and the **objective equation** (@eq-objective-reduced):
 
-Writing $N = [n+m] \setminus B$ for the non-basic index set, the equational form LP becomes:
+$$z = \underbrace{c_B^\top A_B^{-1}b}_{\text{current value}} + \underbrace{r_N^\top}_{\text{reduced costs}} x_N.$$
 
-$$\min \; \zeta = c_B^\top x_B + c_N^\top x_N \quad \text{s.t.} \quad A_B x_B + A_N x_N = b, \;\; x_B, x_N \geq 0.$$
-
-Since $A_B$ is invertible at a BFS, we can solve for $x_B$:
-
-$$x_B = A_B^{-1} b - A_B^{-1} A_N x_N.$$
-
-Substituting into the objective:
-
-$$\zeta = c_B^\top (A_B^{-1} b - A_B^{-1} A_N x_N) + c_N^\top x_N = c_B^\top A_B^{-1} b + \bigl(c_N - (A_B^{-1} A_N)^\top c_B\bigr)^\top x_N.$$
+The simplex tableau collects these quantities under a compact notation.
 
 ::: {#def-simplex-quantities}
-## Definition 15.1 (Simplex Tableau Quantities)
+## Simplex Tableau Quantities
 
 Given a basis $B$ with BFS $x_B^* = A_B^{-1} b \geq 0$, define:
 
-- **Transformed RHS (current BFS values):** $\widetilde{b} = A_B^{-1} b = x_B^*$
-- **Transformed constraint matrix:** $\widetilde{A} = A_B^{-1} A_N$
-- **Relative cost vector:** $\widetilde{c} = c_N - \widetilde{A}^\top c_B = c_N - A_N^\top (A_B^{-\top}) c_B$
-- **Current objective value:** $\widetilde{\zeta} = c_B^\top \widetilde{b} = c_B^\top A_B^{-1} b = c_B^\top x_B^*$
+| Symbol | Definition | Meaning | Role in derivation |
+|--------|-----------|---------|-------------------|
+| $\widetilde{b}$ | $A_B^{-1} b$ | Current BFS values | $x_B^*$ |
+| $\widetilde{A}$ | $A_B^{-1} A_N$ | How basic variables respond to non-basic ones | Exchange coefficients in @eq-basic-from-nonbasic |
+| $\widetilde{c}$ | $c_N - \widetilde{A}^\top c_B$ | Cost of increasing each non-basic variable | Reduced costs $r_N$ from @def-reduced-cost |
+| $\widetilde{\zeta}$ | $c_B^\top \widetilde{b}$ | Current objective value | $z^*$ from @eq-objective-reduced |
 :::
+
+The tilde notation is simply shorthand: $\widetilde{c}$ is the reduced cost vector $r_N$, $\widetilde{b}$ is the current BFS $x_B^*$, and $\widetilde{A}$ is the matrix that tells us how the basic variables change when the non-basic variables move away from zero.
 
 ### The Dictionary Form {#sec-dictionary}
 
-Using these quantities, we can write the LP in **dictionary form**:
+Substituting the tableau quantities, the two key equations become:
+
+$$\zeta = \widetilde{\zeta} + \widetilde{c}^\top x_N, \qquad x_B = \widetilde{b} - \widetilde{A}\, x_N.$$
+
+Together, these give the LP in **dictionary form**:
 
 $$\min_{x_N} \; \zeta = \widetilde{\zeta} + \widetilde{c}^\top x_N \quad \text{s.t.} \quad x_B = \widetilde{b} - \widetilde{A}\, x_N, \;\; x_B, x_N \geq 0.$$ {#eq-dictionary-form}
 
-This is equivalent to the original LP, but expressed entirely in terms of the non-basic variables $x_N$. At the current BFS, $x_N = 0$, so $x_B = \widetilde{b}$ and $\zeta = \widetilde{\zeta}$.
+This is equivalent to the original LP, but expressed entirely in terms of the non-basic variables $x_N$. At the current BFS, $x_N = 0$, so $x_B = \widetilde{b}$ and $\zeta = \widetilde{\zeta}$. The dictionary makes the pivot logic transparent: to improve the objective, find a non-basic variable with $\widetilde{c}_q < 0$ and increase it until some basic variable hits zero.
 
 ### The Tableau Layout {#sec-tableau-layout}
 
-The simplex tableau is a compact matrix representation of the dictionary:
+The dictionary can be written as a single matrix equation:
 
-$$\text{Tableau:} \quad \begin{pmatrix} \widetilde{\zeta} & \widetilde{c}^\top \\ \widetilde{b} & -\widetilde{A} \end{pmatrix} \quad \Longleftrightarrow \quad \begin{pmatrix} \zeta \\ x_B \end{pmatrix} = \begin{pmatrix} \widetilde{\zeta} & \widetilde{c}^\top \\ \widetilde{b} & -\widetilde{A} \end{pmatrix} \begin{pmatrix} 1 \\ x_N \end{pmatrix}.$$ {#eq-tableau-form}
+$$\begin{pmatrix} \zeta \\ x_B \end{pmatrix} = \begin{pmatrix} \widetilde{\zeta} & \widetilde{c}^\top \\ \widetilde{b} & -\widetilde{A} \end{pmatrix} \begin{pmatrix} 1 \\ x_N \end{pmatrix}.$$ {#eq-tableau-form}
 
-The **columns** correspond to non-basic variables (currently set to zero), and the **rows** correspond to basic variables (currently at positive values $\widetilde{b}$).
+The matrix on the right is the **simplex tableau**:
+
+$$\text{Tableau} = \begin{pmatrix} \widetilde{\zeta} & \widetilde{c}^\top \\ \hline \widetilde{b} & -\widetilde{A} \end{pmatrix}.$$
 
 ::: {.callout-tip}
 ## Reading the Tableau
 
-- The top row gives the current objective value $\widetilde{\zeta}$ and the relative costs $\widetilde{c}^\top$.
-- The remaining rows give the current BFS values $\widetilde{b}$ and the exchange coefficients $-\widetilde{A}$.
-- **Optimality test:** If $\widetilde{c} \geq 0$ (all relative costs nonneg), the current BFS is optimal.
-- **Pivoting** amounts to choosing a column $q \in N$ and a row $p \in B$ to swap.
+- **Top-left entry** $\widetilde{\zeta}$: current objective value.
+- **Top row** $\widetilde{c}^\top$: reduced costs of non-basic variables. Negative entries signal room for improvement.
+- **Left column** $\widetilde{b}$: current values of basic variables (the BFS).
+- **Body** $-\widetilde{A}$: exchange coefficients -- column $q$ tells you how $x_B$ changes when $x_q$ increases.
+- **Optimality test:** If $\widetilde{c} \geq 0$, the current BFS is optimal.
+- **Pivoting:** Choose a column $q$ with $\widetilde{c}_q < 0$ (entering) and a row $p$ via the ratio test (leaving), then swap.
 :::
 
-## Simplex Pivoting {#sec-pivoting}
+### Pivoting in Tableau Notation {#sec-pivoting}
 
-With the tableau (@eq-tableau-form) encoding the current BFS and its associated data, we can now describe the mechanism that drives the simplex method forward. A **pivot** is a single iteration of the simplex method. It moves from one BFS to an adjacent BFS by swapping one variable into the basis and one out.
+The pivot mechanism from @sec-pivot-mechanism translates directly into tableau language. In terms of the tableau quantities:
 
-### Choosing the Entering Variable {#sec-entering}
+- **Entering variable:** Choose $q \in N$ with $\widetilde{c}_q < 0$. The pivot column is $\widetilde{A}_q$ (column $q$ of $\widetilde{A}$), which plays the role of $d_q = A_B^{-1}a_q$ from the derivation.
 
-The entering variable $q$ is a non-basic variable whose relative cost is negative, meaning that increasing $x_q$ from zero will decrease the objective.
-
-::: {#def-entering-variable}
-## Definition 15.2 (Entering Variable)
-
-Choose $q \in N$ such that $\widetilde{c}_q < 0$. This means increasing $x_q$ from zero will decrease the objective value.
-
-If no such $q$ exists (i.e., $\widetilde{c}_j \geq 0$ for all $j \in N$), then the current BFS is **optimal**.
-:::
-
-### Choosing the Leaving Variable: The Ratio Test {#sec-ratio-test}
-
-Once we have chosen the entering variable $q$, we need to determine how much we can increase $x_q$ while keeping all basic variables nonneg. The dictionary form (@eq-dictionary-form) shows that increasing $x_q$ decreases some basic variables, and the ratio test determines the maximum feasible step.
-
-Setting $x_j = 0$ for all $j \in N \setminus \{q\}$ and $x_q = t \geq 0$, the basic variables become:
-
-$$x_B = \widetilde{b} - t \cdot \widetilde{A}_q,$$
-
-where $\widetilde{A}_q$ is the $q$-th column of $\widetilde{A}$ (the column corresponding to the entering variable). For each basic variable $i \in B$:
-
-$$x_i = \widetilde{b}_i - t \cdot \widetilde{A}_{iq}.$$
-
-We need $x_i \geq 0$ for all $i \in B$. For any $i$ with $\widetilde{A}_{iq} > 0$, this requires $t \leq \widetilde{b}_i / \widetilde{A}_{iq}$.
+- **Ratio test:** For each row $i \in B$ with $\widetilde{A}_{iq} > 0$, compute the ratio $\widetilde{b}_i / \widetilde{A}_{iq}$. The smallest ratio determines the step size and leaving variable:
 
 ::: {#def-ratio-test}
-## Definition 15.3 (Ratio Test and Leaving Variable)
+## Ratio Test (Tableau Form)
 
-The maximum step size is:
-
-$$t^* = \min\left\{\frac{\widetilde{b}_i}{\widetilde{A}_{iq}} : \widetilde{A}_{iq} > 0, \;\; i \in B\right\}.$$ {#eq-ratio-test}
-
-- If $\widetilde{A}_{iq} \leq 0$ for all $i \in B$, then $x_q$ can be increased without bound, and the LP is **unbounded**.
-- Otherwise, the **leaving variable** is:
-
-$$p = \arg\min_{i \in B}\left\{\frac{\widetilde{b}_i}{\widetilde{A}_{iq}} : \widetilde{A}_{iq} > 0\right\}.$$
+$$t^* = \min\left\{\frac{\widetilde{b}_i}{\widetilde{A}_{iq}} : \widetilde{A}_{iq} > 0, \;\; i \in B\right\}, \qquad p = \arg\min_{i \in B}\left\{\frac{\widetilde{b}_i}{\widetilde{A}_{iq}} : \widetilde{A}_{iq} > 0\right\}.$$ {#eq-ratio-test}
 :::
 
-### Effect of a Pivot {#sec-pivot-effect}
-
-After pivoting with entering variable $q$ and leaving variable $p$:
-
-- $x_p \leftarrow 0$ (leaves the basis, becomes non-basic)
-- $x_q \leftarrow t^* = \widetilde{b}_p / \widetilde{A}_{pq} \geq 0$ (enters the basis)
-- All other variables remain unchanged
-- The basis updates: $B' = \{j \in B : j \neq p\} \cup \{q\}$, $N' = \{j \in N : j \neq q\} \cup \{p\}$
+- **After the pivot:** $x_p \leftarrow 0$, $x_q \leftarrow t^* = \widetilde{b}_p / \widetilde{A}_{pq}$, and the basis updates to $B' = (B \setminus \{p\}) \cup \{q\}$.
 
 ::: {.callout-tip}
 ## Key Properties of a Pivot
 
-1. **Feasibility is maintained:** The ratio test ensures no basic variable becomes negative.
-2. **The objective decreases (or stays the same):** The objective changes by $-t^* \cdot |\widetilde{c}_q| = \widetilde{c}_q \cdot \widetilde{b}_p / \widetilde{A}_{pq} \leq 0$ since $\widetilde{c}_q < 0$ and $\widetilde{b}_p / \widetilde{A}_{pq} \geq 0$.
-3. **Degeneracy warning:** If $\widetilde{b}_p = 0$, then $t^* = 0$ and the objective does not decrease. This is the phenomenon of **degeneracy**.
+1. **Feasibility is maintained:** The ratio test ensures $x_B \geq 0$ after the update.
+2. **The objective improves:** The change is $\Delta\zeta = \widetilde{c}_q \cdot t^* \leq 0$, since $\widetilde{c}_q < 0$ and $t^* \geq 0$.
+3. **Degeneracy warning:** If $\widetilde{b}_p = 0$, then $t^* = 0$ and the objective does not decrease. The basis changes, but the BFS point stays put. This is **degeneracy** -- we return to it in @sec-degeneracy.
 :::
 
-## The Full Simplex Algorithm {#sec-full-algorithm}
+## The Full Simplex Algorithm (Tableau Form) {#sec-full-algorithm}
 
-We now assemble the pieces into the complete simplex algorithm.
+The simplex method from @sec-simplex-algorithm can now be expressed concisely as a five-step loop over the tableau:
 
 ::: {.callout-important}
 ## Algorithm: The Simplex Method (5 Steps)
@@ -181,58 +307,7 @@ $$t^* = \min_{i \in B}\left\{\frac{\widetilde{b}_i}{\widetilde{A}_{iq}} : \widet
 **Step 5 (Pivot):** Update $B \leftarrow (B \setminus \{p\}) \cup \{q\}$, $N \leftarrow (N \setminus \{q\}) \cup \{p\}$. Go to Step 1.
 :::
 
-```python
-#| label: fig-simplex-flowchart
-#| fig-cap: "Figure 15.1: Flowchart of the simplex method. The algorithm iterates through tableau computation, optimality check, entering variable selection, ratio test, and pivoting."
-#| echo: false
-
-import plotly.graph_objects as go
-
-fig = go.Figure()
-
-# Boxes
-boxes = [
-    (0.5, 0.92, 'Step 1: Compute tableau<br>(c\u0303, A\u0303, b\u0303, \u03b6\u0303)'),
-    (0.5, 0.74, 'Step 2: All c\u0303\u2c7c \u2265 0 ?'),
-    (0.5, 0.56, 'Step 3: Choose entering<br>variable q with c\u0303q < 0'),
-    (0.5, 0.38, 'Step 4: Ratio test<br>All A\u0303\u1d62q \u2264 0 ?'),
-    (0.5, 0.20, 'Step 5: Pivot<br>B \u2190 (B\\{p})\u222a{q}'),
-]
-colors = ['#7b97ad', '#b8995e', '#7a9a7e', '#b8995e', '#907ea0']
-
-for (x, y, txt), col in zip(boxes, colors):
-    fig.add_shape(type='rect',
-        x0=x-0.22, y0=y-0.06, x1=x+0.22, y1=y+0.06,
-        line=dict(color=col, width=2), fillcolor=f'rgba({int(col[1:3],16)},{int(col[3:5],16)},{int(col[5:7],16)},0.12)')
-    fig.add_annotation(x=x, y=y, text=txt, showarrow=False,
-        font=dict(size=11), align='center')
-
-# Arrows between boxes (vertical flow)
-for i in range(len(boxes)-1):
-    fig.add_annotation(x=0.5, y=boxes[i][1]-0.06, ax=0.5, ay=boxes[i+1][1]+0.06,
-        xref='x', yref='y', axref='x', ayref='y',
-        showarrow=True, arrowhead=2, arrowsize=1.2, arrowcolor='#555')
-
-# Loop back arrow from Step 5 to Step 1
-fig.add_annotation(x=0.28, y=0.20, ax=0.28, ay=0.92,
-    xref='x', yref='y', axref='x', ayref='y',
-    showarrow=True, arrowhead=2, arrowsize=1.2, arrowcolor='#907ea0')
-fig.add_annotation(x=0.22, y=0.56, text='loop', showarrow=False,
-    font=dict(size=9, color='#907ea0'))
-
-# Side labels for STOP conditions
-fig.add_annotation(x=0.82, y=0.74, text='Yes \u2192 OPTIMAL', showarrow=False,
-    font=dict(size=11, color='#7a9a7e'))
-fig.add_annotation(x=0.82, y=0.38, text='Yes \u2192 UNBOUNDED', showarrow=False,
-    font=dict(size=11, color='#b56b6b'))
-
-fig.update_layout(
-    xaxis=dict(range=[0, 1.1], visible=False),
-    yaxis=dict(range=[0.08, 1.02], visible=False),
-    showlegend=False, margin=dict(t=10, b=10, l=10, r=10),
-    height=520, width=550)
-fig.show()
-```
+![Flowchart of the simplex method. The algorithm iterates through tableau computation, optimality check, entering variable selection, ratio test, and pivoting.](figures/simplex-flowchart.svg){#fig-simplex-flowchart width="85%"}
 
 The five-step algorithm above is the complete specification of the simplex method. To make the mechanics concrete, we now work through a small example by hand, tracing every tableau computation and pivot decision.
 
@@ -305,265 +380,161 @@ Computing the new relative costs: $\widetilde{c} \geq 0$ (both components nonneg
 The simplex method found the optimal solution $x^* = (0.5, 1.5)$ with $\zeta^* = -1.5$ in two pivots, visiting BFS $e \to d \to a$.
 :::
 
-```python
-#| label: fig-simplex-path
-#| fig-cap: "Figure 15.2: The simplex method traces a path along edges of the feasible polytope. Starting from the origin (BFS e), it pivots to BFS d, then to the optimal BFS a. Hover over vertices for details."
-#| echo: false
+![The simplex method traces a path along edges of the feasible polytope. Starting from the origin (BFS $e$), it pivots to BFS $d$, then to the optimal BFS $a$ at $(0.5, 1.5)$ with $\zeta^* = -1.5$.](figures/simplex-path.svg){#fig-simplex-path}
 
-import plotly.graph_objects as go
-import numpy as np
+![The simplex tableau at each iteration. The method starts with basis $B=\{3,4\}$ (slack variables), pivots twice, and terminates at the optimal basis $B=\{1,2\}$ with $x^* = (\frac{1}{2}, \frac{3}{2})$ and $f^* = -\frac{3}{2}$. Red entries indicate negative reduced costs that trigger a pivot; green entries confirm optimality.](figures/simplex-tableau.svg){#fig-simplex-tableau width="85%"}
 
-# Feasible region vertices (in order for polygon)
-poly_x = [0, 2, 0.5, 0, 0]
-poly_y = [0, 0, 1.5, 1, 0]
+```{=html}
+<!-- Remove obsolete interactive tableau -->
+<div style="display:none;">
+<script>
+(function() {
+  var iterations = [
+    {title: 'Iteration 0: B={3,4}, N={1,2}', B: [3,4], N: [1,2],
+     b_tilde: [1,2], A_tilde: [[-1,1],[1,1]], c_tilde: [0,-1], zeta: 0,
+     entering: 'q=2 (c\u0303\u2082=\u22121<0)', leaving: 'p=3 (min{1/1, 2/1}=1)',
+     status: 'Not optimal: c\u0303\u2082 = \u22121 < 0'},
+    {title: 'Iteration 1: B={2,4}, N={1,3}', B: [2,4], N: [1,3],
+     b_tilde: [1,1], A_tilde: [[-1,1],[2,-1]], c_tilde: [-1,1], zeta: -1,
+     entering: 'q=1 (c\u0303\u2081=\u22121<0)', leaving: 'p=4 (min{\u2014, 1/2}=0.5)',
+     status: 'Not optimal: c\u0303\u2081 = \u22121 < 0'},
+    {title: 'Iteration 2: B={1,2}, N={3,4}', B: [1,2], N: [3,4],
+     b_tilde: [0.5,1.5], A_tilde: [[0.5,-0.5],[0.5,0.5]], c_tilde: [0.5,0.5], zeta: -1.5,
+     entering: 'None', leaving: 'None',
+     status: 'OPTIMAL: all c\u0303 \u2265 0'}
+  ];
 
-# BFS points
-bfs = {
-    'e': (0, 0, 'B={3,4}, \u03b6=0'),
-    'd': (0, 1, 'B={2,4}, \u03b6=\u22121'),
-    'a': (0.5, 1.5, 'B={1,2}, \u03b6=\u22121.5 (optimal)'),
-    'b': (2, 0, 'B={1,3}, \u03b6=0'),
-}
+  function fmt(v) { return (v >= 0 ? '+' : '') + v.toFixed(1); }
 
-fig = go.Figure()
-
-# Feasible region
-fig.add_trace(go.Scatter(x=poly_x, y=poly_y, fill='toself',
-    fillcolor='rgba(123,143,163,0.15)', line=dict(color='#7b97ad', width=2.5),
-    name='Feasible region', mode='lines'))
-
-# Constraint lines (extended)
-# -x1 + x2 = 1
-xx = np.linspace(-0.5, 3, 100)
-fig.add_trace(go.Scatter(x=xx, y=xx+1, mode='lines',
-    line=dict(color='#968a80', dash='dot', width=1.2),
-    name='\u2212x\u2081+x\u2082=1', hoverinfo='skip'))
-# x1 + x2 = 2
-fig.add_trace(go.Scatter(x=xx, y=2-xx, mode='lines',
-    line=dict(color='#968a80', dash='dot', width=1.2),
-    name='x\u2081+x\u2082=2', hoverinfo='skip'))
-
-# Objective contours
-for val in [0, -0.5, -1, -1.5]:
-    fig.add_trace(go.Scatter(x=[-0.5, 3], y=[val, val], mode='lines',
-        line=dict(color='#b8995e', dash='dash', width=1),
-        showlegend=(val == 0),
-        name='Objective contours' if val == 0 else '',
-        hoverinfo='skip'))
-
-# Simplex path
-path_x = [0, 0, 0.5]
-path_y = [0, 1, 1.5]
-fig.add_trace(go.Scatter(x=path_x, y=path_y, mode='lines+markers',
-    line=dict(color='#b56b6b', width=3),
-    marker=dict(size=10, color='#b56b6b', symbol='circle',
-    line=dict(width=1.5, color='white')),
-    name='Simplex path'))
-
-# Add arrows along simplex path
-fig.add_annotation(x=0, y=0.5, ax=0, ay=0.1,
-    xref='x', yref='y', axref='x', ayref='y',
-    showarrow=True, arrowhead=2, arrowsize=1.5, arrowcolor='#b56b6b')
-fig.add_annotation(x=0.25, y=1.25, ax=0.05, ay=1.05,
-    xref='x', yref='y', axref='x', ayref='y',
-    showarrow=True, arrowhead=2, arrowsize=1.5, arrowcolor='#b56b6b')
-
-# BFS labels
-for label, (bx, by, info) in bfs.items():
-    fig.add_trace(go.Scatter(x=[bx], y=[by], mode='markers+text',
-        marker=dict(color='#8a6e5e', size=9, line=dict(width=1, color='white')),
-        text=[label], textposition='top right',
-        textfont=dict(size=13, color='#8a6e5e'),
-        hovertext=[f'BFS {label}: ({bx},{by})<br>{info}'],
-        hoverinfo='text', showlegend=False))
-
-# Optimal star
-fig.add_trace(go.Scatter(x=[0.5], y=[1.5], mode='markers',
-    marker=dict(color='#b56b6b', size=15, symbol='star',
-    line=dict(width=1, color='white')),
-    name='Optimal: (0.5, 1.5)'))
-
-# Iteration annotations
-fig.add_annotation(x=-0.18, y=0.5, text='Iter 1', showarrow=False,
-    font=dict(size=10, color='#b56b6b'))
-fig.add_annotation(x=0.05, y=1.35, text='Iter 2', showarrow=False,
-    font=dict(size=10, color='#b56b6b'))
-
-fig.update_layout(
-    xaxis=dict(title='x\u2081', range=[-0.5, 2.8], zeroline=True),
-    yaxis=dict(title='x\u2082', range=[-0.5, 2.3], zeroline=True, scaleanchor='x'),
-    showlegend=True, margin=dict(t=20, b=50, l=55, r=20))
-fig.show()
-```
-
-```python
-#| label: fig-tableau-iterations
-#| fig-cap: "Figure 15.3: Interactive simplex tableau at each iteration. Use the dropdown to see how the tableau evolves as the simplex method pivots from one BFS to the next."
-#| echo: false
-
-import plotly.graph_objects as go
-import numpy as np
-
-# Iteration data
-iterations = [
-    {
-        'title': 'Iteration 0: B={3,4}, N={1,2}',
-        'B': [3, 4], 'N': [1, 2],
-        'b_tilde': [1, 2],
-        'A_tilde': [[-1, 1], [1, 1]],
-        'c_tilde': [0, -1],
-        'zeta': 0,
-        'entering': 'q=2 (c\u0303\u2082=\u22121<0)',
-        'leaving': 'p=3 (min{1/1, 2/1}=1)',
-        'status': 'Not optimal: c\u0303\u2082 = \u22121 < 0'
-    },
-    {
-        'title': 'Iteration 1: B={2,4}, N={1,3}',
-        'B': [2, 4], 'N': [1, 3],
-        'b_tilde': [1, 1],
-        'A_tilde': [[-1, 1], [2, -1]],
-        'c_tilde': [-1, 1],
-        'zeta': -1,
-        'entering': 'q=1 (c\u0303\u2081=\u22121<0)',
-        'leaving': 'p=4 (min{\u2014, 1/2}=0.5)',
-        'status': 'Not optimal: c\u0303\u2081 = \u22121 < 0'
-    },
-    {
-        'title': 'Iteration 2: B={1,2}, N={3,4}',
-        'B': [1, 2], 'N': [3, 4],
-        'b_tilde': [0.5, 1.5],
-        'A_tilde': [[0.5, -0.5], [0.5, 0.5]],
-        'c_tilde': [0.5, 0.5],
-        'zeta': -1.5,
-        'entering': 'None',
-        'leaving': 'None',
-        'status': 'OPTIMAL: all c\u0303 \u2265 0'
+  var allTraces = [];
+  for (var k = 0; k < iterations.length; k++) {
+    var it = iterations[k];
+    var header = ['', 'x<sub>' + it.N[0] + '</sub>', 'x<sub>' + it.N[1] + '</sub>'];
+    var col0 = ['\u03b6\u0303 = ' + it.zeta];
+    var col1 = [fmt(it.c_tilde[0])];
+    var col2 = [fmt(it.c_tilde[1])];
+    var fc0 = ['rgba(184,153,94,0.15)'];
+    var fc1 = ['rgba(184,153,94,0.15)'];
+    var fc2 = ['rgba(184,153,94,0.15)'];
+    for (var r = 0; r < it.B.length; r++) {
+      col0.push('x<sub>' + it.B[r] + '</sub> = ' + it.b_tilde[r].toFixed(1));
+      col1.push(fmt(-it.A_tilde[r][0]));
+      col2.push(fmt(-it.A_tilde[r][1]));
+      fc0.push('rgba(123,143,163,0.08)');
+      fc1.push('rgba(123,143,163,0.08)');
+      fc2.push('rgba(123,143,163,0.08)');
     }
-]
+    allTraces.push({
+      type: 'table',
+      header: {values: header, fill: {color: 'rgba(123,143,163,0.25)'},
+        font: {size: 13}, align: 'center', height: 30},
+      cells: {values: [col0, col1, col2], fill: {color: [fc0, fc1, fc2]},
+        font: {size: 13}, align: 'center', height: 28},
+      visible: (k === 0)
+    });
+  }
 
-# Build table for each iteration
-fig = go.Figure()
+  var buttons = [];
+  for (var k = 0; k < iterations.length; k++) {
+    var vis = [false, false, false]; vis[k] = true;
+    var it = iterations[k];
+    var statusText = '<b>' + it.status + '</b>';
+    if (it.entering !== 'None') {
+      statusText += '<br>Entering: ' + it.entering + '<br>Leaving: ' + it.leaving;
+    }
+    buttons.push({label: it.title, method: 'update',
+      args: [{visible: vis},
+        {annotations: [{x: 0.5, y: -0.15, xref: 'paper', yref: 'paper',
+          text: statusText, showarrow: false, font: {size: 12}, align: 'center'}]}]
+    });
+  }
 
-for k, it in enumerate(iterations):
-    # Build header
-    header = [''] + [f'x<sub>{j}</sub>' for j in it['N']]
-    # Build rows
-    row_obj = [f'\u03b6\u0303 = {it["zeta"]}'] + [f'{v:+.1f}' for v in it['c_tilde']]
-    rows = [row_obj]
-    for i_idx, i_val in enumerate(it['B']):
-        row = [f'x<sub>{i_val}</sub> = {it["b_tilde"][i_idx]:.1f}']
-        for j_idx in range(len(it['N'])):
-            row.append(f'{-it["A_tilde"][i_idx][j_idx]:+.1f}')
-        rows.append(row)
+  var initStatus = '<b>' + iterations[0].status + '</b><br>Entering: ' + iterations[0].entering + '<br>Leaving: ' + iterations[0].leaving;
 
-    cells_vals = list(zip(*rows))
-    header_vals = header
+  var layout = themeLayout({
+    updatemenus: [{type: 'dropdown', direction: 'down',
+      x: 0.5, xanchor: 'center', y: 1.15, yanchor: 'top',
+      buttons: buttons, font: {size: 12}}],
+    annotations: [{x: 0.5, y: -0.15, xref: 'paper', yref: 'paper',
+      text: initStatus, showarrow: false, font: {size: 12}, align: 'center'}],
+    margin: {t: 60, b: 80, l: 20, r: 20}, height: 280
+  });
 
-    fill_colors = []
-    for col_idx in range(len(header)):
-        col_colors = []
-        for row_idx in range(len(rows)):
-            if row_idx == 0:
-                col_colors.append('rgba(184,153,94,0.15)')
-            else:
-                col_colors.append('rgba(123,143,163,0.08)')
-        fill_colors.append(col_colors)
-
-    fig.add_trace(go.Table(
-        header=dict(values=header_vals,
-            fill_color='rgba(123,143,163,0.25)',
-            font=dict(size=13), align='center', height=30),
-        cells=dict(values=cells_vals,
-            fill_color=fill_colors,
-            font=dict(size=13), align='center', height=28),
-        visible=(k == 0)
-    ))
-
-# Add dropdown buttons
-buttons = []
-for k, it in enumerate(iterations):
-    vis = [False] * len(iterations)
-    vis[k] = True
-    label = it['title']
-    status_text = f"<b>{it['status']}</b>"
-    if it['entering'] != 'None':
-        status_text += f"<br>Entering: {it['entering']}<br>Leaving: {it['leaving']}"
-    buttons.append(dict(
-        label=label,
-        method='update',
-        args=[{'visible': vis},
-              {'annotations': [dict(
-                  x=0.5, y=-0.15, xref='paper', yref='paper',
-                  text=status_text, showarrow=False,
-                  font=dict(size=12), align='center')]}]
-    ))
-
-fig.update_layout(
-    updatemenus=[dict(
-        type='dropdown', direction='down',
-        x=0.5, xanchor='center', y=1.15, yanchor='top',
-        buttons=buttons,
-        font=dict(size=12))],
-    annotations=[dict(
-        x=0.5, y=-0.15, xref='paper', yref='paper',
-        text=f"<b>{iterations[0]['status']}</b><br>Entering: {iterations[0]['entering']}<br>Leaving: {iterations[0]['leaving']}",
-        showarrow=False, font=dict(size=12), align='center')],
-    margin=dict(t=60, b=80, l=20, r=20), height=280)
-fig.show()
+  Plotly.newPlot('fig-tableau-iterations', allTraces, layout, plotlyConfig);
+})();
+</script>
+</div>
 ```
 
 The worked example above started from the slack-variable basis $B = \{3, 4\}$, which was immediately feasible because $b \geq 0$. But what happens when some right-hand-side entries are negative and the slack-variable basis is infeasible? We need a systematic method for finding an initial BFS.
 
 ## Simplex Initialization via Auxiliary LP {#sec-initialization}
 
-The simplex algorithm requires an initial BFS to start. But how do we find one? This is itself a nontrivial problem. The solution is elegant: we solve an **auxiliary LP** whose feasibility is guaranteed, and whose optimal solution provides a starting BFS for the original problem.
+The simplex method requires a starting BFS. When $b \geq 0$, this is easy: use the slack-variable basis $B = \{n+1, \ldots, n+m\}$, which gives $x_B^* = b \geq 0$ (as we noted in @sec-starting-bfs). But what if some $b_i < 0$? Then $x_B^* = b$ has negative entries, so the slack-variable basis is *infeasible*. We cannot simply pick a basis and hope it works -- we need a systematic method to either find a feasible BFS or certify that none exists.
 
-### The Easy Case: $b \geq 0$ {#sec-easy-init}
+### The Key Idea {#sec-aux-idea}
 
-Consider the canonical form LP with slack variables:
+The idea is beautifully simple: **reduce the feasibility problem to an optimization problem that we already know how to solve.**
 
-$$\min \; c^\top x \quad \text{s.t.} \quad Ax = b, \;\; x \geq 0, \;\; x \in \mathbb{R}^{n+m},$$
+We introduce an auxiliary variable $x_0 \geq 0$ that acts as a "buffer." We subtract $x_0$ from the left-hand side of every constraint:
 
-where $A$ includes the identity block from the slack variables. If $b \geq 0$ (all RHS entries are nonneg), we can immediately set:
+$$\sum_{j=1}^{n} a_{ij} x_j - x_0 \leq b_i, \quad \forall\, i \in [m].$$
 
-$$B = \{n+1, n+2, \ldots, n+m\} \quad \text{(the slack variables)}.$$
+By making $x_0$ large enough, we can satisfy *any* constraint, even those with $b_i < 0$. The question is: can we shrink $x_0$ all the way down to zero while keeping all constraints satisfied? If yes, then with $x_0 = 0$ the constraints reduce to the original ones, and we have found a feasible point for the original LP.
 
-This gives the BFS $x = (0, \ldots, 0, b_1, \ldots, b_m)$, which is feasible since $b \geq 0$.
-
-### The Hard Case: Some $b_i < 0$ {#sec-hard-init}
-
-When some $b_i < 0$, the slack-variable basis is infeasible. We construct an **auxiliary LP** by introducing a new variable $x_0 \geq 0$:
+This leads to the **Auxiliary LP**: minimize $x_0$ subject to the modified constraints.
 
 ::: {#def-auxiliary-lp}
-## Definition 15.4 (Auxiliary LP)
+## Auxiliary LP
 
 Given the original LP $\min c^\top x$ s.t. $\sum_{j=1}^n a_{ij} x_j \leq b_i$, $x_j \geq 0$, the **Auxiliary LP** is:
 
 $$\text{(Aux-LP)} \quad \min \; x_0 \quad \text{s.t.} \quad \sum_{j=1}^{n} a_{ij} x_j - x_0 \leq b_i \;\; \forall\, i \in [m], \quad x_j \geq 0 \;\; \forall\, j \in \{0, 1, \ldots, n\}.$$
 :::
 
-The auxiliary variable $x_0$ acts as a "slack buffer" that absorbs the infeasibility: by making $x_0$ large enough, all constraints can be satisfied.
+### Why This Works {#sec-aux-why}
 
-::: {#thm-aux-lp-properties}
-## Theorem 15.5 (Properties of the Auxiliary LP)
+The Aux-LP has three key properties:
 
-The Auxiliary LP has the following properties:
+**Property 1: The Aux-LP is always feasible (and we can find a starting BFS).**
 
-1. **The Aux-LP is always feasible.** Setting $x_1 = \cdots = x_n = 0$ and $x_0 = -\min_i b_i$ (which is positive when some $b_i < 0$) gives a feasible solution. After adding slack variables, this yields a BFS with $B = \{n+1, \ldots, n+m\}$ (plus possibly $x_0$ replacing one slack).
+Set $x_1 = \cdots = x_n = 0$. The $i$-th constraint becomes $-x_0 \leq b_i$, i.e., $x_0 \geq -b_i$. Choosing $x_0 = \max_i(-b_i) = -\min_i b_i > 0$ satisfies all constraints. After adding slack variables $s_1, \ldots, s_m$, the equational form of the Aux-LP is:
 
-2. **The original LP is feasible if and only if the optimal value of the Aux-LP is zero** (i.e., $x_0^* = 0$).
+$$\sum_{j=1}^{n} a_{ij} x_j - x_0 + s_i = b_i, \quad s_i \geq 0.$$
 
-3. **If the Aux-LP optimal value is zero, the optimal BFS of the Aux-LP provides a starting BFS for the original LP** (after dropping $x_0$).
-:::
+With $x_j = 0$ for $j \geq 1$ and $x_0 = -\min_i b_i$, the slack values are $s_i = b_i + x_0$. For the row $k$ where $b_k$ is most negative, $s_k = 0$. This gives an initial BFS with basis $B = \{x_0, s_1, \ldots, s_m\} \setminus \{s_k\}$ -- we replace the slack $s_k$ with $x_0$ in the basis.
+
+**Property 2: The original LP is feasible $\iff$ the optimal value of the Aux-LP is zero.**
+
+- ($\Rightarrow$) If the original LP has a feasible point $x^*$, then $(x_0, x^*) = (0, x^*)$ satisfies all Aux-LP constraints (they reduce to the original constraints when $x_0 = 0$). Since $x_0 \geq 0$, the minimum of the Aux-LP is at most 0, hence exactly 0.
+- ($\Leftarrow$) If the Aux-LP achieves $x_0^* = 0$, the accompanying $x^*$ satisfies the original constraints (plug $x_0 = 0$ back in).
+
+**Property 3: The optimal BFS of the Aux-LP provides a starting BFS for the original LP.**
+
+When $x_0^* = 0$, the Aux-LP's optimal BFS consists of values for $x_1, \ldots, x_n$ and the slack variables $s_1, \ldots, s_m$ that satisfy $Ax + s = b$, $x, s \geq 0$. We need to extract a BFS for the original LP from this.
+
+- **Generic case ($x_0$ is non-basic):** Since non-basic variables are zero, $x_0 = 0$ is already enforced. The remaining basic variables (a subset of $x_1, \ldots, x_n, s_1, \ldots, s_m$) form a valid BFS for the original equational form. Simply drop $x_0$ from the non-basic set.
+- **Degenerate case ($x_0$ is basic with value 0):** Here $x_0$ sits in the basis at value zero. We must pivot $x_0$ out of the basis before proceeding. Choose any non-basic original variable $x_j$ (or slack $s_j$) with a nonzero entry in $x_0$'s row, and perform one additional pivot to swap $x_0$ out. This pivot does not change the BFS values (since $x_0 = 0$), it merely adjusts which variables are labeled basic vs. non-basic.
+
+### The Initialization Algorithm {#sec-init-algorithm}
 
 ::: {.callout-important}
 ## Algorithm: Simplex Initialization
 
-1. **Check** if $b \geq 0$. If so, use $B = \{n+1, \ldots, n+m\}$ (slack variables) as the initial basis. Done.
-2. **Otherwise**, formulate the Auxiliary LP and solve it using the simplex method (the Aux-LP itself has an obvious initial BFS).
-3. **If** the optimal value of the Aux-LP is zero, the optimal BFS becomes the initial BFS for the original LP. Run simplex from here.
-4. **If** the optimal value of the Aux-LP is positive, the original LP is **infeasible**.
+1. **Check** if $b \geq 0$. If so, use $B = \{n+1, \ldots, n+m\}$ (slack variables) as the initial basis. **Done.**
+
+2. **Formulate the Aux-LP:** Add the buffer variable $x_0$ to every constraint. The objective is $\min x_0$.
+
+3. **Find a starting BFS for the Aux-LP:** Set $x_j = 0$ for $j = 1, \ldots, n$ and $x_0 = -\min_i b_i$. The row with the most negative $b_i$ contributes $x_0$ to the basis in place of its slack variable.
+
+4. **Solve the Aux-LP** using the simplex method.
+
+5. **Interpret the result:**
+   - If the optimal value is **zero**: extract the BFS (dropping $x_0$) and use it to initialize simplex on the original LP.
+   - If the optimal value is **positive**: the original LP is **infeasible**.
 :::
+
+### Example {#sec-aux-example}
 
 ::: {#exm-aux-lp}
 ## Auxiliary LP Example
@@ -572,11 +543,44 @@ Consider the LP:
 
 $$\min \; -x_1 + x_2 - x_3 \quad \text{s.t.} \quad 2x_1 - x_2 + 2x_3 \leq 4, \;\; 2x_1 - 3x_2 + x_3 \leq -5, \;\; -x_1 + x_2 - 2x_3 \leq -1, \;\; x_1, x_2, x_3 \geq 0.$$
 
-Since $b_2 = -5 < 0$ and $b_3 = -1 < 0$, we cannot directly start simplex. The Auxiliary LP is:
+Here $b = (4, -5, -1)^\top$, so $b_2 = -5 < 0$ and $b_3 = -1 < 0$. The slack-variable basis gives $x_B = b$, which has negative entries -- we cannot start simplex directly.
+
+**Construct the Aux-LP.** Subtract $x_0$ from each constraint:
 
 $$\min \; x_0 \quad \text{s.t.} \quad 2x_1 - x_2 + 2x_3 - x_0 \leq 4, \;\; 2x_1 - 3x_2 + x_3 - x_0 \leq -5, \;\; -x_1 + x_2 - 2x_3 - x_0 \leq -1, \;\; x_0, x_1, x_2, x_3 \geq 0.$$
 
-We can initialize the Aux-LP with $x_1 = x_2 = x_3 = 0$, $x_0 = 5$ (since $-\min_i b_i = 5$). Running simplex on the Aux-LP, if the optimal value is 0, we extract the BFS and continue with the original objective.
+**Find a starting BFS for the Aux-LP.** Set $x_1 = x_2 = x_3 = 0$ and $x_0 = -\min_i b_i = -(-5) = 5$. Adding slack variables $s_1, s_2, s_3$:
+
+$$s_1 = 4 + 5 = 9, \qquad s_2 = -5 + 5 = 0, \qquad s_3 = -1 + 5 = 4.$$
+
+Since $s_2 = 0$, the initial basis for the Aux-LP is $B = \{x_0, s_1, s_3\}$ (we replace $s_2$ with $x_0$). This is a valid BFS: all basic variables are nonneg ($x_0 = 5, s_1 = 9, s_3 = 4$).
+
+**Solve the Aux-LP.** In equational form with slack variables, the Aux-LP constraints are:
+
+$$\begin{aligned}
+2x_1 - x_2 + 2x_3 - x_0 + s_1 &= 4, \\
+2x_1 - 3x_2 + x_3 - x_0 + s_2 &= -5, \\
+-x_1 + x_2 - 2x_3 - x_0 + s_3 &= -1.
+\end{aligned}$$
+
+The objective is $\min x_0$. Since $x_0$ is basic, we express the objective in terms of non-basic variables by using the second row (where $x_0$ entered) to eliminate $x_0$:
+
+$$x_0 = 2x_1 - 3x_2 + x_3 - s_2 - 5 \quad \Longrightarrow \quad z = x_0 = 5 + (2x_1 - 3x_2 + x_3 - s_2).$$
+
+Reading off the reduced costs: $r_{x_1} = 2$, $r_{x_2} = -3$, $r_{x_3} = 1$, $r_{s_2} = -1$. Since $r_{x_2} = -3 < 0$, variable $x_2$ should enter the basis. The simplex method proceeds from here, pivoting to decrease $x_0$ until (if possible) $x_0 = 0$.
+
+**Interpret the result.** If simplex drives $x_0^*$ to zero, the accompanying values of $(x_1, x_2, x_3, s_1, s_2, s_3)$ form a BFS for the original LP. We then switch the objective back to $\min(-x_1 + x_2 - x_3)$ and continue simplex from this starting BFS. If instead $x_0^* > 0$ at optimality, the original LP is infeasible --- no assignment of $x_1, x_2, x_3 \geq 0$ can satisfy all the original constraints.
+:::
+
+::: {.callout-note}
+## Two-Phase Simplex
+
+The procedure above is often called the **two-phase simplex method**:
+
+- **Phase I:** Solve the Aux-LP to find a feasible BFS (or detect infeasibility).
+- **Phase II:** Starting from that BFS, solve the original LP.
+
+The two phases use exactly the same simplex machinery --- the only difference is the objective function. Phase I minimizes the artificial variable $x_0$; Phase II minimizes the original cost $c^\top x$.
 :::
 
 With the auxiliary LP, we can now initialize the simplex method on any LP --- the last remaining gap in the algorithm. The final design choice is the pivoting rule: among all non-basic variables with negative relative cost, which one should enter the basis? This choice turns out to have deep implications for whether the algorithm terminates at all.
@@ -588,7 +592,7 @@ The simplex algorithm leaves freedom in **Step 3**: how to choose the entering v
 ### Dantzig's Rule {#sec-dantzig}
 
 ::: {#def-dantzig-rule}
-## Definition 15.6 (Dantzig's Pivoting Rule)
+## Dantzig's Pivoting Rule
 
 **Entering variable:** Choose the non-basic variable with the **most negative** relative cost:
 
@@ -610,7 +614,7 @@ Unfortunately, the simplex method with Dantzig's rule **can run forever**. In de
 ### Degeneracy and Cycling {#sec-degeneracy}
 
 ::: {#def-degeneracy}
-## Definition 15.7 (Degeneracy)
+## Degeneracy
 
 A BFS is **degenerate** if some basic variable has value zero, i.e., $\widetilde{b}_i = 0$ for some $i \in B$ (equivalently, $x_B^*$ contains a zero entry).
 :::
@@ -632,7 +636,7 @@ The initial BFS has $\widetilde{b}_1 = \widetilde{b}_2 = 0$ (degenerate). Under 
 :::
 
 ::: {#thm-cycling}
-## Theorem 15.8 (Cycling and Non-Termination)
+## Cycling and Non-Termination
 
 If the simplex method fails to terminate, then it must cycle -- that is, it revisits the same basis.
 :::
@@ -646,7 +650,7 @@ The number of possible bases is finite (at most $\binom{n+m}{m}$). If the algori
 Since Dantzig's rule can cycle, we need a pivoting rule that guarantees termination. Bland's rule resolves the cycling problem by using a simple, deterministic tie-breaking strategy: always choose the variable with the **smallest index**.
 
 ::: {#def-bland-rule}
-## Definition 15.9 (Bland's Pivoting Rule)
+## Bland's Pivoting Rule
 
 **Entering variable:** Choose the non-basic variable with **smallest index** among those with negative relative cost:
 
@@ -658,7 +662,7 @@ $$p = \arg\min_{i \in B}\left\{\frac{\widetilde{b}_i}{\widetilde{A}_{iq}} : \wid
 :::
 
 ::: {#thm-bland-termination}
-## Theorem 15.10 (Bland's Rule Guarantees Termination)
+## Bland's Rule Guarantees Termination
 
 The simplex method with Bland's rule **always terminates**.
 :::
@@ -682,7 +686,7 @@ Bland's rule resolves the termination question: the simplex method always finish
 
 To analyze the efficiency of the simplex method, we use the **oracle computational model**.
 
-### The Oracle Model {#sec-oracle-model}
+#### The Oracle Model {#sec-oracle-model}
 
 In the oracle model, an iterative algorithm interacts with an **oracle** that provides information for each update:
 
@@ -695,7 +699,7 @@ The **oracle complexity** is the number of queries (= the number of pivots):
 
 $$\text{Oracle complexity} = \#\text{ queries of } \{\widetilde{b}, \widetilde{c}, \widetilde{A}\} = \#\text{ pivots } (p, q).$$
 
-### Complexity Guarantee {#sec-complexity-guarantee}
+#### Complexity Guarantee {#sec-complexity-guarantee}
 
 ::: {.callout-warning}
 ## No Polynomial Bound Known
@@ -713,118 +717,103 @@ Despite this worst-case behavior, the simplex method is remarkably efficient in 
 
 The following visualization traces the simplex method step by step on the worked example. Use the slider to advance through iterations and observe how the entering and leaving variable selection drives the algorithm from one BFS to the next.
 
-```python
-#| label: fig-simplex-interactive
-#| fig-cap: "Figure 15.4: Interactive simplex method demo. Use the slider to step through pivot iterations. The red arrow shows the direction of movement, and the highlighted vertex is the current BFS."
-#| echo: false
+```{=html}
+<div id="fig-simplex-interactive" style="width:100%;max-width:700px;margin:auto;"></div>
+<p class="figure-caption" style="text-align:center;margin-top:0.5em;">Figure 10.4: Interactive simplex method demo. Use the slider to step through pivot iterations. The red arrow shows the direction of movement, and the highlighted vertex is the current BFS.</p>
+<script>
+(function() {
+  var poly_x = [0, 2, 0.5, 0, 0];
+  var poly_y = [0, 0, 1.5, 1, 0];
 
-import plotly.graph_objects as go
-import numpy as np
+  var path = [
+    {label: 'e', x: 0, y: 0, B: '{3,4}', obj: 0,
+     desc: 'Start: BFS e at origin.<br>c\u0303 = (0, \u22121). Enter q=2, leave p=3.'},
+    {label: 'd', x: 0, y: 1, B: '{2,4}', obj: -1,
+     desc: 'After pivot (3,2): BFS d.<br>c\u0303 = (\u22121, 1). Enter q=1, leave p=4.'},
+    {label: 'a', x: 0.5, y: 1.5, B: '{1,2}', obj: -1.5,
+     desc: 'After pivot (4,1): BFS a.<br>c\u0303 = (0.5, 0.5) \u2265 0. OPTIMAL!'}
+  ];
 
-# Feasible region
-poly_x = [0, 2, 0.5, 0, 0]
-poly_y = [0, 0, 1.5, 1, 0]
+  var xx = Array.from({length: 50}, function(_, i) { return -0.5 + 3.5 * i / 49; });
 
-# Simplex path: e -> d -> a
-path = [
-    {'label': 'e', 'x': 0, 'y': 0, 'B': '{3,4}', 'obj': 0,
-     'desc': 'Start: BFS e at origin.<br>c\u0303 = (0, \u22121). Enter q=2, leave p=3.'},
-    {'label': 'd', 'x': 0, 'y': 1, 'B': '{2,4}', 'obj': -1,
-     'desc': 'After pivot (3,2): BFS d.<br>c\u0303 = (\u22121, 1). Enter q=1, leave p=4.'},
-    {'label': 'a', 'x': 0.5, 'y': 1.5, 'B': '{1,2}', 'obj': -1.5,
-     'desc': 'After pivot (4,1): BFS a.<br>c\u0303 = (0.5, 0.5) \u2265 0. OPTIMAL!'},
-]
+  var frames = [];
+  for (var step = 0; step < path.length; step++) {
+    var frameData = [];
 
-# Non-visited BFS
-other_bfs = [
-    {'label': 'b', 'x': 2, 'y': 0},
-]
+    // Feasible region
+    frameData.push({x: poly_x, y: poly_y, fill: 'toself',
+      fillcolor: 'rgba(123,143,163,0.15)', line: {color: '#7b97ad', width: 2.5},
+      name: 'Feasible region', mode: 'lines'});
 
-frames = []
-for step in range(len(path)):
-    frame_data = []
+    // Constraint lines
+    frameData.push({x: xx, y: xx.map(function(v){return v+1;}), mode: 'lines',
+      line: {color: '#968a80', dash: 'dot', width: 1}, showlegend: false, hoverinfo: 'skip'});
+    frameData.push({x: xx, y: xx.map(function(v){return 2-v;}), mode: 'lines',
+      line: {color: '#968a80', dash: 'dot', width: 1}, showlegend: false, hoverinfo: 'skip'});
 
-    # Feasible region
-    frame_data.append(go.Scatter(x=poly_x, y=poly_y, fill='toself',
-        fillcolor='rgba(123,143,163,0.15)', line=dict(color='#7b97ad', width=2.5),
-        name='Feasible region', mode='lines'))
+    // Other BFS (gray)
+    frameData.push({x: [2], y: [0], mode: 'markers+text',
+      marker: {color: '#aaa', size: 7}, text: ['b'],
+      textposition: 'bottom right', textfont: {size: 10, color: '#aaa'},
+      showlegend: false, hoverinfo: 'skip'});
 
-    # Constraint lines
-    xx = np.linspace(-0.5, 3, 50)
-    frame_data.append(go.Scatter(x=xx.tolist(), y=(xx+1).tolist(), mode='lines',
-        line=dict(color='#968a80', dash='dot', width=1), showlegend=False, hoverinfo='skip'))
-    frame_data.append(go.Scatter(x=xx.tolist(), y=(2-xx).tolist(), mode='lines',
-        line=dict(color='#968a80', dash='dot', width=1), showlegend=False, hoverinfo='skip'))
+    // Visited path so far
+    var px = [], py = [];
+    for (var k = 0; k <= step; k++) { px.push(path[k].x); py.push(path[k].y); }
+    frameData.push({x: px, y: py, mode: 'lines',
+      line: {color: '#b56b6b', width: 3}, name: 'Simplex path', showlegend: false});
 
-    # Other BFS (gray)
-    for ob in other_bfs:
-        frame_data.append(go.Scatter(x=[ob['x']], y=[ob['y']], mode='markers+text',
-            marker=dict(color='#aaa', size=7), text=[ob['label']],
-            textposition='bottom right', textfont=dict(size=10, color='#aaa'),
-            showlegend=False, hoverinfo='skip'))
+    // Visited vertices
+    for (var k = 0; k <= step; k++) {
+      var p = path[k];
+      var isCurrent = (k === step);
+      var sz = isCurrent ? 14 : 8;
+      var sym = (isCurrent && step === path.length-1) ? 'star' : (isCurrent ? 'diamond' : 'circle');
+      var col = isCurrent ? '#b56b6b' : '#8a6e5e';
+      frameData.push({x: [p.x], y: [p.y], mode: 'markers+text',
+        marker: {color: col, size: sz, symbol: sym, line: {width: 1.5, color: 'white'}},
+        text: [p.label], textposition: 'top left',
+        textfont: {size: 12, color: col},
+        hovertext: ['BFS ' + p.label + ': (' + p.x + ',' + p.y + ')<br>B=' + p.B + ', \u03b6=' + p.obj],
+        hoverinfo: 'text', showlegend: false});
+    }
 
-    # Visited path so far
-    px = [p['x'] for p in path[:step+1]]
-    py = [p['y'] for p in path[:step+1]]
-    frame_data.append(go.Scatter(x=px, y=py, mode='lines',
-        line=dict(color='#b56b6b', width=3, dash='solid'),
-        name='Simplex path', showlegend=(step == 0)))
+    // Annotations
+    var anns = [];
+    if (step < path.length - 1) {
+      anns.push({x: path[step+1].x, y: path[step+1].y,
+        ax: path[step].x, ay: path[step].y,
+        xref: 'x', yref: 'y', axref: 'x', ayref: 'y',
+        showarrow: true, arrowhead: 3, arrowsize: 1.5, arrowcolor: '#b56b6b', arrowwidth: 2});
+    }
+    anns.push({x: 0.02, y: 0.02, xref: 'paper', yref: 'paper',
+      text: '<b>Step ' + step + ': B=' + path[step].B + ', \u03b6=' + path[step].obj + '</b><br>' + path[step].desc,
+      showarrow: false, font: {size: 11}, align: 'left',
+      bgcolor: 'rgba(255,255,255,0.85)', bordercolor: '#7b97ad', borderwidth: 1});
 
-    # Visited vertices
-    for k in range(step+1):
-        p = path[k]
-        is_current = (k == step)
-        sz = 14 if is_current else 8
-        sym = 'star' if (is_current and step == len(path)-1) else ('circle' if not is_current else 'diamond')
-        col = '#b56b6b' if is_current else '#8a6e5e'
-        frame_data.append(go.Scatter(x=[p['x']], y=[p['y']], mode='markers+text',
-            marker=dict(color=col, size=sz, symbol=sym, line=dict(width=1.5, color='white')),
-            text=[p['label']], textposition='top left',
-            textfont=dict(size=12, color=col),
-            hovertext=[f"BFS {p['label']}: ({p['x']},{p['y']})<br>B={p['B']}, \u03b6={p['obj']}"],
-            hoverinfo='text', showlegend=False))
+    frames.push({data: frameData, name: String(step), layout: {annotations: anns}});
+  }
 
-    # Arrow to next if not last
-    annotations = []
-    if step < len(path) - 1:
-        nx = path[step+1]['x']
-        ny = path[step+1]['y']
-        cx = path[step]['x']
-        cy = path[step]['y']
-        mx = (cx + nx) / 2
-        my = (cy + ny) / 2
-        annotations.append(dict(x=nx, y=ny, ax=cx, ay=cy,
-            xref='x', yref='y', axref='x', ayref='y',
-            showarrow=True, arrowhead=3, arrowsize=1.5, arrowcolor='#b56b6b',
-            arrowwidth=2))
+  var sliderSteps = [];
+  for (var k = 0; k < frames.length; k++) {
+    sliderSteps.push({args: [[String(k)], {mode: 'immediate', frame: {duration: 0, redraw: true}}],
+      label: 'Step ' + k, method: 'animate'});
+  }
 
-    # Info annotation
-    annotations.append(dict(
-        x=0.02, y=0.02, xref='paper', yref='paper',
-        text=f"<b>Step {step}: B={path[step]['B']}, \u03b6={path[step]['obj']}</b><br>{path[step]['desc']}",
-        showarrow=False, font=dict(size=11), align='left',
-        bgcolor='rgba(255,255,255,0.85)', bordercolor='#7b97ad', borderwidth=1))
+  var layout = themeLayout({
+    xaxis: themeAxis('x\u2081', {range: [-0.5, 2.8], zeroline: true, showline: true}),
+    yaxis: themeAxis('x\u2082', {range: [-0.5, 2.3], zeroline: true, scaleanchor: 'x', showline: true}),
+    showlegend: false,
+    annotations: frames[0].layout.annotations,
+    margin: {t: 20, b: 70, l: 55, r: 20},
+    sliders: [{active: 0, pad: {t: 40}, steps: sliderSteps,
+      currentvalue: {prefix: '', visible: true}, x: 0.1, len: 0.8}]
+  });
 
-    frames.append(go.Frame(data=frame_data, name=str(step),
-        layout=go.Layout(annotations=annotations)))
-
-# Initial figure
-fig = go.Figure(data=frames[0].data, frames=frames,
-    layout=go.Layout(
-        xaxis=dict(title='x\u2081', range=[-0.5, 2.8], zeroline=True),
-        yaxis=dict(title='x\u2082', range=[-0.5, 2.3], zeroline=True, scaleanchor='x'),
-        showlegend=False,
-        annotations=frames[0].layout.annotations,
-        margin=dict(t=20, b=70, l=55, r=20),
-        sliders=[dict(
-            active=0, pad=dict(t=40),
-            steps=[dict(args=[[str(k)], dict(mode='immediate',
-                frame=dict(duration=0, redraw=True))],
-                label=f'Step {k}', method='animate')
-                for k in range(len(frames))],
-            currentvalue=dict(prefix='', visible=True),
-            x=0.1, len=0.8)]))
-fig.show()
+  Plotly.newPlot('fig-simplex-interactive', frames[0].data, layout, plotlyConfig)
+    .then(function() { return Plotly.addFrames('fig-simplex-interactive', frames); });
+})();
+</script>
 ```
 
 ## Summary {#sec-summary}

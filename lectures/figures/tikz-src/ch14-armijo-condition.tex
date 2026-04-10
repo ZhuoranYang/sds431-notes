@@ -1,0 +1,78 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta, positioning, calc, fill.between}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{rwgold}{HTML}{B8995E}
+\definecolor{sage}{HTML}{7A9A7E}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{cream}{HTML}{F9F6F0}
+\definecolor{border}{HTML}{D4C9B8}
+\definecolor{terracotta}{HTML}{C47A6A}
+\definecolor{lavender}{HTML}{907EA0}
+
+\begin{document}
+\begin{tikzpicture}
+
+\fill[cream, rounded corners=14pt] (-1.2,-1.8) rectangle (13.5,9.5);
+\draw[border, line width=1.2pt, rounded corners=14pt] (-1.2,-1.8) rectangle (13.5,9.5);
+
+\begin{axis}[
+  at={(0.5cm,0.0cm)},
+  width=12.5cm, height=8.5cm,
+  axis lines=left,
+  axis line style={wmgray, line width=1pt},
+  xlabel={Step size $\alpha$},
+  ylabel={Objective value},
+  xlabel style={text=dkbrown, font=\large},
+  ylabel style={text=dkbrown, font=\large},
+  xmin=0, xmax=1.2, ymin=-4, ymax=20,
+  xtick={0, 0.2, 0.4, 0.6, 0.8, 1.0},
+  tick label style={text=wmgray, font=\small},
+  tick style={wmgray},
+  axis background/.style={fill=cream},
+  legend style={
+    at={(0.97,0.97)}, anchor=north east,
+    draw=border, fill=cream, font=\small, text=dkbrown,
+    rounded corners=3pt,
+  },
+]
+
+% phi(a) = (2-2.5*a)^4 + 0.5*(2-2.5*a)^2, phi(0)=18, phi'(0)=-85
+% Armijo: 18 - 25.5*a (c=0.3)
+
+% Shaded acceptable region
+\addplot[name path=armijo, sage, dashed, line width=1.8pt, domain=0:0.75, samples=2]
+  {18 - 25.5*x};
+\addplot[name path=phi, stblue, line width=2pt, domain=0:1.15, samples=150]
+  {(2-2.5*x)^4 + 0.5*(2-2.5*x)^2};
+\addplot[name path=bottom, draw=none, domain=0:0.72, samples=2] {-4};
+\addplot[sage, fill opacity=0.15] fill between[of=armijo and bottom, soft clip={domain=0:0.72}];
+
+% Tangent line
+\addplot[wmgray, dotted, line width=1.2pt, domain=0:0.22, samples=2]
+  {18 - 85*x};
+
+% Redraw armijo and phi on top
+\addplot[sage, dashed, line width=1.8pt, domain=0:0.75, samples=2, forget plot]
+  {18 - 25.5*x};
+\addplot[stblue, line width=2pt, domain=0:1.15, samples=150, forget plot]
+  {(2-2.5*x)^4 + 0.5*(2-2.5*x)^2};
+
+\addlegendentry{$f(\mathbf{x}+\alpha\mathbf{d})$}
+\addlegendentry{Armijo line ($c=0.3$)}
+\addlegendentry{Tangent}
+
+% Acceptable bracket
+\draw[sage, line width=1.2pt, <->] (axis cs:0.0,-2.5) -- (axis cs:0.72,-2.5);
+\node[text=sage, font=\small\bfseries, below] at (axis cs:0.36,-2.5) {Acceptable $\alpha$};
+
+\end{axis}
+
+\end{tikzpicture}
+\end{document}

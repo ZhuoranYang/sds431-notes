@@ -13,8 +13,15 @@ The overarching theme is that **convex optimization** occupies a sweet spot: it 
 
 Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.
 
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/01a-svm-cvxpy-gradient-descent.ipynb) **SVM via CVXPY and Gradient Descent** --- comparing constrained and regularized formulations of support vector machines
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/01a-svm-cvxpy-gradient-descent.ipynb) **SVM via CVXPY and Gradient Descent** --- comparing constrained and regularized formulations of support vector machines
 :::
+
+## What Will Be Covered {.unnumbered}
+
+- Motivating examples from statistics, machine learning, and operations research: MLE, regression, SVM, PCA, portfolio optimization, optimal control
+- How these problems share common mathematical structure as optimization problems
+- The hierarchy of optimization: convex vs. nonconvex, constrained vs. unconstrained
+- A roadmap for the course: from convex theory to algorithms to applications
 
 ## Motivating Examples {#sec-motivating-examples}
 
@@ -291,7 +298,7 @@ This is a **constrained quadratic optimization** problem.
 ```{=html}
 <div class="figure-container">
   <div id="fig-portfolio"></div>
-  <div class="figure-caption">Markowitz efficient frontier. Each point represents a portfolio; the frontier (gold curve) shows the minimum variance achievable for each level of expected return. Diversification allows portfolios that are less risky than any individual asset.</div>
+  <div class="figure-caption">Markowitz efficient frontier. Each grey dot represents a feasible portfolio; the frontier curve traces the minimum variance achievable for each level of expected return. Diversification allows portfolios that are less risky than any individual asset.</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -521,7 +528,7 @@ b. **Constrained optimization**
 ```{=html}
 <div class="figure-container">
   <div id="fig-optimization-landscape-plotly"></div>
-  <div class="figure-caption">Figure 0.3: The landscape of optimization problems covered in this course, from linear programs to general convex optimization and beyond.</div>
+  <div class="figure-caption">Figure 1.4: The landscape of optimization problems covered in this course, from linear programs to general convex optimization and beyond.</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -567,3 +574,8 @@ document.addEventListener('DOMContentLoaded', () => {
 - **Convex vs. nonconvex problems.** Convex problems (e.g., OLS, Ridge, Lasso) admit global solutions efficiently because every local minimum is a global minimum. Nonconvex problems (e.g., neural network training) lack this guarantee and require careful algorithm design.
 - **Role of regularization.** Adding a penalty term --- $\|\theta\|_2^2$ for Ridge or $\|\theta\|_1$ for Lasso --- controls model complexity and induces desirable structure such as sparsity.
 - **Course roadmap.** The course progresses from convex analysis and duality theory, through first- and second-order algorithms, to LP-specific methods (simplex, interior point) and modern applications (diffusion models, transformers).
+
+::: {.callout-tip}
+## Looking Ahead
+In the next chapter, we establish the **mathematical foundations** --- norms for measuring distance, matrix decompositions for revealing structure, gradients and Hessians for guiding descent, and automatic differentiation for computing gradients efficiently. These tools form the vocabulary that every optimization algorithm in this course builds upon.
+:::

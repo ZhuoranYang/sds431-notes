@@ -1,0 +1,91 @@
+\documentclass[tikz, border=12pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{sage}{HTML}{7A9A7E}
+\definecolor{rwgold}{HTML}{B8995E}
+\definecolor{brick}{HTML}{B56B6B}
+\definecolor{cream}{HTML}{F9F6F0}
+\definecolor{border}{HTML}{D4C9B8}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{gridcolor}{HTML}{E0D9D1}
+\definecolor{plotbg}{HTML}{FAF7F3}
+
+% Gaussian PDF (unnormalized is fine since we take ratios)
+\pgfmathdeclarefunction{gauss}{3}{%
+  \pgfmathparse{exp(-((#1-#2)^2)/(2*#3*#3))/(#3*2.506628)}%
+}
+
+% Score function for Gaussian mixture with modes at -3, 0, 4
+% weights 0.3, 0.4, 0.3, sigma_data=0.5
+% At noise variance nv: total variance = 0.25 + nv, sigma = sqrt(0.25+nv)
+% score(x) = sum_k w_k * g_k(x) * (-(x-mu_k)/sigma_k^2) / sum_k w_k * g_k(x)
+%           = -sum_k w_k * g_k(x) * (x-mu_k) / (sigma_k^2 * sum_k w_k * g_k(x))
+
+\begin{document}
+\begin{tikzpicture}
+\begin{axis}[
+  width=14cm, height=8.5cm,
+  xlabel={$x$},
+  ylabel={Score: $\nabla_x \log q(x)$},
+  xmin=-8, xmax=8,
+  ymin=-8, ymax=8,
+  grid=major,
+  grid style={gridcolor, line width=0.4pt},
+  axis line style={wmgray, line width=0.6pt},
+  tick style={wmgray},
+  xlabel style={dkbrown, font=\large},
+  ylabel style={dkbrown, font=\large},
+  tick label style={wmgray, font=\normalsize},
+  legend pos=north west,
+  legend cell align=left,
+  legend style={draw=border, fill=cream, font=\normalsize,
+    row sep=3pt, inner sep=6pt, at={(0.02,0.98)}, anchor=north west},
+  axis background/.style={fill=plotbg},
+]
+
+% Low noise (nv=0.01): sigma^2 = 0.26, sigma = 0.5099
+% Sharp peaks near each mode
+\addplot[stblue, line width=1.8pt, domain=-8:8, samples=400, smooth]
+  {( 0.3*gauss(x,-3,0.5099)*(-(x+3)/0.26)
+   + 0.4*gauss(x,0,0.5099)*(-(x)/0.26)
+   + 0.3*gauss(x,4,0.5099)*(-(x-4)/0.26) )
+  / max(0.3*gauss(x,-3,0.5099) + 0.4*gauss(x,0,0.5099)
+        + 0.3*gauss(x,4,0.5099), 1e-10)};
+\addlegendentry{Low noise ($t$ small)}
+
+% Medium-low (nv=0.5): sigma^2 = 0.75, sigma = 0.8660
+\addplot[sage, line width=1.6pt, domain=-8:8, samples=400, smooth]
+  {( 0.3*gauss(x,-3,0.866)*(-(x+3)/0.75)
+   + 0.4*gauss(x,0,0.866)*(-(x)/0.75)
+   + 0.3*gauss(x,4,0.866)*(-(x-4)/0.75) )
+  / max(0.3*gauss(x,-3,0.866) + 0.4*gauss(x,0,0.866)
+        + 0.3*gauss(x,4,0.866), 1e-10)};
+\addlegendentry{Medium-low}
+
+% Medium-high (nv=2.0): sigma^2 = 2.25, sigma = 1.5
+\addplot[rwgold, line width=1.6pt, domain=-8:8, samples=400, smooth]
+  {( 0.3*gauss(x,-3,1.5)*(-(x+3)/2.25)
+   + 0.4*gauss(x,0,1.5)*(-(x)/2.25)
+   + 0.3*gauss(x,4,1.5)*(-(x-4)/2.25) )
+  / max(0.3*gauss(x,-3,1.5) + 0.4*gauss(x,0,1.5)
+        + 0.3*gauss(x,4,1.5), 1e-10)};
+\addlegendentry{Medium-high}
+
+% High noise (nv=8.0): sigma^2 = 8.25, sigma = 2.872
+\addplot[brick, line width=1.6pt, domain=-8:8, samples=300, smooth]
+  {( 0.3*gauss(x,-3,2.872)*(-(x+3)/8.25)
+   + 0.4*gauss(x,0,2.872)*(-(x)/8.25)
+   + 0.3*gauss(x,4,2.872)*(-(x-4)/8.25) )
+  / max(0.3*gauss(x,-3,2.872) + 0.4*gauss(x,0,2.872)
+        + 0.3*gauss(x,4,2.872), 1e-10)};
+\addlegendentry{High noise ($t$ large)}
+
+\end{axis}
+\end{tikzpicture}
+\end{document}

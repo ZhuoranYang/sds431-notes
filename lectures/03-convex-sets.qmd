@@ -6,7 +6,7 @@ Before we can solve optimization problems, we need to agree on what a "solution"
 
 With these concepts in hand, we turn to the geometric foundation of tractable optimization: **convex sets**. The feasible region of every well-behaved optimization problem --- from linear programs to semidefinite programs --- is built from convex sets. Understanding convexity is essential because it is the single property that makes an optimization problem "tractable": on convex sets, local information reliably points toward global solutions. We develop the theory of convex sets here and will build on it throughout the rest of the course.
 
-## What Will Be Covered {#sec-convex-sets-overview}
+## What Will Be Covered {.unnumbered}
 
 - Basics of optimization: the oracle computation model, runtime and accuracy trade-offs
 - Solution concepts: optimal solutions, optimal values, local and global minima
@@ -100,10 +100,7 @@ An **optimal solution** $x^*$ is defined as $\operatorname{argmin} f(x)$ subject
 
 $$f(x^*) \leq f(x) \quad \forall \, x \in \Omega.$$
 
-Note:
-
-- $x^*$ may not exist.
-- $x^*$ may not be unique.
+Two important caveats: the optimal solution $x^*$ may not exist (the infimum may not be attained), and even when it does exist, it may not be unique (multiple feasible points may achieve the same minimum value).
 :::
 
 In words, an optimal solution is a feasible point that achieves the smallest possible objective value. The two caveats -- non-existence and non-uniqueness -- are important to keep in mind throughout optimization theory.
@@ -117,8 +114,7 @@ $$f^* = \inf \{y \in \mathbb{R} : \exists \, x \in \Omega \;\text{s.t.}\; y = f(
 
 $f^*$ is the largest number satisfying $f^* \leq f(x)$ for all $x \in \Omega$.
 
-- $f^*$ may not exist (unbounded).
-- It is possible that $f^*$ exists while $x^*$ does not.
+Note that $f^*$ may not exist if the problem is unbounded below ($f^* = -\infty$). It is also possible that $f^*$ exists while $x^*$ does not --- for instance, when the infimum is approached but never attained.
 :::
 
 The optimal value captures the "best achievable cost" over the feasible set. Unlike the optimal solution, $f^*$ is always well-defined (possibly $\pm\infty$), so it serves as a useful benchmark even when no minimizer exists.
@@ -165,10 +161,7 @@ Consider the optimization problem $\min_x f(x)$ subject to $x \in \Omega$. A poi
 Intuitively, a local minimum is "the best point in its neighborhood," while a global minimum is "the best point overall." The distinction matters greatly: most algorithms can only guarantee finding local minima, so a central question in optimization is when local minima are also global.
 
 ::: {.callout-note appearance="simple"}
-The hierarchy of minima:
-
-- Strict local (global) minima $\subseteq$ Local (global) minima
-- (Strict) global minima $\subseteq$ (Strict) local minima
+These four notions form a natural hierarchy: every strict local minimum is a local minimum, and every global minimum is also a local minimum. In particular, strict global $\subseteq$ global $\subseteq$ local, and strict local $\subseteq$ local. The central goal of convex optimization is to identify conditions under which local minima are automatically global.
 :::
 
 ::: {.callout-tip}
@@ -181,6 +174,84 @@ The hierarchy of minima:
 :::
 
 ![A function with multiple local minima (circles) and local maxima (diamonds). The global minimum is the deepest valley. In non-convex optimization, gradient-based methods may get trapped in any local minimum.](figures/ch03-local-global.svg){#fig-local-global}
+
+### Necessary Conditions for Local Optimality {#sec-necessary-conditions}
+
+Now that we have defined local and global minima, a natural question arises: **how can we recognize a local minimum when we find one?** In practice, we cannot check every point in a neighborhood --- instead, we need conditions that a local minimizer *must* satisfy. These are called **necessary conditions** for local optimality. They do not guarantee that a point is a local minimum (that would require *sufficient* conditions), but they narrow the search: any point that fails a necessary condition can be immediately ruled out.
+
+The following results apply to **unconstrained** optimization problems $\min_{x \in \mathbb{R}^n} f(x)$, where there are no constraints on $x$. This is the setting where calculus gives us the cleanest characterizations.
+
+#### First-Order Necessary Condition {#sec-first-order-necessary}
+
+::: {#thm-first-order-necessary}
+## First-Order Necessary Condition
+
+Consider the unconstrained problem $\min_{x} f(x)$ where $f : \mathbb{R}^n \to \mathbb{R}$ is differentiable. If $x^*$ is a local minimizer, then
+
+$$\nabla f(x^*) = 0.$$
+:::
+
+A point satisfying $\nabla f(x^*) = 0$ is called a **stationary point**. The theorem says that every local minimizer must be a stationary point --- but the converse is false. A stationary point could also be a local maximum or a saddle point.
+
+::: {.proof}
+*Strategy.* We show that $\nabla f(x^*)$ cannot have any nonzero component. If it did, we could move in the direction $-\nabla f(x^*)$ and decrease $f$, contradicting local minimality.
+
+Consider any direction $d \in \mathbb{R}^n$ and any small $\alpha > 0$. Since $x^*$ is a local minimizer, we have
+
+$$f(x^* + \alpha \, d) \geq f(x^*) \quad \forall \, \alpha \in (0, \varepsilon),$$
+
+for some $\varepsilon > 0$. By Taylor expansion:
+
+$$f(x^* + \alpha \, d) = f(x^*) + \alpha \, d^\top \nabla f(x^*) + o(\alpha).$$
+
+Therefore $\alpha \, d^\top \nabla f(x^*) + o(\alpha) \geq 0$. Dividing by $\alpha > 0$ and taking $\alpha \to 0$:
+
+$$d^\top \nabla f(x^*) \geq 0.$$
+
+But we can also choose the direction $-d$, which by the same argument gives $-d^\top \nabla f(x^*) \geq 0$, i.e., $d^\top \nabla f(x^*) \leq 0$.
+
+Combining both inequalities: $d^\top \nabla f(x^*) = 0$ for every $d \in \mathbb{R}^n$. This is only possible if $\nabla f(x^*) = 0$. $\blacksquare$
+:::
+
+::: {.callout-tip}
+## Intuition
+
+The gradient $\nabla f(x^*)$ points in the direction of steepest ascent. If the gradient is nonzero, we can decrease $f$ by moving in the direction $-\nabla f(x^*)$ --- so $x^*$ cannot be a local minimum. Therefore, at a local minimum, the gradient must vanish: there is no direction of local descent.
+:::
+
+#### Second-Order Necessary Condition {#sec-second-order-necessary}
+
+The first-order condition $\nabla f(x^*) = 0$ eliminates points where the gradient is nonzero, but it cannot distinguish between local minima, local maxima, and saddle points --- all three satisfy $\nabla f = 0$. To tell them apart, we need to examine the **curvature** of $f$ at $x^*$, which is captured by the Hessian matrix $\nabla^2 f(x^*)$.
+
+::: {#thm-second-order-necessary}
+## Second-Order Necessary Condition
+
+Consider the unconstrained problem $\min_{x} f(x)$ where $f : \mathbb{R}^n \to \mathbb{R}$ is twice differentiable. If $x^*$ is a local minimizer, then
+
+$$\nabla f(x^*) = 0 \quad \text{and} \quad \nabla^2 f(x^*) \succeq 0.$$
+
+That is, the Hessian at $x^*$ must be positive semidefinite.
+:::
+
+::: {.proof}
+From @thm-first-order-necessary, we already know $\nabla f(x^*) = 0$. It remains to show $\nabla^2 f(x^*) \succeq 0$.
+
+Consider the Taylor expansion of $f$ around $x^*$: for any direction $d \in \mathbb{R}^n$ and small $\alpha > 0$,
+
+$$f(x^* + \alpha \, d) = f(x^*) + \alpha \, \underbrace{\nabla f(x^*)^\top d}_{= \, 0} + \tfrac{\alpha^2}{2} \, d^\top \nabla^2 f(x^*) \, d + o(\alpha^2).$$
+
+Since $x^*$ is a local minimizer, $f(x^* + \alpha \, d) \geq f(x^*)$, which gives
+
+$$\frac{f(x^* + \alpha \, d) - f(x^*)}{\alpha^2} = \tfrac{1}{2} \, d^\top \nabla^2 f(x^*) \, d + o(1) \geq 0.$$
+
+Taking $\alpha \to 0$, we obtain $d^\top \nabla^2 f(x^*) \, d \geq 0$ for every $d \in \mathbb{R}^n$. By definition, this means $\nabla^2 f(x^*) \succeq 0$. $\blacksquare$
+:::
+
+::: {.callout-note appearance="simple"}
+**Why these conditions matter.** Most optimization algorithms --- gradient descent, Newton's method, quasi-Newton methods --- are designed to find stationary points ($\nabla f = 0$). The first-order necessary condition tells us that this is the right target: every local minimizer is a stationary point. The second-order condition gives an additional test: if the Hessian at a stationary point has a negative eigenvalue, that point is *not* a local minimum (it is a saddle point), and we should keep searching.
+
+For **convex** functions, the situation is much simpler: every stationary point is automatically a global minimum. This is the key insight that makes convex optimization tractable, and we will prove it formally in the next chapter.
+:::
 
 ### Compact Sets and the Weierstrass Theorem {#sec-compact-sets}
 
@@ -213,10 +284,7 @@ The distinction between open and closed sets matters because closed sets "contai
 ::: {#def-closed-open-set}
 ## Closed Set, Open Set
 
-- $S$ is **closed** if $\partial S \subseteq S$. E.g., $[0,1]$.
-- $S$ is **open** if $S = \text{interior}(S)$. E.g., $(0,1)$.
-
-There are sets that are neither open nor closed, e.g., $(0,1] = \{t : 0 < t \leq 1\}$.
+A set $S \subseteq \mathbb{R}^n$ is **closed** if it contains its entire boundary, $\partial S \subseteq S$ (e.g., $[0,1]$), and **open** if it contains none of its boundary, $S = \text{interior}(S)$ (e.g., $(0,1)$). These two properties are not exhaustive: some sets are neither open nor closed, such as $(0,1] = \{t : 0 < t \leq 1\}$, which contains one boundary point but not the other.
 :::
 
 Closedness alone is not enough to guarantee that a minimum exists -- the set $[0, \infty)$ is closed but a decreasing function can still escape to infinity. We also need boundedness. The combination of both properties is called compactness.
@@ -224,11 +292,10 @@ Closedness alone is not enough to guarantee that a minimum exists -- the set $[0
 ::: {#def-bounded-compact-set}
 ## Bounded, Compact Set
 
-- $S$ is **bounded** if there exists $r$ such that $S \subseteq B(0, r)$, i.e., for all $x \in S$, $\|x\|_2 \leq r$.
-- $S \subseteq \mathbb{R}^n$ is **compact** if $S$ is bounded and closed.
-
-**Property:** If $\{a_n\}_{n \geq 1} \subseteq S$ is a sequence with a limit $a^* = \lim_{n \to \infty} a_n$, and $S$ is compact, then $a^* \in S$.
+A set $S$ is **bounded** if it fits inside some ball, i.e., there exists $r > 0$ such that $S \subseteq B(0, r)$. A set $S \subseteq \mathbb{R}^n$ is **compact** if it is both bounded and closed. Compactness has the following sequential characterization: if $\{a_n\}_{n \geq 1} \subseteq S$ is a sequence with a limit $a^* = \lim_{n \to \infty} a_n$, and $S$ is compact, then $a^* \in S$.
 :::
+
+![Left --- Interior point $p$ has an $\varepsilon$-ball fully contained in $S$; boundary point $q$ straddles inside and outside. Right --- Open sets exclude their boundary (dashed), closed sets include it (solid). A set is compact if and only if it is both closed and bounded.](figures/ch03-topology-concepts.svg){#fig-topology-concepts}
 
 Compactness is the key topological property that guarantees limits stay inside the set. In optimization, compact feasible sets ensure that minimizing sequences cannot "escape to infinity" (ruled out by boundedness) or converge to a boundary point outside the set (ruled out by closedness). Both failure modes appeared in @exm-various-cases: Case 2 showed escape to infinity on an unbounded set, and Case 4 showed a minimizing sequence whose limit lies outside the domain.
 
@@ -313,6 +380,8 @@ The following sets are all convex. The first few are elementary building blocks;
 8. **Polyhedron:** $\{x : Ax \leq b\}$. The feasible set of any linear program is a polyhedron -- an intersection of finitely many halfspaces.
 :::
 
+![Common convex sets in $\mathbb{R}^2$. Left --- a hyperplane $a^\top x = b$ divides the plane into two halfspaces. Center --- the $\ell_1$, $\ell_2$, and $\ell_\infty$ unit balls are all convex. Right --- a polyhedron is the intersection of finitely many halfspaces.](figures/ch03-convex-examples.svg){#fig-convex-examples}
+
 ::: {.proof}
 **Proof that Halfspaces are Convex.**
 
@@ -361,9 +430,41 @@ The following operations preserve convexity:
 These rules are the building blocks for establishing that complex feasible sets are convex without going back to the definition each time. For instance, the feasible set of a linear program $\{x : Ax \leq b\}$ is convex because it is an intersection of halfspaces (rule 1), and the image of a convex set under a linear map remains convex (rule 2). By composing these rules, one can handle most constraint sets encountered in practice.
 
 ::: {.proof}
-**Proof (Intersection preserves convexity).**
+**Proof of @thm-operations-convex-sets.** We prove each rule by taking two arbitrary points in the resulting set, forming their convex combination, and verifying the defining property. Throughout, all vectors lie in the appropriate $\mathbb{R}^n$ (or $\mathbb{R}^{n_1} \times \mathbb{R}^{n_2}$ for products) and $\lambda \in [0,1]$.
 
-Let $x, y \in C_1 \cap C_2$ and $\lambda \in [0,1]$. Since $x, y \in C_1$ and $C_1$ is convex, we have $\lambda x + (1-\lambda)y \in C_1$. By the same reasoning applied to $C_2$, we get $\lambda x + (1-\lambda)y \in C_2$. Therefore $\lambda x + (1-\lambda)y \in C_1 \cap C_2$, confirming that the intersection satisfies the definition of convexity. This completes the proof. $\blacksquare$
+**Rule 1 (Intersection).** Let $x, y \in C_1 \cap C_2$. Since $x, y \in C_1$ and $C_1$ is convex, $\lambda x + (1-\lambda)y \in C_1$. By the same reasoning, $\lambda x + (1-\lambda)y \in C_2$. Therefore $\lambda x + (1-\lambda)y \in C_1 \cap C_2$.
+
+For the general case $\bigcap_{\alpha \in A} C_\alpha$: if $x, y \in \bigcap_\alpha C_\alpha$, then $x, y \in C_\alpha$ for every $\alpha \in A$. By convexity of each $C_\alpha$, $\lambda x + (1-\lambda)y \in C_\alpha$ for every $\alpha$, hence $\lambda x + (1-\lambda)y \in \bigcap_\alpha C_\alpha$. Note that the index set $A$ can be uncountably infinite --- this is why the positive semidefinite cone $\mathbb{S}_+^n = \{X : v^\top X v \geq 0 \;\forall\, v\}$ is convex: it is an intersection of infinitely many halfspaces (one for each direction $v \in \mathbb{R}^n$).
+
+**Rule 2 (Affine image).** Let $f(x) = Ax + b$ where $A \in \mathbb{R}^{m \times n}$ and $b \in \mathbb{R}^m$. We must show $f(C) = \{Ax + b : x \in C\}$ is convex. Let $u, v \in f(C)$, so there exist $x_1, x_2 \in C$ with $u = Ax_1 + b$ and $v = Ax_2 + b$. Then:
+
+$$\lambda u + (1-\lambda)v = \lambda(Ax_1 + b) + (1-\lambda)(Ax_2 + b) = A\bigl(\underbrace{\lambda x_1 + (1-\lambda)x_2}_{\in \, C}\bigr) + b \in f(C),$$
+
+where the key step uses the **linearity** of the affine map: the weights $\lambda$ and $(1-\lambda)$ pass through $A$ and $b$ collects into a single copy. Since $C$ is convex, $\lambda x_1 + (1-\lambda)x_2 \in C$, so the result lies in $f(C)$.
+
+**Rule 3 (Affine preimage).** Let $f(x) = Ax + b$ with $A \in \mathbb{R}^{m \times n}$, $b \in \mathbb{R}^m$, and $C \subseteq \mathbb{R}^m$ convex. We must show $f^{-1}(C) = \{x \in \mathbb{R}^n : Ax + b \in C\}$ is convex. Let $x_1, x_2 \in f^{-1}(C)$, so $Ax_1 + b \in C$ and $Ax_2 + b \in C$. Then:
+
+$$A\bigl(\lambda x_1 + (1-\lambda)x_2\bigr) + b = \lambda\underbrace{(Ax_1 + b)}_{\in \, C} + (1-\lambda)\underbrace{(Ax_2 + b)}_{\in \, C} \in C,$$
+
+where the membership follows from convexity of $C$. Therefore $\lambda x_1 + (1-\lambda)x_2 \in f^{-1}(C)$. This rule is particularly useful: it immediately implies that any set defined by linear equalities and inequalities is convex. For instance, the solution set $\{x : Ax = b\}$ is the preimage of $\{b\}$ (a convex singleton) under the linear map $x \mapsto Ax$, and the set $\{x : \|Ax + b\| \leq r\}$ is the preimage of a norm ball under an affine map.
+
+**Rule 4 (Scaling and translation).** This is a special case of Rule 2 with the affine map $f(x) = \alpha x + \beta$, where $\alpha \in \mathbb{R}$ and $\beta \in \mathbb{R}^n$. For completeness: let $u, v \in \alpha C + \beta$, so $u = \alpha x_1 + \beta$ and $v = \alpha x_2 + \beta$ for some $x_1, x_2 \in C$. Then:
+
+$$\lambda u + (1-\lambda)v = \alpha\bigl(\lambda x_1 + (1-\lambda)x_2\bigr) + \beta \in \alpha C + \beta,$$
+
+since $\lambda x_1 + (1-\lambda)x_2 \in C$ by convexity.
+
+**Rule 5 (Cartesian product).** Let $(x_1, y_1), (x_2, y_2) \in C_1 \times C_2$ where $C_1 \subseteq \mathbb{R}^{n_1}$ and $C_2 \subseteq \mathbb{R}^{n_2}$. The convex combination is:
+
+$$\lambda(x_1, y_1) + (1-\lambda)(x_2, y_2) = \bigl(\underbrace{\lambda x_1 + (1-\lambda)x_2}_{\in \, C_1}, \;\; \underbrace{\lambda y_1 + (1-\lambda)y_2}_{\in \, C_2}\bigr) \in C_1 \times C_2.$$
+
+The convex combination distributes component-wise, and each component stays in its respective convex set by convexity of $C_1$ and $C_2$. This extends by induction to any finite product: $C_1 \times C_2 \times \cdots \times C_k$ is convex if each $C_i$ is convex. In the multivariate setting, this is frequently used when different blocks of variables have independent constraints (e.g., $x \in [0,1]^n$ is convex because it is the product $[0,1] \times \cdots \times [0,1]$).
+
+**Rule 6 (Minkowski sum).** Let $u, v \in C_1 + C_2$, so $u = x_1 + y_1$ and $v = x_2 + y_2$ for some $x_1, x_2 \in C_1 \subseteq \mathbb{R}^n$ and $y_1, y_2 \in C_2 \subseteq \mathbb{R}^n$. Then:
+
+$$\lambda u + (1-\lambda)v = \underbrace{\bigl(\lambda x_1 + (1-\lambda)x_2\bigr)}_{\in \, C_1} + \underbrace{\bigl(\lambda y_1 + (1-\lambda)y_2\bigr)}_{\in \, C_2} \in C_1 + C_2.$$
+
+The key insight is that the convex combination of two sums can be rewritten as a sum of two convex combinations, each staying in its respective set. The Minkowski sum arises naturally in robust optimization: if the nominal constraint set is $C_1$ and the uncertainty set is $C_2$, then the "inflated" feasible region $C_1 + C_2$ remains convex. $\blacksquare$
 :::
 
 ::: {.callout-tip}
@@ -372,9 +473,261 @@ Let $x, y \in C_1 \cap C_2$ and $\lambda \in [0,1]$. Since $x, y \in C_1$ and $C
 A polyhedron $\{x : Ax \leq b\}$ is convex because it is the intersection of halfspaces, each of which is convex. This is a direct consequence of the intersection rule.
 :::
 
-An important geometric consequence of convexity is that disjoint convex sets can always be separated by a hyperplane. The **separating hyperplane theorem** states that if two convex sets $C$ and $D$ are disjoint ($C \cap D = \emptyset$), then there exists a hyperplane $\{x : a^\top x = b\}$ such that $a^\top x \leq b$ for all $x \in C$ and $a^\top x \geq b$ for all $x \in D$. This result is fundamental to duality theory and to the geometric understanding of optimality conditions: at an optimal point of a constrained problem, the objective's level set is "separated" from the feasible set by a supporting hyperplane.
+The following interactive figure illustrates the most important operations. The contrast between intersection (convex) and union (not convex) is especially illuminating: convexity is preserved by "narrowing" a set (intersection) but destroyed by "widening" it (union).
+
+```{=html}
+<div class="figure-container">
+  <div id="fig-set-operations"></div>
+  <div class="figure-caption">Figure: Operations on convex sets. (a) Intersection preserves convexity. (b) Union does NOT preserve convexity — the red segment leaves the set. (c) Affine image (rotation + scaling) of an ellipse remains convex. (d) Minkowski sum of a triangle and a disk produces a "rounded triangle," still convex.</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const cfg = {responsive: true, displayModeBar: false};
+
+  // Helper: generate ellipse points
+  function ellipse(cx, cy, rx, ry, angle, N) {
+    const xs = [], ys = [];
+    const c = Math.cos(angle), s = Math.sin(angle);
+    for (let i = 0; i <= N; i++) {
+      const t = 2 * Math.PI * i / N;
+      const ex = rx * Math.cos(t), ey = ry * Math.sin(t);
+      xs.push(cx + c*ex - s*ey);
+      ys.push(cy + s*ex + c*ey);
+    }
+    return {x: xs, y: ys};
+  }
+
+  // Helper: generate regular polygon
+  function polygon(cx, cy, r, sides, rot) {
+    const xs = [], ys = [];
+    for (let i = 0; i <= sides; i++) {
+      const a = rot + 2*Math.PI*i/sides;
+      xs.push(cx + r*Math.cos(a));
+      ys.push(cy + r*Math.sin(a));
+    }
+    return {x: xs, y: ys};
+  }
+
+  // ========== (a) Intersection ==========
+  const e1 = ellipse(0.3, 0, 1.2, 0.8, 0.3, 120);
+  const e2 = ellipse(-0.3, 0, 1.2, 0.8, -0.3, 120);
+
+  // Compute intersection region by sampling
+  function inEllipse(px, py, cx, cy, rx, ry, angle) {
+    const c = Math.cos(-angle), s = Math.sin(-angle);
+    const dx = px-cx, dy = py-cy;
+    const lx = c*dx - s*dy, ly = s*dx + c*dy;
+    return (lx/rx)*(lx/rx) + (ly/ry)*(ly/ry) <= 1;
+  }
+  const intX = [], intY = [];
+  for (let i = 0; i <= 200; i++) {
+    const a = 2*Math.PI*i/200;
+    for (let r = 0; r <= 1.3; r += 0.01) {
+      const px = r*Math.cos(a), py = r*Math.sin(a);
+      if (inEllipse(px,py,0.3,0,1.2,0.8,0.3) && inEllipse(px,py,-0.3,0,1.2,0.8,-0.3)) {
+        intX.push(px); intY.push(py); break;
+      }
+    }
+  }
+
+  // ========== (b) Union (NOT convex) ==========
+  // Two circles with gap
+  const c1 = ellipse(-1, 0, 0.7, 0.7, 0, 80);
+  const c2 = ellipse(1, 0, 0.7, 0.7, 0, 80);
+
+  // ========== (c) Affine image ==========
+  const origE = ellipse(0, 0, 1, 0.5, 0, 100);
+  // Apply A = [[1.2, 0.6],[0.3, 0.9]], b = [0, 0]
+  const affX = [], affY = [];
+  for (let i = 0; i < origE.x.length; i++) {
+    affX.push(1.2*origE.x[i] + 0.6*origE.y[i]);
+    affY.push(0.3*origE.x[i] + 0.9*origE.y[i]);
+  }
+
+  // ========== (d) Minkowski sum: triangle + disk ==========
+  const tri = polygon(0, 0, 1.0, 3, Math.PI/2);
+  // Minkowski sum with disk of radius 0.3
+  const minkX = [], minkY = [];
+  const rd = 0.3;
+  for (let i = 0; i < tri.x.length - 1; i++) {
+    const x1 = tri.x[i], y1 = tri.y[i];
+    const x2 = tri.x[i+1], y2 = tri.y[i+1];
+    // Edge direction
+    const dx = x2-x1, dy = y2-y1;
+    const len = Math.sqrt(dx*dx+dy*dy);
+    const nx = -dy/len, ny = dx/len; // outward normal
+    // Offset edge
+    const ox1 = x1+rd*nx, oy1 = y1+rd*ny;
+    const ox2 = x2+rd*nx, oy2 = y2+rd*ny;
+    // Arc at vertex i+1
+    const a1 = Math.atan2(ny, nx);
+    const nx2_ = i+1 < tri.x.length-1 ? -(tri.y[i+2]-tri.y[i+1]) : -(tri.y[1]-tri.y[0]);
+    const ny2_ = i+1 < tri.x.length-1 ? (tri.x[i+2]-tri.x[i+1]) : (tri.x[1]-tri.x[0]);
+    const len2 = Math.sqrt(nx2_*nx2_+ny2_*ny2_);
+    const a2 = Math.atan2(ny2_/len2, nx2_/len2);
+    // Add edge points
+    for (let t = 0; t <= 1; t += 0.05) {
+      minkX.push(ox1 + t*(ox2-ox1));
+      minkY.push(oy1 + t*(oy2-oy1));
+    }
+    // Add rounded corner
+    let startA = a1, endA = a2;
+    if (endA < startA) endA += 2*Math.PI;
+    for (let t = 0; t <= 1; t += 0.05) {
+      const a = startA + t*(endA-startA);
+      minkX.push(x2 + rd*Math.cos(a));
+      minkY.push(y2 + rd*Math.sin(a));
+    }
+  }
+
+  const traces = [
+    // (a) Intersection
+    {x: e1.x, y: e1.y, mode: 'lines', line: {color: '#7b97ad', width: 2},
+     fill: 'toself', fillcolor: 'rgba(123,151,173,0.12)', xaxis: 'x', yaxis: 'y',
+     showlegend: false, hoverinfo: 'skip'},
+    {x: e2.x, y: e2.y, mode: 'lines', line: {color: '#b8995e', width: 2},
+     fill: 'toself', fillcolor: 'rgba(184,153,94,0.12)', xaxis: 'x', yaxis: 'y',
+     showlegend: false, hoverinfo: 'skip'},
+    {x: intX, y: intY, mode: 'markers', marker: {color: '#7a9a7e', size: 2.5},
+     xaxis: 'x', yaxis: 'y', showlegend: false, hoverinfo: 'skip'},
+
+    // (b) Union (NOT convex)
+    {x: c1.x, y: c1.y, mode: 'lines', line: {color: '#7b97ad', width: 2},
+     fill: 'toself', fillcolor: 'rgba(123,151,173,0.18)', xaxis: 'x2', yaxis: 'y2',
+     showlegend: false, hoverinfo: 'skip'},
+    {x: c2.x, y: c2.y, mode: 'lines', line: {color: '#b8995e', width: 2},
+     fill: 'toself', fillcolor: 'rgba(184,153,94,0.18)', xaxis: 'x2', yaxis: 'y2',
+     showlegend: false, hoverinfo: 'skip'},
+    // Line segment that leaves the union
+    {x: [-0.5, 0.5], y: [0.5, 0.5], mode: 'lines', line: {color: '#c47a6a', width: 3, dash: 'dash'},
+     xaxis: 'x2', yaxis: 'y2', showlegend: false, hoverinfo: 'skip'},
+    {x: [-0.5, 0.5], y: [0.5, 0.5], mode: 'markers', marker: {color: '#c47a6a', size: 7},
+     xaxis: 'x2', yaxis: 'y2', showlegend: false, hoverinfo: 'skip'},
+
+    // (c) Affine image
+    {x: origE.x, y: origE.y, mode: 'lines', line: {color: '#7b97ad', width: 2, dash: 'dot'},
+     fill: 'toself', fillcolor: 'rgba(123,151,173,0.10)', xaxis: 'x3', yaxis: 'y3',
+     showlegend: false, hoverinfo: 'skip'},
+    {x: affX, y: affY, mode: 'lines', line: {color: '#7a9a7e', width: 2.5},
+     fill: 'toself', fillcolor: 'rgba(122,154,126,0.18)', xaxis: 'x3', yaxis: 'y3',
+     showlegend: false, hoverinfo: 'skip'},
+
+    // (d) Minkowski sum
+    {x: tri.x, y: tri.y, mode: 'lines', line: {color: '#7b97ad', width: 2, dash: 'dot'},
+     xaxis: 'x4', yaxis: 'y4', showlegend: false, hoverinfo: 'skip'},
+    {x: minkX, y: minkY, mode: 'lines', line: {color: '#7a9a7e', width: 2.5},
+     fill: 'toself', fillcolor: 'rgba(122,154,126,0.15)', xaxis: 'x4', yaxis: 'y4',
+     showlegend: false, hoverinfo: 'skip'},
+  ];
+
+  const ann = (text, x, y, col) => ({
+    text: '<b>'+text+'</b>', x, y, xref:'paper', yref:'paper',
+    showarrow:false, font:{size:13, color:col||'#3d3530'}
+  });
+
+  const layout = {
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: {family: '"Source Serif 4", Georgia, serif', size: 12},
+    height: 440,
+    grid: {rows: 2, columns: 2, pattern: 'independent', xgap: 0.08, ygap: 0.12},
+    xaxis:  {domain:[0,0.44], zeroline:false, showgrid:false, showticklabels:false, scaleanchor:'y'},
+    yaxis:  {domain:[0.55,1], zeroline:false, showgrid:false, showticklabels:false},
+    xaxis2: {domain:[0.56,1], zeroline:false, showgrid:false, showticklabels:false, scaleanchor:'y2'},
+    yaxis2: {domain:[0.55,1], zeroline:false, showgrid:false, showticklabels:false},
+    xaxis3: {domain:[0,0.44], zeroline:false, showgrid:false, showticklabels:false, scaleanchor:'y3'},
+    yaxis3: {domain:[0,0.45], zeroline:false, showgrid:false, showticklabels:false},
+    xaxis4: {domain:[0.56,1], zeroline:false, showgrid:false, showticklabels:false, scaleanchor:'y4'},
+    yaxis4: {domain:[0,0.45], zeroline:false, showgrid:false, showticklabels:false},
+    margin: {t:10, b:10, l:10, r:10},
+    annotations: [
+      ann('(a) Intersection (convex)', 0.22, 1.02, '#7a9a7e'),
+      ann('(b) Union (NOT convex)', 0.78, 1.02, '#c47a6a'),
+      ann('(c) Affine image (convex)', 0.22, 0.50, '#7a9a7e'),
+      ann('(d) Minkowski sum (convex)', 0.78, 0.50, '#7a9a7e'),
+      {text:'C₁∩C₂', x:0, y:0, xref:'x', yref:'y', showarrow:false, font:{size:14, color:'#7a9a7e'}},
+      {text:'C₁∪C₂', x:0, y:0.8, xref:'x2', yref:'y2', showarrow:false, font:{size:13, color:'#7b7067'}},
+      {text:'✗', x:0, y:0.5, xref:'x2', yref:'y2', showarrow:false, font:{size:18, color:'#c47a6a'}},
+      {text:'C', x:-0.2, y:-0.15, xref:'x3', yref:'y3', showarrow:false, font:{size:13, color:'#7b97ad'}},
+      {text:'A·C+b', x:0.7, y:0.5, xref:'x3', yref:'y3', showarrow:false, font:{size:13, color:'#7a9a7e'}},
+      {text:'C⊕B(0,r)', x:0, y:-0.75, xref:'x4', yref:'y4', showarrow:false, font:{size:13, color:'#7a9a7e'}},
+    ],
+  };
+  Plotly.newPlot('fig-set-operations', traces, layout, cfg);
+});
+</script>
+```
+
+### Separating Hyperplane Theorems {#sec-separating-hyperplane}
+
+An important geometric consequence of convexity is that disjoint convex sets can always be "pulled apart" by a flat surface. This idea --- that a hyperplane can be placed between two non-overlapping convex sets --- is one of the most fundamental results in convex analysis. It underpins **duality theory** (every dual variable corresponds to a separating hyperplane), **optimality conditions** (at an optimal point, the objective's level set is separated from the feasible set), and algorithms like the **ellipsoid method** (which uses separating hyperplanes to cut the search space in half).
+
+We state two versions: a basic separation theorem that always works, and a strict separation theorem that requires an additional boundedness condition.
+
+::: {#thm-separating-hyperplane}
+## Separating Hyperplane Theorem
+
+Let $C, D \subseteq \mathbb{R}^n$ be two convex sets with $C \cap D = \emptyset$. Then there exists $a \in \mathbb{R}^n$ ($a \neq 0$) and $b \in \mathbb{R}$ such that
+
+$$a^\top x \leq b \quad \forall \, x \in C, \qquad a^\top x \geq b \quad \forall \, x \in D.$$
+
+In words: two disjoint convex sets can always be separated by a hyperplane $\{x : a^\top x = b\}$.
+:::
 
 ![The separating hyperplane theorem: two disjoint convex sets $C$ and $D$ can always be separated by a hyperplane $a^\top x = b$. The normal vector $a$ points from $C$ toward $D$, and the hyperplane passes between the two sets.](figures/ch01-separating-hyperplane.svg){#fig-separating-hyperplane}
+
+::: {.callout-warning}
+## Strict Separation Is Not Always Possible
+
+One might hope for **strict** separation: $a^\top x < b$ for all $x \in C$ and $a^\top x > b$ for all $x \in D$. However, this is *not* always possible, even for disjoint convex sets. Consider in $\mathbb{R}^2$:
+
+$$C = \{(x_1, x_2) : x_2 \leq 0\}, \qquad D = \{(x_1, x_2) : x_2 \geq 1/x_1, \; x_1 > 0\}.$$
+
+Both sets are convex and disjoint, but they "approach" each other asymptotically as $x_1 \to \infty$: the gap between them shrinks to zero without ever closing. No hyperplane can strictly separate them --- any separating hyperplane must pass through the "asymptotic contact point." The issue is that neither set is bounded.
+:::
+
+To guarantee strict separation, we need at least one of the sets to be bounded, which prevents this "asymptotic touching" phenomenon.
+
+::: {#thm-strict-separation}
+## Strict Separating Hyperplane Theorem
+
+Let $C, D \subseteq \mathbb{R}^n$ be two **closed** convex sets with at least one of them **bounded** (i.e., compact). If $C \cap D = \emptyset$, then there exists $a \in \mathbb{R}^n$ ($a \neq 0$) and $b \in \mathbb{R}$ such that
+
+$$a^\top x < b \quad \forall \, x \in C, \qquad a^\top x > b \quad \forall \, x \in D.$$
+
+That is, the separating hyperplane strictly separates the two sets (no points lie on the hyperplane itself).
+:::
+
+::: {.proof}
+**Proof of @thm-strict-separation.**
+
+*Strategy.* We find the closest pair of points between $C$ and $D$, then construct a hyperplane perpendicular to the line segment connecting them, passing through the midpoint. Compactness ensures the closest pair exists with a strictly positive gap.
+
+**Step 1: The distance is positive and attained.** Define the distance between $C$ and $D$ as
+
+$$\text{dist}(C, D) = \inf\{\|u - v\|_2 : u \in C, \; v \in D\}.$$
+
+We claim this infimum is positive and attained. Without loss of generality, suppose $C$ is compact. Define the "thickened" set $\widetilde{D} = \{v \in D : \inf_{u \in C}\|u - v\| \leq \text{dist}(C,D) + 1\}$. Then $\widetilde{D}$ is bounded (since it is within distance $\text{dist}(C,D) + 1 + \text{diam}(C)$ of any point in $C$), and $\text{dist}(C, D) = \text{dist}(C, \widetilde{D})$. Since $(u,v) \mapsto \|u - v\|$ is continuous and $C \times \widetilde{D}$ is compact, the infimum is attained: there exist $c \in C$ and $d \in D$ with $\|c - d\|_2 = \text{dist}(C, D)$.
+
+Since $C \cap D = \emptyset$ and both are closed, we have $\text{dist}(C, D) > 0$.
+
+**Step 2: Construct the separating hyperplane.** Define the hyperplane with normal vector $a = d - c$ passing through the midpoint $\tfrac{c + d}{2}$:
+
+$$f(x) = a^\top x - b, \quad \text{where} \quad a = d - c, \quad b = \frac{\|d\|_2^2 - \|c\|_2^2}{2}.$$
+
+One can verify that $f\!\left(\frac{c+d}{2}\right) = 0$, so the hyperplane passes through the midpoint.
+
+**Step 3: Verify separation.** We claim $f(x) > 0$ for all $x \in D$ and $f(x) < 0$ for all $x \in C$. The key insight is that the closest-point pair $(c, d)$ satisfies a variational inequality: for any $x \in D$, the point $d$ minimizes $\|c - v\|$ over $v \in D$, so $(d - c)^\top(x - d) \geq 0$ for all $x \in D$ (this is the first-order optimality condition for projecting $c$ onto the convex set $D$). Similarly, $(c - d)^\top(x - c) \geq 0$ for all $x \in C$. These inequalities, combined with $\|d - c\|_2 > 0$, yield the strict separation. $\blacksquare$
+:::
+
+::: {.callout-note appearance="simple"}
+**Summary of separating hyperplane theorems.** The key takeaway is:
+
+- **Disjoint convex sets** $\Longrightarrow$ can be separated by a hyperplane (non-strict).
+- **Disjoint, closed, one bounded** $\Longrightarrow$ can be **strictly** separated.
+
+The proof also tells us *how to construct* the separating hyperplane: find the closest pair of points between the two sets, and place the hyperplane perpendicular to the segment connecting them. This constructive insight is used in algorithms like the ellipsoid method and in proving strong duality.
+:::
 
 ### Convex Combination and Convex Hull {#sec-convex-combination}
 
@@ -433,6 +786,13 @@ Thus $\lambda \, u + (1-\lambda) \, v$ is itself a convex combination of $x_1, \
 ## Summary {.unnumbered}
 
 - **Solution concepts.** Feasible, locally optimal, and globally optimal solutions are distinguished; the Weierstrass theorem guarantees existence of an optimum when the feasible set is compact and the objective is continuous.
+- **Necessary conditions.** At a local minimum of a differentiable function, $\nabla f(x^*) = 0$ (first-order) and $\nabla^2 f(x^*) \succeq 0$ (second-order). These conditions narrow the search for optima to stationary points.
 - **Convex sets.** A set $C$ is convex if $\lambda x + (1-\lambda)y \in C$ for all $x,y \in C$ and $\lambda \in [0,1]$; intersections, affine images, and Minkowski sums preserve convexity.
 - **Building blocks.** Halfspaces, polyhedra, norm balls, ellipsoids, and cones are all convex. The feasible set of any linear program is a polyhedron (intersection of halfspaces).
+- **Separating hyperplanes.** Disjoint convex sets can always be separated by a hyperplane. Strict separation requires closedness and boundedness of at least one set. This result underpins duality theory and optimality conditions.
 - **Convex hulls.** The convex hull $\operatorname{conv}(S)$ is the smallest convex set containing $S$; it is itself convex and plays a central role in the geometry of linear programming.
+
+::: {.callout-tip}
+## Looking Ahead
+With convex sets in hand, the next chapter introduces **convex functions** --- functions whose epigraph is a convex set. We develop three equivalent characterizations (the chord inequality, the first-order condition, and the Hessian test) and a toolkit of operations that preserve convexity. The payoff: for convex functions, every local minimum is a global minimum.
+:::

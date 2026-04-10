@@ -25,8 +25,8 @@ book:
     - part: "First-Order Methods"
       chapters:
         - lectures/06-gradient-descent.qmd
-        - lectures/07-momentum-adaptive-sgd.qmd
-        - lectures/08-constrained-first-order.qmd
+        - lectures/07-momentum-adaptive.qmd
+        - lectures/08-sgd-proximal-frank-wolfe.qmd
     - part: "Linear Programming"
       chapters:
         - lectures/09-lp-formulation-geometry.qmd
@@ -67,7 +67,6 @@ format:
           <link rel="preconnect" href="https://fonts.googleapis.com">
           <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
           <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    include-after-body:
       - file: _plotly-theme.html
 
 lightbox: auto

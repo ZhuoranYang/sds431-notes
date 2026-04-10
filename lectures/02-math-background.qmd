@@ -8,6 +8,21 @@ This chapter is a self-contained review designed to bring all students to a comm
 
 We also introduce backpropagation --- the reverse-mode automatic differentiation algorithm that powers modern deep learning. Even if you have used frameworks like PyTorch or JAX, understanding the mathematical mechanics beneath them will deepen your appreciation of why gradient-based optimization scales to problems with millions of parameters.
 
+::: {.callout-tip}
+## Companion Notebooks
+
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/02a-automatic-differentiation.ipynb) **Automatic Differentiation** --- computing gradients and Hessians with autograd, PyTorch, and JAX
+:::
+
+## What Will Be Covered {.unnumbered}
+
+- Vector norms ($\ell_1$, $\ell_2$, $\ell_\infty$, $\ell_p$) and matrix norms (operator, Frobenius, nuclear)
+- Eigenvalues, eigenvectors, and the spectral theorem for symmetric matrices
+- Positive semidefinite matrices and the Loewner ordering
+- Gradients, Hessians, and the chain rule in multivariate calculus
+- Taylor expansion and quadratic approximation
+- Backpropagation as reverse-mode automatic differentiation
+
 ## Norms: Vector and Matrix {#sec-norms}
 
 When we talk about "approximate solutions" to a problem, we mean the answer is "close" to being correct. We measure **closeness** by a distance $\|x - y\|$, for some norm. That is, $x$ is close to $y$ if $\|x - y\|$ is small.
@@ -15,7 +30,7 @@ When we talk about "approximate solutions" to a problem, we mean the answer is "
 ### Vector Norms {#sec-vector-norms}
 
 ::: {#def-vector-norm}
-## Definition 2.1 (Vector Norm)
+## Vector Norm
 
 A **vector norm** $\|\cdot\| : \mathbb{R}^n \to \mathbb{R}$ is a function that maps $x \in \mathbb{R}^n$ to $\|x\| \in \mathbb{R}$ satisfying the following properties:
 
@@ -47,7 +62,7 @@ $$\|x\|_p = \left(\sum_{i=1}^{n} |x_i|^p\right)^{1/p}$$
 ```{=html}
 <div class="figure-container">
   <div id="fig-norm-balls"></div>
-  <div class="figure-caption">Figure 2.1: Unit norm balls in \(\mathbb{R}^2\) for \(\ell_1\), \(\ell_2\), and \(\ell_\infty\) norms. The set \(\{x \in \mathbb{R}^2 : \|x\| \leq 1\}\) for each norm.</div>
+  <div class="figure-caption">Unit norm balls in &#x211D;<sup>2</sup> for &#x2113;<sub>1</sub>, &#x2113;<sub>2</sub>, and &#x2113;<sub>&infin;</sub> norms. The set {x &isin; &#x211D;<sup>2</sup> : &#x2016;x&#x2016; &le; 1} for each norm.</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -118,7 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
 A natural question arises when working with different norms: how do they compare? If we know $\|x\|_2$ is small, can we conclude anything about $\|x\|_1$ or $\|x\|_\infty$? The following inequalities give precise answers, and they will be used repeatedly when converting convergence guarantees stated in one norm into bounds in another.
 
 ::: {#thm-norm-inequalities}
-## Theorem 2.1 (Norm Inequalities)
+## Norm Inequalities
 
 For any $x \in \mathbb{R}^n$:
 $$\|x\|_\infty \leq \|x\|_2 \leq \|x\|_1.$$
@@ -141,7 +156,7 @@ which implies $x^\top y \leq \|x\| \cdot \|y\|$ (Cauchy--Schwarz).
 The specific inequalities above are instances of a more general phenomenon: in finite dimensions, all $\ell_p$-norms are equivalent up to dimension-dependent constants. This means that a sequence converging in one norm automatically converges in every other, so the choice of norm does not affect the fundamental behavior of an algorithm --- only the constants in the convergence bounds.
 
 ::: {#thm-norm-equivalence}
-## Theorem 2.2 (Equivalence of $\ell_p$-Norms)
+## Equivalence of $\ell_p$-Norms
 
 For any $p, q \in [1, +\infty)$, there exist constants $c_{p,q}$ and $C_{p,q}$ such that
 $$c_{p,q} \cdot \|x\|_q \;\leq\; \|x\|_p \;\leq\; C_{p,q} \cdot \|x\|_q \qquad \forall\, x \in \mathbb{R}^n.$$
@@ -168,7 +183,7 @@ $\langle x, y \rangle$ characterizes the **angle** between $x$ and $y$. In parti
 The standard dot product on $\mathbb{R}^n$ is just one example of an inner product. To work with more general spaces --- such as spaces of matrices, functions, or probability distributions --- we need an axiomatic definition that captures the essential properties: a notion of angle, orthogonality, and an induced norm.
 
 ::: {#def-inner-product}
-## Definition 2.2 (Inner Product)
+## Inner Product
 
 An **inner product** $\langle \cdot, \cdot \rangle : \mathcal{X} \times \mathcal{X} \to \mathbb{R}$ defined on a general space $\mathcal{X}$ satisfies the following properties:
 
@@ -189,7 +204,7 @@ Any inner product induces a norm $\|\cdot\|$ by letting $\|x\| = \sqrt{\langle x
 ### Cauchy--Schwarz Inequality {#sec-cauchy-schwarz}
 
 ::: {#thm-cauchy-schwarz}
-## Theorem 2.3 (Cauchy--Schwarz Inequality)
+## Cauchy--Schwarz Inequality
 
 For any inner product and its induced norm, we always have:
 $$\langle x, y \rangle \;\leq\; \|x\| \cdot \|y\| \;=\; \sqrt{\langle x, x \rangle} \cdot \sqrt{\langle y, y \rangle}.$$ {#eq-cauchy-schwarz}
@@ -225,7 +240,7 @@ We have now developed the theory of norms and inner products for vectors. In opt
 Inner products can be defined on general spaces. For example, the space of matrices $\mathbb{R}^{m \times n}$.
 
 ::: {#def-matrix-inner-product}
-## Definition 2.3 (Matrix Inner Product)
+## Matrix Inner Product
 
 For matrices $A, B \in \mathbb{R}^{m \times n}$:
 $$\langle A, B \rangle = \operatorname{tr}(A^\top B)$$
@@ -237,7 +252,7 @@ This inner product treats each matrix as a long vector of its entries and takes 
 ### Frobenius Norm {#sec-frobenius-norm}
 
 ::: {#def-frobenius-norm}
-## Definition 2.4 (Frobenius Norm)
+## Frobenius Norm
 
 The **Frobenius norm** $\|\cdot\|_F : \mathbb{R}^{m \times n} \to \mathbb{R}$ is the norm induced by the matrix inner product:
 $$\|A\|_F = \sqrt{\sum_{i=1}^{m} \sum_{j=1}^{n} (A_{ij})^2} = \|\operatorname{vec}(A)\|_2$$
@@ -257,7 +272,7 @@ $$\|A\|_{\max} := \|A\|_{\ell_\infty} = \|\operatorname{vec}(A)\|_\infty = \max_
 We can also define another class of matrix norms by viewing matrices as **operators** $A: \mathbb{R}^n \to \mathbb{R}^m$. This gives **operator norms** (also called **induced norms**).
 
 ::: {#def-operator-norms}
-## Definition 2.5 (Operator Norms / Induced Norms)
+## Operator Norms / Induced Norms
 
 For any $1 \leq p \leq \infty$, the matrix norm induced by $\ell_p$-vector norms is:
 $$\|A\|_p = \sup_{x \neq 0} \frac{\|Ax\|_p}{\|x\|_p}.$$
@@ -275,7 +290,7 @@ $\|A\|_p$ measures the **diameter of the image** of the $\ell_p$-ball under the 
 ```{=html}
 <div class="figure-container">
   <div id="fig-operator-norm"></div>
-  <div class="figure-caption">Figure 2.2: The unit \(\ell_2\)-ball (left) mapped by \(A = \begin{pmatrix} 1 & 2 \\ 0 & 2 \end{pmatrix}\) to an ellipse (right). The operator norm \(\|A\|_2\) equals the largest semi-axis length.</div>
+  <div class="figure-caption">The unit &#x2113;<sub>2</sub>-ball (left) mapped by A = [[1, 2], [0, 2]] to an ellipse (right). The operator norm &#x2016;A&#x2016;<sub>2</sub> equals the largest semi-axis length.</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -348,18 +363,23 @@ document.addEventListener('DOMContentLoaded', () => {
 ```
 
 ::: {#thm-induced-norm-properties}
-## Theorem 2.4 (Properties of Induced Norms)
+## Properties of Induced Norms
 
-- **Consistent:** $\|Ax\|_p \leq \|A\|_p \cdot \|x\|_p$ for all $x \in \mathbb{R}^n$.
-- **Submultiplicative:** $\|AB\|_p \leq \|A\|_p \cdot \|B\|_p$.
-
-All induced norms are submultiplicative. The Frobenius norm is also submultiplicative. Not every matrix norm is submultiplicative (e.g., $\|A\|_{\max}$).
+Induced norms satisfy two key compatibility properties. First, they are **consistent** with the vector norm that defines them: $\|Ax\|_p \leq \|A\|_p \cdot \|x\|_p$ for all $x \in \mathbb{R}^n$. Second, they are **submultiplicative**: $\|AB\|_p \leq \|A\|_p \cdot \|B\|_p$. The Frobenius norm is also submultiplicative, but not every matrix norm is (e.g., $\|A\|_{\max}$).
 :::
 
-These properties are essential for bounding errors in iterative algorithms. The consistency property $\|Ax\|_p \leq \|A\|_p \cdot \|x\|_p$ lets us control how much a linear map can amplify a vector, while submultiplicativity lets us bound the norm of a product of matrices by the product of their norms.
+::: {.proof}
+**Proof of consistency.** By the definition of the induced norm, $\|A\|_p = \sup_{z \neq 0} \|Az\|_p / \|z\|_p$, which means $\|Az\|_p \leq \|A\|_p \cdot \|z\|_p$ for every $z$. Setting $z = x$ gives the result. (In fact, consistency is *immediate* from the definition --- the induced norm is the smallest constant $C$ such that $\|Ax\|_p \leq C\|x\|_p$ for all $x$.)
+
+**Proof of submultiplicativity.** Applying consistency twice:
+$$\|ABx\|_p = \|A(Bx)\|_p \leq \|A\|_p \cdot \|Bx\|_p \leq \|A\|_p \cdot \|B\|_p \cdot \|x\|_p.$$
+Since this holds for all $x$, dividing by $\|x\|_p$ and taking the supremum gives $\|AB\|_p \leq \|A\|_p \cdot \|B\|_p$. $\blacksquare$
+:::
+
+These properties are essential for bounding errors in iterative algorithms. The consistency property $\|Ax\|_p \leq \|A\|_p \cdot \|x\|_p$ lets us control how much a linear map can amplify a vector, while submultiplicativity lets us bound the norm of a product of matrices by the product of their norms. For example, if we run $k$ iterations of a linear recurrence $x^{k} = Ax^{k-1}$, then $\|x^k\|_p \leq \|A\|_p^k \|x^0\|_p$, so the iterates shrink whenever $\|A\|_p < 1$.
 
 ::: {#thm-closed-form-induced-norms}
-## Theorem 2.5 (Closed-Form Expressions for Induced Norms)
+## Closed-Form Expressions for Induced Norms
 
 1. $\|A\|_1 = \sup_{x \neq 0} \frac{\|Ax\|_1}{\|x\|_1} = \max_{j \in [n]} \sum_{i=1}^{m} |A_{ij}|$ --- **max column sum**.
 2. $\|A\|_\infty = \sup_{x \neq 0} \frac{\|Ax\|_\infty}{\|x\|_\infty} = \max_{i \in [m]} \sum_{j=1}^{n} |A_{ij}|$ --- **max row sum**.
@@ -393,7 +413,7 @@ For $A = \begin{pmatrix} 1 & 2 \\ 0 & 2 \end{pmatrix}$:
 ### Nuclear Norm {#sec-nuclear-norm}
 
 ::: {#def-nuclear-norm}
-## Definition 2.6 (Nuclear Norm)
+## Nuclear Norm
 
 The **nuclear norm** (also denoted $\|\cdot\|_*$ or $\|\cdot\|_{\mathrm{nuc}}$) is the sum of singular values:
 $$\|A\|_* = \sum_{i=1}^{\mathrm{rank}(A)} \sigma_i.$$
@@ -414,40 +434,50 @@ Having established how to measure the size of vectors and matrices through norms
 ### Eigendecomposition {#sec-eigendecomp}
 
 ::: {#thm-eigendecomposition}
-## Theorem 2.6 (Eigendecomposition of Symmetric Matrices)
+## Eigendecomposition of Symmetric Matrices
 
 Let $A \in \mathbb{R}^{n \times n}$ be a **symmetric** matrix, i.e., $A^\top = A$. Then $A$ admits an eigendecomposition:
 $$A = \sum_{i=1}^{n} \lambda_i \cdot v_i v_i^\top = V \Lambda V^\top$$
-where:
-
-- $V = (v_1, v_2, \ldots, v_n)$ is an **orthogonal matrix** ($VV^\top = V^\top V = I_n$).
-- $\Lambda = \operatorname{diag}(\lambda_1, \lambda_2, \ldots, \lambda_n)$ with $\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_n$.
+where $V = (v_1, v_2, \ldots, v_n)$ is an **orthogonal matrix** ($VV^\top = V^\top V = I_n$) whose columns are the eigenvectors, and $\Lambda = \operatorname{diag}(\lambda_1, \lambda_2, \ldots, \lambda_n)$ is the diagonal matrix of eigenvalues ordered as $\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_n$.
 :::
 
 The eigendecomposition reveals a symmetric matrix as a weighted sum of rank-one projections $v_i v_i^\top$. Each eigenvector $v_i$ is a principal direction of the linear map, and the eigenvalue $\lambda_i$ tells us how much the map stretches or compresses along that direction. When all eigenvalues are nonnegative, the matrix is positive semidefinite, which will be a recurring condition in convex optimization.
 
+Several important quantities reduce to simple functions of the eigenvalues:
+
+- **Quadratic form:** $x^\top A x = \sum_{i=1}^{n} \lambda_i (v_i^\top x)^2$. This shows that the quadratic form is a weighted sum of squared projections onto the eigenvectors. In particular, $A \succeq 0$ (positive semidefinite) if and only if all $\lambda_i \geq 0$.
+- **Spectral norm:** $\|A\|_2 = \max_i |\lambda_i|$, the largest eigenvalue in magnitude.
+- **Condition number:** $\kappa(A) = \lambda_1 / \lambda_n$ (for $A \succ 0$). This ratio controls the convergence speed of gradient descent on quadratic objectives --- a theme we will return to when studying gradient descent.
+- **Trace and determinant:** $\operatorname{tr}(A) = \sum_i \lambda_i$ and $\det(A) = \prod_i \lambda_i$.
+
 ### Singular Value Decomposition (SVD) {#sec-svd}
 
 ::: {#thm-svd}
-## Theorem 2.7 (SVD)
+## SVD
 
 Let $A \in \mathbb{R}^{m \times n}$ be a matrix with rank $k$. Then we can write:
 $$A = \sum_{i=1}^{k} \sigma_i \cdot u_i v_i^\top = U \Sigma V^\top$$
-where:
-
-- $U = (u_1, u_2, \ldots, u_m) \in \mathbb{R}^{m \times m}$ is an orthogonal matrix.
-- $V = (v_1, \ldots, v_n) \in \mathbb{R}^{n \times n}$ is an orthogonal matrix.
-- $\Sigma = \operatorname{diag}(\sigma_1, \sigma_2, \ldots, \sigma_k, 0, \ldots, 0)$ with $\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_k > 0$.
+where $U = (u_1, \ldots, u_m) \in \mathbb{R}^{m \times m}$ and $V = (v_1, \ldots, v_n) \in \mathbb{R}^{n \times n}$ are orthogonal matrices (the left and right singular vectors, respectively), and $\Sigma = \operatorname{diag}(\sigma_1, \ldots, \sigma_k, 0, \ldots, 0)$ contains the singular values $\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_k > 0$.
 
 Consequently, $A^\top A = V \Sigma^2 V^\top$ and $AA^\top = U \Sigma^2 U^\top$, with eigenvalues $\sigma_i^2$.
 :::
 
-The SVD generalizes eigendecomposition to arbitrary (non-square, non-symmetric) matrices. It decomposes any matrix into a sum of rank-one terms $\sigma_i u_i v_i^\top$, ordered by decreasing importance. The singular values $\sigma_i$ measure the "importance" of each component, and truncating the sum after the first few terms gives the best low-rank approximation to $A$ (the Eckart--Young theorem).
+The SVD generalizes eigendecomposition to arbitrary (non-square, non-symmetric) matrices. It decomposes any matrix into a sum of rank-one terms $\sigma_i u_i v_i^\top$, ordered by decreasing importance. The singular values $\sigma_i$ measure the "importance" of each component.
+
+Geometrically, the SVD says that every linear map can be decomposed into three steps: (1) rotate in the input space (by $V^\top$), (2) scale along coordinate axes (by $\Sigma$), and (3) rotate in the output space (by $U$). This explains why the image of the unit sphere under any linear map is always an ellipsoid, with semi-axes of lengths $\sigma_1, \ldots, \sigma_k$.
+
+::: {.callout-tip}
+## Remark: Best Low-Rank Approximation (Eckart--Young Theorem)
+
+The truncated SVD $A_r = \sum_{i=1}^{r} \sigma_i u_i v_i^\top$ is the best rank-$r$ approximation to $A$ in both the Frobenius and spectral norms:
+$$A_r = \arg\min_{\operatorname{rank}(B) \leq r} \|A - B\|_F, \qquad \|A - A_r\|_F = \sqrt{\sigma_{r+1}^2 + \cdots + \sigma_k^2}.$$
+This result is the mathematical foundation of dimensionality reduction (PCA), image compression, and low-rank matrix completion in recommender systems.
+:::
 
 ```{=html}
 <div class="figure-container">
   <div id="fig-eigenvalues"></div>
-  <div class="figure-caption">Figure 2.3: Eigenvalue spectrum of a symmetric matrix. The eigenvalues determine the shape of the associated quadratic form \(x^\top A x\).</div>
+  <div class="figure-caption">Eigenvalue spectrum of a symmetric matrix. The eigenvalues determine the shape of the associated quadratic form x<sup>&#x22A4;</sup>Ax.</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -565,7 +595,7 @@ Intuitively, derivatives (gradient) give us the **linear approximation** of a fu
 ### Gradient {#sec-gradient}
 
 ::: {#def-gradient}
-## Definition 2.7 (Partial Derivatives and Gradient)
+## Partial Derivatives and Gradient
 
 The $i$-th **partial derivative** $\frac{\partial f}{\partial x_i} : \mathbb{R}^n \to \mathbb{R}$ is defined by only perturbing the $i$-th entry at $a$:
 $$\frac{\partial f}{\partial x_i}(a) = \lim_{t \to 0} \frac{f(a + t \cdot e_i) - f(a)}{t}$$
@@ -578,7 +608,7 @@ $$\nabla f(a) = \begin{pmatrix} \frac{\partial f}{\partial x_1}(a) \\ \vdots \\ 
 The gradient collects all partial derivatives into a single vector that points in the direction of steepest ascent of $f$ at the point $a$. Its negative, $-\nabla f(a)$, therefore points in the direction of steepest descent, which is the foundation of gradient descent algorithms.
 
 ::: {#thm-linear-approximation}
-## Theorem 2.8 (Linear Approximation via Gradient)
+## Linear Approximation via Gradient
 
 Let $\delta \in \mathbb{R}^n$ be a small perturbation. Then:
 $$f(a + \delta) \approx f(a) + \sum_{i=1}^{n} \delta_i \cdot \frac{\partial f}{\partial x_i}(a) = f(a) + \langle \nabla f(a), \delta \rangle.$$ {#eq-linear-approximation}
@@ -600,7 +630,7 @@ The gradient $\nabla f(x,y)$ is perpendicular to the level set $\{(x,y) : f(x,y)
 The gradient provides a first-order (linear) approximation to $f$, but this approximation says nothing about curvature. Near a critical point where $\nabla f(a) \approx 0$, the linear approximation reduces to a constant and becomes uninformative. To distinguish a minimum from a maximum or a saddle point, and to build more accurate local models that algorithms like Newton's method can exploit, we need **second-order information**.
 
 ::: {#def-hessian}
-## Definition 2.8 (Hessian)
+## Hessian
 
 The **Hessian** of $f$ at point $x \in \mathbb{R}^n$ is defined as:
 $$\nabla^2 f(x) \;(\text{also written as } H_f(x)) \;=\; \begin{pmatrix} \frac{\partial^2 f}{\partial x_1^2} & \cdots & \frac{\partial^2 f}{\partial x_n \partial x_1} \\ \vdots & \ddots & \vdots \\ \frac{\partial^2 f}{\partial x_1 \partial x_n} & \cdots & \frac{\partial^2 f}{\partial x_n^2} \end{pmatrix}.$$
@@ -619,7 +649,7 @@ $f^2(x,y) = x^2 - y^2 \;\Rightarrow\; \nabla^2 f^2(x,y) = \begin{pmatrix} 2 & 0 
 :::
 
 ::: {#thm-quadratic-approximation}
-## Theorem 2.9 (Quadratic Approximation via Hessian)
+## Quadratic Approximation via Hessian
 
 The Hessian gives a **quadratic approximation** around $a$:
 $$f(x) \approx f(a) + \langle \nabla f(a), x - a \rangle + \tfrac{1}{2}(x - a)^\top \nabla^2 f(a)\, (x - a).$$ {#eq-quadratic-approximation}
@@ -634,7 +664,7 @@ This quadratic approximation (@eq-quadratic-approximation) extends the linear ap
 In practice, objective functions are rarely written as simple closed-form expressions. Instead, they are compositions of simpler operations --- sums, products, nonlinearities, and matrix multiplications. The chain rule tells us how to compute the gradient of such a composite function by combining the derivatives of its individual pieces. This seemingly elementary calculus rule is the theoretical backbone of all automatic differentiation and, by extension, all of modern deep learning.
 
 ::: {#thm-chain-rule}
-## Theorem 2.10 (Chain Rule)
+## Chain Rule
 
 Let $f_1, \ldots, f_m : \mathbb{R}^n \to \mathbb{R}$ be $m$ functions, and let $g : \mathbb{R}^m \to \mathbb{R}$. Consider the composite function:
 $$h(x) = g\big(f_1(x), f_2(x), \ldots, f_m(x)\big).$$
@@ -656,60 +686,151 @@ We can compute $\frac{\partial h}{\partial x_1}$ systematically by introducing i
 Applying the chain rule step by step yields the same result: $\frac{\partial h}{\partial x_1} = -\sin(y_1) + y_4 = -\sin(x_1) + \exp(x_2)$.
 :::
 
-### Automatic Differentiation: Backpropagation {#sec-autodiff}
+### Automatic Differentiation {#sec-autodiff}
 
-This systematic application of the chain rule is exactly **backpropagation** --- automatic differentiation via **computational graphs** and the chain rule.
+The chain rule example above computed $\partial h / \partial x_1$ by hand, introducing intermediate variables and applying the chain rule step by step. This is precisely the idea behind **automatic differentiation** (AD): instead of deriving gradients symbolically (which can produce exponentially large expressions) or estimating them numerically (which is slow and inaccurate), AD applies the chain rule *mechanically* to a sequence of elementary operations. The result is exact (up to floating-point arithmetic) and computationally efficient.
+
+Why does this matter so much? Consider training a neural network with 100 million parameters. We need $\nabla_\theta \mathcal{L}(\theta) \in \mathbb{R}^{10^8}$ at every iteration. Finite differences would require $10^8$ function evaluations per gradient. Symbolic differentiation would produce an expression too large to store. Automatic differentiation computes the entire gradient in roughly the same time as a single function evaluation --- a fact that makes modern deep learning computationally feasible.
+
+#### Computational Graphs {#sec-computation-graphs}
 
 ::: {#def-computational-graph}
-## Definition 2.9 (Computational Graph)
+## Computational Graph
 
-A **computational graph** $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ is a directed graph which encodes a computation relationship:
-
-- **Node set** $\mathcal{V} = \{v_1, \ldots, v_N\}$: quantities to be computed (input, intermediate values, output).
-- Each **edge** $e = (v_i \to v_j) \in \mathcal{E}$ means $v_j$ uses $v_i$ as input.
+A **computational graph** $\mathcal{G} = (\mathcal{V}, \mathcal{E})$ is a directed acyclic graph (DAG) that encodes the dependency structure of a computation. The **node set** $\mathcal{V} = \{v_1, \ldots, v_N\}$ represents the quantities to be computed: **input nodes** (the variables $x_1, \ldots, x_n$), **intermediate nodes** (results of elementary operations), and **output nodes** (the final result). Each **edge** $(v_j \to v_i) \in \mathcal{E}$ indicates that the computation of $v_i$ uses $v_j$ as an input.
 :::
 
-A computational graph makes the dependency structure of a calculation explicit. Every modern deep learning framework (PyTorch, TensorFlow, JAX) constructs such a graph automatically, enabling efficient gradient computation via automatic differentiation.
+Every modern deep learning framework --- PyTorch, TensorFlow, JAX --- constructs such a graph either eagerly (tracing operations as they execute) or statically (before execution). Once the graph exists, both the function value and its gradient can be computed by traversing the graph in the appropriate direction.
 
-Input $x$ goes through a computational graph, intermediate variables are computed, and the final output is the loss $J$. The derivative $\frac{\partial J}{\partial x_i}$ can be calculated by going **backwards** on the computational graph using the chain rule.
+![Computation graph for $f(x_1, x_2) = \sin(x_1) + x_1 \cdot x_2$. Inputs (blue) feed into intermediate nodes (sage) via elementary operations, which combine into the output (gold).](figures/ch02-computation-graph.svg){#fig-computation-graph}
+
+#### A Worked Example {#sec-autodiff-example}
+
+Let us trace through automatic differentiation on a concrete function. Consider:
+$$f(x_1, x_2) = \sin(x_1) + x_1 \cdot x_2.$$
+We want to compute $\nabla f = \left(\frac{\partial f}{\partial x_1}, \frac{\partial f}{\partial x_2}\right)$ at the point $(x_1, x_2) = (\pi/6, \, 2)$.
+
+**Step 1: Build the computation graph.** We decompose $f$ into elementary operations and introduce intermediate variables:
+
+| Node | Operation | Value at $(\pi/6, 2)$ |
+|:----:|:---------:|:---------------------:|
+| $x_1$ | input | $\pi/6 \approx 0.524$ |
+| $x_2$ | input | $2$ |
+| $v_1$ | $\sin(x_1)$ | $0.5$ |
+| $v_2$ | $x_1 \cdot x_2$ | $1.047$ |
+| $f$ | $v_1 + v_2$ | $1.547$ |
+
+: Forward evaluation trace {.striped}
+
+**Step 2: Compute local partial derivatives.** Each node's derivative with respect to its immediate inputs is an elementary calculus fact:
+
+| Edge | Local derivative | Value |
+|:----:|:----------------:|:-----:|
+| $x_1 \to v_1$ | $\cos(x_1)$ | $\sqrt{3}/2 \approx 0.866$ |
+| $x_1 \to v_2$ | $x_2$ | $2$ |
+| $x_2 \to v_2$ | $x_1$ | $\pi/6 \approx 0.524$ |
+| $v_1 \to f$ | $1$ | $1$ |
+| $v_2 \to f$ | $1$ | $1$ |
+
+: Local partial derivatives (edge weights) {.striped}
+
+With this graph and these local derivatives in hand, we can compute the gradient by traversing the graph in two different directions.
+
+#### Forward Mode AD {#sec-forward-mode}
 
 ::: {.callout-important}
 ## Algorithm: Forward Mode AD
 
-To compute $\frac{\partial f}{\partial x_i}$: compute $\frac{\partial v}{\partial x_i}$ for all nodes $v$ in $\mathcal{V}$ using a **forward pass**.
+**Goal:** Compute $\frac{\partial f}{\partial x_\ell}$ for a chosen input $x_\ell$.
 
-If $v_i = h_i(\{v_j : (j \to i) \in \mathcal{E}\})$, then:
-$$\frac{\partial v_i}{\partial x_\ell} = \sum_{j:\, (j \to i) \in \mathcal{E}} \frac{\partial h_i}{\partial v_j} \cdot \frac{\partial v_j}{\partial x_\ell}.$$
+**Idea:** Propagate **tangent values** $\dot{v}_i = \frac{\partial v_i}{\partial x_\ell}$ from inputs to output, following the edges forward.
 
-Cost: one forward pass per input dimension. Slow when $\dim(\text{input})$ is large.
+If node $v_i$ is computed as $v_i = h_i(\{v_j : (j \to i) \in \mathcal{E}\})$, then:
+$$\dot{v}_i = \sum_{j:\, (j \to i) \in \mathcal{E}} \frac{\partial h_i}{\partial v_j} \cdot \dot{v}_j.$$
+
+**Seed:** Set $\dot{x}_\ell = 1$ and $\dot{x}_k = 0$ for $k \neq \ell$.
 :::
+
+**Forward mode trace for $\partial f / \partial x_1$:** We seed $\dot{x}_1 = 1$, $\dot{x}_2 = 0$.
+
+| Node | Tangent computation | Value |
+|:----:|:-------------------:|:-----:|
+| $\dot{x}_1$ | seed | $1$ |
+| $\dot{x}_2$ | seed | $0$ |
+| $\dot{v}_1$ | $\cos(x_1) \cdot \dot{x}_1 = 0.866 \cdot 1$ | $0.866$ |
+| $\dot{v}_2$ | $x_2 \cdot \dot{x}_1 + x_1 \cdot \dot{x}_2 = 2 \cdot 1 + 0.524 \cdot 0$ | $2$ |
+| $\dot{f}$ | $\dot{v}_1 + \dot{v}_2 = 0.866 + 2$ | $2.866$ |
+
+: Forward mode trace for $\partial f / \partial x_1$ {.striped}
+
+So $\frac{\partial f}{\partial x_1}\big|_{(\pi/6, 2)} = \cos(\pi/6) + 2 = \frac{\sqrt{3}}{2} + 2 \approx 2.866$. To also get $\frac{\partial f}{\partial x_2}$, we would need a *second* forward pass with seed $\dot{x}_1 = 0$, $\dot{x}_2 = 1$.
+
+**Cost:** One forward pass per input variable. If there are $n$ inputs and $m$ outputs, computing the full Jacobian costs $\mathcal{O}(n)$ forward passes. This is efficient when $n$ is small (few inputs, many outputs).
+
+#### Reverse Mode AD (Backpropagation) {#sec-reverse-mode}
 
 ::: {.callout-important}
 ## Algorithm: Reverse Mode AD (Backpropagation)
 
-Deep learning packages implement **Reverse Mode AD**.
+**Goal:** Compute $\frac{\partial f}{\partial x_i}$ for *all* inputs $x_i$ simultaneously.
 
-Define the **adjoint**: $\bar{v}_i = \frac{\partial y}{\partial v_i}$ (assuming a single output $y$).
+**Idea:** Propagate **adjoint values** $\bar{v}_j = \frac{\partial f}{\partial v_j}$ from the output back to the inputs, following the edges in reverse.
 
-**Idea:** For any $v_j \in \mathcal{V}$ such that $(j \to i) \in \mathcal{E}$, $\bar{v}_j$ receives a contribution $\frac{\partial v_i}{\partial v_j} \cdot \bar{v}_i$ from $v_i$. Thus:
+For each node $v_j$, accumulate contributions from all its children:
 $$\bar{v}_j = \sum_{i:\, (j \to i) \in \mathcal{E}} \frac{\partial v_i}{\partial v_j} \cdot \bar{v}_i.$$
+
+**Seed:** Set $\bar{f} = 1$ (the output's adjoint).
 
 **Steps:**
 
-```
-1. Run a forward pass to evaluate all nodes {v_j}_{j in V}.
-2. Compute partial derivatives {dv_j/dv_i : (j -> i) in E}.  // new edge weights
-3. Evaluate each v_bar_j reversely on the graph.
-```
-
-Cost: **one forward + one backward pass**, regardless of input dimension!
+1. **Forward pass:** evaluate all nodes $\{v_j\}$ and store intermediate values.
+2. **Backward pass:** compute adjoints $\bar{v}_j$ in reverse topological order.
 :::
+
+**Reverse mode trace:** We seed $\bar{f} = 1$ and propagate backwards.
+
+| Node | Adjoint computation | Value |
+|:----:|:-------------------:|:-----:|
+| $\bar{f}$ | seed | $1$ |
+| $\bar{v}_1$ | $\bar{f} \cdot \frac{\partial f}{\partial v_1} = 1 \cdot 1$ | $1$ |
+| $\bar{v}_2$ | $\bar{f} \cdot \frac{\partial f}{\partial v_2} = 1 \cdot 1$ | $1$ |
+| $\bar{x}_2$ | $\bar{v}_2 \cdot \frac{\partial v_2}{\partial x_2} = 1 \cdot x_1$ | $0.524$ |
+| $\bar{x}_1$ | $\bar{v}_1 \cdot \frac{\partial v_1}{\partial x_1} + \bar{v}_2 \cdot \frac{\partial v_2}{\partial x_1} = 1 \cdot \cos(x_1) + 1 \cdot x_2$ | $2.866$ |
+
+: Reverse mode trace (backpropagation) {.striped}
+
+In a single backward pass, we obtain *both* partial derivatives: $\frac{\partial f}{\partial x_1} = 2.866$ and $\frac{\partial f}{\partial x_2} = 0.524$. This matches the analytical gradient $\nabla f = (\cos(x_1) + x_2, \; x_1)$.
+
+**Cost:** One forward pass + one backward pass, regardless of the number of inputs. If there are $n$ inputs and $m$ outputs, computing the full Jacobian costs $\mathcal{O}(m)$ backward passes.
+
+#### Forward vs. Reverse: When to Use Which {#sec-forward-vs-reverse}
+
+![Forward mode (left, sage) propagates tangent derivatives from inputs to output. Reverse mode (right, rosewood) propagates adjoint derivatives from output to inputs. The same computation graph is traversed in opposite directions.](figures/ch02-forward-vs-reverse.svg){#fig-forward-vs-reverse}
+
+The fundamental trade-off between forward and reverse mode is captured by a simple rule:
+
+| | Forward Mode | Reverse Mode |
+|:---|:---:|:---:|
+| Propagation direction | Inputs $\to$ Output | Output $\to$ Inputs |
+| One pass computes | One column of Jacobian | One row of Jacobian |
+| Full Jacobian cost | $\mathcal{O}(n)$ passes | $\mathcal{O}(m)$ passes |
+| Efficient when | $n \ll m$ (few inputs) | $m \ll n$ (few outputs) |
+
+: Comparison of forward and reverse mode AD
+
+In deep learning, the typical setting is $m = 1$ (scalar loss) and $n = 10^6$ to $10^9$ (model parameters). Reverse mode computes the entire gradient $\nabla_\theta \mathcal{L} \in \mathbb{R}^n$ in a single backward pass --- this is why **backpropagation** (reverse mode AD) is the dominant algorithm for training neural networks.
+
+::: {.callout-tip}
+## Remark: Memory vs. Computation
+
+Reverse mode's efficiency comes at a cost: it must store all intermediate values from the forward pass to use during the backward pass. For a computation graph with $N$ nodes, this requires $\mathcal{O}(N)$ memory. Techniques like **gradient checkpointing** trade computation for memory by recomputing some intermediate values instead of storing them, reducing memory to $\mathcal{O}(\sqrt{N})$ at the cost of roughly doubling the computation time.
+:::
+
+![Backpropagation through a neural network. Forward arrows (solid, green) propagate activations from input $x$ through layers $W_1$, ReLU, $W_2$ to the loss $\mathcal{L}$. Backward arrows (dashed, red) propagate gradients via the chain rule: $\partial \mathcal{L}/\partial W_1 = (\partial \mathcal{L}/\partial W_2)(\partial W_2 / \partial \text{ReLU})(\partial \text{ReLU} / \partial W_1)$.](figures/ch03-backpropagation.svg){#fig-backpropagation}
 
 ::: {.callout-note appearance="simple"}
-**Main takeaway:** Whenever we can build a computational graph, we know how to compute the gradient. This is the general philosophy of deep learning.
+**Main takeaway:** Whenever we can express a computation as a directed acyclic graph of elementary operations, we can compute exact gradients efficiently via automatic differentiation. Forward mode is natural for functions with few inputs; reverse mode (backpropagation) is natural for functions with few outputs. Since training a neural network means differentiating a scalar loss with respect to millions of parameters, reverse mode is the workhorse of modern deep learning.
 :::
-
-![Computation graph for backpropagation. Forward arrows (solid, green) propagate activations from input $x$ through layers $W_1$, ReLU, $W_2$ to the loss $\mathcal{L}$. Backward arrows (dashed, red) propagate gradients via the chain rule.](figures/ch03-backpropagation.svg){#fig-backpropagation}
 
 
 ::: {.callout-tip}

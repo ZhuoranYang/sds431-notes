@@ -1,0 +1,55 @@
+\documentclass[tikz, border=12pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{terracotta}{HTML}{C47A6A}
+\definecolor{cream}{HTML}{F9F6F0}
+\definecolor{border}{HTML}{D4C9B8}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{gridcolor}{HTML}{E0D9D1}
+\definecolor{plotbg}{HTML}{FAF7F3}
+
+\begin{document}
+\begin{tikzpicture}
+\begin{axis}[
+  width=14cm, height=8cm,
+  xlabel={Timestep $t$},
+  ylabel={Value},
+  xmin=0, xmax=1050,
+  ymin=-0.03, ymax=1.08,
+  xtick={0,200,400,600,800,1000},
+  ytick={0,0.2,0.4,0.6,0.8,1.0},
+  grid=major,
+  grid style={gridcolor, line width=0.4pt},
+  axis line style={wmgray, line width=0.6pt},
+  tick style={wmgray},
+  xlabel style={dkbrown, font=\large},
+  ylabel style={dkbrown, font=\large},
+  tick label style={wmgray, font=\normalsize},
+  legend pos=east,
+  legend cell align=left,
+  legend style={draw=border, fill=cream, font=\normalsize,
+    row sep=3pt, inner sep=6pt},
+  axis background/.style={fill=plotbg},
+]
+
+% beta_t: linear from 1e-4 to 0.02
+\addplot[terracotta, line width=1.6pt, domain=1:1000, samples=200, smooth]
+  {0.0001 + 0.0199*(x-1)/999};
+\addlegendentry{$\beta_t$}
+
+% alpha_bar_t: cumulative product approximation
+% log(alpha_bar_t) = sum log(1-beta_i) ≈ -sum beta_i
+% sum beta_i ≈ 0.0001*t + 0.00001*t*(t-1)
+\addplot[stblue, line width=2pt, domain=1:1000, samples=300, smooth]
+  {exp(-0.0001*x - 0.00000997*x*(x-1))};
+\addlegendentry{$\bar{\alpha}_t$}
+
+\end{axis}
+\end{tikzpicture}
+\end{document}

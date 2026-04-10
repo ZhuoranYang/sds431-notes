@@ -1,0 +1,84 @@
+\documentclass[tikz, border=12pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage{amsmath}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{sage}{HTML}{7A9A7E}
+\definecolor{rwgold}{HTML}{B8995E}
+\definecolor{terracotta}{HTML}{C47A6A}
+\definecolor{brick}{HTML}{B56B6B}
+\definecolor{cream}{HTML}{F9F6F0}
+\definecolor{border}{HTML}{D4C9B8}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{gridcolor}{HTML}{E0D9D1}
+\definecolor{plotbg}{HTML}{FAF7F3}
+
+% Gaussian helper: gauss(x, mu, sigma)
+\pgfmathdeclarefunction{gauss}{3}{%
+  \pgfmathparse{exp(-((#1-#2)^2)/(2*#3*#3))/(#3*2.506628)}%
+}
+
+\begin{document}
+\begin{tikzpicture}
+\begin{axis}[
+  width=14cm, height=8.5cm,
+  xlabel={$x$},
+  ylabel={Density},
+  xmin=-8, xmax=8,
+  ymin=0, ymax=0.42,
+  grid=major,
+  grid style={gridcolor, line width=0.4pt},
+  axis line style={wmgray, line width=0.6pt},
+  tick style={wmgray},
+  xlabel style={dkbrown, font=\large},
+  ylabel style={dkbrown, font=\large},
+  tick label style={wmgray, font=\normalsize},
+  legend pos=north east,
+  legend cell align=left,
+  legend style={draw=border, fill=cream, font=\normalsize,
+    row sep=3pt, inner sep=6pt},
+  axis background/.style={fill=plotbg},
+]
+
+% t=0 (alpha_bar = 1.0): original mixture
+% modes: -3, 0, 4; weights: 0.3, 0.4, 0.3; sigma_data = 0.5
+% variance = 1*0.25 + 0 = 0.25, sigma = 0.5
+\addplot[stblue, line width=1.8pt, domain=-8:8, samples=300, smooth,
+  fill=stblue, fill opacity=0.12]
+  {0.3*gauss(x,-3,0.5) + 0.4*gauss(x,0,0.5) + 0.3*gauss(x,4,0.5)};
+\addlegendentry{$t = 0$ (data)}
+
+% t=10 (alpha_bar ≈ 0.983): barely noised
+% mean_k = sqrt(0.983)*mu_k, sigma = sqrt(1 - 0.75*0.983) = sqrt(0.2625) = 0.512
+\addplot[sage, line width=1.6pt, domain=-8:8, samples=300, smooth]
+  {0.3*gauss(x,-2.974,0.512) + 0.4*gauss(x,0,0.512) + 0.3*gauss(x,3.966,0.512)};
+\addlegendentry{$t = 10$}
+
+% t=50 (alpha_bar ≈ 0.793): moderately noised
+% mean_k = sqrt(0.793)*mu_k ≈ 0.891*mu_k
+% sigma = sqrt(1-0.75*0.793) = sqrt(0.405) = 0.636
+\addplot[rwgold, line width=1.6pt, domain=-8:8, samples=300, smooth]
+  {0.3*gauss(x,-2.672,0.636) + 0.4*gauss(x,0,0.636) + 0.3*gauss(x,3.563,0.636)};
+\addlegendentry{$t = 50$}
+
+% t=100 (alpha_bar ≈ 0.436): heavily noised
+% mean_k = sqrt(0.436)*mu_k ≈ 0.660*mu_k
+% sigma = sqrt(1-0.75*0.436) = sqrt(0.673) = 0.820
+\addplot[terracotta, line width=1.6pt, domain=-8:8, samples=300, smooth]
+  {0.3*gauss(x,-1.981,0.820) + 0.4*gauss(x,0,0.820) + 0.3*gauss(x,2.641,0.820)};
+\addlegendentry{$t = 100$}
+
+% t=199 (alpha_bar ≈ 0.046): nearly pure noise
+% mean_k = sqrt(0.046)*mu_k ≈ 0.214*mu_k
+% sigma = sqrt(1-0.75*0.046) = sqrt(0.9655) = 0.983
+\addplot[brick, line width=1.6pt, domain=-8:8, samples=300, smooth, dashed]
+  {0.3*gauss(x,-0.643,0.983) + 0.4*gauss(x,0,0.983) + 0.3*gauss(x,0.858,0.983)};
+\addlegendentry{$t = 199$}
+
+\end{axis}
+\end{tikzpicture}
+\end{document}

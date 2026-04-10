@@ -13,12 +13,14 @@ These methods form the backbone of modern deep learning optimization. Nearly eve
 
 Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.
 
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/11-gd-adagrad-rmsprop-adam.ipynb) **Optimizer Comparison** --- comparing GD, AdaGrad, RMSProp, Adam, and Heavy Ball on Beale and Rosenbrock functions
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/12-pytorch-optimizers.ipynb) **Tour of PyTorch Optimizers** --- experimenting with PyTorch's built-in optimizers at different learning rates
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/18-learning-rate-schedules.ipynb) **Learning Rate Schedules** --- step, cosine, and warm-up scheduling in PyTorch
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/11-gd-adagrad-rmsprop-adam.ipynb) **Optimizer Comparison** --- comparing GD, AdaGrad, RMSProp, Adam, and Heavy Ball on Beale and Rosenbrock functions
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/12-pytorch-optimizers.ipynb) **Tour of PyTorch Optimizers** --- experimenting with PyTorch's built-in optimizers at different learning rates
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/18-learning-rate-schedules.ipynb) **Learning Rate Schedules** --- step, cosine, and warm-up scheduling in PyTorch
 :::
 
 ## What Will Be Covered {#sec-overview}
+
+This chapter develops the following topics, progressing from simple acceleration techniques to methods for nonsmooth and large-scale optimization:
 
 - Gradient descent recap and the role of the condition number
 - Polyak's heavy-ball momentum method and its convergence on quadratics
@@ -106,91 +108,64 @@ The trajectory of GD bounces back and forth in the **high curvature directions**
 By adding past gradients, we smooth out the trajectory. Momentum methods are first-order (gradient-based) methods.
 :::
 
-::: {.figure-container}
-```{ojs}
-//| echo: false
-//| label: fig-momentum-intuition
-//| fig-cap: "Figure 8.1: GD oscillates on an ill-conditioned quadratic. Momentum smooths out the trajectory, accelerating convergence."
+```{=html}
+<div class="figure-container">
+  <div id="fig-momentum-intuition"></div>
+  <div class="figure-caption">GD oscillates on an ill-conditioned quadratic. Momentum smooths out the trajectory, accelerating convergence.</div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // f(x) = ½(x₁² + κ x₂²) — valley along x₁, steep in x₂
+  const kappa = 10;
+  const x0 = [5, 1];
+  const nIter = 20;
+  const sqK = Math.sqrt(kappa);
+  const alphaGD = 2 / (kappa + 1);
+  const alphaHB = Math.pow(2 / (sqK + 1), 2);
+  const betaHB  = Math.pow((sqK - 1) / (sqK + 1), 2);
 
-{
-  const M_ = 20, m_ = 1;
-  const kappa = M_ / m_;
-  const x0 = [5, 5];
-  const alphaGD = 2 / (m_ + M_);
-  const alphaHB = Math.pow(2 / (Math.sqrt(m_) + Math.sqrt(M_)), 2);
-  const betaHB = Math.pow((Math.sqrt(kappa) - 1) / (Math.sqrt(kappa) + 1), 2);
-
-  function ellipsePoints(a, b, cx, cy, n) {
+  function ellipsePoints(c, n) {
+    const a = Math.sqrt(2*c), b = Math.sqrt(2*c/kappa);
     const xs = [], ys = [];
-    for (let i = 0; i <= n; i++) {
-      const t = 2 * Math.PI * i / n;
-      xs.push(cx + a * Math.cos(t));
-      ys.push(cy + b * Math.sin(t));
-    }
+    for (let i = 0; i <= n; i++) { const t = 2*Math.PI*i/n; xs.push(a*Math.cos(t)); ys.push(b*Math.sin(t)); }
     return {x: xs, y: ys};
   }
-
-  function gdTrajectory(M, m, x0, alpha, nIter) {
-    const path = [[x0[0], x0[1]]];
-    let x = [x0[0], x0[1]];
-    for (let i = 0; i < nIter; i++) {
-      x = [x[0] - alpha * M * x[0], x[1] - alpha * m * x[1]];
-      path.push([x[0], x[1]]);
+  function gdTraj(x0, alpha, n) {
+    const p = [[...x0]]; let x = [...x0];
+    for (let i = 0; i < n; i++) { x = [x[0]-alpha*x[0], x[1]-alpha*kappa*x[1]]; p.push([...x]); }
+    return p;
+  }
+  function hbTraj(x0, alpha, beta, n) {
+    const p = [[...x0]]; let x = [...x0], xp = [...x0];
+    for (let i = 0; i < n; i++) {
+      const xn = [x[0]-alpha*x[0]+beta*(x[0]-xp[0]), x[1]-alpha*kappa*x[1]+beta*(x[1]-xp[1])];
+      xp = x; x = xn; p.push([...x]);
     }
-    return path;
+    return p;
   }
 
-  function hbTrajectory(M, m, x0, alpha, beta, nIter) {
-    const path = [[x0[0], x0[1]]];
-    let x = [x0[0], x0[1]], xp = [x0[0], x0[1]];
-    for (let i = 0; i < nIter; i++) {
-      const xn = [
-        x[0] - alpha * M * x[0] + beta * (x[0] - xp[0]),
-        x[1] - alpha * m * x[1] + beta * (x[1] - xp[1])
-      ];
-      xp = x; x = xn;
-      path.push([x[0], x[1]]);
-    }
-    return path;
-  }
-
-  const gdPath = gdTrajectory(M_, m_, x0, alphaGD, 40);
-  const hbPath = hbTrajectory(M_, m_, x0, alphaHB, betaHB, 40);
-
-  const contourData = [10, 50, 125, 250].map(c => {
-    const a = Math.sqrt(2*c/M_), b = Math.sqrt(2*c/m_);
-    const pts = ellipsePoints(a, b, 0, 0, 80);
-    return {x: pts.x, y: pts.y, mode: 'lines', line: {color: '#d5cdc4', width: 1}, showlegend: false, hoverinfo: 'skip'};
+  const gdPath = gdTraj(x0, alphaGD, nIter);
+  const hbPath = hbTraj(x0, alphaHB, betaHB, nIter);
+  const contours = [0.5, 2, 5, 10, 17.5].map(c => {
+    const pts = ellipsePoints(c, 100);
+    return {x: pts.x, y: pts.y, mode: 'lines', line: {color: '#D4C9B8', width: 1}, showlegend: false, hoverinfo: 'skip'};
   });
-
-  const traces = [
-    ...contourData,
-    {x: gdPath.map(p=>p[0]), y: gdPath.map(p=>p[1]), mode: 'lines+markers',
-      line: {color: '#ad8480', width: 2}, marker: {size: 3, color: '#ad8480'},
-      name: 'Gradient Descent'},
-    {x: hbPath.map(p=>p[0]), y: hbPath.map(p=>p[1]), mode: 'lines+markers',
-      line: {color: '#7b97ad', width: 2}, marker: {size: 3, color: '#7b97ad'},
-      name: 'Heavy-Ball Momentum'},
-    {x: [0], y: [0], mode: 'markers', marker: {color: '#b56b6b', size: 12, symbol: 'star'},
-      name: 'Optimum x*'},
+  const traces = [...contours,
+    {x: gdPath.map(p=>p[0]), y: gdPath.map(p=>p[1]), mode: 'lines+markers', line: {color: '#C47A6A', width: 2.5}, marker: {size: 4, color: '#C47A6A'}, name: 'Gradient Descent', opacity: 0.85},
+    {x: hbPath.map(p=>p[0]), y: hbPath.map(p=>p[1]), mode: 'lines+markers', line: {color: '#7B97AD', width: 2.5}, marker: {size: 4, color: '#7B97AD'}, name: 'Heavy-Ball Momentum', opacity: 0.85},
+    {x: [0], y: [0], mode: 'markers', marker: {color: '#b56b6b', size: 12, symbol: 'star'}, name: 'Optimum x*'},
   ];
-
   const layout = {
-    title: {text: 'GD vs. Momentum on Ill-Conditioned Quadratic (\u03BA = 20)'},
-    xaxis: {title: 'x\u2081', range: [-6, 6]},
-    yaxis: {title: 'x\u2082', range: [-6, 6], scaleanchor: 'x'},
-    showlegend: true,
-    legend: {x: 0.55, y: 1},
-    margin: {t: 48, b: 50, l: 55, r: 20},
-    width: 700, height: 500
+    title: {text: 'GD vs. Momentum (\u03BA = 10): f(x) = \u00BD(x\u2081\u00B2 + 10 x\u2082\u00B2)'},
+    xaxis: {title: 'x\u2081', range: [-1.5, 7]},
+    yaxis: {title: 'x\u2082', range: [-2, 2], scaleanchor: 'x'},
+    showlegend: true, legend: {x: 0.55, y: 0.98},
+    margin: {t: 48, b: 50, l: 55, r: 20}, width: 750, height: 420
   };
-
-  const div = DOM.element('div');
-  Plotly.newPlot(div, traces, layout, {responsive: true, displayModeBar: false});
-  return div;
-}
+  Plotly.newPlot('fig-momentum-intuition', traces, layout, {responsive: true, displayModeBar: false});
+});
+</script>
 ```
-:::
 
 ### Polyak's Heavy-Ball Method {#polyak}
 
@@ -235,75 +210,54 @@ In practice, $\beta$ is set to a constant that is **close to 1** (e.g., 0.9 or 0
 ::: {.callout-note appearance="simple"}
 **Intuition of momentum:**
 
-- In **high curvature directions**, the gradients cancel each other out => momentum damps oscillations.
-- In **low curvature directions**, the gradients point to the same direction => momentum increases the stepsize in low curvature directions.
+- In **high curvature directions**, the gradients cancel each other out, so momentum damps oscillations.
+- In **low curvature directions**, the gradients point in the same direction, so momentum effectively increases the stepsize.
 :::
 
-::: {.figure-container}
-```{ojs}
-//| echo: false
-//| label: fig-stepsize-effect
-//| fig-cap: "Figure 8.2: Effect of stepsize on optimization trajectory. Too small: slow progress. Too large: oscillations. Much too large: instability."
-
-{
-  const M_ = 10, m_ = 1;
-  const x0 = [4, 4];
-
-  function ellipsePoints2(a, b, cx, cy, n) {
+```{=html}
+<div class="figure-container">
+  <div id="fig-stepsize-effect"></div>
+  <div class="figure-caption">Effect of stepsize on optimization trajectory. Too small: slow progress. Optimal: fast convergence. Too large: divergence.</div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // f(x) = ½(x₁² + κ x₂²), same orientation as momentum figure
+  const kappa = 10, x0 = [5, 1];
+  function ellipsePoints2(c, n) {
+    const a = Math.sqrt(2*c), b = Math.sqrt(2*c/kappa);
     const xs = [], ys = [];
-    for (let i = 0; i <= n; i++) {
-      const t = 2 * Math.PI * i / n;
-      xs.push(cx + a * Math.cos(t));
-      ys.push(cy + b * Math.sin(t));
-    }
+    for (let i = 0; i <= n; i++) { const t = 2*Math.PI*i/n; xs.push(a*Math.cos(t)); ys.push(b*Math.sin(t)); }
     return {x: xs, y: ys};
   }
-
-  function gdTraj2(M, m, x0, alpha, nIter) {
-    const path = [[x0[0], x0[1]]];
-    let x = [x0[0], x0[1]];
-    for (let i = 0; i < nIter; i++) {
-      x = [x[0] - alpha * M * x[0], x[1] - alpha * m * x[1]];
-      path.push([x[0], x[1]]);
-    }
-    return path;
+  function gdTraj2(x0, alpha, n) {
+    const p = [[...x0]]; let x = [...x0];
+    for (let i = 0; i < n; i++) { x = [x[0]-alpha*x[0], x[1]-alpha*kappa*x[1]]; p.push([...x]); }
+    return p;
   }
-
-  const small = gdTraj2(M_, m_, x0, 0.02, 50);
-  const good = gdTraj2(M_, m_, x0, 2/(m_+M_), 50);
-  const large = gdTraj2(M_, m_, x0, 0.18, 50);
-
-  const contours = [5, 20, 80].map(c => {
-    const a = Math.sqrt(2*c/M_), b = Math.sqrt(2*c/m_);
-    const pts = ellipsePoints2(a, b, 0, 0, 80);
-    return {x: pts.x, y: pts.y, mode: 'lines', line: {color: '#d5cdc4', width: 1}, showlegend: false, hoverinfo: 'skip'};
+  const alphaOpt = 2 / (1 + kappa);
+  const small = gdTraj2(x0, 0.04, 30);
+  const good  = gdTraj2(x0, alphaOpt, 20);
+  const large = gdTraj2(x0, 0.21, 12);
+  const contours = [0.5, 2, 5, 10, 17.5].map(c => {
+    const pts = ellipsePoints2(c, 100);
+    return {x: pts.x, y: pts.y, mode: 'lines', line: {color: '#D4C9B8', width: 1}, showlegend: false, hoverinfo: 'skip'};
   });
-
-  const traces = [
-    ...contours,
-    {x: small.slice(0,30).map(p=>p[0]), y: small.slice(0,30).map(p=>p[1]), mode: 'lines+markers',
-      line: {color: '#7a9a7e', width: 2}, marker: {size: 3}, name: '\u03B1 too small'},
-    {x: good.slice(0,30).map(p=>p[0]), y: good.slice(0,30).map(p=>p[1]), mode: 'lines+markers',
-      line: {color: '#7b97ad', width: 2}, marker: {size: 3}, name: '\u03B1 optimal'},
-    {x: large.slice(0,20).map(p=>p[0]), y: large.slice(0,20).map(p=>p[1]), mode: 'lines+markers',
-      line: {color: '#b56b6b', width: 2}, marker: {size: 3}, name: '\u03B1 too large'},
-    {x: [0], y: [0], mode: 'markers', marker: {color: '#8a6e5e', size: 10, symbol: 'star'}, name: 'x*'},
+  const traces = [...contours,
+    {x: small.map(p=>p[0]), y: small.map(p=>p[1]), mode: 'lines+markers', line: {color: '#7A9A7E', width: 2.5}, marker: {size: 4, color: '#7A9A7E'}, name: '\u03B1 = 0.04 (too small)'},
+    {x: large.map(p=>p[0]), y: large.map(p=>p[1]), mode: 'lines+markers', line: {color: '#C47A6A', width: 2.5}, marker: {size: 4, color: '#C47A6A'}, name: '\u03B1 = 0.21 (diverges)'},
+    {x: good.map(p=>p[0]),  y: good.map(p=>p[1]),  mode: 'lines+markers', line: {color: '#7B97AD', width: 2.5}, marker: {size: 4, color: '#7B97AD'}, name: '\u03B1 = 2/(L+\u03BC) (optimal)'},
+    {x: [0], y: [0], mode: 'markers', marker: {color: '#b56b6b', size: 12, symbol: 'star'}, name: 'Optimum x*'},
   ];
-
   const layout = {
-    xaxis: {title: 'x\u2081', range: [-6, 6]},
-    yaxis: {title: 'x\u2082', range: [-6, 6], scaleanchor: 'x'},
-    showlegend: true,
-    margin: {t: 20, b: 50, l: 55, r: 20},
-    width: 700, height: 500
+    xaxis: {title: 'x\u2081', range: [-1.5, 7]},
+    yaxis: {title: 'x\u2082', range: [-3.5, 3.5], scaleanchor: 'x'},
+    showlegend: true, legend: {x: 0.52, y: 0.98},
+    margin: {t: 20, b: 50, l: 55, r: 20}, width: 750, height: 420
   };
-
-  const div = DOM.element('div');
-  Plotly.newPlot(div, traces, layout, {responsive: true, displayModeBar: false});
-  return div;
-}
+  Plotly.newPlot('fig-stepsize-effect', traces, layout, {responsive: true, displayModeBar: false});
+});
+</script>
 ```
-:::
 
 ::: {.callout-tip}
 ## Remarks on Heavy-Ball
@@ -320,7 +274,7 @@ In practice, $\beta$ is set to a constant that is **close to 1** (e.g., 0.9 or 0
 We now formalize the convergence advantage of momentum. The key insight is to lift the iteration into a higher-dimensional space by tracking both the current and previous iterates, which turns the heavy-ball recursion into a linear dynamical system governed by a companion matrix $T$. The convergence rate is then determined by the spectral radius of $T$, and by choosing $\alpha$ and $\beta$ optimally we can minimize this spectral radius.
 
 ::: {#thm-heavy-ball-convergence}
-## Theorem 8.1 (Heavy-Ball Convergence on Quadratics)
+## Heavy-Ball Convergence on Quadratics
 
 Consider $f(x) = \frac{1}{2} x^\top A x - b^\top x$ with $m \mathbf{I}_n \preceq A \preceq M \cdot \mathbf{I}_n$. Then $\nabla f(x) = Ax - b = A(x - x^*)$ with $x^* = A^{-1}b$.
 
@@ -340,7 +294,7 @@ This result shows that the convergence rate of the heavy-ball method on quadrati
 Given the spectral radius characterization above, we can now derive the optimal choice of step size and momentum parameter that minimizes $\rho(T)$ and determine the resulting iteration complexity.
 
 ::: {#cor-heavy-ball-optimal-params}
-## Corollary 8.2: Optimal Parameters for Heavy-Ball
+## Optimal Parameters for Heavy-Ball
 
 The optimal parameters are:
 $$\alpha = \Bigl(\frac{2}{\sqrt{m} + \sqrt{M}}\Bigr)^2, \qquad \beta = \Bigl(\frac{\sqrt{M} - \sqrt{m}}{\sqrt{M} + \sqrt{m}}\Bigr)^2 = \Bigl(\frac{\sqrt{\kappa} - 1}{\sqrt{\kappa} + 1}\Bigr)^2.$$
@@ -374,21 +328,13 @@ The heavy-ball method achieves the optimal $O(\sqrt{\kappa}\log(1/\varepsilon))$
 **Update:**
 $$x^{k+1} = x^k + \beta(x^k - x^{k-1}) - \alpha \cdot \nabla f\!\bigl(x^k + \beta(x^k - x^{k-1})\bigr).$$ {#eq-nag-update}
 
-Equivalently, defining an intermediate point $y^{k+1}$:
+Equivalently, defining an intermediate "lookahead" point $y^{k+1}$:
 
-```
-Nesterov:
-  y^{k+1} = x^k + beta * (x^k - x^{k-1})     // first add momentum
-  x^{k+1} = y^{k+1} - alpha * grad f(y^{k+1}) // then apply gradient
-```
+**Nesterov (first momentum, then gradient):**
+$$\begin{cases} y^{k+1} = x^k + \beta\,(x^k - x^{k-1}) & \text{(extrapolate: add momentum)} \\ x^{k+1} = y^{k+1} - \alpha\,\nabla f(y^{k+1}) & \text{(gradient step at lookahead)} \end{cases}$$
 
-Compare with Heavy-ball:
-
-```
-Heavy-ball:
-  y^{k+1} = x^k - alpha * grad f(x^k)         // first apply gradient
-  x^{k+1} = y^{k+1} + beta * (x^k - x^{k-1}) // then add momentum
-```
+**Compare with Heavy-ball (first gradient, then momentum):**
+$$\begin{cases} y^{k+1} = x^k - \alpha\,\nabla f(x^k) & \text{(gradient step at current point)} \\ x^{k+1} = y^{k+1} + \beta\,(x^k - x^{k-1}) & \text{(add momentum)} \end{cases}$$
 :::
 
 ![Nesterov's accelerated gradient vs. heavy-ball momentum. Heavy-ball evaluates the gradient at the current point $x^k$ and then adds momentum. Nesterov first extrapolates to an intermediate "lookahead" point $y^{k+1} = x^k + \beta(x^k - x^{k-1})$ and then evaluates the gradient there. This seemingly small change in evaluation point is what upgrades the convergence guarantee from quadratics-only (heavy-ball) to all smooth convex functions.](figures/ch09-nesterov-momentum.svg){#fig-nesterov-momentum}
@@ -402,7 +348,7 @@ NAG is a modified version of the heavy-ball method with **faster convergence** t
 The key question is whether the accelerated $O(\sqrt{\kappa})$ rate of the heavy-ball method --- which was only proven for quadratics --- extends to general smooth strongly convex functions. Nesterov showed that with the right choice of parameters, the "look-ahead" gradient evaluation achieves exactly this. The following result gives the optimal parameters and the resulting convergence guarantee.
 
 ::: {#cor-nag-convergence}
-## Corollary 8.3: NAG Convergence
+## NAG Convergence
 
 The optimal parameters are:
 $$\alpha_{\text{NAG}} = \frac{4}{m + 3M}, \qquad \beta_{\text{NAG}} = \frac{\sqrt{3\kappa + 1} - 2}{\sqrt{3\kappa + 1} + 2}.$$
@@ -795,113 +741,40 @@ In practice, AdamW with weight decay $\lambda \approx 0.01$ is the default optim
 
 ![Evolution of first-order optimizers: from vanilla gradient descent to AdamW.](figures/ch09-optimizer-timeline.svg){#fig-optimizer-timeline}
 
-::: {.figure-container}
-```{ojs}
-//| echo: false
-//| label: fig-method-comparison
-//| fig-cap: "Figure 8.3: Comparison of first-order methods on an ill-conditioned quadratic. Trajectories show how momentum and adaptive methods converge faster."
-
-{
-  const M_ = 20, m_ = 1, kappa = 20;
-  const x0 = [5, 5];
-  const nIt = 60;
-
-  const alphaGD = 2/(m_+M_);
-  const alphaHB = Math.pow(2/(Math.sqrt(m_)+Math.sqrt(M_)), 2);
-  const betaHB = Math.pow((Math.sqrt(kappa)-1)/(Math.sqrt(kappa)+1), 2);
-  const alphaNAG = 4/(m_+3*M_);
-  const betaNAG = (Math.sqrt(3*kappa+1)-2)/(Math.sqrt(3*kappa+1)+2);
-
-  function ellipsePoints3(a, b, cx, cy, n) {
-    const xs = [], ys = [];
-    for (let i = 0; i <= n; i++) {
-      const t = 2 * Math.PI * i / n;
-      xs.push(cx + a * Math.cos(t));
-      ys.push(cy + b * Math.sin(t));
-    }
-    return {x: xs, y: ys};
-  }
-
-  function gdTraj3(M, m, x0, alpha, nIter) {
-    const path = [[x0[0], x0[1]]];
-    let x = [x0[0], x0[1]];
-    for (let i = 0; i < nIter; i++) {
-      x = [x[0] - alpha * M * x[0], x[1] - alpha * m * x[1]];
-      path.push([x[0], x[1]]);
-    }
-    return path;
-  }
-
-  function hbTraj3(M, m, x0, alpha, beta, nIter) {
-    const path = [[x0[0], x0[1]]];
-    let x = [x0[0], x0[1]], xp = [x0[0], x0[1]];
-    for (let i = 0; i < nIter; i++) {
-      const xn = [
-        x[0] - alpha * M * x[0] + beta * (x[0] - xp[0]),
-        x[1] - alpha * m * x[1] + beta * (x[1] - xp[1])
-      ];
-      xp = x; x = xn;
-      path.push([x[0], x[1]]);
-    }
-    return path;
-  }
-
-  const gdP = gdTraj3(M_, m_, x0, alphaGD, nIt);
-  const hbP = hbTraj3(M_, m_, x0, alphaHB, betaHB, nIt);
-
-  // NAG
-  let x = [x0[0], x0[1]], xp = [x0[0], x0[1]];
-  const nagP = [[x0[0], x0[1]]];
-  for (let i = 0; i < nIt; i++) {
-    const y0 = x[0] + betaNAG*(x[0]-xp[0]);
-    const y1 = x[1] + betaNAG*(x[1]-xp[1]);
-    const xn = [y0 - alphaNAG*M_*y0, y1 - alphaNAG*m_*y1];
-    xp = x; x = xn;
-    nagP.push([x[0], x[1]]);
-  }
-
-  const contours = [10, 50, 125, 250].map(c => {
-    const a = Math.sqrt(2*c/M_), b = Math.sqrt(2*c/m_);
-    const pts = ellipsePoints3(a, b, 0, 0, 80);
-    return {x: pts.x, y: pts.y, mode: 'lines', line: {color: '#d5cdc4', width: 1}, showlegend: false, hoverinfo: 'skip'};
-  });
-
-  const traces = [
-    ...contours,
-    {x: gdP.map(p=>p[0]), y: gdP.map(p=>p[1]), mode: 'lines+markers',
-      line: {color: '#ad8480', width: 2}, marker: {size: 2.5}, name: 'GD'},
-    {x: hbP.map(p=>p[0]), y: hbP.map(p=>p[1]), mode: 'lines+markers',
-      line: {color: '#7b97ad', width: 2}, marker: {size: 2.5}, name: 'Heavy-Ball'},
-    {x: nagP.map(p=>p[0]), y: nagP.map(p=>p[1]), mode: 'lines+markers',
-      line: {color: '#7a9a7e', width: 2}, marker: {size: 2.5}, name: 'Nesterov'},
-    {x: [0], y: [0], mode: 'markers', marker: {color: '#b56b6b', size: 12, symbol: 'star'},
-      name: 'x*'},
+```{=html}
+<div class="figure-container">
+  <div id="fig-method-comparison"></div>
+  <div class="figure-caption">Figure 7.1: Comparison of first-order methods on an ill-conditioned quadratic. Trajectories show how momentum and adaptive methods converge faster.</div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const M_=20, m_=1, kappa=20, x0=[5,5], nIt=60;
+  const alphaGD=2/(m_+M_), alphaHB=Math.pow(2/(Math.sqrt(m_)+Math.sqrt(M_)),2), betaHB=Math.pow((Math.sqrt(kappa)-1)/(Math.sqrt(kappa)+1),2);
+  const alphaNAG=4/(m_+3*M_), betaNAG=(Math.sqrt(3*kappa+1)-2)/(Math.sqrt(3*kappa+1)+2);
+  function ell(a,b,cx,cy,n){const xs=[],ys=[];for(let i=0;i<=n;i++){const t=2*Math.PI*i/n;xs.push(cx+a*Math.cos(t));ys.push(cy+b*Math.sin(t));}return{x:xs,y:ys};}
+  function gd(M,m,x0,alpha,n){const p=[[x0[0],x0[1]]];let x=[x0[0],x0[1]];for(let i=0;i<n;i++){x=[x[0]-alpha*M*x[0],x[1]-alpha*m*x[1]];p.push([x[0],x[1]]);}return p;}
+  function hb(M,m,x0,alpha,beta,n){const p=[[x0[0],x0[1]]];let x=[x0[0],x0[1]],xp=[x0[0],x0[1]];for(let i=0;i<n;i++){const xn=[x[0]-alpha*M*x[0]+beta*(x[0]-xp[0]),x[1]-alpha*m*x[1]+beta*(x[1]-xp[1])];xp=x;x=xn;p.push([x[0],x[1]]);}return p;}
+  const gdP=gd(M_,m_,x0,alphaGD,nIt), hbP=hb(M_,m_,x0,alphaHB,betaHB,nIt);
+  let x=[x0[0],x0[1]],xp=[x0[0],x0[1]]; const nagP=[[x0[0],x0[1]]];
+  for(let i=0;i<nIt;i++){const y0=x[0]+betaNAG*(x[0]-xp[0]),y1=x[1]+betaNAG*(x[1]-xp[1]),xn=[y0-alphaNAG*M_*y0,y1-alphaNAG*m_*y1];xp=x;x=xn;nagP.push([x[0],x[1]]);}
+  const contours=[10,50,125,250].map(c=>{const a=Math.sqrt(2*c/M_),b=Math.sqrt(2*c/m_),pts=ell(a,b,0,0,80);return{x:pts.x,y:pts.y,mode:'lines',line:{color:'#d5cdc4',width:1},showlegend:false,hoverinfo:'skip'};});
+  const traces=[...contours,
+    {x:gdP.map(p=>p[0]),y:gdP.map(p=>p[1]),mode:'lines+markers',line:{color:'#ad8480',width:2},marker:{size:2.5},name:'GD'},
+    {x:hbP.map(p=>p[0]),y:hbP.map(p=>p[1]),mode:'lines+markers',line:{color:'#7b97ad',width:2},marker:{size:2.5},name:'Heavy-Ball'},
+    {x:nagP.map(p=>p[0]),y:nagP.map(p=>p[1]),mode:'lines+markers',line:{color:'#7a9a7e',width:2},marker:{size:2.5},name:'Nesterov'},
+    {x:[0],y:[0],mode:'markers',marker:{color:'#b56b6b',size:12,symbol:'star'},name:'x*'},
   ];
-
-  const layout = {
-    title: {text: 'Trajectories: GD vs. Heavy-Ball vs. Nesterov (\u03BA = 20)'},
-    xaxis: {title: 'x\u2081', range: [-6, 6]},
-    yaxis: {title: 'x\u2082', range: [-6, 6], scaleanchor: 'x'},
-    showlegend: true,
-    legend: {x: 0.55, y: 1},
-    margin: {t: 48, b: 50, l: 55, r: 20},
-    width: 700, height: 500
-  };
-
-  const div = DOM.element('div');
-  Plotly.newPlot(div, traces, layout, {responsive: true, displayModeBar: false});
-  return div;
-}
+  const layout={title:{text:'Trajectories: GD vs. Heavy-Ball vs. Nesterov (\u03BA = 20)'},xaxis:{title:'x\u2081',range:[-6,6]},yaxis:{title:'x\u2082',range:[-6,6],scaleanchor:'x'},showlegend:true,legend:{x:0.55,y:1},margin:{t:48,b:50,l:55,r:20},width:700,height:500};
+  Plotly.newPlot('fig-method-comparison',traces,layout,{responsive:true,displayModeBar:false});
+});
+</script>
 ```
-:::
 
-::: {.figure-container}
-```{ojs}
-//| echo: false
-//| label: fig-convergence-rates
-//| fig-cap: "Figure 8.4: Convergence rates of GD vs. Heavy-Ball momentum. The $O(\\sqrt{\\kappa}\\,\\log(1/\\varepsilon))$ complexity of momentum is a significant improvement over $O(\\kappa\\,\\log(1/\\varepsilon))$ for GD."
-
-{
+```{=html}
+<div id="fig-convergence-rates" style="width:100%;max-width:700px;margin:auto;"></div>
+<p class="figure-caption" style="text-align:center;margin-top:0.5em;">Figure 7.2: Convergence rates of GD vs. Heavy-Ball momentum. The <em>O</em>(√κ log 1/ε) complexity of momentum is a significant improvement over <em>O</em>(κ log 1/ε) for GD.</p>
+<script>
+(function() {
   const M_ = 20, m_ = 1, kappa = 20;
   const nIt = 80;
   const x0 = [5, 5];
@@ -912,7 +785,7 @@ In practice, AdamW with weight decay $\lambda \approx 0.01$ is the default optim
   const alphaNAG = 4/(m_+3*M_);
   const betaNAG = (Math.sqrt(3*kappa+1)-2)/(Math.sqrt(3*kappa+1)+2);
 
-  function gdTraj4(M, m, x0, alpha, nIter) {
+  function gdTraj(M, m, x0, alpha, nIter) {
     const path = [[x0[0], x0[1]]];
     let x = [x0[0], x0[1]];
     for (let i = 0; i < nIter; i++) {
@@ -922,7 +795,7 @@ In practice, AdamW with weight decay $\lambda \approx 0.01$ is the default optim
     return path;
   }
 
-  function hbTraj4(M, m, x0, alpha, beta, nIter) {
+  function hbTraj(M, m, x0, alpha, beta, nIter) {
     const path = [[x0[0], x0[1]]];
     let x = [x0[0], x0[1]], xp = [x0[0], x0[1]];
     for (let i = 0; i < nIter; i++) {
@@ -936,10 +809,10 @@ In practice, AdamW with weight decay $\lambda \approx 0.01$ is the default optim
     return path;
   }
 
-  const gdP = gdTraj4(M_, m_, x0, alphaGD, nIt);
+  const gdP = gdTraj(M_, m_, x0, alphaGD, nIt);
   const gdF = gdP.map(p => 0.5*(M_*p[0]*p[0] + m_*p[1]*p[1]));
 
-  const hbP = hbTraj4(M_, m_, x0, alphaHB, betaHB, nIt);
+  const hbP = hbTraj(M_, m_, x0, alphaHB, betaHB, nIt);
   const hbF = hbP.map(p => 0.5*(M_*p[0]*p[0] + m_*p[1]*p[1]));
 
   // NAG
@@ -974,12 +847,10 @@ In practice, AdamW with weight decay $\lambda \approx 0.01$ is the default optim
     width: 700, height: 500
   };
 
-  const div = DOM.element('div');
-  Plotly.newPlot(div, traces, layout, {responsive: true, displayModeBar: false});
-  return div;
-}
+  Plotly.newPlot('fig-convergence-rates', traces, layout, {responsive: true, displayModeBar: false});
+})();
+</script>
 ```
-:::
 
 ::: {.callout-note appearance="simple"}
 **Summary of iteration complexities** (strongly convex quadratics):
@@ -1098,7 +969,7 @@ Two competing requirements on the step sizes:
 The key question for SGD is: how fast does it converge despite the noise in each gradient estimate? Since each stochastic gradient $\nabla f_i(x^k)$ deviates from the true gradient $\nabla f(x^k)$, we need a decaying step size to ensure that the cumulative noise remains controlled. The following theorem quantifies the resulting convergence rate.
 
 ::: {#thm-sgd-convergence}
-## Convergence of SGD (Theorem 9.1)
+## Convergence of SGD
 
 When $f$ is an $L$-Lipschitz continuous convex function, with step size $\alpha^k = O\!\left(\frac{1}{\sqrt{k}}\right)$, we have
 
@@ -1165,9 +1036,11 @@ Special cases:
 ::: {.callout-tip}
 ## Remark
 
-1. Minibatch SGD is very popular in deep learning.
-2. $\alpha^k$ is often chosen to be a small constant.
-3. Minibatch stochastic gradient can be combined with momentum, Adagrad, RMSprop, Adam, etc.
+Several practical points are worth noting:
+
+1. Minibatch SGD is very popular in deep learning (it balances the noise reduction of full-batch GD with the speed of single-sample SGD).
+2. $\alpha^k$ is often chosen to be a small constant (or decayed according to a schedule such as cosine annealing).
+3. Minibatch stochastic gradient can be combined with momentum, Adagrad, RMSprop, Adam, etc., yielding the optimizers most commonly used in practice.
 :::
 
 ## Proximal Gradient Methods {#proximal}
@@ -1198,7 +1071,7 @@ $$\min_{\theta} \; \|y - X\theta\|_2^2 \quad \text{s.t.} \quad \theta \in \mathc
 ### Composite Objective Functions {#composite}
 
 ::: {#def-composite-objective}
-## Composite Objective (Definition 9.2)
+## Composite Objective
 
 **Composite objective functions** are functions that can be written as
 
@@ -1240,7 +1113,7 @@ where the second line follows by completing the square.
 ### Proximal Mapping {#proximal-mapping}
 
 ::: {#def-proximal-mapping}
-## Proximal Mapping (Definition 9.3)
+## Proximal Mapping
 
 The **proximal mapping** induced by $h$ is defined as
 
@@ -1275,7 +1148,7 @@ For k = 0, 1, 2, ...:
 A natural concern is whether introducing the nonsmooth term $h$ slows down convergence. Remarkably, it does not: as long as the smooth component $g$ is $M$-smooth, the proximal gradient method converges at the same $O(1/k)$ rate as gradient descent on a purely smooth function.
 
 ::: {#thm-proximal-convergence}
-## Convergence of Proximal Gradient Descent (Theorem 9.4)
+## Convergence of Proximal Gradient Descent
 
 If $g$ is convex and $M$-smooth, and $h$ is convex, then setting $\alpha^k = \frac{1}{M}$, we have
 
@@ -1305,7 +1178,7 @@ $h$ is called **"simple"** if the proximal mapping can be easily implemented (i.
 The most important example of a proximal operator arises from the $\ell_1$-norm penalty $h(x) = \lambda\|x\|_1$, which is central to sparse estimation. The resulting proximal mapping has a beautiful closed-form solution that shrinks each coordinate toward zero, producing exact sparsity.
 
 ::: {#def-soft-thresholding}
-## Soft Thresholding Operator (Definition 9.5)
+## Soft Thresholding Operator
 
 For $h(x) = \lambda \|x\|_1$, the proximal mapping is
 
@@ -1333,7 +1206,7 @@ $$\theta^{k+1} = S_{\alpha\lambda}\!\left(\theta^k + \alpha \cdot X^\top (y - X 
 When the nonsmooth term $h$ is the indicator function of a constraint set $\mathcal{C}$, the proximal mapping reduces to a familiar geometric operation: Euclidean projection. This connection shows that constrained optimization is a special case of the proximal framework.
 
 ::: {#def-projection-proximal}
-## Projection as Proximal Mapping (Definition 9.6)
+## Projection as Proximal Mapping
 
 For the indicator function $h(x) = \mathcal{I}_\mathcal{C}(x) = \begin{cases} \infty & x \notin \mathcal{C}, \\ 0 & x \in \mathcal{C}, \end{cases}$
 
@@ -1349,7 +1222,7 @@ This shows that projection onto a convex set is a special case of the proximal m
 Combining the projection interpretation of the proximal mapping with the proximal gradient algorithm immediately yields one of the most widely used constrained optimization methods.
 
 ::: {#cor-projected-gd}
-## Projected Gradient Descent (Corollary 9.7)
+## Projected Gradient Descent
 
 When $h = \mathcal{I}_\mathcal{C}$, proximal gradient descent becomes:
 

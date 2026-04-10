@@ -1,29 +1,35 @@
 ---
 title: "Convex Optimization"
 ---
-Optimization is hard in general -- a function can have countless local minima, saddle points, and deceptive plateaus. So why is it that many of the optimization problems arising in statistics, machine learning, and engineering can be solved reliably and efficiently? The answer, more often than not, is **convexity**. When both the objective and the constraints are convex, the landscape of the problem simplifies dramatically: every local minimum is automatically a global minimum, and powerful duality theory provides certificates of optimality.
+Optimization is hard in general --- a function can have countless local minima, saddle points, and deceptive plateaus. So why is it that many of the optimization problems arising in statistics, machine learning, and engineering can be solved reliably and efficiently? The answer, more often than not, is **convexity**. When both the objective and the constraints are convex, the landscape of the problem simplifies dramatically: every local minimum is automatically a global minimum, and efficient algorithms can find it in polynomial time.
 
-This chapter develops the theory of convex optimization from the ground up. We define the standard form of a convex program, establish its key structural properties (convexity of suboptimal sets, uniqueness under strict convexity, and the equivalence of local and global optima), and survey the most important classes of convex programs -- LP, QP, SOCP, and SDP -- which form a nested hierarchy of increasing expressiveness. We then introduce **Lagrangian duality**, a framework that associates every optimization problem with a "dual" problem whose optimal value provides a bound on the original. Under mild conditions (Slater's constraint qualification), this bound is tight, leading to the celebrated **KKT conditions** -- a system of equations and inequalities that completely characterize optimal primal-dual pairs.
-
-Duality and KKT conditions are not just theoretical tools. They are the engine behind modern solvers (interior-point methods solve the KKT system directly) and the foundation for sensitivity analysis, economic interpretation of constraints, and algorithm design throughout the rest of this course.
+This chapter develops the theory of convex optimization from the ground up. We define the standard form of a convex program, establish its key structural properties --- convexity of suboptimal sets, uniqueness under strict convexity, first-order optimality conditions, and the equivalence of local and global optima. We then survey the most important classes of convex programs --- LP, QP, SOCP, and SDP --- which form a nested hierarchy of increasing expressiveness. Finally, we introduce **CVXPY**, a modern Python framework that lets us specify and solve convex programs with just a few lines of code, and demonstrate its power through several applications with interactive visualizations.
 
 ::: {.callout-tip}
 ## Companion Notebooks
 
 Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.
 
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/05-convex-optimization-examples.ipynb) **Convex Optimization Examples** --- LP, QP, SDP, robust optimization, and Chebyshev center in CVXPY
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/06-portfolio-optimization.ipynb) **Portfolio Optimization** --- Markowitz mean-variance optimization with leverage constraints
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/07-control-cvxpy.ipynb) **Optimal Control** --- control trajectory optimization with state and input constraints
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/08-logistic-regression.ipynb) **Logistic Regression** --- $\ell_1$-regularized logistic regression with cross-validation
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/05a-convex-optimization-examples.ipynb) **Convex Optimization Examples** --- LP, QP, SDP, robust optimization, and Chebyshev center in CVXPY
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/05b-portfolio-optimization.ipynb) **Portfolio Optimization** --- Markowitz mean-variance optimization with leverage constraints
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/05c-control-cvxpy.ipynb) **Optimal Control** --- control trajectory optimization with state and input constraints
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/05d-logistic-regression.ipynb) **Logistic Regression** --- $\ell_1$-regularized logistic regression with cross-validation
 :::
+
+## What Will Be Covered {.unnumbered}
+
+- Standard form of optimization problems and the convexity condition
+- Key properties: local optima are global, convexity of optimal and suboptimal sets
+- First-order optimality conditions for unconstrained and constrained convex programs
+- The hierarchy of convex programs: LP, QP, SOCP, and SDP
+- Practical modeling with CVXPY: portfolio optimization, optimal control, logistic regression
 
 ## Formulation of Optimization Problems {#sec-formulation}
 
 ### Standard Form {#sec-standard-form}
 
 ::: {#def-general-optimization}
-## Definition 5.1 (General Optimization --- Standard Form)
+## General Optimization --- Standard Form
 
 A general optimization problem in **standard form** is:
 
@@ -35,14 +41,7 @@ $$
 \end{aligned}
 $$
 
-where:
-
-- $x \in \mathbb{R}^n$ is the **optimization variable** (decision variable)
-- $f_0 : \mathbb{R}^n \to \mathbb{R}$ is the **objective function** (cost function)
-- $f_i : \mathbb{R}^n \to \mathbb{R}$, $i \in [m]$, are **inequality constraint functions**
-- $h_i : \mathbb{R}^n \to \mathbb{R}$, $i \in [p]$, are **equality constraint functions**
-
-If $m = p = 0$, this reduces to **unconstrained optimization**: $\min_{x \in \mathbb{R}^n} f_0(x)$.
+Here $x \in \mathbb{R}^n$ is the **optimization variable** (decision variable), $f_0 : \mathbb{R}^n \to \mathbb{R}$ is the **objective function** (cost function), $f_i : \mathbb{R}^n \to \mathbb{R}$ for $i \in [m]$ are **inequality constraint functions**, and $h_i : \mathbb{R}^n \to \mathbb{R}$ for $i \in [p]$ are **equality constraint functions**. If $m = p = 0$, this reduces to **unconstrained optimization**: $\min_{x \in \mathbb{R}^n} f_0(x)$.
 :::
 
 The standard form provides a unified framework for expressing optimization problems. By separating the objective from the inequality and equality constraints, we can develop general-purpose theory and algorithms that apply across a wide range of applications.
@@ -50,7 +49,7 @@ The standard form provides a unified framework for expressing optimization probl
 ### Feasibility and Optimal Value {#sec-feasibility}
 
 ::: {#def-domain-feasible-set}
-## Definition 5.2 (Domain, Feasible Set, Optimal Value)
+## Domain, Feasible Set, Optimal Value
 
 The **domain** of the optimization problem is:
 
@@ -68,8 +67,12 @@ $$
 f^* = \inf\{f_0(x) \mid x \in \Omega\}.
 $$
 
+Two degenerate cases deserve special notation:
+
 - If $\Omega = \emptyset$ (infeasible), we define $f^* = +\infty$.
 - If there exists a sequence $\{x_k\}$ of feasible points with $f_0(x_k) \to -\infty$, we define $f^* = -\infty$ and say the problem is **unbounded (from below)**.
+
+Both conventions ensure that $f^*$ is always well-defined.
 :::
 
 The domain, feasible set, and optimal value characterize the "landscape" of an optimization problem. The distinction between infeasibility ($f^* = +\infty$) and unboundedness ($f^* = -\infty$) is important: both indicate that something is wrong with the problem formulation, but for different reasons.
@@ -77,7 +80,7 @@ The domain, feasible set, and optimal value characterize the "landscape" of an o
 ### Optimal Points and Local Optimality {#sec-optimal-points}
 
 ::: {#def-optimal-point}
-## Definition 5.3 (Optimal Point, Active Constraint, Local Optimality)
+## Optimal Point, Active Constraint, Local Optimality
 
 If $x_0$ is feasible and $f_0(x_0) = f^* > -\infty$, then $x_0$ is an **optimal point** (solution / minimizer). If an optimal point exists, we say $f^*$ is **attained** and the problem is **solvable**.
 
@@ -95,29 +98,33 @@ $$
 ::: {#exm-unconstrained-optimization}
 ## Unconstrained Optimization ($n=1, m=p=0$)
 
-- $f_0 = 1/x$, $\operatorname{dom}(f_0) = \mathbb{R}_{++}$. Then $f^* = 0$, no optimal point.
-- $f_0 = -\log x$, $\operatorname{dom}(f_0) = \mathbb{R}_{++}$. Then $f^* = -\infty$, unbounded.
-- $f_0 = x \log x$, $\operatorname{dom}(f_0) = \mathbb{R}_{++}$. Then $f^* = -1/e$, $x^* = 1/e$.
-- $f_0 = x^3 - 3x$, $\operatorname{dom}(f_0) = \mathbb{R}$. Then $f^* = -\infty$, unbounded, local minimum at $x_0 = 1$.
+The following examples illustrate the range of possible behaviors for unconstrained optimization in one dimension (@fig-unconstrained-examples):
+
+**(a)** $f_0 = 1/x$ on $\operatorname{dom}(f_0) = \mathbb{R}_{++}$. As $x \to \infty$, $f_0(x) \to 0$, so $f^* = 0$. However, no point achieves this value --- the infimum is not attained.
+
+**(b)** $f_0 = -\log x$ on $\operatorname{dom}(f_0) = \mathbb{R}_{++}$. As $x \to \infty$, $f_0(x) \to -\infty$, so $f^* = -\infty$ and the problem is unbounded below.
+
+**(c)** $f_0 = x \log x$ on $\operatorname{dom}(f_0) = \mathbb{R}_{++}$. Setting $f_0'(x) = \log x + 1 = 0$ gives the unique minimizer $x^* = 1/e$, with optimal value $f^* = -1/e$. This is the "well-behaved" case: the minimum exists and is attained.
+
+**(d)** $f_0 = x^3 - 3x$ on $\operatorname{dom}(f_0) = \mathbb{R}$. Setting $f_0'(x) = 3x^2 - 3 = 0$ gives critical points at $x = \pm 1$. The point $x_0 = 1$ is a local minimum with $f_0(1) = -2$, but $f_0(x) \to -\infty$ as $x \to -\infty$, so the local minimum is not global.
 :::
+
+![Four behaviors of unconstrained optimization: (a) infimum not attained, (b) unbounded below, (c) unique global minimum, (d) local minimum that is not global.](figures/ch05-unconstrained-examples.svg){#fig-unconstrained-examples}
 
 ::: {.callout-tip}
 ## Remark: Feasibility Problem
 
-A **feasibility problem** asks: does there exist $x$ with $f_i(x) \leq 0$ for all $i$ and $h_i(x) = 0$ for all $i$? This is equivalent to minimizing $f_0 = 0$ subject to the same constraints.
-
-- $f^* = 0$ if the constraints are feasible.
-- $f^* = +\infty$ if the constraints are infeasible.
+A **feasibility problem** asks: does there exist $x$ with $f_i(x) \leq 0$ for all $i$ and $h_i(x) = 0$ for all $i$? This is equivalent to minimizing $f_0 = 0$ subject to the same constraints. The optimal value immediately reveals feasibility: $f^* = 0$ if the constraints are feasible (the trivial objective is attained), and $f^* = +\infty$ if the constraints are infeasible (no feasible point exists).
 :::
 
 ### Convex Optimization in Standard Form {#sec-convex-standard}
 
-With the general framework in place, we now specialize to the setting that will occupy most of this chapter: convex optimization. The key additional requirements are that the objective and inequality constraints are convex functions, and the equality constraints are affine.
+With the general framework in place, we now specialize to the setting that will occupy most of this course: **convex optimization**. At its core, a convex optimization problem asks us to minimize a convex objective function over a convex feasible set. The standard form makes this precise by specifying exactly which kinds of objectives and constraints preserve convexity.
 
 ::: {#def-convex-optimization}
-## Definition 5.4 (Convex Optimization Problem)
+## Convex Optimization Problem
 
-A **convex optimization problem** is a problem in standard form with three additional requirements (see [Chapter 3](03-convex-sets.qmd) and [Chapter 4](04-convex-functions.qmd) for definitions and characterizations of convex sets and functions):
+A **convex optimization problem** is a problem in standard form with three additional requirements:
 
 1. The objective $f_0$ is **convex**.
 2. The inequality constraint functions $f_i$ are **convex**.
@@ -134,26 +141,40 @@ $$
 The domain is $\mathcal{D} = \bigcap_{i=0}^{m} \operatorname{dom} f_i$, which is convex (intersection of convex sets).
 :::
 
-A convex optimization problem is one where both the objective and the feasible set have a "bowl-shaped" structure. The three requirements -- convex objective, convex inequality constraints, and affine equality constraints -- together ensure that the feasible set is convex and there are no spurious local minima. This makes convex problems fundamentally easier to solve than general nonconvex problems.
+The three requirements work together to guarantee that the feasible set $\Omega$ is convex, which is what makes the problem tractable. Two of these requirements deserve special emphasis.
+
+::: {.callout-warning}
+## Why Only Affine Equality Constraints?
+
+Requirement 3 --- that equality constraints must be affine --- is not an arbitrary restriction. A nonlinear equality constraint $h(x) = 0$ defines a level set $\{x : h(x) = 0\}$, which is typically a curved surface, **not** a convex set. For instance, $x_1^2 + x_2^2 = 1$ defines a circle, which is not convex. Allowing nonlinear equalities would destroy convexity of the feasible set, and with it all the structural properties that make convex optimization tractable.
+
+Affine equalities $a_i^\top x = b_i$ define hyperplanes, which *are* convex (in fact, they are both convex and affine subsets of $\mathbb{R}^n$). Their intersection is an affine subspace --- always convex.
+:::
 
 ::: {.callout-tip}
-## Remark: Why the Feasible Set is Convex
+## The Abstract View
+
+The standard form is one way to specify a convex optimization problem, but the essential structure is simpler. A convex optimization problem is equivalently:
+
+$$\min_{x \in \Omega}\; f_0(x), \qquad \text{where } f_0 \text{ is convex and } \Omega \subseteq \mathbb{R}^n \text{ is a convex set.}$$
+
+The standard form with convex inequalities and affine equalities is simply the most common way to describe the convex feasible set $\Omega$. Any problem of the form "minimize a convex function over a convex set" is a convex optimization problem, regardless of how $\Omega$ is represented.
+:::
 
 The feasible set of a convex optimization problem is always convex:
 
 $$
-\Omega = \mathcal{D} \;\cap\; \bigcap_{i=1}^{m}\{x : f_i(x) \leq 0\} \;\cap\; \bigcap_{i=1}^{p}\{x : a_i^\top x = b_i\}.
+\Omega = \mathcal{D} \;\cap\; \underbrace{\bigcap_{i=1}^{m}\{x : f_i(x) \leq 0\}}_{\text{sublevel sets of convex } f_i} \;\cap\; \underbrace{\bigcap_{i=1}^{p}\{x : a_i^\top x = b_i\}}_{\text{hyperplanes}}.
 $$
 
-This is an intersection of convex sets (the domain is convex, sublevel sets of convex functions are convex, and hyperplanes are convex).
-:::
+Each sublevel set $\{x : f_i(x) \leq 0\}$ is convex (by @thm-sublevel-sets-convex), each hyperplane is convex, and the intersection of convex sets is convex (by @thm-operations-convex-sets).
 
 ## Properties of Convex Optimization {#sec-properties}
 
 What makes convex optimization fundamentally different from general nonlinear optimization? Three structural properties answer this question: the set of near-optimal solutions is always convex, strictly convex objectives have unique minimizers, and -- most importantly -- every local minimum is automatically global. Together, these properties explain why convex problems are computationally tractable.
 
 ::: {#thm-convex-suboptimal-sets}
-## Theorem 5.1 (Convex $\varepsilon$-Suboptimal Sets)
+## Convex $\varepsilon$-Suboptimal Sets
 
 For any $\varepsilon \geq 0$, the **$\varepsilon$-suboptimal set**
 
@@ -164,16 +185,32 @@ $$
 is a **convex set**.
 :::
 
-This means that the set of "nearly optimal" feasible points is always convex. In practice, this implies that if two solutions are both close to optimal, then any convex combination of them is also close to optimal -- there are no "gaps" in the set of good solutions.
+::: {.proof}
+Let $S_\varepsilon = \{x \in \Omega : f_0(x) \leq f^* + \varepsilon\}$. Take any $x, y \in S_\varepsilon$ and $\lambda \in [0,1]$. Since $\Omega$ is convex, $z = \lambda x + (1{-}\lambda)y \in \Omega$. By convexity of $f_0$,
+
+$$f_0(z) \leq \lambda f_0(x) + (1{-}\lambda)f_0(y) \leq \lambda(f^* + \varepsilon) + (1{-}\lambda)(f^* + \varepsilon) = f^* + \varepsilon.$$
+
+Hence $z \in S_\varepsilon$, so $S_\varepsilon$ is convex. $\blacksquare$
+:::
+
+This means that the set of "nearly optimal" feasible points is always convex. In practice, this implies that if two solutions are both close to optimal, then any convex combination of them is also close to optimal --- there are no "gaps" in the set of good solutions.
 
 ::: {#thm-strict-convexity-uniqueness}
-## Theorem 5.2 (Strict Convexity Implies Uniqueness)
+## Strict Convexity Implies Uniqueness
 
 If $f_0$ is **strictly convex**, then the optimal solution (if it exists) is **unique**. That is,
 
 $$
 \{x : f_0(x) = f^*\} \cap \Omega = \{x^*\}.
 $$
+:::
+
+::: {.proof}
+Suppose for contradiction that $x^*$ and $y^*$ are both optimal with $x^* \neq y^*$, so $f_0(x^*) = f_0(y^*) = f^*$. Since $\Omega$ is convex, the midpoint $z = \tfrac{1}{2}x^* + \tfrac{1}{2}y^*$ is feasible. By strict convexity of $f_0$,
+
+$$f_0(z) < \tfrac{1}{2}f_0(x^*) + \tfrac{1}{2}f_0(y^*) = f^*.$$
+
+This contradicts the definition of $f^*$ as the optimal value. $\blacksquare$
 :::
 
 Strict convexity means the objective function curves strictly upward in every direction, so there can be at most one point at the bottom of the "bowl." This is a useful structural property: when the optimizer is unique, there is no ambiguity about the solution and algorithms are guaranteed to converge to the same answer regardless of initialization.
@@ -187,8 +224,10 @@ $$
 \min_\beta \;\|y - X\beta\|_2^2 \quad \text{s.t.} \quad \|\beta\|_1 \leq s.
 $$
 
+The uniqueness of the solution depends on the geometry of the design matrix:
+
 - If $n \geq d$ and $X$ has full column rank, then $f_0(\beta) = \|y - X\beta\|_2^2$ is **strictly convex**, giving a **unique** solution.
-- If $n < d$ (high-dimensional case), the solution is **not necessarily unique**.
+- If $n < d$ (high-dimensional case), the solution is **not necessarily unique** because the objective is only convex (not strictly so).
 :::
 
 The first two properties tell us about the structure of the set of optimal and near-optimal solutions. The next property is the most consequential: it tells us that local search suffices for global optimization.
@@ -196,7 +235,7 @@ The first two properties tell us about the structure of the set of optimal and n
 ### Local Optimality Implies Global Optimality {#sec-local-is-global}
 
 ::: {#thm-local-min-global-min}
-## Theorem 5.3 (Local Min = Global Min)
+## Local Min = Global Min
 
 Any **local optimal point** of a convex problem is also **globally optimal**.
 :::
@@ -229,43 +268,125 @@ This gives $f_0(\lambda x_0 + (1-\lambda)y) \geq f_0(x_0)$. **Contradiction.** T
 For convex optimization: **every local minimum is a global minimum**. This is the fundamental reason why convex problems are "tractable."
 :::
 
-```python
-#| label: fig-local-global
-#| fig-cap: "Figure 5.1: A convex function (left) has a single global minimum. A non-convex function (right) can have multiple local minima that are not global."
+```{=html}
+<div id="fig-local-global" style="width:100%;max-width:800px;margin:auto;"></div>
+<p class="figure-caption" style="text-align:center;margin-top:0.5em;">Figure 5.1: A convex function (left) has a single global minimum. A non-convex function (right) can have multiple local minima that are not global.</p>
+<script>
+(function() {
+  var x = Array.from({length: 200}, function(_, i) { return -3 + 6 * i / 199; });
+  var convexY = x.map(function(v) { return v * v; });
+  var nonconvexY = x.map(function(v) { return Math.pow(v, 4) - 3 * v * v + 1; });
 
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import numpy as np
+  var traces = [
+    {x: x, y: convexY, mode: 'lines', line: {color: '#7b97ad', width: 3}, showlegend: false, xaxis: 'x', yaxis: 'y'},
+    {x: [0], y: [0], mode: 'markers', marker: {color: '#b56b6b', size: 12, symbol: 'star'}, name: 'Global min', xaxis: 'x', yaxis: 'y'},
+    {x: x, y: nonconvexY, mode: 'lines', line: {color: '#ad8480', width: 3}, showlegend: false, xaxis: 'x2', yaxis: 'y2'},
+    {x: [-1.22, 1.22], y: [-1.25, -1.25], mode: 'markers', marker: {color: '#b56b6b', size: 12, symbol: 'star'}, name: 'Global minima', xaxis: 'x2', yaxis: 'y2'},
+    {x: [0], y: [1], mode: 'markers', marker: {color: '#b8995e', size: 10, symbol: 'diamond'}, name: 'Local max', xaxis: 'x2', yaxis: 'y2'}
+  ];
 
-x = np.linspace(-3, 3, 200)
-convex_y = x**2
-nonconvex_y = x**4 - 3*x**2 + 1
+  var layout = {
+    height: 400,
+    margin: {t: 40, b: 50, l: 55, r: 20},
+    xaxis: {title: {text: 'x'}, domain: [0, 0.45]},
+    yaxis: {title: {text: 'f(x)'}, anchor: 'x'},
+    xaxis2: {title: {text: 'x'}, domain: [0.55, 1]},
+    yaxis2: {title: {text: 'f(x)'}, anchor: 'x2'},
+    annotations: [
+      {text: 'Convex: f(x) = x\u00B2', font: {size: 14}, showarrow: false, x: 0.225, xref: 'paper', y: 1.02, yref: 'paper', xanchor: 'center'},
+      {text: 'Non-convex: x\u2074 \u2212 3x\u00B2 + 1', font: {size: 14}, showarrow: false, x: 0.775, xref: 'paper', y: 1.02, yref: 'paper', xanchor: 'center'}
+    ]
+  };
 
-fig = make_subplots(rows=1, cols=2, subplot_titles=["Convex: f(x) = x²", "Non-convex: x⁴ − 3x² + 1"])
-
-fig.add_trace(go.Scatter(x=x, y=convex_y, mode='lines', line=dict(color='#7b97ad', width=3), name='Convex: f(x) = x²', showlegend=False), row=1, col=1)
-fig.add_trace(go.Scatter(x=[0], y=[0], mode='markers', marker=dict(color='#b56b6b', size=12, symbol='star'), name='Global min'), row=1, col=1)
-
-fig.add_trace(go.Scatter(x=x, y=nonconvex_y, mode='lines', line=dict(color='#ad8480', width=3), name='Non-convex: x⁴ − 3x² + 1', showlegend=False), row=1, col=2)
-fig.add_trace(go.Scatter(x=[-1.22, 1.22], y=[-1.25, -1.25], mode='markers', marker=dict(color='#b56b6b', size=12, symbol='star'), name='Global minima'), row=1, col=2)
-fig.add_trace(go.Scatter(x=[0], y=[1], mode='markers', marker=dict(color='#b8995e', size=10, symbol='diamond'), name='Local max'), row=1, col=2)
-
-fig.update_xaxes(title_text="x", row=1, col=1)
-fig.update_xaxes(title_text="x", row=1, col=2)
-fig.update_yaxes(title_text="f(x)", row=1, col=1)
-fig.update_yaxes(title_text="f(x)", row=1, col=2)
-fig.update_layout(height=400, margin=dict(t=40, b=50, l=55, r=20))
-fig.show()
+  Plotly.newPlot('fig-local-global', traces, layout, {responsive: true, displayModeBar: false});
+})();
+</script>
 ```
+
+## Optimality Conditions for Differentiable Problems {#sec-optimality}
+
+The properties above characterize the *structure* of the optimal set. When the objective is differentiable, we can also give explicit *gradient conditions* that characterize optimal points. These conditions are the starting point for the gradient-based algorithms developed in subsequent chapters.
+
+### Unconstrained Case
+
+::: {#thm-first-order-unconstrained}
+## Unconstrained Optimality
+
+If $f_0$ is convex and differentiable, then $x^*$ is a global minimizer of $f_0$ over $\mathbb{R}^n$ if and only if:
+
+$$
+\nabla f_0(x^*) = 0.
+$$ {#eq-unconstrained-optimality}
+:::
+
+For unconstrained convex problems, the familiar calculus condition $\nabla f_0(x^*) = 0$ is both necessary and sufficient for global optimality --- a direct consequence of the first-order characterization of convexity (@eq-first-order-convexity).
+
+### Equality-Constrained Case
+
+When the only constraints are affine equalities $Ax = b$, the optimality condition takes a geometric form involving the null space of $A$.
+
+::: {#thm-equality-constrained-optimality}
+## Equality-Constrained Optimality
+
+Consider $\min f_0(x)$ subject to $Ax = b$, where $f_0$ is convex and differentiable. Then $x^*$ is optimal if and only if:
+
+$$
+\nabla f_0(x^*) \perp \mathcal{N}(A),
+$$ {#eq-equality-optimality}
+
+where $\mathcal{N}(A) = \{v : Av = 0\}$ is the null space of $A$.
+:::
+
+::: {.proof}
+The feasible set is $\Omega = \{x : Ax = b\}$. By the general constrained optimality condition (@thm-first-order-constrained below), $x^*$ is optimal if and only if $\nabla f_0(x^*)^\top(y - x^*) \geq 0$ for all feasible $y$. Since both $x^*$ and $y$ satisfy $Ax = b$, we have $A(y - x^*) = 0$, so $y - x^*$ ranges over the null space $\mathcal{N}(A)$. The condition becomes $\nabla f_0(x^*)^\top v \geq 0$ for all $v \in \mathcal{N}(A)$. Since $\mathcal{N}(A)$ is a subspace (if $v \in \mathcal{N}(A)$ then $-v \in \mathcal{N}(A)$), this forces $\nabla f_0(x^*)^\top v = 0$ for all $v \in \mathcal{N}(A)$. $\blacksquare$
+:::
+
+Geometrically, @eq-equality-optimality says that at the optimum, the gradient of the objective has no component along the affine subspace of feasible directions --- any movement that stays feasible cannot decrease $f_0$.
+
+### General Constrained Case
+
+::: {#thm-first-order-constrained}
+## Constrained Optimality
+
+If $f_0$ is convex and differentiable, then $x^*$ is optimal for $\min_{x \in \Omega} f_0(x)$ (where $\Omega$ is convex) if and only if:
+
+$$
+\nabla f_0(x^*)^\top (y - x^*) \geq 0 \quad \forall\, y \in \Omega.
+$$ {#eq-constrained-optimality}
+
+Geometrically, the negative gradient $-\nabla f_0(x^*)$ makes an obtuse angle with every feasible direction from $x^*$.
+:::
+
+![First-order optimality for constrained convex problems. At the optimal point $x^*$ on the boundary of the feasible set $\Omega$, the negative gradient $-\nabla f_0(x^*)$ points away from $\Omega$, so $\langle \nabla f_0(x^*), y - x^* \rangle \geq 0$ for all feasible $y \in \Omega$ --- no feasible descent direction exists.](figures/ch05-optimality-condition.svg){#fig-constrained-optimality}
+
+::: {.proof}
+**Sufficiency:** For any $y \in \Omega$, by the first-order characterization of convexity:
+
+$$
+f_0(y) \geq f_0(x^*) + \nabla f_0(x^*)^\top (y - x^*) \geq f_0(x^*),
+$$
+
+where the first inequality uses convexity and the second uses the assumption $\nabla f_0(x^*)^\top (y - x^*) \geq 0$. Since this holds for every feasible $y$, $x^*$ is optimal.
+
+**Necessity:** Suppose $x^*$ is optimal but $\exists\, y \in \Omega$ with $\nabla f_0(x^*)^\top (y - x^*) < 0$. Then for small $t > 0$, the point $x^* + t(y - x^*) \in \Omega$ (by convexity of $\Omega$) and by the first-order Taylor expansion:
+
+$$
+f_0(x^* + t(y-x^*)) \approx f_0(x^*) + t \nabla f_0(x^*)^\top(y - x^*) < f_0(x^*),
+$$
+
+contradicting optimality of $x^*$. $\blacksquare$
+:::
+
+The constrained optimality condition @eq-constrained-optimality generalizes both the unconstrained case (@eq-unconstrained-optimality, where $\Omega = \mathbb{R}^n$ and the condition reduces to $\nabla f_0(x^*) = 0$) and the equality-constrained case (@eq-equality-optimality, where feasible directions are restricted to $\mathcal{N}(A)$).
 
 ## Examples of Convex Optimization {#sec-examples}
 
-The structural properties established above -- convex suboptimal sets, uniqueness under strict convexity, and the equivalence of local and global optima -- apply to *all* convex programs. In practice, however, most convex problems encountered in statistics, machine learning, and engineering fall into a small number of well-studied classes that form a strict hierarchy: LP $\subseteq$ QP $\subseteq$ SOCP $\subseteq$ SDP. Each class has specialized algorithms that exploit its structure, and recognizing which class a problem belongs to is often the key step in solving it efficiently.
+The structural properties and optimality conditions above apply to *all* convex programs. In practice, however, most convex problems fall into a small number of well-studied classes that form a strict hierarchy: LP $\subseteq$ QP $\subseteq$ QCQP $\subseteq$ SOCP $\subseteq$ SDP. Each class has specialized algorithms that exploit its structure, and recognizing which class a problem belongs to is often the key step in solving it efficiently.
 
 ### 1. Linear Program (LP) {#sec-lp}
 
 ::: {#def-linear-program}
-## Definition 5.5 (Linear Program)
+## Linear Program
 
 A **linear program** (introduced in @sec-convex-sets) has a linear objective and linear constraints:
 
@@ -285,7 +406,7 @@ Linear programs are the simplest class of convex optimization problems. Despite 
 ::: {#exm-transportation}
 ## Transportation Problem
 
-Given $m$ producers with supply limits $s_i$ and $n$ consumers with demands $d_j$, and per-unit transport cost $c_{ij}$ from producer $i$ to consumer $j$:
+Given $m$ producers with supply limits $s_i$ and $n$ consumers with demands $d_j$, and per-unit transport cost $c_{ij}$ from producer $i$ to consumer $j$ (@fig-transportation):
 
 $$
 \min_{\{x_{ij}\}} \sum_{i,j} c_{ij} x_{ij} \quad \text{s.t.} \quad \sum_j x_{ij} \leq s_i,\; \sum_i x_{ij} \geq d_j,\; x_{ij} \geq 0.
@@ -294,10 +415,12 @@ $$
 This is an LP: linear objective, linear inequality constraints.
 :::
 
+![The transportation problem as a bipartite graph. Each producer $P_i$ (with supply $s_i$) can ship to each consumer $D_j$ (with demand $d_j$) at unit cost $c_{ij}$. The decision variables $x_{ij} \geq 0$ represent the flow on each route.](figures/ch05-transportation.svg){#fig-transportation}
+
 ::: {#exm-max-flow}
 ## Maximum Flow Problem
 
-Given a directed graph $G = (V, E)$ with edge capacities $C_{uv}$, maximize flow from source (node 1) to sink (node $n$):
+Given a directed graph $G = (V, E)$ with edge capacities $C_{uv}$, maximize flow from source to sink (@fig-max-flow):
 
 $$
 \max_{\{x_{uv}\}} \sum_{\substack{v \in V \\ e_{1v} \in E}} x_{1v} \quad \text{s.t.} \quad 0 \leq x_{uv} \leq C_{uv},\; \sum_{u: e_{uv}\in E} x_{uv} = \sum_{w: e_{vw}\in E} x_{vw} \;\;\forall\, v \in V \setminus \{1,n\}.
@@ -306,12 +429,38 @@ $$
 The flow conservation constraint (flow in = flow out) holds at every internal node. This is also an LP.
 :::
 
+![A maximum flow instance on a 4-node network. Each edge is labeled flow/capacity. The total flow from source $s$ to sink $t$ is 4.](figures/ch05-max-flow.svg){#fig-max-flow}
+
+::: {#exm-svm-lp}
+## Linear Classification (Support Vector Machine)
+
+Given $m$ data points $\{(x_i, y_i)\}_{i=1}^m$ with $x_i \in \mathbb{R}^n$ and labels $y_i \in \{+1, -1\}$, the data is **linearly separable** if there exists a hyperplane $w^\top x + b = 0$ that separates the two classes. Finding such a hyperplane amounts to finding $(w, b)$ with $y_i(w^\top x_i + b) \geq 1$ for all $i$, which is a **feasibility LP**.
+
+Among all separating hyperplanes, the **max-margin classifier** chooses the one that maximizes the distance (margin $= 2/\|w\|_2$) between the closest points of each class and the hyperplane (@fig-svm-margin):
+
+$$
+\min_{w, b}\; \tfrac{1}{2}\|w\|_2^2 \quad \text{s.t.} \quad y_i(w^\top x_i + b) \geq 1, \quad i = 1, \ldots, m.
+$$
+
+This is a **QP** (quadratic objective, linear constraints). We will revisit this formulation when we discuss SOCP, where the connection between max-margin and robust classification becomes clear.
+:::
+
+![Max-margin SVM. The separating hyperplane $w^\top x = b$ (solid) maximizes the margin $2/\|w\|$ between the two classes. Support vectors (large markers) lie exactly on the margin boundaries $w^\top x = b \pm 1$ (dashed). The normal vector $w$ points toward the positive class.](figures/ch05-svm-margin.svg){#fig-svm-margin}
+
+::: {.callout-note}
+## A Brief History of Linear Programming
+
+Solving systems of linear inequalities dates back to the late 1700s, when Fourier invented Fourier--Motzkin elimination. In the 1930s, **Kantorovich** and **Koopmans** brought new life to LP by applying it to resource allocation and transportation problems; they jointly received the Nobel Prize in Economics in 1975. Koopmans was a director of the Cowles Foundation at Yale --- his medal is displayed at 30 Hillhouse Avenue.
+
+In 1947, **George Dantzig** invented the **simplex method**, the first practical algorithm for solving LPs. Although Dantzig's version of simplex runs in exponential time in the worst case, it works remarkably well in practice. **Von Neumann** is credited with developing the theory of **LP duality**. In 1979, **Khachiyan** showed that LPs can be solved in polynomial time using the **ellipsoid method** (a theoretical breakthrough, since the ellipsoid method is quite slow in practice). In 1984, **Karmarkar** developed the **interior-point method**, another polynomial-time algorithm that is also efficient in practice. In 2001, **Spielman and Teng** (Yale) established the **smoothed analysis of the simplex method**, showing that small random perturbations of LP data can be solved efficiently by simplex.
+:::
+
 ### 2. Quadratic Program (QP) {#sec-qp}
 
 Many problems in statistics and machine learning -- least-squares regression, portfolio optimization, support vector machines -- naturally involve minimizing a quadratic objective subject to linear constraints. Quadratic programs generalize LPs by allowing a quadratic (but still convex) objective.
 
 ::: {#def-quadratic-program}
-## Definition 5.6 (Quadratic Program)
+## Quadratic Program
 
 A **quadratic program** minimizes a convex quadratic objective subject to linear constraints:
 
@@ -324,10 +473,84 @@ where $P \succeq 0$ (positive semidefinite). If $P \succ 0$, the objective is st
 
 The positive semidefiniteness condition $P \succeq 0$ is what ensures convexity of the objective. When $P \succ 0$ (strictly positive definite), the problem has a unique minimizer, which is the typical situation in regularized regression and portfolio optimization.
 
+![LP vs QP: both have the same polyhedral feasible set $Ax \leq b$. **Left:** LP with linear contours --- the optimum is always at a vertex. **Right:** QP with elliptical contours --- the optimum can lie on a face or in the interior, not necessarily at a vertex.](figures/ch05-lp-vs-qp.svg){#fig-lp-vs-qp}
+
 ::: {#exm-least-squares-constraints}
 ## Least Squares with Constraints
 
-The constrained least-squares problem $\min \|Ax - b\|_2^2 \;\text{s.t.}\; x \geq 0$ is a QP with $P = 2A^\top A$, $q = -2A^\top b$.
+The constrained least-squares problem $\min \|Ax - b\|_2^2 \;\text{s.t.}\; x \geq 0$ is a QP with $P = 2A^\top A$, $q = -2A^\top b$. Similarly, the Lasso $\min \|y - X\beta\|_2^2$ subject to $\|\beta\|_1 \leq s$ is a QP (after reformulating the $\ell_1$-constraint using auxiliary variables).
+:::
+
+![Nonnegative least squares. The elliptical contours show level sets of $\|Ax - b\|^2$. The unconstrained minimizer $x_{\text{LS}}$ (terracotta) is infeasible; the constrained optimum $x^*$ (sage) is the point in the first quadrant closest to $x_{\text{LS}}$ in objective value.](figures/ch05-constrained-ls.svg){#fig-constrained-ls}
+
+::: {#exm-portfolio}
+## Markowitz Portfolio Optimization
+
+Given $n$ assets with expected return vector $\mu \in \mathbb{R}^n$ and covariance matrix $\Sigma \in \mathbb{S}^n_+$, an investor allocates weight $x_i$ to asset $i$ (with $\sum_i x_i = 1$, $x_i \geq 0$). The portfolio variance is $x^\top \Sigma x$ and the expected return is $\mu^\top x$ (@fig-portfolio-frontier). The **minimum-variance portfolio** for a target return $r_{\min}$ is:
+
+$$
+\min_x \; x^\top \Sigma x \quad \text{s.t.} \quad \mu^\top x \geq r_{\min}, \quad \mathbf{1}^\top x = 1, \quad x \geq 0.
+$$
+
+This is a QP: quadratic objective ($\Sigma \succeq 0$), linear constraints.
+:::
+
+![Markowitz efficient frontier. The bullet-shaped region shows all achievable (risk, return) pairs. The **efficient frontier** (sage, thick) traces portfolios that maximize return for each risk level. The minimum-variance portfolio (gold) is the leftmost point. For a target return $r_{\min}$ (dashed), the optimal portfolio minimizes risk on the frontier.](figures/ch05-portfolio-frontier.svg){#fig-portfolio-frontier}
+
+::: {#exm-distance-polyhedra}
+## Distance Between Polyhedra
+
+Given two polyhedra $P_1 = \{x : A_1 x \leq b_1\}$ and $P_2 = \{x : A_2 x \leq b_2\}$ (@fig-distance-polyhedra), their distance $\operatorname{dist}(P_1, P_2) = \inf_{x_1 \in P_1, x_2 \in P_2} \|x_1 - x_2\|_2$ can be computed by solving the QP:
+
+$$
+\min_{x_1, x_2} \; \|x_1 - x_2\|_2^2 \quad \text{s.t.} \quad A_1 x_1 \leq b_1, \quad A_2 x_2 \leq b_2.
+$$
+:::
+
+![Distance between two polyhedra. The closest points $x_1^* \in P_1$ and $x_2^* \in P_2$ achieve the minimum $\|x_1 - x_2\|_2$ over all pairs, giving a QP with linear constraints.](figures/ch05-distance-polyhedra.svg){#fig-distance-polyhedra}
+
+### Quadratically Constrained QP (QCQP) {#sec-qcqp}
+
+A natural extension of QP allows quadratic (not just linear) constraints. This leads to the **quadratically constrained quadratic program**.
+
+::: {#def-qcqp}
+## Definition (QCQP)
+
+A **QCQP** minimizes a convex quadratic objective subject to convex quadratic inequality constraints:
+
+$$
+\min_x \; \tfrac{1}{2}x^\top P_0 x + q_0^\top x + r_0 \quad \text{s.t.} \quad \tfrac{1}{2}x^\top P_i x + q_i^\top x + r_i \leq 0, \;\; i \in [m], \quad Ax = b,
+$$
+
+where $P_0, P_1, \ldots, P_m \succeq 0$. When $P_i \succ 0$, the constraint $\{x : \tfrac{1}{2}x^\top P_i x + q_i^\top x + r_i \leq 0\}$ is an ellipsoid, so the feasible set of a QCQP is the intersection of ellipsoids with an affine subspace.
+:::
+
+The hierarchy so far: LP $\subseteq$ QP $\subseteq$ QCQP (LP is QP with $P = 0$; QP is QCQP with $P_1 = \cdots = P_m = 0$).
+
+::: {#exm-trust-region}
+## Trust Region Optimization
+
+At each step of a trust-region method, we minimize a local quadratic model $m(s) = f(x) + \nabla f(x)^\top s + \tfrac{1}{2}s^\top \nabla^2 f(x)\, s$ within a trust region $\|s\| \leq \Delta$ (@fig-trust-region):
+
+$$
+\min_s \; f(x) + \nabla f(x)^\top s + \tfrac{1}{2}s^\top \nabla^2 f(x)\, s \quad \text{s.t.} \quad s^\top s \leq \Delta^2.
+$$
+
+This is a QCQP with one quadratic constraint (the trust region).
+:::
+
+![Trust region optimization. The quadratic model $m(s)$ (dashed contours) has its unconstrained minimizer outside the trust region $\|s\| \leq \Delta$ (sage circle). The trust-region solution $s^*$ lies on the boundary, in the direction of the unconstrained minimizer.](figures/ch05-trust-region.svg){#fig-trust-region}
+
+::: {#exm-portfolio-risk}
+## Portfolio Optimization with Risk Constraints
+
+Suppose asset returns have a factor structure: the risk exposure is captured by a matrix $F \in \mathbb{R}^{k \times n}$ (where $F_{ij}$ is asset $j$'s exposure to risk factor $i$). We want to minimize variance while bounding the total factor risk exposure $\|Fw\|_2^2 \leq \text{risk}_{\max}$:
+
+$$
+\min_w \; w^\top \Sigma w \quad \text{s.t.} \quad \mu^\top w \geq r_{\min}, \quad \|Fw\|_2^2 \leq \text{risk}_{\max}, \quad 0 \leq w_i \leq 0.1, \quad \sum_i w_i = 1.
+$$
+
+The norm-squared constraint $\|Fw\|_2^2 = w^\top F^\top F w \leq \text{risk}_{\max}$ is a convex quadratic constraint (since $F^\top F \succeq 0$), making this a QCQP. The bound $w_i \leq 0.1$ ensures no single asset exceeds 10% of the portfolio.
 :::
 
 ### 3. Second-Order Cone Program (SOCP) {#sec-socp}
@@ -335,7 +558,7 @@ The constrained least-squares problem $\min \|Ax - b\|_2^2 \;\text{s.t.}\; x \ge
 Some problems require constraints that bound the Euclidean norm of an affine expression -- for example, robust optimization under uncertainty, or placing bounds on prediction errors. These norm constraints are more expressive than the linear constraints of LPs and QPs but still preserve convexity.
 
 ::: {#def-socp}
-## Definition 5.7 (SOCP)
+## SOCP
 
 A **second-order cone program** has the form:
 
@@ -346,28 +569,92 @@ $$
 The constraint $\|Ax+b\|_2 \leq c^\top x + d$ defines a **second-order cone**. SOCPs generalize both LPs and QPs.
 :::
 
-SOCPs allow norm constraints, which are strictly more expressive than linear constraints. They appear in robust optimization (where uncertainty sets are ellipsoidal) and in engineering design problems involving Euclidean distances or magnitudes.
+The constraint $\|Ax + b\|_2 \leq c^\top x + d$ requires the point $(Ax + b,\; c^\top x + d)$ to lie in the **second-order cone** $\mathcal{C}_{n+1} = \{(u, t) : \|u\|_2 \leq t\}$. When $c_i = 0$ for all $i$, the norm constraints reduce to quadratic constraints and SOCP reduces to QCQP. The full hierarchy so far is LP $\subseteq$ QP $\subseteq$ QCQP $\subseteq$ SOCP.
+
+::: {#exm-robust-lp}
+## Robust LP with Ellipsoidal Uncertainty
+
+In many applications, the constraint coefficients $a_i$ are not known exactly but lie in an ellipsoidal uncertainty set $\mathcal{E}_i = \{\bar{a}_i + P_i u : \|u\|_2 \leq 1\}$ (where $P_i \in \mathbb{R}^{n \times n}$). A **robust LP** requires the constraint to hold for *all* possible values of $a_i$ (@fig-robust-lp):
+
+$$
+\min\; c^\top x \quad \text{s.t.} \quad a_i^\top x \leq b_i \;\;\forall\, a_i \in \mathcal{E}_i, \quad i \in [m].
+$$
+
+Since $\sup_{\|u\| \leq 1} (\bar{a}_i + P_i u)^\top x = \bar{a}_i^\top x + \|P_i^\top x\|_2$, the robust constraint becomes $\bar{a}_i^\top x + \|P_i^\top x\|_2 \leq b_i$, which is a second-order cone constraint. The robust LP is therefore an **SOCP**.
+:::
+
+![Robust LP with ellipsoidal uncertainty. Each nominal constraint (blue, solid) has an associated uncertainty set $\mathcal{U}_i$ (gold ellipses). The robust feasible set (green, solid) is the intersection of all worst-case constraints --- it shrinks inward from the nominal feasible set (blue, dashed) by the amount $\|P_i^\top x\|_2$.](figures/ch05-robust-lp.svg){#fig-robust-lp}
+
+::: {#exm-smallest-enclosing-circle}
+## Smallest Enclosing Circle
+
+Given $n$ points $(x_i, y_i)$ in $\mathbb{R}^2$, find the smallest circle enclosing all of them (@fig-enclosing-circle). With center $(c_x, c_y)$ and radius $R$:
+
+$$
+\min_{c_x, c_y, R}\; R \quad \text{s.t.} \quad \sqrt{(x_i - c_x)^2 + (y_i - c_y)^2} \leq R, \quad i = 1, \ldots, n.
+$$
+
+Each constraint is a second-order cone constraint, making this an SOCP.
+:::
+
+![Smallest enclosing circle. The optimal circle (sage) of radius $R$ centered at $(c_x, c_y)$ encloses all data points (blue). Three points lie exactly on the boundary --- they determine the solution.](figures/ch05-enclosing-circle.svg){#fig-enclosing-circle}
+
+::: {#exm-robust-classifier}
+## Robust Classification and Max-Margin SVM
+
+Suppose each data point $x_i$ is not known exactly but lies in a ball $\mathcal{E}_i = \{x_i + u : \|u\|_2 \leq \rho\}$. We want a linear classifier $(w, b)$ that correctly classifies *every* point in every ball: $y_i(w^\top(x_i + u) + b) \geq 1$ for all $\|u\| \leq \rho$. Taking the worst case over $u$ gives $y_i(w^\top x_i + b) - \rho\|w\|_2 \geq 1$, or equivalently:
+
+$$
+\rho\|w\|_2 \leq y_i(w^\top x_i + b) - 1 \quad \forall\, i \in [m].
+$$
+
+Maximizing the robustness radius $\rho$ is equivalent to $\max_{\rho, w, b} \rho$ subject to $\rho\|w\|_2 \leq y_i(w^\top x_i + b)$ for all $i$. Setting $\rho\|w\| = 1$ (a rescaling) recovers the **max-margin SVM**: $\min \|w\|_2$ subject to $y_i(w^\top x_i + b) \geq 1$. The robust classification perspective reveals that **maximizing margin is equivalent to maximizing robustness to input perturbations**.
+:::
 
 ### 4. Semidefinite Program (SDP) {#sec-sdp}
 
-Semidefinite programs are the most expressive class of convex programs we will study. They arise naturally in combinatorial optimization (relaxations of graph problems), control theory (Lyapunov stability), and statistics (covariance estimation). The key new ingredient is a constraint on the eigenvalues of a matrix, expressed through a linear matrix inequality.
+Semidefinite programs are the most expressive class in the standard hierarchy. They arise naturally in combinatorial optimization (relaxations of graph problems), control theory (Lyapunov stability), and statistics (covariance estimation). The key ingredient is a constraint on the eigenvalues of a matrix.
 
 ::: {#def-sdp}
-## Definition 5.8 (SDP)
+## Definition (SDP)
 
-A **semidefinite program** optimizes a linear objective subject to a linear matrix inequality (LMI):
+A **semidefinite program** (in standard form) optimizes a linear objective over the cone of positive semidefinite matrices:
 
 $$
-\min_x\; c^\top x \quad \text{s.t.} \quad x_1 F_1 + x_2 F_2 + \cdots + x_n F_n + G \preceq 0, \quad Ax = b,
+\min_{X \in \mathbb{S}^n}\; \langle C, X \rangle \quad \text{s.t.} \quad \langle A_i, X \rangle = b_i, \; i \in [m], \quad X \succeq 0,
 $$
 
-where $F_i, G$ are symmetric matrices. The constraint $X \preceq 0$ means $X$ is negative semidefinite. SDPs generalize SOCPs (and hence LPs and QPs).
+where $C, A_1, \ldots, A_m \in \mathbb{S}^n$ are symmetric matrices, and $\langle A, B \rangle = \operatorname{tr}(A^\top B) = \operatorname{vec}(A)^\top \operatorname{vec}(B)$ is the matrix inner product.
 :::
 
-SDPs are the most general class in the standard hierarchy of tractable convex programs. They arise in control theory, combinatorial optimization (as relaxations of hard discrete problems), and quantum information. The ability to constrain eigenvalues of matrices makes SDPs a powerful modeling tool.
+SDPs are a natural generalization of LPs: an LP $\min c^\top x$ subject to $Ax = b$, $x \geq 0$ constrains a *vector* to be componentwise nonnegative, while an SDP constrains a *matrix* to be positive semidefinite (all eigenvalues nonnegative). SDPs generalize SOCPs (and hence all preceding classes).
+
+::: {.callout-warning}
+## SDP Duality
+
+Just as LPs have duals ($\min c^\top x$ s.t. $Ax = b$, $x \geq 0$ has dual $\max b^\top y$ s.t. $A^\top y \leq c$), the SDP above has the dual:
+
+$$\max\; b^\top y \quad \text{s.t.} \quad \sum_{i=1}^{m} y_i A_i \preceq C.$$
+
+However, unlike LP, **strong duality does not always hold** for SDP --- there can be a gap between the primal and dual optimal values. Strong duality holds under a regularity condition (Slater's condition): if there exists a strictly feasible point $X \succ 0$ satisfying all equality constraints.
+:::
+
+::: {#exm-eigenvalue-sdp}
+## Computing the Largest Eigenvalue via SDP
+
+The largest eigenvalue of a symmetric matrix $\Sigma$ can be expressed as $\lambda_{\max}(\Sigma) = \max_{\|x\|_2 = 1} x^\top \Sigma x$. This is a nonconvex problem (the constraint $\|x\| = 1$ is not convex). However, it admits an exact **SDP relaxation**. Writing $X = xx^\top$, the problem becomes $\max \langle \Sigma, X \rangle$ subject to $\langle I, X \rangle = 1$, $X = xx^\top$. Relaxing the rank-one constraint $X = xx^\top$ to $X \succeq 0$ gives the SDP:
+
+$$
+\max_{X}\; \langle \Sigma, X \rangle \quad \text{s.t.} \quad \langle I, X \rangle = 1, \quad X \succeq 0.
+$$
+
+This relaxation is **tight**: the optimal value equals $\lambda_{\max}(\Sigma)$, since $\langle \Sigma, X \rangle \leq \|\Sigma\|_2 \cdot \|X\|_{\text{nuc}} = \lambda_{\max}(\Sigma) \cdot \operatorname{tr}(X) = \lambda_{\max}(\Sigma)$.
+
+Alternatively, since $\lambda_{\max}(\Sigma)$ is the smallest $t$ such that $tI \succeq \Sigma$, we can write $\lambda_{\max}(\Sigma) = \min t$ subject to $\Sigma \preceq tI$, which is also an SDP.
+:::
 
 ::: {.callout-note appearance="simple"}
-**Hierarchy of convex programs:** LP $\subseteq$ QP $\subseteq$ SOCP $\subseteq$ SDP $\subseteq$ General Convex.
+**Hierarchy of convex programs:** LP $\subseteq$ QP $\subseteq$ QCQP $\subseteq$ SOCP $\subseteq$ SDP $\subseteq$ General Convex.
 :::
 
 ```{=html}
@@ -413,47 +700,8 @@ SDPs are the most general class in the standard hierarchy of tractable convex pr
   <text x="340" y="308" text-anchor="middle" fill="#3d3530" font-size="12">← more structured &amp; efficient │ more expressive &amp; general →</text>
 </svg>
 </div>
-<div class="figure-caption" style="text-align:center; color:#3d3530; font-size:0.92em; margin-top:0.3em;">Figure 5.3: Nested hierarchy of convex programs. Each inner class is a special case of the outer classes. Moving outward increases modeling power but generally increases computational cost. LP is solvable in polynomial time; QP and SOCP admit efficient interior-point methods; SDP is the most general class with polynomial-time algorithms.</div>
+<div class="figure-caption" style="text-align:center; color:#3d3530; font-size:0.92em; margin-top:0.3em;">Figure 5.2: Nested hierarchy of convex programs. Each inner class is a special case of the outer classes. Moving outward increases modeling power but generally increases computational cost. LP is solvable in polynomial time; QP and SOCP admit efficient interior-point methods; SDP is the most general class with polynomial-time algorithms.</div>
 </div>
-```
-
-```python
-#| label: fig-feasible-region
-#| fig-cap: "Figure 5.2: Feasible region of a 2D LP (polyhedron) and QP (intersection of ellipse with halfplanes), with optimal points marked."
-
-import plotly.graph_objects as go
-import numpy as np
-
-fig = go.Figure()
-
-# LP feasible region
-lp_x = [0, 3, 2, 0, 0]
-lp_y = [0, 0, 2, 3, 0]
-fig.add_trace(go.Scatter(x=lp_x, y=lp_y, fill='toself', fillcolor='rgba(123,143,163,0.18)', line=dict(color='#7b97ad', width=2.5), name='LP Feasible Region', mode='lines'))
-
-# Contours of objective c^T x = -x1 - 2x2
-for c_val in [-1, -3, -5]:
-    fig.add_trace(go.Scatter(x=[0, 4], y=[-(c_val)/2, -(c_val+4)/2], mode='lines', line=dict(color='#b8995e', dash='dot', width=1.2), showlegend=False, hoverinfo='skip'))
-
-# LP vertices
-fig.add_trace(go.Scatter(x=[0, 3, 2, 0], y=[0, 0, 2, 3], mode='markers', marker=dict(color='#8a6e5e', size=8), name='LP Vertices', text=['(0,0)', '(3,0)', '(2,2)', '(0,3)'], hoverinfo='text'))
-
-# LP optimal
-fig.add_trace(go.Scatter(x=[0], y=[3], mode='markers', marker=dict(color='#b56b6b', size=14, symbol='star'), name='LP Optimal: (0,3)'))
-
-# QP constraint (ellipse)
-theta = np.linspace(0, 2*np.pi, 200)
-ell_x = 1.2 + 0.8*np.cos(theta)
-ell_y = 1.5 + 1.2*np.sin(theta)
-fig.add_trace(go.Scatter(x=ell_x, y=ell_y, mode='lines', line=dict(color='#907ea0', width=2, dash='dash'), name='QP constraint (ellipse)'))
-
-# QP optimal
-fig.add_trace(go.Scatter(x=[1.2], y=[1.5], mode='markers', marker=dict(color='#7a9a7e', size=12, symbol='diamond'), name='QP Optimal (interior)'))
-
-fig.update_xaxes(title_text="x₁", range=[-0.5, 4])
-fig.update_yaxes(title_text="x₂", range=[-0.5, 4], scaleanchor='x')
-fig.update_layout(height=500, margin=dict(t=20, b=50, l=55, r=20), legend=dict(x=0.5, y=1))
-fig.show()
 ```
 
 ## Equivalent Transformations {#sec-transformations}
@@ -482,19 +730,23 @@ Minimizing $f(x) = \max_{i=1,\ldots,m}\{a_i^\top x + b_i\}$ is equivalent to the
 $$
 \min_t\; t \quad \text{s.t.} \quad a_i^\top x + b_i \leq t \;\;\forall\, i \in \{1,\ldots,m\}.
 $$
+
+**Concrete example.** A factory operates $n$ machines and must handle $m$ demand scenarios. In scenario $i$, the cost is $a_i^\top x + b_i$ where $x$ is the production plan. Minimizing worst-case cost across all scenarios is exactly $\min_x \max_i (a_i^\top x + b_i)$, which the epigraph form converts to an LP.
 :::
 
 ::: {#exm-inscribed-circle}
 ## Largest Inscribed Circle in a Polytope
 
-Given a polytope $P = \{x : a_i^\top x + b_i \geq 0\}$, find the largest circle (center $x_1$, radius $r$) inside $P$:
+Given a polytope $P = \{x : a_i^\top x + b_i \geq 0\}$, find the largest circle (center $x_c$, radius $r$) inside $P$ (@fig-inscribed-circle):
 
 $$
-\max_{x_1, r}\; r \quad \text{s.t.} \quad a_i^\top x_1 + b_i \geq r\|a_i\| \;\;\forall\, i.
+\max_{x_c, r}\; r \quad \text{s.t.} \quad a_i^\top x_c + b_i \geq r\|a_i\| \;\;\forall\, i.
 $$
 
-This is an LP in $(x_1, r)$!
+This is an LP in $(x_c, r)$!
 :::
+
+![Largest inscribed circle (Chebyshev center) in a polytope. The circle of radius $r$ centered at $x_c$ is tangent to the nearest faces. The distance from $x_c$ to face $i$ is $(a_i^\top x_c + b_i)/\|a_i\| \geq r$, giving an LP in $(x_c, r)$.](figures/ch05-inscribed-circle.svg){#fig-inscribed-circle}
 
 ::: {#exm-linear-fractional}
 ## Linear Fractional Programming
@@ -504,289 +756,328 @@ Minimizing $f_0(x) = \frac{c^\top x + d}{e^\top x + f}$ (with $e^\top x + f > 0$
 $$
 \min\; c^\top y + d \cdot z \quad \text{s.t.} \quad Gy - hz \leq 0,\; Ay - bz = 0,\; e^\top y + fz = 1,\; z \geq 0.
 $$
+
+**Concrete example.** A firm wants to maximize its return on investment: $\max\; \frac{\text{revenue}(x)}{\text{cost}(x)} = \frac{c^\top x + d}{e^\top x + f}$ subject to resource constraints $Gx \leq h$. Maximizing this ratio is a quasilinear program, but the Charnes--Cooper substitution converts it to a standard LP.
 :::
 
-## Lagrangian Duality {#sec-lagrangian-duality}
+### Eliminating and Introducing Equality Constraints {#sec-eliminate-equality}
 
-So far we have established the structural properties of convex problems (local = global optimality, convex suboptimal sets), catalogued the standard classes (LP, QP, SOCP, SDP), and seen how to reformulate problems into equivalent convex programs. These tools tell us *what* convex problems look like, but they do not yet provide a mechanism for *certifying* that a candidate solution is optimal or for *bounding* how far we are from optimal. Lagrangian duality fills this gap: it associates every optimization problem with a "dual" problem whose optimal value provides a lower bound on the primal optimum, and under mild conditions this bound is tight.
+Several standard transformations convert between different representations of the feasible set.
 
-### The Lagrangian {#sec-lagrangian}
-
-Consider the optimization problem in standard form:
+**Eliminating equality constraints.** If $Ax = b$ and $x_0$ is any particular solution (so $Ax_0 = b$), then $x = Fz + x_0$ where $F$ is a matrix whose columns span the null space $\mathcal{N}(A)$. Substituting eliminates the equality constraint:
 
 $$
-\min_{x}\; f_0(x) \quad \text{s.t.} \quad f_i(x) \leq 0,\; i \in [m], \quad h_i(x) = 0,\; i \in [p].
+\min f_0(x) \;\;\text{s.t.}\;\; f_i(x) \leq 0,\; Ax = b \quad \iff \quad \min_z f_0(Fz + x_0) \;\;\text{s.t.}\;\; f_i(Fz + x_0) \leq 0.
 $$
 
-::: {#def-lagrangian}
-## Definition 5.9 (Lagrangian)
+This is particularly useful in LP, where eliminating equalities leads to the concept of basic feasible solutions.
 
-The **Lagrangian** $L : \mathbb{R}^n \times \mathbb{R}^m \times \mathbb{R}^p \to \mathbb{R}$ is defined as:
+**Concrete example.** In portfolio optimization with $n = 3$ assets and the budget constraint $x_1 + x_2 + x_3 = 1$, we can substitute $x_3 = 1 - x_1 - x_2$ and optimize only over $(x_1, x_2)$. This reduces the problem from 3 variables with 1 equality to 2 unconstrained variables (plus any remaining inequalities like $x_i \geq 0$).
+
+**Introducing equality constraints.** Conversely, if the objective and constraints involve compositions $f_i(A_i x + b_i)$, we can introduce new variables $y_i = A_i x + b_i$ and rewrite the problem with simpler objectives at the cost of additional equality constraints:
 
 $$
-L(x, \lambda, \nu) = f_0(x) + \sum_{i=1}^{m} \lambda_i f_i(x) + \sum_{i=1}^{p} \nu_i h_i(x),
-$$ {#eq-lagrangian}
+\min_x f_0(A_0 x + b_0) \;\;\text{s.t.}\;\; f_i(A_i x + b_i) \leq 0 \quad \iff \quad \min_{x, y_0, \ldots, y_m} f_0(y_0) \;\;\text{s.t.}\;\; f_i(y_i) \leq 0,\; y_i = A_i x + b_i.
+$$
 
-where $\lambda_i \geq 0$ are **dual variables** (Lagrange multipliers) for the inequality constraints, and $\nu_i$ are dual variables for the equality constraints.
+**Introducing slack variables.** An inequality $Ax \leq b$ can be converted to an equality by introducing a nonneg slack variable $s \geq 0$: $Ax + s = b$, $s \geq 0$. This is the standard technique for converting LP inequalities into equational form.
+
+**Concrete example.** The LP $\min\; 2x_1 + 3x_2$ subject to $x_1 + x_2 \leq 4$, $x_1 \leq 3$, $x_1, x_2 \geq 0$ becomes, after introducing slacks $s_1, s_2 \geq 0$:
+
+$$
+\min\; 2x_1 + 3x_2 \quad \text{s.t.} \quad x_1 + x_2 + s_1 = 4,\; x_1 + s_2 = 3,\; x_1, x_2, s_1, s_2 \geq 0.
+$$
+
+This **equational form** is the starting point for the simplex method (Chapter 7).
+
+### Minimizing Over Some Variables {#sec-partial-min}
+
+If a problem has two blocks of variables and one block appears only in separable constraints, we can minimize over it analytically:
+
+$$
+\min_{x_1, x_2} f_0(x_1, x_2) \;\;\text{s.t.}\;\; f_i(x_1) \leq 0,\; g_j(x_2) \leq 0 \quad \iff \quad \min_{x_1} \widetilde{f}_0(x_1) \;\;\text{s.t.}\;\; f_i(x_1) \leq 0,
+$$
+
+where $\widetilde{f}_0(x_1) = \inf_{x_2 : g_j(x_2) \leq 0} f_0(x_1, x_2)$ is convex by the partial minimization rule (@thm-operations-convex-functions).
+
+::: {#exm-schur-complement}
+## Schur Complement
+
+Consider minimizing a block-quadratic over $x_2$:
+
+$$
+\min_{x_1, x_2} \begin{pmatrix} x_1 \\ x_2 \end{pmatrix}^\top \begin{pmatrix} P_{11} & P_{12} \\ P_{12}^\top & P_{22} \end{pmatrix} \begin{pmatrix} x_1 \\ x_2 \end{pmatrix} \quad \text{s.t.} \quad f_i(x_1) \leq 0.
+$$
+
+Minimizing over $x_2$ analytically (completing the square) gives $x_2^* = -P_{22}^{-1} P_{12}^\top x_1$, and the reduced problem is $\min_{x_1} x_1^\top (P_{11} - P_{12} P_{22}^{-1} P_{12}^\top) x_1$ subject to $f_i(x_1) \leq 0$. The matrix $P_{11} - P_{12} P_{22}^{-1} P_{12}^\top$ is the **Schur complement** of $P_{22}$ in $P$, and it is PSD whenever $P \succeq 0$.
 :::
 
-The Lagrangian "relaxes" the constraints by incorporating them into the objective via penalty terms. When a constraint is violated ($f_i(x) > 0$), the penalty term $\lambda_i f_i(x)$ increases the Lagrangian, discouraging infeasible points. The dual variables $\lambda_i$ can be interpreted as "prices" for violating each constraint.
+## Solving Convex Programs with CVXPY {#sec-cvxpy}
 
-::: {#def-lagrange-dual-function}
-## Definition 5.10 (Lagrange Dual Function)
+The theory developed in this chapter --- standard forms, properties, and the program hierarchy --- tells us *what* convex problems are and *why* they are tractable. But how do we actually *solve* them in practice? Modern **domain-specific languages** (DSLs) for convex optimization let us specify problems in a natural mathematical syntax and automatically translate them into a form that efficient solvers can handle.
 
-The **Lagrange dual function** $g : \mathbb{R}^m \times \mathbb{R}^p \to \mathbb{R}$ is the infimum of the Lagrangian over $x$:
+[**CVXPY**](https://www.cvxpy.org/) is a Python library that implements **disciplined convex programming** (DCP): a system of composition rules that can verify convexity of an optimization problem at specification time, before any numerical computation begins. The DCP rules mirror the preservation rules from @thm-operations-convex-functions --- nonnegative sums of convex functions, compositions with monotone functions, pointwise maxima, etc. If CVXPY can verify that a problem follows these rules, it knows the problem is convex and can solve it.
 
-$$
-g(\lambda, \nu) = \inf_{x \in \mathcal{D}} L(x, \lambda, \nu) = \inf_{x \in \mathcal{D}} \left( f_0(x) + \sum_{i=1}^m \lambda_i f_i(x) + \sum_{i=1}^p \nu_i h_i(x) \right).
-$$ {#eq-dual-function}
+### Basic Pattern
 
-The dual function is always **concave** (even if the original problem is not convex), since it is the pointwise infimum of a family of affine functions in $(\lambda, \nu)$.
-:::
-
-The dual function (@eq-dual-function) provides a family of lower bounds on the optimal value $f^*$: for any $\lambda \geq 0$ and any $\nu$, we have $g(\lambda, \nu) \leq f^*$. The concavity of $g$ is a remarkable structural property -- it holds regardless of whether the original problem is convex.
-
-### The Dual Problem {#sec-dual-problem}
-
-::: {#def-lagrange-dual-problem}
-## Definition 5.11 (Lagrange Dual Problem)
-
-The **Lagrange dual problem** is:
-
-$$
-\max_{\lambda, \nu}\; g(\lambda, \nu) \quad \text{s.t.} \quad \lambda \geq 0.
-$$
-
-This is always a **convex** optimization problem (maximizing a concave function), regardless of whether the original (primal) problem is convex.
-
-Let $d^*$ denote the optimal value of the dual problem.
-:::
-
-The dual problem asks: what is the tightest lower bound on $f^*$ that we can obtain from the Lagrangian relaxation? Since maximizing a concave function is a convex optimization problem, the dual is always "easy" in principle, even when the primal problem is nonconvex.
-
-### Weak and Strong Duality {#sec-weak-strong}
-
-::: {#thm-weak-duality}
-## Theorem 5.4 (Weak Duality)
-
-For **any** optimization problem (convex or not):
-
-$$
-d^* \leq f^*.
-$$ {#eq-weak-duality}
-
-The difference $f^* - d^*$ is called the **duality gap**. Weak duality always holds.
-:::
-
-Weak duality tells us that the dual optimal value can never exceed the primal optimal value. This is useful in practice: any feasible dual solution immediately provides a certificate that the primal objective cannot be better than $g(\lambda, \nu)$, giving us a way to bound how far a candidate solution is from optimal.
-
-::: {.proof}
-**Strategy.** The argument proceeds in three steps: first, bound the Lagrangian at any feasible point; second, pass to the infimum over $x$ to obtain the dual function; third, take the supremum over dual variables to compare $d^*$ with $f^*$.
-
-**Step 1 (Lagrangian upper bound).** For any feasible $x$ (so $f_i(x) \leq 0$, $h_i(x) = 0$) and any $\lambda \geq 0$:
-
-$$
-L(x, \lambda, \nu) = f_0(x) + \sum_i \lambda_i \underbrace{f_i(x)}_{\leq 0} + \sum_i \nu_i \underbrace{h_i(x)}_{=0} \leq f_0(x).
-$$
-
-The inequality follows because each penalty term $\lambda_i f_i(x)$ is nonpositive (a nonnegative multiplier times a nonpositive constraint value) and each equality term vanishes.
-
-**Step 2 (Dual function bound).** Since $g(\lambda, \nu)$ is the infimum of $L(x, \lambda, \nu)$ over all $x \in \mathcal{D}$, we have $g(\lambda, \nu) \leq L(x, \lambda, \nu) \leq f_0(x)$ for every feasible $x$. Taking the infimum over all feasible $x$ on the right-hand side gives $g(\lambda, \nu) \leq f^*$.
-
-**Step 3 (Conclusion).** Taking the supremum over all $(\lambda, \nu)$ with $\lambda \geq 0$ on the left-hand side yields $d^* \leq f^*$. $\blacksquare$
-:::
-
-::: {#thm-strong-duality}
-## Theorem 5.5 (Strong Duality)
-
-For convex problems, under mild conditions (e.g., **Slater's condition**), **strong duality** holds:
-
-$$
-d^* = f^*.
-$$ {#eq-strong-duality}
-
-That is, the duality gap is **zero**.
-:::
-
-Strong duality (@eq-strong-duality) is a much deeper result than weak duality (@eq-weak-duality). When it holds, solving the dual problem is equivalent to solving the primal problem -- we can recover the primal optimal value from the dual. This is the theoretical foundation for algorithms such as interior-point methods that solve the primal and dual problems simultaneously.
+The CVXPY workflow has four steps: define variables, define the objective, define constraints, and solve:
 
 ```python
-#| label: fig-duality-gap
-#| fig-cap: "Figure 5.3: Visualization of weak duality. The dual function g(lambda) provides a lower bound on the primal optimal f*. Under strong duality, the gap closes."
-
-import plotly.graph_objects as go
+import cvxpy as cp
 import numpy as np
 
-lam = np.linspace(0, 5, 200)
-f_star = 1.0
-g_lambda = -(lam - 2)**2 / 4 + 1
-g_weak = -(lam - 1.8)**2 / 3 + 0.6
+# 1. Define variables
+x = cp.Variable(n)
 
-fig = go.Figure()
+# 2. Define objective
+objective = cp.Minimize(f(x))   # or cp.Maximize(...)
 
-fig.add_trace(go.Scatter(x=[0, 5], y=[f_star, f_star], mode='lines', line=dict(color='#b56b6b', width=2.5, dash='dash'), name='Primal: f* = 1'))
-fig.add_trace(go.Scatter(x=lam, y=g_lambda, mode='lines', line=dict(color='#7b97ad', width=3), name='Dual: g(λ)', fill='tozeroy', fillcolor='rgba(123,143,163,0.18)'))
-fig.add_trace(go.Scatter(x=[2], y=[1], mode='markers', marker=dict(color='#b56b6b', size=14, symbol='star'), name='d* = f* (strong duality)'))
-fig.add_trace(go.Scatter(x=lam, y=g_weak, mode='lines', line=dict(color='#907ea0', width=2.5, dash='dot'), name='Weak dual: gap > 0'))
-fig.add_trace(go.Scatter(x=[1.8], y=[0.6], mode='markers', marker=dict(color='#907ea0', size=10, symbol='diamond'), name='d* = 0.6 (gap = 0.4)', showlegend=False))
+# 3. Define constraints
+constraints = [A @ x <= b, C @ x == d, x >= 0]
 
-fig.add_shape(type='line', x0=1.8, x1=1.8, y0=0.6, y1=1.0, line=dict(color='#b8995e', width=2, dash='dot'))
-fig.add_annotation(x=2.1, y=0.8, text='Duality<br>gap', showarrow=False, font=dict(size=11, color='#b8995e'))
+# 4. Solve
+prob = cp.Problem(objective, constraints)
+prob.solve()
 
-fig.update_xaxes(title_text="λ (dual variable)", range=[-0.2, 5.2])
-fig.update_yaxes(title_text="Value", range=[-1.5, 1.5])
-fig.update_layout(height=450, margin=dict(t=20, b=50, l=55, r=20), legend=dict(x=0.55, y=0.98))
-fig.show()
+print("Optimal value:", prob.value)
+print("Optimal x:", x.value)
 ```
 
-### Slater's Condition {#sec-slater}
+CVXPY calls an appropriate solver depending on the problem class: ECOS or SCS for SOCPs, OSQP for QPs, SCS or MOSEK for SDPs.
 
-Weak duality (@eq-weak-duality) always holds, but when does the duality gap close? The following condition, due to Slater, provides a simple and widely applicable sufficient condition for strong duality (@eq-strong-duality).
+### Example: Portfolio Optimization
 
-::: {#thm-slater}
-## Theorem 5.6 (Slater's Condition for Strong Duality)
+The Markowitz portfolio problem from @exm-portfolio can be solved in just a few lines:
 
-If the primal problem is convex and there exists a **strictly feasible** point $\widetilde{x}$ satisfying:
+```python
+import cvxpy as cp
+import numpy as np
 
-$$
-f_i(\widetilde{x}) < 0 \quad \forall\, i \in [m], \qquad h_i(\widetilde{x}) = 0 \quad \forall\, i \in [p],
-$$
+# Data: 4 assets
+mu = np.array([0.12, 0.10, 0.07, 0.03])  # expected returns
+Sigma = np.array([                          # covariance matrix
+    [0.0064, 0.0008, 0.0002, 0.0000],
+    [0.0008, 0.0025, 0.0003, 0.0000],
+    [0.0002, 0.0003, 0.0016, 0.0000],
+    [0.0000, 0.0000, 0.0000, 0.0001]])
 
-then **strong duality holds**: $d^* = f^*$.
+w = cp.Variable(4)
+ret = mu @ w
+risk = cp.quad_form(w, Sigma)
 
-For problems with only *affine* inequality constraints, Slater's condition reduces to just feasibility (no strict inequality needed).
-:::
+# Sweep over target returns to trace the efficient frontier
+for r_min in np.linspace(0.03, 0.12, 50):
+    prob = cp.Problem(cp.Minimize(risk),
+                      [cp.sum(w) == 1, w >= 0, ret >= r_min])
+    prob.solve()
+    # Record: (sqrt(risk.value), r_min)
+```
 
-Slater's condition requires the existence of a point that strictly satisfies all inequality constraints -- it lies in the "interior" of the feasible set, not on its boundary. This rules out pathological cases where the feasible set is "thin" (e.g., all points sit on constraint boundaries) and ensures the dual problem can fully capture the primal optimal value.
+The interactive plot below shows the **efficient frontier** --- the set of portfolios achieving minimum variance for each target return level. Individual assets are shown as scatter points; the frontier (blue curve) represents the best achievable risk-return trade-off.
 
-::: {.callout-tip}
-## Remark
+```{=html}
+<div id="fig-efficient-frontier" style="width:100%;max-width:700px;margin:auto;"></div>
+<p class="figure-caption" style="text-align:center;margin-top:0.5em;">Figure: Markowitz efficient frontier for a two-asset portfolio. The frontier traces the minimum-variance portfolio for each target return. No portfolio below the frontier is achievable; portfolios above it are suboptimal.</p>
+<script>
+(function() {
+  // Two-asset efficient frontier (analytical)
+  var mu1 = 0.05, mu2 = 0.14, s1 = 0.10, s2 = 0.28, rho = 0.25;
+  var N = 200;
+  var risks = [], rets = [];
+  for (var i = 0; i < N; i++) {
+    var w = -0.2 + 1.4 * i / (N - 1);  // weight on asset 1
+    var r = w * mu1 + (1 - w) * mu2;
+    var v = w*w*s1*s1 + (1-w)*(1-w)*s2*s2 + 2*w*(1-w)*rho*s1*s2;
+    risks.push(Math.sqrt(v));
+    rets.push(r);
+  }
+  // Minimum variance portfolio
+  var wMin = (s2*s2 - rho*s1*s2) / (s1*s1 + s2*s2 - 2*rho*s1*s2);
+  var rMin = wMin*mu1 + (1-wMin)*mu2;
+  var vMin = wMin*wMin*s1*s1 + (1-wMin)*(1-wMin)*s2*s2 + 2*wMin*(1-wMin)*rho*s1*s2;
 
-Slater's condition is a **constraint qualification**: it ensures that the geometry of the feasible set is well-behaved enough for duality to be tight. For LPs, strong duality always holds (assuming feasibility of both primal and dual).
-:::
+  var traces = [
+    {x: risks, y: rets, mode: 'lines', line: {color: '#7b97ad', width: 3}, name: 'Efficient frontier'},
+    {x: [s1, s2], y: [mu1, mu2], mode: 'markers+text', marker: {color: '#c47a6a', size: 12, symbol: 'diamond'},
+     text: ['Bonds', 'Stocks'], textposition: ['bottom center', 'top center'],
+     textfont: {size: 12, color: '#3d3530'}, name: 'Individual assets', showlegend: true},
+    {x: [Math.sqrt(vMin)], y: [rMin], mode: 'markers', marker: {color: '#7a9a7e', size: 14, symbol: 'star'},
+     name: 'Min-variance portfolio'}
+  ];
 
-## KKT Conditions {#sec-kkt}
+  var layout = {
+    height: 450, margin: {t: 20, b: 55, l: 65, r: 20},
+    xaxis: {title: {text: 'Portfolio risk (std dev)', font: {size: 14}}, range: [0.05, 0.32],
+            gridcolor: '#e0d9d1', linecolor: '#968a80'},
+    yaxis: {title: {text: 'Expected return', font: {size: 14}}, range: [0.02, 0.16],
+            gridcolor: '#e0d9d1', linecolor: '#968a80', tickformat: '.0%'},
+    legend: {x: 0.02, y: 0.98, font: {size: 12}},
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: {family: '"Source Serif 4", Georgia, serif'}
+  };
 
-With the Lagrangian framework and strong duality established, we can now derive the conditions that any optimal primal-dual pair must satisfy. These KKT conditions combine gradient information (stationarity) with constraint satisfaction (feasibility and complementary slackness) into a single optimality certificate.
+  Plotly.newPlot('fig-efficient-frontier', traces, layout, {responsive: true, displayModeBar: false});
+})();
+</script>
+```
 
-::: {#thm-kkt}
-## Theorem 5.7 (Karush-Kuhn-Tucker Conditions)
+### Example: Chebyshev Center of a Polytope
 
-For a convex problem with differentiable $f_0, f_1, \ldots, f_m$ and strong duality, $x^*$ is primal optimal and $(\lambda^*, \nu^*)$ is dual optimal **if and only if** the following KKT conditions hold:
+The largest inscribed circle problem from @exm-inscribed-circle finds the **Chebyshev center** of a polytope --- the point farthest from all boundary faces:
 
-1. **Primal feasibility:** $f_i(x^*) \leq 0$ for $i \in [m]$, and $h_i(x^*) = 0$ for $i \in [p]$.
-2. **Dual feasibility:** $\lambda_i^* \geq 0$ for $i \in [m]$.
-3. **Complementary slackness:** $\lambda_i^* f_i(x^*) = 0$ for $i \in [m]$.
-4. **Stationarity:**
+```python
+import cvxpy as cp
+import numpy as np
 
-$$
-\nabla f_0(x^*) + \sum_{i=1}^{m} \lambda_i^* \nabla f_i(x^*) + \sum_{i=1}^{p} \nu_i^* \nabla h_i(x^*) = 0.
-$$ {#eq-kkt-stationarity}
-:::
+# Polytope: A @ x <= b (6 halfplanes forming a hexagon-like shape)
+A = np.array([[ 1, 0], [-1, 0], [0,  1], [0, -1], [1, 1], [-1, -1]])
+b = np.array([2, 2, 2, 2, 3, 3])
+norms = np.linalg.norm(A, axis=1)
 
-The KKT conditions are the "first-order optimality conditions" for constrained optimization, generalizing the familiar condition $\nabla f_0(x^*) = 0$ from unconstrained calculus. The stationarity condition (@eq-kkt-stationarity) requires that the gradient of the Lagrangian (@eq-lagrangian) vanishes at the optimal point. Together with primal feasibility, dual feasibility, and complementary slackness, these conditions provide a complete characterization: for convex problems with strong duality (@eq-strong-duality), they are both necessary and sufficient for optimality.
+x = cp.Variable(2)
+r = cp.Variable()
+constraints = [A @ x + r * norms <= b, r >= 0]
+prob = cp.Problem(cp.Maximize(r), constraints)
+prob.solve()
 
-![Geometric picture of the KKT conditions. At the optimal point $x^*$ on the boundary of the feasible region $\Omega$, the negative objective gradient $-\nabla f(x^*)$ is a conic combination of the constraint gradients $\nabla g_i(x^*)$ with multipliers $\lambda_i \geq 0$.](figures/ch06-kkt-geometry.svg){#fig-kkt-geometry}
+print(f"Center: {x.value}, Radius: {r.value:.4f}")
+```
 
-::: {.callout-tip}
-## Remark: Complementary Slackness
+```{=html}
+<div id="fig-chebyshev" style="width:100%;max-width:600px;margin:auto;"></div>
+<p class="figure-caption" style="text-align:center;margin-top:0.5em;">Figure: Chebyshev center (largest inscribed circle) of a polytope. The center maximizes the minimum distance to all boundary faces.</p>
+<script>
+(function() {
+  // Polytope defined by Ax <= b with A = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1]], b = [2,2,2,2,3,3]
+  // Vertices (computed from pairwise active constraints, ordered counterclockwise):
+  // (2,1), (1,2), (-2,2), (-2,-1), (-1,-2), (2,-2)
+  var polyX = [2, 1, -2, -2, -1, 2, 2];
+  var polyY = [1, 2, 2, -1, -2, -2, 1];
 
-The complementary slackness condition $\lambda_i^* f_i(x^*) = 0$ means: for each inequality constraint, either the constraint is **active** ($f_i(x^*) = 0$) or the corresponding multiplier is zero ($\lambda_i^* = 0$). Intuitively, the dual variable "prices" the constraint, and an inactive constraint has zero price.
-:::
+  // Chebyshev center and radius: by symmetry center = (0,0), min distance to faces = 2
+  var cx = 0, cy = 0, rad = 2.0;
 
-::: {.proof}
-**Proof Sketch (KKT Necessity).**
+  // Circle
+  var cTheta = Array.from({length: 100}, function(_, i) { return 2*Math.PI*i/99; });
+  var circX = cTheta.map(function(t) { return cx + rad * Math.cos(t); });
+  var circY = cTheta.map(function(t) { return cy + rad * Math.sin(t); });
 
-**Strategy.** Under strong duality, the primal and dual optimal values coincide. Writing out the chain of inequalities that defines the dual function, we show that equality must hold at every step, which forces both complementary slackness and stationarity.
+  var traces = [
+    {x: polyX, y: polyY, fill: 'toself', fillcolor: 'rgba(123,151,173,0.12)',
+     line: {color: '#7b97ad', width: 2.5}, name: 'Polytope', mode: 'lines'},
+    {x: circX, y: circY, mode: 'lines', line: {color: '#c47a6a', width: 2.5, dash: 'dash'},
+     fill: 'toself', fillcolor: 'rgba(196,122,106,0.1)', name: 'Inscribed circle'},
+    {x: [cx], y: [cy], mode: 'markers', marker: {color: '#c47a6a', size: 10, symbol: 'x'},
+     name: 'Chebyshev center'}
+  ];
 
-Under strong duality, if $x^*$ is primal optimal and $(\lambda^*, \nu^*)$ is dual optimal:
+  var layout = {
+    height: 450, margin: {t: 20, b: 50, l: 55, r: 20},
+    xaxis: {title: {text: 'x₁'}, range: [-3, 3], scaleanchor: 'y', gridcolor: '#e0d9d1', linecolor: '#968a80'},
+    yaxis: {title: {text: 'x₂'}, range: [-3, 3], gridcolor: '#e0d9d1', linecolor: '#968a80'},
+    legend: {x: 0.02, y: 0.98, font: {size: 12}},
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: {family: '"Source Serif 4", Georgia, serif'}
+  };
 
-$$
-f_0(x^*) = g(\lambda^*, \nu^*) = \inf_x L(x, \lambda^*, \nu^*) \leq L(x^*, \lambda^*, \nu^*) = f_0(x^*) + \sum_i \lambda_i^* f_i(x^*),
-$$
+  Plotly.newPlot('fig-chebyshev', traces, layout, {responsive: true, displayModeBar: false});
+})();
+</script>
+```
 
-where the first equality uses strong duality ($f^* = d^*$), the second is the definition of the dual function, the inequality follows because the infimum is at most the value at any particular point, and the last equality expands the Lagrangian at $x^*$ (using $h_i(x^*) = 0$). Since $\lambda_i^* \geq 0$ and $f_i(x^*) \leq 0$, we have $\sum_i \lambda_i^* f_i(x^*) \leq 0$, so equality must hold throughout. This gives:
+### Example: Lasso Regularization Path
 
-1. $\lambda_i^* f_i(x^*) = 0$ for all $i$ (complementary slackness).
-2. $x^*$ minimizes $L(x, \lambda^*, \nu^*)$, so $\nabla_x L(x^*, \lambda^*, \nu^*) = 0$ (stationarity).
+The $\ell_1$-regularized regression (Lasso) $\min_\beta \|y - X\beta\|_2^2 + \lambda\|\beta\|_1$ shrinks coefficients toward zero as $\lambda$ increases. CVXPY can sweep over $\lambda$ to produce the **regularization path**:
 
-Together with primal and dual feasibility (which hold by assumption), all four KKT conditions are established. This completes the proof. $\blacksquare$
-:::
+```python
+import cvxpy as cp
+import numpy as np
 
-## Optimality Conditions for Differentiable Problems {#sec-optimality}
+# Generate synthetic data
+np.random.seed(0)
+n, d = 50, 8
+X = np.random.randn(n, d)
+beta_true = np.array([3, -2, 0, 0, 1.5, 0, 0, -1])
+y = X @ beta_true + 0.5 * np.random.randn(n)
 
-The KKT conditions characterize optimality using dual variables and the Lagrangian. When the problem has a simpler structure -- for example, when there are no constraints at all, or when the feasible set is described abstractly as a convex set $\Omega$ rather than by explicit inequality and equality constraints -- we can state cleaner first-order conditions that reason directly about the gradient. These results connect the abstract theory of convex optimization back to the familiar calculus condition "set the derivative to zero," and they are the starting point for the gradient-based algorithms developed in subsequent chapters.
+beta = cp.Variable(d)
+lambd = cp.Parameter(nonneg=True)
+prob = cp.Problem(cp.Minimize(cp.sum_squares(X @ beta - y) + lambd * cp.norm1(beta)))
 
-::: {#thm-first-order-unconstrained}
-## Theorem 5.8 (First-Order Optimality for Unconstrained Convex Problems)
+# Sweep lambda
+for lam_val in np.logspace(-2, 2, 100):
+    lambd.value = lam_val
+    prob.solve()
+    # Record beta.value for each lambda
+```
 
-If $f_0$ is convex and differentiable, then $x^*$ is a global minimizer of $f_0$ over $\mathbb{R}^n$ if and only if:
+```{=html}
+<div id="fig-lasso-path" style="width:100%;max-width:700px;margin:auto;"></div>
+<p class="figure-caption" style="text-align:center;margin-top:0.5em;">Figure: Lasso regularization path. Each curve shows how one coefficient evolves as the penalty λ increases. Coefficients shrink toward zero; for the orthogonal case shown, the soft-thresholding formula β*(λ) = sign(β̂)·max(|β̂| - λ, 0) applies.</p>
+<script>
+(function() {
+  // Simulate orthogonal-design Lasso path (soft thresholding)
+  var betaOLS = [3.0, -2.0, 0.3, -0.1, 1.5, 0.2, -0.15, -1.0];
+  var colors = ['#7b97ad', '#c47a6a', '#7a9a7e', '#b8995e', '#907ea0', '#ad8480', '#968a80', '#3d3530'];
+  var N = 200;
+  var lambdas = Array.from({length: N}, function(_, i) { return Math.pow(10, -2 + 4*i/(N-1)); });
 
-$$
-\nabla f_0(x^*) = 0.
-$$ {#eq-unconstrained-optimality}
-:::
+  var traces = betaOLS.map(function(b, idx) {
+    var vals = lambdas.map(function(lam) {
+      var absBeta = Math.abs(b);
+      return Math.sign(b) * Math.max(absBeta - lam, 0);
+    });
+    return {
+      x: lambdas, y: vals, mode: 'lines', line: {color: colors[idx], width: 2},
+      name: 'β' + (idx+1)
+    };
+  });
 
-For unconstrained convex problems, the familiar calculus condition $\nabla f_0(x^*) = 0$ is both necessary and sufficient for global optimality -- a direct consequence of the fact that convexity ensures every stationary point is a global minimizer. The constrained analog requires a subtler condition.
+  // Zero line
+  traces.push({x: [0.01, 100], y: [0, 0], mode: 'lines',
+    line: {color: '#968a80', width: 0.8, dash: 'dot'}, showlegend: false});
 
-::: {#thm-first-order-constrained}
-## Theorem 5.9 (First-Order Optimality for Constrained Convex Problems)
+  var layout = {
+    height: 400, margin: {t: 20, b: 55, l: 65, r: 20},
+    xaxis: {title: {text: 'λ (regularization strength)', font: {size: 14}}, type: 'log',
+            gridcolor: '#e0d9d1', linecolor: '#968a80'},
+    yaxis: {title: {text: 'Coefficient value', font: {size: 14}}, range: [-2.5, 3.5],
+            gridcolor: '#e0d9d1', linecolor: '#968a80'},
+    legend: {x: 0.75, y: 0.98, font: {size: 11}},
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: {family: '"Source Serif 4", Georgia, serif'}
+  };
 
-If $f_0$ is convex and differentiable, then $x^*$ is optimal for $\min_{x \in \Omega} f_0(x)$ (where $\Omega$ is convex) if and only if:
+  Plotly.newPlot('fig-lasso-path', traces, layout, {responsive: true, displayModeBar: false});
+})();
+</script>
+```
 
-$$
-\nabla f_0(x^*)^\top (y - x^*) \geq 0 \quad \forall\, y \in \Omega.
-$$ {#eq-constrained-optimality}
-
-Geometrically, the negative gradient $-\nabla f_0(x^*)$ makes an obtuse angle with every feasible direction from $x^*$.
-:::
-
-![First-order optimality for constrained convex problems. Left: a non-optimal point where the negative gradient has a component pointing into the feasible set --- there exist feasible descent directions. Right: the optimal point $x^*$, where the negative gradient points away from (or along the boundary of) the feasible set, so no feasible direction can decrease $f_0$.](figures/ch01-optimality-condition.svg){#fig-constrained-optimality}
-
-The constrained optimality condition (@eq-constrained-optimality) generalizes the unconstrained condition (@eq-unconstrained-optimality) to handle constraints. Intuitively, $x^*$ is optimal when there is no feasible direction along which $f_0$ can decrease. The condition says that the gradient "points outward" from the feasible set at $x^*$, so any step that remains feasible cannot improve the objective.
-
-::: {.proof}
-The two directions use different tools: sufficiency combines the first-order characterization of convexity with the gradient condition, while necessity constructs a feasible descent direction via a convex combination.
-
-**Sufficiency:** For any $y \in \Omega$, by the first-order characterization of convexity:
-
-$$
-f_0(y) \geq f_0(x^*) + \nabla f_0(x^*)^\top (y - x^*) \geq f_0(x^*),
-$$
-
-where the first inequality uses the convexity of $f_0$ and the second uses the assumption $\nabla f_0(x^*)^\top (y - x^*) \geq 0$. Since this holds for every feasible $y$, $x^*$ is optimal.
-
-**Necessity:** Suppose $x^*$ is optimal but $\exists\, y \in \Omega$ with $\nabla f_0(x^*)^\top (y - x^*) < 0$. Then for small $t > 0$, the point $x^* + t(y - x^*) \in \Omega$ (by convexity of $\Omega$) and by the first-order Taylor expansion:
-
-$$
-f_0(x^* + t(y-x^*)) \approx f_0(x^*) + t \nabla f_0(x^*)^\top(y - x^*) < f_0(x^*),
-$$
-
-contradicting optimality of $x^*$. Hence we conclude the proof. $\blacksquare$
-:::
-
-::: {.callout-tip}
-## Looking Ahead
-
-Next, we study the geometry of linear programming in detail---vertices, extreme points, basic feasible solutions, and the structure of the LP polytope.
-:::
+As $\lambda$ increases from zero, coefficients shrink toward zero and eventually vanish entirely --- this is the **sparsity-inducing** property of $\ell_1$-regularization. The coefficients with the largest OLS estimates (in absolute value) persist the longest, while small or noise-driven coefficients are eliminated first.
 
 ## Summary {.unnumbered}
 
-- **Standard form and problem hierarchy.** Convex optimization problems are written as $\min f_0(x)$ subject to $f_i(x) \leq 0$ and $Ax = b$; special cases---LP, QP, SOCP, SDP---form a strict hierarchy of increasing generality and computational cost.
-- **Lagrangian duality.** Associating multipliers $\lambda_i \geq 0$ with each inequality constraint yields the Lagrangian $L(x,\lambda,\nu) = f_0(x) + \sum_i \lambda_i f_i(x) + \nu^\top(Ax - b)$; minimizing over $x$ gives the dual function $g(\lambda,\nu)$, which provides a lower bound on the optimal value.
-- **Weak and strong duality.** Weak duality ($d^* \leq f^*$) always holds; strong duality ($d^* = f^*$) holds under constraint qualifications such as Slater's condition (existence of a strictly feasible point).
-- **KKT conditions.** At optimality (with strong duality), the primal-dual pair $(x^*,\lambda^*,\nu^*)$ satisfies stationarity, primal feasibility, dual feasibility, and complementary slackness $\lambda_i^* f_i(x^*) = 0$---the central optimality certificate in convex optimization.
-- **First-order optimality.** For differentiable convex objectives, $\nabla f_0(x^*) = 0$ characterizes unconstrained optima; for constrained problems over a convex set $\Omega$, the condition $\nabla f_0(x^*)^\top(y - x^*) \geq 0$ for all $y \in \Omega$ is necessary and sufficient.
+- **Standard form.** A convex optimization problem minimizes a convex objective $f_0$ subject to convex inequality constraints $f_i(x) \leq 0$ and **affine** equality constraints $Ax = b$. The affine restriction on equalities is essential: nonlinear equalities can destroy convexity of the feasible set.
+- **Abstract view.** Every convex program is equivalently: minimize a convex function over a convex set $\Omega$. The standard form is simply the most common way to describe $\Omega$.
+- **Key properties.** (1) $\varepsilon$-suboptimal sets are convex; (2) strict convexity implies a unique minimizer; (3) every local minimum is a global minimum --- the fundamental reason convex problems are tractable.
+- **Optimality conditions.** For differentiable $f_0$: unconstrained optimality $\Leftrightarrow$ $\nabla f_0(x^*) = 0$; with equality constraints $Ax = b$, optimality $\Leftrightarrow$ $\nabla f_0(x^*) \perp \mathcal{N}(A)$; over a general convex set $\Omega$, optimality $\Leftrightarrow$ $\nabla f_0(x^*)^\top(y - x^*) \geq 0$ for all $y \in \Omega$.
+- **Problem hierarchy.** LP $\subseteq$ QP $\subseteq$ QCQP $\subseteq$ SOCP $\subseteq$ SDP $\subseteq$ General Convex, each with specialized algorithms and increasing modeling power.
+- **Solving in practice.** CVXPY implements disciplined convex programming: specify the problem in mathematical syntax, verify convexity automatically, and dispatch to an efficient solver.
 
 ### Optimization Problem Hierarchy {.unnumbered}
 
 | Problem | Objective | Constraints | Example |
 |---|---|---|---|
-| **LP** | $c^\top x$ | $Ax \leq b$ | Transportation, network flow |
-| **QP** | $\tfrac{1}{2}x^\top Q x + c^\top x$ | $Ax \leq b$ | Ridge regression, portfolio |
-| **SOCP** | $c^\top x$ | $\|A_i x + b_i\|_2 \leq c_i^\top x + d_i$ | Robust optimization |
-| **SDP** | $\langle C, X \rangle$ | $\langle A_i, X \rangle = b_i,\; X \succeq 0$ | Relaxations, control |
-| **Convex Program** | convex $f_0(x)$ | convex $f_i(x) \leq 0$ | General convex |
+| **LP** | $c^\top x$ | $Ax \leq b$ | Transportation, max flow, SVM |
+| **QP** | $\tfrac{1}{2}x^\top Px + q^\top x$ | $Gx \leq h$ | Portfolio, Lasso, least squares |
+| **QCQP** | convex quadratic | convex quadratic | Trust region, risk-bounded portfolio |
+| **SOCP** | $c^\top x$ | $\|A_i x + b_i\|_2 \leq c_i^\top x + d_i$ | Robust LP, enclosing circle |
+| **SDP** | $\langle C, X \rangle$ | $\langle A_i, X \rangle = b_i,\; X \succeq 0$ | Eigenvalue, relaxations |
 
-Each row generalizes the rows above it: LP $\subset$ QP $\subset$ SOCP $\subset$ SDP $\subset$ Convex Program.
+Each row generalizes the rows above it: LP $\subset$ QP $\subset$ QCQP $\subset$ SOCP $\subset$ SDP $\subset$ Convex Program.
+
+::: {.callout-tip}
+## Looking Ahead
+
+With the framework, properties, and solution tools for convex optimization established, we turn next to the geometry of **linear programming** in detail --- vertices, extreme points, basic feasible solutions, and the structure of the LP polytope that underlies the simplex method.
+:::

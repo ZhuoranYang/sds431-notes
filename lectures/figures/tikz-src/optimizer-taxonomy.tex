@@ -2,7 +2,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{mathpazo}
 \usepackage{amsmath,amssymb}
-\usetikzlibrary{arrows.meta, positioning, calc, fit, patterns, decorations.pathreplacing}
+\usetikzlibrary{arrows.meta, positioning, calc, fit}
 
 \definecolor{stblue}{HTML}{7B97AD}
 \definecolor{rwgold}{HTML}{B8995E}
@@ -15,70 +15,78 @@
 \definecolor{lavender}{HTML}{907EA0}
 
 \begin{document}
-\begin{tikzpicture}[>={Stealth[length=4mm, width=3mm]}, line width=1.5pt,
+\begin{tikzpicture}[>={Stealth[length=3.5mm, width=2.5mm]}, line width=1.2pt,
   rootbox/.style={fill=dkbrown!8, draw=dkbrown, line width=2pt, rounded corners=8pt,
-                  font=\LARGE\bfseries, text=dkbrown, inner sep=12pt, minimum width=5.5cm},
-  branchbox/.style={fill=#1!12, draw=#1, line width=1.5pt, rounded corners=6pt,
-                    font=\Large\bfseries, text=dkbrown, inner sep=8pt, minimum width=3.5cm,
-                    minimum height=1.2cm},
-  leafbox/.style={fill=#1!12, draw=#1, line width=1.2pt, rounded corners=6pt,
-                  font=\large, text=dkbrown, inner sep=8pt, minimum width=3.2cm,
+                  font=\Large\bfseries, text=dkbrown, inner sep=10pt, minimum width=5cm},
+  branchbox/.style={fill=#1!15, draw=#1, line width=1.5pt, rounded corners=6pt,
+                    font=\large\bfseries, text=dkbrown, inner sep=8pt, minimum width=3.2cm,
+                    minimum height=1.1cm},
+  leafbox/.style={fill=#1!8, draw=#1!70, line width=1pt, rounded corners=5pt,
+                  font=\normalsize, text=dkbrown, inner sep=6pt, minimum width=2.4cm,
+                  minimum height=0.9cm},
+  descbox/.style={fill=#1!6, draw=#1!40, line width=0.8pt, rounded corners=5pt,
+                  font=\small, text=wmgray, inner sep=6pt, text width=3.8cm, align=center,
                   minimum height=1.2cm},
-  conn/.style={dkbrown, line width=1.5pt, ->}
+  conn/.style={dkbrown!70, line width=1.2pt}
 ]
 
 % Background
-\fill[cream, rounded corners=14pt] (-10.5,-9) rectangle (10.5,4);
-\draw[border, line width=1.5pt, rounded corners=14pt] (-10.5,-9) rectangle (10.5,4);
+\fill[cream, rounded corners=14pt] (-16,-10.5) rectangle (16,4.5);
+\draw[border, line width=1.5pt, rounded corners=14pt] (-16,-10.5) rectangle (16,4.5);
 
-% Root
-\node[rootbox] (root) at (0,2.5) {First-Order Methods};
+% ── Root ──
+\node[rootbox] (root) at (0,3) {First-Order Methods};
 
-% Branch nodes
-\node[branchbox=stblue] (gd) at (-7,-0.8) {GD};
-\node[branchbox=rwgold] (adaptive) at (-2.4,-0.8) {Adaptive};
-\node[branchbox=sage] (stochastic) at (2.4,-0.8) {Stochastic};
-\node[branchbox=lavender] (constrained) at (7,-0.8) {Constrained};
+% ── Branch nodes ──
+\node[branchbox=stblue]    (momentum)    at (-10.5, 0) {Momentum};
+\node[branchbox=rwgold]    (adaptive)    at ( -3.5, 0) {Adaptive};
+\node[branchbox=sage]      (stochastic)  at (  3.5, 0) {Stochastic};
+\node[branchbox=lavender]  (constrained) at ( 10.5, 0) {Constrained};
 
-% Connections from root
-\draw[conn] (root.south) -- ++(0,-0.3) -| (gd.north);
-\draw[conn] (root.south) -- ++(0,-0.3) -| (adaptive.north);
-\draw[conn] (root.south) -- ++(0,-0.3) -| (stochastic.north);
-\draw[conn] (root.south) -- ++(0,-0.3) -| (constrained.north);
+% ── Connections: root → branches ──
+\foreach \child in {momentum, adaptive, stochastic, constrained}{
+  \draw[conn] (root.south) -- ++(0,-0.4) -| (\child.north);
+}
 
-% GD leaves
-\node[leafbox=stblue] (hb) at (-8.5,-3.5) {Heavy-Ball};
-\node[leafbox=stblue] (nes) at (-5.5,-3.5) {Nesterov};
-\draw[conn] (gd.south) -- ++(0,-0.3) -| (hb.north);
-\draw[conn] (gd.south) -- ++(0,-0.3) -| (nes.north);
+% ── Momentum leaves ──
+\node[leafbox=stblue] (hb)  at (-12, -3) {Heavy-Ball};
+\node[leafbox=stblue] (nes) at ( -9, -3) {Nesterov AGD};
+\foreach \leaf in {hb, nes}{
+  \draw[conn] (momentum.south) -- ++(0,-0.35) -| (\leaf.north);
+}
 
-% Adaptive leaves
-\node[leafbox=rwgold] (adagrad) at (-4.2,-3.5) {AdaGrad};
-\node[leafbox=rwgold] (rmsprop) at (-1.4,-3.5) {RMSProp};
-\node[leafbox=rwgold] (adam) at (-2.8,-5.8) {Adam};
-\draw[conn] (adaptive.south) -- ++(0,-0.3) -| (adagrad.north);
-\draw[conn] (adaptive.south) -- ++(0,-0.3) -| (rmsprop.north);
-\draw[conn] (adaptive.south) -- ++(0,-0.3) -| (adam.north);
+% ── Adaptive leaves ──
+\node[leafbox=rwgold] (adag) at (-5.2, -3) {AdaGrad};
+\node[leafbox=rwgold] (rmsp) at (-1.8, -3) {RMSProp};
+\node[leafbox=rwgold] (adam) at (-3.5, -5.2) {Adam / AdamW};
+\foreach \leaf in {adag, rmsp, adam}{
+  \draw[conn] (adaptive.south) -- ++(0,-0.35) -| (\leaf.north);
+}
 
-% Stochastic leaves
-\node[leafbox=sage] (sgd) at (1.0,-3.5) {SGD};
-\node[leafbox=sage] (minibatch) at (3.8,-3.5) {Mini-batch SGD};
-\draw[conn] (stochastic.south) -- ++(0,-0.3) -| (sgd.north);
-\draw[conn] (stochastic.south) -- ++(0,-0.3) -| (minibatch.north);
+% ── Stochastic leaves ──
+\node[leafbox=sage] (sgd) at (1.8, -3) {SGD};
+\node[leafbox=sage] (mb)  at (5.2, -3) {Mini-batch SGD};
+\foreach \leaf in {sgd, mb}{
+  \draw[conn] (stochastic.south) -- ++(0,-0.35) -| (\leaf.north);
+}
 
-% Constrained leaves
-\node[leafbox=lavender] (pgd) at (5.5,-3.5) {Projected GD};
-\node[leafbox=lavender] (fw) at (8.5,-3.5) {Frank-Wolfe};
-\draw[conn] (constrained.south) -- ++(0,-0.3) -| (pgd.north);
-\draw[conn] (constrained.south) -- ++(0,-0.3) -| (fw.north);
+% ── Constrained leaves ──
+\node[leafbox=lavender] (prox) at ( 8.8, -3) {Proximal GD};
+\node[leafbox=lavender] (fw)   at (12.2, -3) {Frank-Wolfe};
+\node[leafbox=lavender] (proj) at (10.5, -5.2) {Projected GD};
+\foreach \leaf in {prox, fw, proj}{
+  \draw[conn] (constrained.south) -- ++(0,-0.35) -| (\leaf.north);
+}
 
-% Convergence rate annotations at bottom
-\node[font=\large, text=stblue!70!dkbrown] at (-7,-5.0) {Momentum methods};
-\node[font=\large, text=sage!70!dkbrown] at (2.4,-5.0) {Variance reduction};
-\node[font=\large, text=lavender!70!dkbrown] at (7,-5.0) {Feasibility preserving};
+% ── Description boxes ──
+\node[descbox=stblue]   at (-10.5, -7.5) {Accelerated convergence\\[2pt]$O(\rho^k)$ linear rate};
+\node[descbox=rwgold]   at ( -3.5, -7.5) {Per-coordinate stepsizes\\[2pt]Scale with gradient history};
+\node[descbox=sage]     at (  3.5, -7.5) {Random gradient estimates\\[2pt]Scalable to large data};
+\node[descbox=lavender] at ( 10.5, -7.5) {Handle constraints\\[2pt]and non-smooth terms};
 
-% Bottom note
-\node[font=\Large, text=wmgray] at (0,-8.2) {Taxonomy of first-order optimization algorithms};
+% ── Bottom note ──
+\node[font=\normalsize\itshape, text=wmgray] at (0,-9.8)
+  {All methods use only $\nabla\!f(x)$ or $g \in \partial f(x)$ \  (first-order oracle)};
 
 \end{tikzpicture}
 \end{document}

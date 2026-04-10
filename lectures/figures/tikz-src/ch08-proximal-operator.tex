@@ -1,0 +1,70 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta, positioning, calc}
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{rwgold}{HTML}{B8995E}
+\definecolor{sage}{HTML}{7A9A7E}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{cream}{HTML}{F9F6F0}
+\definecolor{border}{HTML}{D4C9B8}
+\definecolor{terracotta}{HTML}{C47A6A}
+\definecolor{lavender}{HTML}{907EA0}
+
+\begin{document}
+\begin{tikzpicture}[
+  background rectangle/.style={fill=cream},
+  show background rectangle,
+  every node/.style={text=dkbrown, font=\small},
+  scale=1.3,
+]
+
+% Axes
+\draw[wmgray, -{Stealth[length=5pt]}, line width=0.6pt] (-2.8,0) -- (4.8,0) node[right, font=\footnotesize] {$z$};
+\draw[wmgray, -{Stealth[length=5pt]}, line width=0.6pt] (-2.8,0) -- (-2.8,3.8);
+
+% g(z) = |z| (the L1 penalty)
+\draw[stblue, line width=1.6pt] (-2.4,2.4) -- (0,0) -- (2.4,2.4);
+\node[font=\footnotesize, text=stblue!80!black, anchor=west] at (2.5,2.4) {$h(z) = |z|$};
+
+% Quadratic penalty centered at x_k
+\pgfmathsetmacro{\xk}{2.5}
+\draw[lavender, line width=1.2pt, domain=-0.5:4.5, samples=80]
+  plot (\x, {0.35*(\x-\xk)*(\x-\xk)});
+\node[font=\footnotesize, text=lavender!80!black, anchor=west] at (4.55,1.5)
+  {$\frac{1}{2\alpha}\|z-x_k\|^2$};
+
+% Combined: g(z) + quadratic
+\draw[terracotta, line width=1.8pt, domain=-1.6:4.3, samples=120]
+  plot (\x, {abs(\x) + 0.35*(\x-\xk)*(\x-\xk)});
+\node[font=\footnotesize, text=terracotta!80!black, anchor=east] at (-1.7,3.5)
+  {$h(z) + \frac{1}{2\alpha}\|z - x_k\|^2$};
+
+% Mark x_k on x-axis
+\fill[rwgold] (\xk,0) circle (2.5pt);
+\node[below=2pt, font=\footnotesize, text=rwgold!80!black] at (\xk,0) {$x_k$};
+\draw[rwgold, line width=0.4pt, dashed] (\xk,0) -- (\xk,{abs(\xk)+0.01});
+
+% Compute x_{k+1} = prox result
+% With eta = 1/(2*0.35) ~ 1.43, lambda=1: prox = sign(xk)*max(|xk|-eta, 0)
+% = max(2.5-1.43, 0) ~ 1.07
+\pgfmathsetmacro{\xnew}{1.07}
+\pgfmathsetmacro{\ynew}{abs(\xnew) + 0.35*(\xnew-\xk)*(\xnew-\xk)}
+
+% Mark minimum on combined curve
+\fill[sage] (\xnew,\ynew) circle (2.8pt);
+
+% Mark x_{k+1} on x-axis
+\fill[sage] (\xnew,0) circle (2.5pt);
+\node[below=2pt, font=\footnotesize, text=sage!70!black] at (\xnew,0) {$x_{k+1}$};
+\draw[sage, line width=0.4pt, dashed] (\xnew,0) -- (\xnew,\ynew);
+
+% Arrow showing the prox step
+\draw[sage!80!black, -{Stealth[length=5pt]}, line width=1pt]
+  (\xk,-0.45) -- (\xnew+0.05,-0.45);
+\node[font=\scriptsize, text=sage!70!black, below=1pt] at ({0.5*(\xk+\xnew)},-0.45) {prox step};
+
+\end{tikzpicture}
+\end{document}

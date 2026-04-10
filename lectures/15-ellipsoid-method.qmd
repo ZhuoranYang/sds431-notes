@@ -10,7 +10,7 @@ The core idea is beautifully geometric. We maintain an ellipsoid that is guarant
 
 While the ellipsoid method is not practical for large-scale computation (it suffers from numerical issues and large constants), its theoretical significance is profound. It established that LP is in the complexity class P and laid the groundwork for interior point methods, which achieve both polynomial complexity and practical efficiency.
 
-## What Will Be Covered {#sec-overview}
+## What Will Be Covered {.unnumbered}
 
 - Historical context: from simplex to polynomial-time algorithms
 - Ellipsoids: definition, geometry, and volume
@@ -26,6 +26,8 @@ While the ellipsoid method is not practical for large-scale computation (it suff
 
 ::: {.callout-note}
 ## A Brief History of LP Algorithms and Convex Optimization
+
+The quest for efficient LP algorithms spans four decades, with each breakthrough reshaping our understanding of computational complexity:
 
 - **1947:** Dantzig introduced the simplex algorithm for LP.
 - **1973:** Klee and Minty proved that the simplex algorithm is **not** a polynomial-time algorithm by constructing a family of LPs on which it visits all $2^n$ vertices.
@@ -54,70 +56,7 @@ The center $c$ determines where the ellipsoid is located, and the matrix $Q$ det
 
 **Example.** The Euclidean ball of radius $R$ centered at $x_0$ is the ellipsoid $B(x_0, R) = \mathcal{E}(x_0, R^2 I)$. Here $Q = R^2 I$ is a scalar multiple of the identity, so all axes have equal length $R$.
 
-```python
-#| label: fig-ellipsoid-shapes
-#| fig-cap: "Ellipsoids in 2D with different shape matrices Q. Left: a ball (Q = I). Center: an axis-aligned ellipse. Right: a rotated ellipse. The eigenvectors of Q determine the principal axes."
-#| echo: false
-
-import numpy as np
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
-fig = make_subplots(rows=1, cols=3, subplot_titles=(
-    'Ball: Q = I', 'Axis-aligned: Q = diag(4, 1)', 'Rotated ellipse'))
-
-theta = np.linspace(0, 2 * np.pi, 200)
-circle_x = np.cos(theta)
-circle_y = np.sin(theta)
-
-# Ball: Q = I
-fig.add_trace(go.Scatter(x=circle_x.tolist(), y=circle_y.tolist(), fill='toself',
-    fillcolor='rgba(123,143,163,0.18)', line=dict(color='#7b97ad', width=2.5),
-    name='Q = I', mode='lines'), row=1, col=1)
-fig.add_trace(go.Scatter(x=[0], y=[0], mode='markers',
-    marker=dict(color='#b56b6b', size=8), showlegend=False), row=1, col=1)
-
-# Axis-aligned: Q = diag(4, 1)
-Q2 = np.array([[4, 0], [0, 1]])
-L2 = np.linalg.cholesky(Q2)
-pts2 = L2 @ np.array([circle_x, circle_y])
-fig.add_trace(go.Scatter(x=pts2[0].tolist(), y=pts2[1].tolist(), fill='toself',
-    fillcolor='rgba(122,154,126,0.18)', line=dict(color='#7a9a7e', width=2.5),
-    name='Q = diag(4,1)', mode='lines'), row=1, col=2)
-fig.add_trace(go.Scatter(x=[0], y=[0], mode='markers',
-    marker=dict(color='#b56b6b', size=8), showlegend=False), row=1, col=2)
-# Draw axes
-fig.add_trace(go.Scatter(x=[-2, 2], y=[0, 0], mode='lines',
-    line=dict(color='#b8995e', dash='dash', width=1.2), showlegend=False), row=1, col=2)
-fig.add_trace(go.Scatter(x=[0, 0], y=[-1, 1], mode='lines',
-    line=dict(color='#b8995e', dash='dash', width=1.2), showlegend=False), row=1, col=2)
-
-# Rotated: Q = R diag(4,0.5) R^T
-angle = np.pi / 6
-R_mat = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
-D3 = np.diag([4, 0.5])
-Q3 = R_mat @ D3 @ R_mat.T
-L3 = np.linalg.cholesky(Q3)
-pts3 = L3 @ np.array([circle_x, circle_y])
-fig.add_trace(go.Scatter(x=pts3[0].tolist(), y=pts3[1].tolist(), fill='toself',
-    fillcolor='rgba(144,126,160,0.18)', line=dict(color='#907ea0', width=2.5),
-    name='Rotated Q', mode='lines'), row=1, col=3)
-fig.add_trace(go.Scatter(x=[0], y=[0], mode='markers',
-    marker=dict(color='#b56b6b', size=8), showlegend=False), row=1, col=3)
-# Draw principal axes
-v1 = R_mat @ np.array([2, 0])
-v2 = R_mat @ np.array([0, np.sqrt(0.5)])
-fig.add_trace(go.Scatter(x=[-v1[0], v1[0]], y=[-v1[1], v1[1]], mode='lines',
-    line=dict(color='#b8995e', dash='dash', width=1.2), showlegend=False), row=1, col=3)
-fig.add_trace(go.Scatter(x=[-v2[0], v2[0]], y=[-v2[1], v2[1]], mode='lines',
-    line=dict(color='#b8995e', dash='dash', width=1.2), showlegend=False), row=1, col=3)
-
-for col in [1, 2, 3]:
-    fig.update_xaxes(range=[-3, 3], zeroline=False, row=1, col=col)
-    fig.update_yaxes(range=[-2.5, 2.5], zeroline=False, scaleanchor=f'x{col if col > 1 else ""}', row=1, col=col)
-fig.update_layout(showlegend=True, margin=dict(t=40, b=40, l=40, r=20))
-fig.show()
-```
+![Ellipsoids in 2D with different shape matrices $Q$. Left: a ball ($Q = I$). Center: an axis-aligned ellipse. Right: a rotated ellipse. The eigenvectors of $Q$ determine the principal axes.](figures/ellipsoid-shapes.svg){#fig-ellipsoid-shapes}
 
 ### Volume of an Ellipsoid {#sec-volume}
 
@@ -188,90 +127,7 @@ $$P \subseteq \{x : a_{i_0}^\top x \leq a_{i_0}^\top c\}.$$
 
 We can then discard the other half of the ellipsoid and construct a new, smaller ellipsoid covering the half-ellipsoid $\mathcal{E}(c, Q) \cap \{x : a_{i_0}^\top x \leq a_{i_0}^\top c\}$ that still contains $P$.
 
-```python
-#| label: fig-ellipsoid-cut
-#| fig-cap: "The ellipsoid method for feasibility. The center c is outside P, so a violated constraint provides a separating hyperplane. P lies entirely in the lower half-ellipsoid. The new (green) ellipsoid covers this half and is strictly smaller."
-#| echo: false
-
-import numpy as np
-import plotly.graph_objects as go
-
-theta = np.linspace(0, 2 * np.pi, 300)
-circle_x = np.cos(theta)
-circle_y = np.sin(theta)
-
-# Ellipsoid E(c, Q): centered at (2.5, 2), shape Q
-c0 = np.array([2.5, 2.0])
-Q0 = np.array([[4.0, 0.5], [0.5, 2.0]])
-L0 = np.linalg.cholesky(Q0)
-ell0 = (L0 @ np.array([circle_x, circle_y])).T + c0
-
-# Polytope P
-poly_x = [0, 1.5, 2.0, 1.2, 0.3, 0]
-poly_y = [0.5, 0.3, 1.5, 2.5, 2.2, 0.5]
-
-# Separating hyperplane: a^T x = a^T c, use constraint that c violates
-# Use a = [0.8, 0.3], which separates c from P
-a_sep = np.array([0.8, 0.3])
-a_dot_c = a_sep @ c0
-
-# Half-ellipsoid: E(c, Q) cap {x: a^T x <= a^T c}
-# New ellipsoid (MVEE of half-ellipsoid)
-g = a_sep
-n_dim = 2
-Qg = Q0 @ g
-gQg = g @ Qg
-c1 = c0 - (1.0 / (n_dim + 1)) * Qg / np.sqrt(gQg)
-Q1 = (n_dim**2 / (n_dim**2 - 1)) * (Q0 - (2.0 / (n_dim + 1)) * np.outer(Qg, Qg) / gQg)
-L1 = np.linalg.cholesky(Q1)
-ell1 = (L1 @ np.array([circle_x, circle_y])).T + c1
-
-# Hyperplane line
-hp_dir = np.array([-a_sep[1], a_sep[0]])
-hp_p1 = c0 - 4 * hp_dir
-hp_p2 = c0 + 4 * hp_dir
-
-fig = go.Figure()
-
-# Old ellipsoid
-fig.add_trace(go.Scatter(x=ell0[:, 0].tolist(), y=ell0[:, 1].tolist(), mode='lines',
-    line=dict(color='#ad8480', width=2.5), name='E(c\u2070, Q\u2070)', fill='toself',
-    fillcolor='rgba(173,132,128,0.10)'))
-
-# Polytope
-fig.add_trace(go.Scatter(x=poly_x, y=poly_y, fill='toself',
-    fillcolor='rgba(123,143,163,0.25)', line=dict(color='#7b97ad', width=2.5),
-    name='Polytope P', mode='lines'))
-
-# Separating hyperplane
-fig.add_trace(go.Scatter(x=[hp_p1[0], hp_p2[0]], y=[hp_p1[1], hp_p2[1]], mode='lines',
-    line=dict(color='#b8995e', width=2, dash='dash'),
-    name='Separating hyperplane'))
-
-# New ellipsoid
-fig.add_trace(go.Scatter(x=ell1[:, 0].tolist(), y=ell1[:, 1].tolist(), mode='lines',
-    line=dict(color='#7a9a7e', width=2.5), name='E(c\u00b9, Q\u00b9)', fill='toself',
-    fillcolor='rgba(122,154,126,0.12)'))
-
-# Centers
-fig.add_trace(go.Scatter(x=[c0[0]], y=[c0[1]], mode='markers+text',
-    marker=dict(color='#b56b6b', size=10, symbol='circle'),
-    text=['c\u2070'], textposition='top right', name='Center c\u2070'))
-fig.add_trace(go.Scatter(x=[c1[0]], y=[c1[1]], mode='markers+text',
-    marker=dict(color='#7a9a7e', size=10, symbol='circle'),
-    text=['c\u00b9'], textposition='top right', name='Center c\u00b9'))
-
-# Arrow for separating direction
-fig.add_annotation(x=c0[0] + 0.5 * a_sep[0], y=c0[1] + 0.5 * a_sep[1],
-    ax=c0[0], ay=c0[1], xref='x', yref='y', axref='x', ayref='y',
-    showarrow=True, arrowhead=3, arrowsize=1.5, arrowwidth=2, arrowcolor='#b8995e')
-
-fig.update_layout(
-    xaxis=dict(title='x\u2081', range=[-1.5, 6], zeroline=True),
-    yaxis=dict(title='x\u2082', range=[-1.5, 5], zeroline=True, scaleanchor='x'),
-    showlegend=True, margin=dict(t=20, b=50, l=55, r=20))
-fig.show()
-```
+![The ellipsoid method for feasibility. The center $c$ is outside $P$, so a violated constraint provides a separating hyperplane. $P$ lies entirely in the lower half-ellipsoid. The new (green) ellipsoid covers this half and is strictly smaller.](figures/ellipsoid-cut.svg){#fig-ellipsoid-cut}
 
 ### The Ellipsoid Algorithm for Feasibility {#sec-ellipsoid-feasibility-algo}
 
@@ -316,86 +172,7 @@ where $n$ is the dimension.
 
 The update has an elegant interpretation. The new center $c^+$ shifts from $c$ in the direction $-Qg$ (which accounts for the ellipsoid's shape) by a step proportional to $\frac{1}{n+1}$. The new shape matrix $Q^+$ is obtained by shrinking $Q$ along the cut direction $g$ while slightly expanding in the orthogonal directions. The factor $\frac{n^2}{n^2-1}$ is a mild inflation that ensures the half-ellipsoid is fully enclosed.
 
-```python
-#| label: fig-mvee-update
-#| fig-cap: "The MVEE update. Given a half-ellipsoid (shaded), the minimum volume enclosing ellipsoid (green dashed) is computed using the update formulas. The new center shifts away from the cut."
-#| echo: false
-
-import numpy as np
-import plotly.graph_objects as go
-
-theta = np.linspace(0, 2 * np.pi, 300)
-circle_x = np.cos(theta)
-circle_y = np.sin(theta)
-
-n_dim = 2
-c = np.array([0.0, 0.0])
-Q = np.array([[3.0, 0.8], [0.8, 1.5]])
-g = np.array([1.0, 0.3])
-g = g / np.linalg.norm(g)
-
-L = np.linalg.cholesky(Q)
-ell_pts = (L @ np.array([circle_x, circle_y])).T + c
-
-# Half-ellipsoid: g^T (y - c) <= 0
-half_mask = (ell_pts - c) @ g <= 1e-10
-half_pts = ell_pts[half_mask]
-
-# MVEE update
-Qg = Q @ g
-gQg = g @ Qg
-c_new = c - (1.0 / (n_dim + 1)) * Qg / np.sqrt(gQg)
-Q_new = (n_dim**2 / (n_dim**2 - 1)) * (Q - (2.0 / (n_dim + 1)) * np.outer(Qg, Qg) / gQg)
-L_new = np.linalg.cholesky(Q_new)
-ell_new = (L_new @ np.array([circle_x, circle_y])).T + c_new
-
-# Cutting hyperplane line
-hp_dir = np.array([-g[1], g[0]])
-hp_p1 = c - 3 * hp_dir
-hp_p2 = c + 3 * hp_dir
-
-fig = go.Figure()
-
-# Original ellipsoid
-fig.add_trace(go.Scatter(x=ell_pts[:, 0].tolist(), y=ell_pts[:, 1].tolist(), mode='lines',
-    line=dict(color='#ad8480', width=2), name='E(c, Q)', fill='toself',
-    fillcolor='rgba(173,132,128,0.08)'))
-
-# Half-ellipsoid shading
-# Close the half-ellipsoid path along the cut line
-sorted_half = half_pts.tolist()
-fig.add_trace(go.Scatter(x=[p[0] for p in sorted_half], y=[p[1] for p in sorted_half],
-    fill='toself', fillcolor='rgba(123,143,163,0.22)', line=dict(color='#7b97ad', width=0),
-    name='Half-ellipsoid', mode='lines'))
-
-# Cutting hyperplane
-fig.add_trace(go.Scatter(x=[hp_p1[0], hp_p2[0]], y=[hp_p1[1], hp_p2[1]], mode='lines',
-    line=dict(color='#b8995e', width=2, dash='dash'), name='Cut: g\u1d40(y\u2212c)=0'))
-
-# New ellipsoid (MVEE)
-fig.add_trace(go.Scatter(x=ell_new[:, 0].tolist(), y=ell_new[:, 1].tolist(), mode='lines',
-    line=dict(color='#7a9a7e', width=2.5, dash='dash'), name='E(c\u207a, Q\u207a) [MVEE]',
-    fill='toself', fillcolor='rgba(122,154,126,0.10)'))
-
-# Centers
-fig.add_trace(go.Scatter(x=[c[0]], y=[c[1]], mode='markers+text',
-    marker=dict(color='#ad8480', size=9), text=['c'], textposition='top right',
-    showlegend=False))
-fig.add_trace(go.Scatter(x=[c_new[0]], y=[c_new[1]], mode='markers+text',
-    marker=dict(color='#7a9a7e', size=9), text=['c\u207a'], textposition='top right',
-    showlegend=False))
-
-# Arrow from c to c_new
-fig.add_annotation(x=c_new[0], y=c_new[1], ax=c[0], ay=c[1],
-    xref='x', yref='y', axref='x', ayref='y',
-    showarrow=True, arrowhead=3, arrowsize=1.2, arrowwidth=1.5, arrowcolor='#968a80')
-
-fig.update_layout(
-    xaxis=dict(title='x\u2081', range=[-3, 3], zeroline=True),
-    yaxis=dict(title='x\u2082', range=[-2.5, 2.5], zeroline=True, scaleanchor='x'),
-    showlegend=True, margin=dict(t=20, b=50, l=55, r=20))
-fig.show()
-```
+![The MVEE update. Given a half-ellipsoid (shaded), the minimum volume enclosing ellipsoid (green dashed) is computed using the update formulas. The new center shifts away from the cut.](figures/mvee-update.svg){#fig-mvee-update}
 
 ## Analysis of the Ellipsoid Method {#sec-analysis}
 
@@ -416,35 +193,7 @@ where $n$ is the dimension of $x$.
 
 This means that after $2(n+1)$ steps, the volume of the ellipsoid shrinks by at least a factor of $\frac{1}{e} \approx 0.368$. The shrinkage is guaranteed regardless of which cutting plane is used --- the geometry of the MVEE update ensures a constant-factor reduction.
 
-```python
-#| label: fig-volume-shrinkage
-#| fig-cap: "Volume shrinkage of the ellipsoid over iterations for different dimensions n. The volume decreases exponentially, with a per-step shrinkage factor of exp(-1/(2(n+1))). Higher dimensions lead to slower per-step shrinkage."
-#| echo: false
-
-import numpy as np
-import plotly.graph_objects as go
-
-fig = go.Figure()
-
-dims = [2, 5, 10, 20]
-colors = ['#7b97ad', '#7a9a7e', '#b8995e', '#907ea0']
-max_iter = 500
-
-for n_dim, color in zip(dims, colors):
-    shrinkage = np.exp(-1.0 / (2 * (n_dim + 1)))
-    iters = np.arange(max_iter + 1)
-    vol_ratio = shrinkage ** iters
-    fig.add_trace(go.Scatter(x=iters.tolist(), y=vol_ratio.tolist(), mode='lines',
-        line=dict(color=color, width=2.5),
-        name=f'n = {n_dim} (shrinkage = {shrinkage:.4f})'))
-
-fig.update_layout(
-    xaxis=dict(title='Iteration k'),
-    yaxis=dict(title='vol(E\u1d4f) / vol(E\u2070)', type='log',
-               range=[-6, 0]),
-    showlegend=True, margin=dict(t=20, b=50, l=60, r=20))
-fig.show()
-```
+![Volume shrinkage of the ellipsoid over iterations for different dimensions $n$. The volume decreases exponentially, with a per-step shrinkage factor of $\exp(-1/(2(n+1)))$. Higher dimensions lead to slower per-step shrinkage.](figures/volume-shrinkage.svg){#fig-volume-shrinkage}
 
 ### Iteration Complexity {#sec-complexity}
 
@@ -557,109 +306,7 @@ $$\Omega \cap \{y : (y - c^k)^\top \nabla f(c^k) \leq 0\}.$$
 
 In both cases, we have a cutting plane through $c^k$, and the next ellipsoid $\mathcal{E}(c^{k+1}, Q^{k+1})$ is the MVEE of the relevant half. We also track the **best feasible point seen so far** as our candidate solution.
 
-```python
-#| label: fig-two-scenarios
-#| fig-cap: "The two scenarios of the ellipsoid method for convex optimization. Left (Scenario 1): the center is feasible but not optimal --- the gradient provides the cutting plane. Right (Scenario 2): the center is infeasible --- the separation oracle provides the cutting plane."
-#| echo: false
-
-import numpy as np
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
-fig = make_subplots(rows=1, cols=2, subplot_titles=(
-    'Scenario 1: Feasible, Gradient Cut', 'Scenario 2: Infeasible, Separation Cut'))
-
-theta = np.linspace(0, 2 * np.pi, 200)
-cx, cy = np.cos(theta), np.sin(theta)
-
-# --- Scenario 1 (left): center inside Omega ---
-# Feasible region (convex set)
-t_omega = np.linspace(0, 2 * np.pi, 100)
-omega1_x = (1.2 * np.cos(t_omega) - 0.5).tolist()
-omega1_y = (1.0 * np.sin(t_omega) + 0.2).tolist()
-
-# Ellipsoid centered inside Omega
-c1 = np.array([-0.2, 0.3])
-Q1 = np.array([[2.5, 0.3], [0.3, 1.2]])
-L1 = np.linalg.cholesky(Q1)
-ell1 = (L1 @ np.array([cx, cy])).T + c1
-
-# Gradient direction
-grad = np.array([0.7, 0.5])
-grad_norm = grad / np.linalg.norm(grad)
-
-fig.add_trace(go.Scatter(x=omega1_x + [omega1_x[0]], y=omega1_y + [omega1_y[0]],
-    fill='toself', fillcolor='rgba(123,143,163,0.20)',
-    line=dict(color='#7b97ad', width=2.5), name='\u03A9', mode='lines'), row=1, col=1)
-fig.add_trace(go.Scatter(x=ell1[:, 0].tolist(), y=ell1[:, 1].tolist(), mode='lines',
-    line=dict(color='#ad8480', width=2), name='E(c\u1d4f, Q\u1d4f)'), row=1, col=1)
-
-# Cutting plane (perpendicular to gradient through c)
-hp_dir1 = np.array([-grad_norm[1], grad_norm[0]])
-fig.add_trace(go.Scatter(
-    x=[c1[0] - 2.5 * hp_dir1[0], c1[0] + 2.5 * hp_dir1[0]],
-    y=[c1[1] - 2.5 * hp_dir1[1], c1[1] + 2.5 * hp_dir1[1]],
-    mode='lines', line=dict(color='#b8995e', width=2, dash='dash'),
-    name='Gradient cut'), row=1, col=1)
-
-fig.add_trace(go.Scatter(x=[c1[0]], y=[c1[1]], mode='markers+text',
-    marker=dict(color='#b56b6b', size=9), text=['c\u1d4f'],
-    textposition='bottom right', showlegend=False), row=1, col=1)
-
-# Gradient arrow
-fig.add_annotation(x=c1[0] + 0.6 * grad_norm[0], y=c1[1] + 0.6 * grad_norm[1],
-    ax=c1[0], ay=c1[1], xref='x', yref='y', axref='x', ayref='y',
-    showarrow=True, arrowhead=3, arrowsize=1.5, arrowwidth=2, arrowcolor='#b56b6b',
-    text='\u2207f', font=dict(size=12, color='#b56b6b'))
-
-# Label
-fig.add_annotation(x=-0.5, y=-1.6, text='c\u1d4f \u2208 \u03A9, use \u2207f(c\u1d4f) to cut',
-    showarrow=False, font=dict(size=11, color='#968a80'), xref='x', yref='y')
-
-# --- Scenario 2 (right): center outside Omega ---
-omega2_x = (1.0 * np.cos(t_omega) - 0.8).tolist()
-omega2_y = (0.8 * np.sin(t_omega) + 0.0).tolist()
-
-c2 = np.array([0.8, 0.4])
-Q2 = np.array([[2.8, 0.5], [0.5, 1.5]])
-L2 = np.linalg.cholesky(Q2)
-ell2 = (L2 @ np.array([cx, cy])).T + c2
-
-# Separating direction
-a_sep2 = np.array([0.9, 0.3])
-a_sep2_norm = a_sep2 / np.linalg.norm(a_sep2)
-hp_dir2 = np.array([-a_sep2_norm[1], a_sep2_norm[0]])
-
-fig.add_trace(go.Scatter(x=omega2_x + [omega2_x[0]], y=omega2_y + [omega2_y[0]],
-    fill='toself', fillcolor='rgba(123,143,163,0.20)',
-    line=dict(color='#7b97ad', width=2.5), showlegend=False, mode='lines'), row=1, col=2)
-fig.add_trace(go.Scatter(x=ell2[:, 0].tolist(), y=ell2[:, 1].tolist(), mode='lines',
-    line=dict(color='#ad8480', width=2), showlegend=False), row=1, col=2)
-
-fig.add_trace(go.Scatter(
-    x=[c2[0] - 2.5 * hp_dir2[0], c2[0] + 2.5 * hp_dir2[0]],
-    y=[c2[1] - 2.5 * hp_dir2[1], c2[1] + 2.5 * hp_dir2[1]],
-    mode='lines', line=dict(color='#907ea0', width=2, dash='dash'),
-    name='Separation cut'), row=1, col=2)
-
-fig.add_trace(go.Scatter(x=[c2[0]], y=[c2[1]], mode='markers+text',
-    marker=dict(color='#b56b6b', size=9), text=['c\u1d4f'],
-    textposition='top right', showlegend=False), row=1, col=2)
-
-fig.add_annotation(x=c2[0] + 0.6 * a_sep2_norm[0], y=c2[1] + 0.6 * a_sep2_norm[1],
-    ax=c2[0], ay=c2[1], xref='x2', yref='y2', axref='x2', ayref='y2',
-    showarrow=True, arrowhead=3, arrowsize=1.5, arrowwidth=2, arrowcolor='#907ea0',
-    text='a', font=dict(size=12, color='#907ea0'))
-
-fig.add_annotation(x=0.5, y=-1.6, text='c\u1d4f \u2209 \u03A9, separation oracle cuts',
-    showarrow=False, font=dict(size=11, color='#968a80'), xref='x2', yref='y2')
-
-for col in [1, 2]:
-    fig.update_xaxes(range=[-3.5, 3.5], zeroline=False, row=1, col=col)
-    fig.update_yaxes(range=[-2.5, 2.5], zeroline=False, scaleanchor=f'x{col if col > 1 else ""}', row=1, col=col)
-fig.update_layout(showlegend=True, margin=dict(t=40, b=55, l=45, r=20))
-fig.show()
-```
+![The two scenarios of the ellipsoid method for convex optimization. Left (Scenario 1): the center is feasible but not optimal --- the gradient provides the cutting plane. Right (Scenario 2): the center is infeasible --- the separation oracle provides the cutting plane.](figures/ellipsoid-scenarios.svg){#fig-ellipsoid-scenarios}
 
 ### The Full Algorithm {#sec-full-algorithm}
 

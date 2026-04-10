@@ -8,7 +8,9 @@ In this chapter we make the notion of "corner" precise in two complementary ways
 
 This result has profound algorithmic consequences. Instead of searching over all feasible points, it suffices to examine the vertices -- and the simplex method does exactly this, moving from vertex to vertex while improving the objective at each step.
 
-## What Will Be Covered {#sec-overview}
+## What Will Be Covered {.unnumbered}
+
+This chapter develops the geometric and algebraic foundations of linear programming, building toward the key algorithms:
 
 - The four possible cases of an LP (infeasible, unbounded, multiple optima, unique optimum)
 - Extreme points and vertices: geometric and algebraic characterizations of "corner" points
@@ -29,39 +31,17 @@ Consider the linear program $\min c^\top x$ subject to $x \in \Omega$, where $\O
 3. **Infinite number of optimal solutions:** $f^*$ is finite, $x^*$ is not unique. The set $\{x : c^\top x = f^*\} \cap \Omega$ corresponds to a "face" of $\Omega$. The entire face is optimal. The vector $\vec{c}$ is normal (perpendicular) to that face.
 4. **Unique optimal solution:** $f^*$ is finite, $x^*$ is unique. Then $\{x : c^\top x = f^*\} \cap \Omega = x^*$, and $x^*$ is a "corner" point of $\Omega$.
 
-We will show what "corner point" means geometrically and algebraically.
+### Geometric Picture: Pushing the Level Set
 
-```python
-#| label: fig-four-cases
-#| fig-cap: "Figure 6.1: The four cases of LP illustrated in 2D."
-#| echo: false
+The key geometric insight is this: for a fixed cost vector $c$, the **level sets** $\{x : c^\top x = t\}$ form a family of parallel hyperplanes, all perpendicular to $c$. As we decrease $t$ (moving in the direction $-c$), the level-set hyperplane sweeps across the feasible region. The optimum is reached at the **last value of $t$** for which $\{x : c^\top x = t\}$ still touches $\Omega$:
 
-import plotly.graph_objects as go
+- If the hyperplane can be pushed indefinitely without leaving $\Omega$, the LP is **unbounded** ($f^* = -\infty$).
+- If the last contact is at a single corner point, the optimum is a **unique vertex**.
+- If the last contact is along an entire edge or face (i.e., $c$ is perpendicular to that face), there are **infinitely many optimal solutions** — but the face always contains a vertex.
 
-poly_x = [0, 3, 4, 2, 0, 0]
-poly_y = [0, 0, 2, 4, 3, 0]
+This "sliding hyperplane" picture is the geometric reason why the **Fundamental Theorem of LP** (proved below) holds: for a polyhedron, the last point of contact with a sweeping hyperplane is always at a vertex (or a face that contains vertices).
 
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=poly_x, y=poly_y, fill='toself',
-    fillcolor='rgba(123,143,163,0.18)', line=dict(color='#7b97ad', width=2.5),
-    name='Feasible region \u03A9', mode='lines'))
-fig.add_trace(go.Scatter(x=[-1, 5], y=[3.5, 0.5], mode='lines',
-    line=dict(color='#b8995e', dash='dash', width=1.5),
-    name='Objective contour c<sup>T</sup>x = const'))
-fig.add_trace(go.Scatter(x=[-1, 5], y=[5.5, 2.5], mode='lines',
-    line=dict(color='#b8995e', dash='dash', width=1.5), showlegend=False))
-fig.add_trace(go.Scatter(x=[-1, 5], y=[1.5, -1.5], mode='lines',
-    line=dict(color='#b8995e', dash='dash', width=1.5), showlegend=False))
-fig.add_trace(go.Scatter(x=[0], y=[0], mode='markers',
-    marker=dict(color='#b56b6b', size=13, symbol='star',
-    line=dict(width=1, color='white')), name='Optimal x*'))
-fig.update_layout(
-    title=dict(text='Unique Optimal Solution (Case 4)'),
-    xaxis=dict(title='x\u2081', range=[-1.5, 5.5], zeroline=True),
-    yaxis=dict(title='x\u2082', range=[-1.5, 5.5], zeroline=True, scaleanchor='x'),
-    showlegend=True, margin=dict(t=48, b=50, l=55, r=20))
-fig.show()
-```
+![The four possible cases of a linear program, illustrated in 2D. Dashed gold lines are objective contours $c^\top x = \text{const}$; the gold arrow shows the direction of decreasing objective.](figures/lp-four-cases.svg){#fig-four-cases}
 
 ## Vertices and Extreme Points {#vertices-extreme-points}
 
@@ -72,7 +52,7 @@ We need to characterize Case 3 and Case 4. To this end, we need to answer: what 
 The informal notion of a "corner point" of a polygon is intuitive, but we need a rigorous definition that works in any dimension. The following definition captures the essential property: a corner point cannot be expressed as a mixture of two other points in the set.
 
 ::: {#def-extreme-point}
-## Definition 6.1 (Extreme Point)
+## Extreme Point
 
 A point $x$ is an **extreme point** of a convex set $\mathcal{C}$ if it *cannot* be written as a convex combination of any two other points in $\mathcal{C}$.
 
@@ -81,37 +61,41 @@ That is, if $x = \lambda y + (1-\lambda) z$ for some $y, z \in \mathcal{C}$ and 
 
 An extreme point is a point that cannot be "decomposed" as a mixture of two other points in the set. Geometrically, extreme points are the "corners" of a convex set. For a polygon, they are the vertices; for a disk, they are the entire boundary. This concept will be crucial for understanding where LP solutions live.
 
-```python
-#| label: fig-extreme-points
-#| fig-cap: "Figure 6.2: Extreme points of a polygon (green vertices) vs. non-extreme boundary points. Hover over points for details."
-#| echo: false
-
-import plotly.graph_objects as go
-
-vx = [1, 3, 4, 3.5, 2, 0.5, 1]
-vy = [0.5, 0, 1.5, 3.5, 4, 3, 0.5]
-epx = [1, 3, 4, 3.5, 2, 0.5]
-epy = [0.5, 0, 1.5, 3.5, 4, 3]
-nepx = [2, 3.5, 3.75, 2.75, 1.25, 0.75]
-nepy = [0.25, 0.75, 2.5, 3.75, 3.5, 1.75]
-
-fig = go.Figure()
-fig.add_trace(go.Scatter(x=vx, y=vy, fill='toself',
-    fillcolor='rgba(122,154,126,0.2)', line=dict(color='#7a9a7e', width=2.5),
-    name='Convex set C', mode='lines'))
-fig.add_trace(go.Scatter(x=epx, y=epy, mode='markers',
-    marker=dict(color='#7a9a7e', size=10, symbol='circle',
-    line=dict(width=1.5, color='white')), name='Extreme points',
-    text=[f'Extreme point {i+1}' for i in range(len(epx))], hoverinfo='text'))
-fig.add_trace(go.Scatter(x=nepx, y=nepy, mode='markers',
-    marker=dict(color='#968a80', size=8, symbol='x'), name='Not extreme',
-    text=['Boundary point (not extreme) \u2014 convex combination of neighbors']*len(nepx),
-    hoverinfo='text'))
-fig.update_layout(
-    xaxis=dict(range=[-0.5, 5], zeroline=False),
-    yaxis=dict(range=[-0.5, 5], zeroline=False, scaleanchor='x'),
-    showlegend=True, margin=dict(t=20, b=40, l=45, r=20))
-fig.show()
+```{=html}
+<div id="fig-extreme-points" style="width:100%;max-width:700px;margin:auto;"></div>
+<p class="figure-caption" style="text-align:center;margin-top:0.5em;">Figure 9.2: Extreme points of a polygon (green vertices) vs. non-extreme boundary points. Hover over points for details.</p>
+<script>
+(function() {
+  var vx = [1, 3, 4, 3.5, 2, 0.5, 1];
+  var vy = [0.5, 0, 1.5, 3.5, 4, 3, 0.5];
+  var epx = [1, 3, 4, 3.5, 2, 0.5];
+  var epy = [0.5, 0, 1.5, 3.5, 4, 3];
+  var nepx = [2, 3.5, 3.75, 2.75, 1.25, 0.75];
+  var nepy = [0.25, 0.75, 2.5, 3.75, 3.5, 1.75];
+  var epText = [];
+  for (var i = 0; i < epx.length; i++) { epText.push('Extreme point ' + (i+1)); }
+  var nepText = [];
+  for (var i = 0; i < nepx.length; i++) { nepText.push('Boundary point (not extreme) \u2014 convex combination of neighbors'); }
+  var traces = [
+    {x: vx, y: vy, fill: 'toself',
+     fillcolor: 'rgba(122,154,126,0.2)', line: {color: '#7a9a7e', width: 2.5},
+     name: 'Convex set C', mode: 'lines', type: 'scatter'},
+    {x: epx, y: epy, mode: 'markers', type: 'scatter',
+     marker: {color: '#7a9a7e', size: 10, symbol: 'circle',
+     line: {width: 1.5, color: 'white'}}, name: 'Extreme points',
+     text: epText, hoverinfo: 'text'},
+    {x: nepx, y: nepy, mode: 'markers', type: 'scatter',
+     marker: {color: '#968a80', size: 8, symbol: 'x'}, name: 'Not extreme',
+     text: nepText, hoverinfo: 'text'}
+  ];
+  var layout = themeLayout({
+    xaxis: themeAxis('x\u2081', {range: [-0.5, 5], zeroline: false, showline: true}),
+    yaxis: themeAxis('x\u2082', {range: [-0.5, 5], zeroline: false, scaleanchor: 'x', showline: true}),
+    showlegend: true, legend: legendStyle(), margin: {t: 20, b: 40, l: 45, r: 20}
+  });
+  Plotly.newPlot('fig-extreme-points', traces, layout, plotlyConfig);
+})();
+</script>
 ```
 
 ::: {#exm-circle-extreme-points}
@@ -131,50 +115,14 @@ $$\sum_{i=1}^{k} \alpha_i a_i = 0 \implies \alpha_i = 0 \quad \forall\, i \in [k
 To build an algebraic characterization of extreme points, we need a way to determine when a system of constraints uniquely pins down a point. Linear independence of constraint normals ensures that the intersection of the corresponding hyperplanes is a single point rather than a line or higher-dimensional subspace.
 
 ::: {#def-linearly-independent-constraints}
-## Definition 6.2 (Linearly Independent Constraints)
+## Linearly Independent Constraints
 
 $k$ linear inequalities $a_i^\top x \leq b_i$, $i = 1, 2, \ldots, k$, are called **linearly independent** if $\{a_i\}_{i \in [k]}$ are linearly independent.
 :::
 
 Linear independence of constraints means the constraints impose genuinely different restrictions on the decision variable. When constraints are linearly dependent, their boundaries are parallel (or coincident), and they cannot "pin down" a unique point. When $n$ constraints are linearly independent, their boundaries intersect in exactly one point.
 
-```python
-#| label: fig-lin-dep-indep
-#| fig-cap: "Figure 6.3: Left --- Linearly dependent constraints (parallel lines). Right --- Linearly independent constraints (crossing lines) with unique intersection."
-#| echo: false
-
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
-fig = make_subplots(rows=1, cols=2, subplot_titles=(
-    'Linearly Dependent (parallel)', 'Linearly Independent (crossing)'))
-
-fig.add_trace(go.Scatter(x=[-1, 5], y=[1, 7], mode='lines',
-    line=dict(color='#ad8480', width=2.5),
-    name='3x\u2081 \u2212 3x\u2082 = 3'), row=1, col=1)
-fig.add_trace(go.Scatter(x=[-1, 5], y=[-1, 5], mode='lines',
-    line=dict(color='#7b97ad', width=2.5, dash='dash'),
-    name='x\u2081 \u2212 x\u2082 = 0'), row=1, col=1)
-fig.add_trace(go.Scatter(x=[-1, 5], y=[3, -3], mode='lines',
-    line=dict(color='#ad8480', width=2.5),
-    name='a\u2081\u1d40x = b\u2081'), row=1, col=2)
-fig.add_trace(go.Scatter(x=[-1, 5], y=[-1, 5], mode='lines',
-    line=dict(color='#7b97ad', width=2.5),
-    name='a\u2082\u1d40x = b\u2082'), row=1, col=2)
-fig.add_trace(go.Scatter(x=[2], y=[2], mode='markers',
-    marker=dict(color='#b56b6b', size=12, symbol='star',
-    line=dict(width=1, color='white')),
-    name='Intersection (vertex)',
-    text=['Unique solution: intersection of 2 independent constraints'],
-    hoverinfo='text'), row=1, col=2)
-
-fig.update_xaxes(range=[-1, 5], row=1, col=1)
-fig.update_yaxes(range=[-2, 5], scaleanchor='x', row=1, col=1)
-fig.update_xaxes(range=[-1, 5], row=1, col=2)
-fig.update_yaxes(range=[-2, 5], scaleanchor='x2', row=1, col=2)
-fig.update_layout(showlegend=True, margin=dict(t=40, b=55, l=45, r=20))
-fig.show()
-```
+![Left — Linearly dependent constraints (parallel boundary lines). Right — Linearly independent constraints (crossing boundary lines) with unique intersection at $(1,1)$.](figures/constraints-dep-indep.svg){#fig-constraints-dep-indep}
 
 In $\mathbb{R}^2$: the constraints $3x_1 - 3x_2 \leq 3$ and $x_1 - x_2 \leq 0$ are **linearly dependent** because their normal vectors are parallel. Halfspaces with parallel boundary lines are linearly dependent. Halfspaces whose boundary lines cross are linearly independent.
 
@@ -183,7 +131,7 @@ In $\mathbb{R}^2$: the constraints $3x_1 - 3x_2 \leq 3$ and $x_1 - x_2 \leq 0$ a
 How do we characterize a "corner" point algebraically? Geometrically, it is an extreme point. Algebraically, it is the intersection of constraint boundaries -- the hyperplanes where inequality constraints hold with equality. A constraint that holds with equality at a point is said to be **binding** at that point.
 
 ::: {#def-binding-constraint}
-## Definition 6.3 (Binding / Tight Constraint)
+## Binding / Tight Constraint
 
 We say a constraint $a_i^\top x \leq b_i$ (where $a_i \in \mathbb{R}^n$, $b_i \in \mathbb{R}$) is **binding** (or **tight**) at a point $\bar{x}$ if $a_i^\top \bar{x} = b_i$.
 
@@ -202,50 +150,51 @@ A binding constraint is one that is satisfied with equality at a given point -- 
 In general, in $\mathbb{R}^n$, an extreme point is determined by $n$ linearly independent binding constraints.
 :::
 
-```python
-#| label: fig-tetrahedron
-#| fig-cap: "Figure 6.4: A tetrahedron in 3D. Each vertex is the intersection of 3 face-planes. Hover over vertices to see binding constraints."
-#| echo: false
-
-import plotly.graph_objects as go
-
-verts = [[0,0,3],[2,0,0],[0,2,0],[-1,-1,0]]
-labels = ['A (0,0,3)', 'B (2,0,0)', 'C (0,2,0)', 'D (\u22121,\u22121,0)']
-
-fig = go.Figure()
-fig.add_trace(go.Mesh3d(
-    x=[v[0] for v in verts], y=[v[1] for v in verts], z=[v[2] for v in verts],
-    i=[0,0,0,1], j=[1,1,2,2], k=[2,3,3,3],
-    opacity=0.25, color='#8fa3b8', name='Tetrahedron', hoverinfo='skip'))
-fig.add_trace(go.Scatter3d(mode='markers+text',
-    x=[v[0] for v in verts], y=[v[1] for v in verts], z=[v[2] for v in verts],
-    marker=dict(color='#8a6e5e', size=5, line=dict(width=1, color='white')),
-    text=labels, textposition='top center',
-    textfont=dict(size=11),
-    hovertext=[
-        'A: 3 binding planes (ABC, ACD, ABD)',
-        'B: 3 binding planes (ABC, ABD, BCD)',
-        'C: 3 binding planes (ABC, ACD, BCD)',
-        'D: 3 binding planes (ABD, ACD, BCD)'],
-    hoverinfo='text', name='Vertices'))
-
-edges = [[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]]
-for a, b in edges:
-    fig.add_trace(go.Scatter3d(mode='lines',
-        x=[verts[a][0], verts[b][0]],
-        y=[verts[a][1], verts[b][1]],
-        z=[verts[a][2], verts[b][2]],
-        line=dict(color='#7b97ad', width=3),
-        showlegend=False, hoverinfo='skip'))
-
-fig.update_layout(
-    scene=dict(
-        xaxis=dict(title='x\u2081'),
-        yaxis=dict(title='x\u2082'),
-        zaxis=dict(title='x\u2083'),
-        camera=dict(eye=dict(x=1.8, y=1.8, z=1.2))),
-    showlegend=False, margin=dict(t=10, b=10, l=10, r=10))
-fig.show()
+```{=html}
+<div id="fig-tetrahedron" style="width:100%;max-width:700px;margin:auto;"></div>
+<p class="figure-caption" style="text-align:center;margin-top:0.5em;">Figure 9.4: A tetrahedron in 3D. Each vertex is the intersection of 3 face-planes. Hover over vertices to see binding constraints.</p>
+<script>
+(function() {
+  var vx = [0, 2, 0, -1], vy = [0, 0, 2, -1], vz = [3, 0, 0, 0];
+  var labels = ['A (0,0,3)', 'B (2,0,0)', 'C (0,2,0)', 'D (\u22121,\u22121,0)'];
+  var hoverTexts = [
+    'A: 3 binding planes (ABC, ACD, ABD)',
+    'B: 3 binding planes (ABC, ABD, BCD)',
+    'C: 3 binding planes (ABC, ACD, BCD)',
+    'D: 3 binding planes (ABD, ACD, BCD)'];
+  var edges = [[0,1],[0,2],[0,3],[1,2],[1,3],[2,3]];
+  var traces = [
+    {type: 'mesh3d', x: vx, y: vy, z: vz,
+     i: [0,0,0,1], j: [1,1,2,2], k: [2,3,3,3],
+     opacity: 0.25, color: '#8fa3b8', name: 'Tetrahedron', hoverinfo: 'skip'},
+    {type: 'scatter3d', mode: 'markers+text',
+     x: vx, y: vy, z: vz,
+     marker: {color: '#8a6e5e', size: 5, line: {width: 1, color: 'white'}},
+     text: labels, textposition: 'top center',
+     textfont: {size: 11},
+     hovertext: hoverTexts, hoverinfo: 'text', name: 'Vertices'}
+  ];
+  for (var e = 0; e < edges.length; e++) {
+    var a = edges[e][0], b = edges[e][1];
+    traces.push({type: 'scatter3d', mode: 'lines',
+      x: [vx[a], vx[b]], y: [vy[a], vy[b]], z: [vz[a], vz[b]],
+      line: {color: '#7b97ad', width: 3},
+      showlegend: false, hoverinfo: 'skip'});
+  }
+  var sceneAx = function(t) {
+    return {title: {text: t, font: {family: figFont, size: 14}},
+            gridcolor: css('--fig-grid'), zerolinecolor: css('--fig-grid'),
+            tickfont: {family: figFont, size: 12, color: css('--fig-axis')}};
+  };
+  var layout = themeLayout({
+    scene: {
+      xaxis: sceneAx('x\u2081'), yaxis: sceneAx('x\u2082'), zaxis: sceneAx('x\u2083'),
+      camera: {eye: {x: 1.8, y: 1.8, z: 1.2}}},
+    showlegend: false, margin: {t: 10, b: 10, l: 10, r: 10}
+  });
+  Plotly.newPlot('fig-tetrahedron', traces, layout, plotlyConfig);
+})();
+</script>
 ```
 
 ### Vertex {#vertex-def}
@@ -253,7 +202,7 @@ fig.show()
 We are now ready to give the algebraic definition of a "corner" point. A vertex is a feasible point where enough linearly independent constraints are tight to uniquely determine it -- exactly $n$ constraints in $\mathbb{R}^n$.
 
 ::: {#def-vertex}
-## Definition 6.4 (Vertex)
+## Vertex
 
 A point $\bar{x} \in \mathbb{R}^n$ is a **vertex** of a polyhedron $P = \{x : Ax \leq b\}$ if:
 
@@ -286,7 +235,7 @@ For polyhedra, **vertex = extreme point**.
 The geometric and algebraic characterizations of "corner" points turn out to be equivalent for polyhedra. This is a key result: it means we can use whichever characterization is more convenient -- the geometric one for intuition and proofs by contradiction, the algebraic one for computation and enumeration.
 
 ::: {#thm-equivalence-extreme-vertex}
-## Theorem 6.5 (Equivalence of Extreme Point and Vertex)
+## Equivalence of Extreme Point and Vertex
 
 Let $P = \{x \in \mathbb{R}^n \mid Ax \leq b\}$ be a nonempty polyhedron with $A \in \mathbb{R}^{m \times n}$. Let $\bar{x} \in P$. Then
 
@@ -295,11 +244,31 @@ $$\bar{x} \text{ is an extreme point} \iff \bar{x} \text{ is a vertex.}$$
 
 This equivalence bridges geometry and algebra: the geometric notion of "cannot be decomposed as a convex combination" is exactly the same as the algebraic notion of "has $n$ linearly independent tight constraints." This means we can use either characterization depending on which is more convenient for a given argument.
 
-### Finite Number of Extreme Points {#finite-extreme-points}
+::: {.proof}
+We prove both directions. Write the polyhedron as $P = \{x : a_i^\top x \leq b_i, \; i = 1, \ldots, m\}$ and let $I(\bar{x}) = \{i : a_i^\top \bar{x} = b_i\}$ denote the set of binding constraints at $\bar{x}$.
+
+**($\Leftarrow$) Vertex $\Rightarrow$ Extreme point.** Suppose $\bar{x}$ is a vertex, so $\{a_i : i \in I(\bar{x})\}$ contains $n$ linearly independent vectors. Assume for contradiction that $\bar{x}$ is not an extreme point: there exist $y, z \in P$ with $y \neq z$ and $\lambda \in (0,1)$ such that $\bar{x} = \lambda y + (1-\lambda) z$.
+
+For each binding constraint $i \in I(\bar{x})$:
+
+$$b_i = a_i^\top \bar{x} = \lambda \, a_i^\top y + (1-\lambda) \, a_i^\top z.$$
+
+Since $y, z \in P$, both $a_i^\top y \leq b_i$ and $a_i^\top z \leq b_i$. A convex combination of two quantities each at most $b_i$ can equal $b_i$ only if both equal $b_i$. Therefore $a_i^\top y = a_i^\top z = b_i$ for every $i \in I(\bar{x})$, which gives $a_i^\top (y - z) = 0$ for all $i \in I(\bar{x})$.
+
+Since $\{a_i : i \in I(\bar{x})\}$ contains $n$ linearly independent vectors in $\mathbb{R}^n$, the only solution is $y - z = 0$, contradicting $y \neq z$. Hence $\bar{x}$ is an extreme point.
+
+**($\Rightarrow$) Extreme point $\Rightarrow$ Vertex.** Suppose $\bar{x}$ is an extreme point. Assume for contradiction that the vectors $\{a_i : i \in I(\bar{x})\}$ do **not** span $\mathbb{R}^n$, i.e., their rank is less than $n$. Then there exists a nonzero direction $d \in \mathbb{R}^n$ with $a_i^\top d = 0$ for all $i \in I(\bar{x})$.
+
+For each non-binding constraint $i \notin I(\bar{x})$, we have $a_i^\top \bar{x} < b_i$ (strict inequality). By continuity, there exists $\epsilon > 0$ small enough that $a_i^\top (\bar{x} \pm \epsilon d) < b_i$ for all $i \notin I(\bar{x})$.
+
+For each binding constraint $i \in I(\bar{x})$: $a_i^\top (\bar{x} \pm \epsilon d) = b_i \pm \epsilon \cdot 0 = b_i \leq b_i$.
+
+Therefore both $y = \bar{x} + \epsilon d$ and $z = \bar{x} - \epsilon d$ lie in $P$, with $y \neq z$ and $\bar{x} = \tfrac{1}{2} y + \tfrac{1}{2} z$. This contradicts $\bar{x}$ being an extreme point. Hence $\{a_i : i \in I(\bar{x})\}$ must contain $n$ linearly independent vectors, so $\bar{x}$ is a vertex. $\blacksquare$
+:::
+
+#### Finite Number of Extreme Points {#finite-extreme-points}
 
 ::: {#cor-finite-extreme-points}
-## Corollary 6.6
-
 Given a finite set of linear inequalities, there can only be a **finite number** of extreme points.
 :::
 
@@ -317,10 +286,10 @@ Each such set of $n$ constraints yields at most one candidate vertex by solving 
 Therefore, the number of vertices is at most $\binom{m}{n}$, which is finite. This completes the proof. $\blacksquare$
 :::
 
-### Vertices of the LP Feasible Set {#vertices-of-lp}
+#### Vertices of the LP Feasible Set {#vertices-of-lp}
 
 ::: {#cor-vertices-lp-feasible-set}
-## Corollary 6.7 (Number of Vertices of the Feasible Set of LP)
+## Number of Vertices of the Feasible Set of LP
 
 Consider an LP in the canonical form:
 
@@ -347,12 +316,12 @@ We know that the number of extreme points is finite, but do they always exist? T
 
 ### Existence of Extreme Points {#existence}
 
-### Containing a Line {#contain-line}
+#### Containing a Line {#contain-line}
 
 Before we can state when extreme points exist, we need to identify the one situation where they fail to exist: when the polyhedron extends infinitely in some direction and its "reverse" -- that is, when it contains an entire line.
 
 ::: {#def-contain-line}
-## Definition 6.8 (Contain a Line)
+## Contain a Line
 
 A polyhedron $P$ **contains a line** if there exist $x \in P$ and $d \in \mathbb{R}^n$, $d \neq 0$, such that
 
@@ -361,49 +330,14 @@ $$x + \lambda d \in P \quad \forall\, \lambda \in \mathbb{R}.$$
 
 A polyhedron contains a line when it extends infinitely in both directions along some direction $d$. For example, a half-plane in $\mathbb{R}^2$ contains lines parallel to its boundary. This condition is the obstruction to having extreme points: if the polyhedron contains a line, no point on that line can be an extreme point.
 
-```python
-#| label: fig-contain-line
-#| fig-cap: "Figure 6.5: Left --- An unbounded polyhedron that contains a line. Center & Right --- Bounded polyhedra that do not contain a line."
-#| echo: false
+![Left --- An unbounded polyhedron that contains a line (the dotted red line extends infinitely in both directions). Right --- Bounded polyhedra that do not contain a line.](figures/polyhedron-line.svg){#fig-polyhedron-line}
 
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-
-fig = make_subplots(rows=1, cols=2, subplot_titles=(
-    'Contains a line', 'Do not contain a line'))
-
-fig.add_trace(go.Scatter(x=[-2, 6, 6, -2, -2], y=[1, 1, 3, 3, 1],
-    fill='toself', fillcolor='rgba(122,154,126,0.2)',
-    line=dict(color='#7a9a7e', width=2.5), name='Contains a line'), row=1, col=1)
-fig.add_trace(go.Scatter(x=[-2, 6], y=[2, 2], mode='lines',
-    line=dict(color='#b56b6b', dash='dot', width=2.5),
-    name='A line inside P'), row=1, col=1)
-fig.add_trace(go.Scatter(x=[2], y=[2], mode='markers',
-    marker=dict(color='#b56b6b', size=8), showlegend=False), row=1, col=1)
-
-fig.add_trace(go.Scatter(x=[9,11,12,10.5,8.5,9], y=[0.5,0,1.5,3.5,2.5,0.5],
-    fill='toself', fillcolor='rgba(123,143,163,0.18)',
-    line=dict(color='#7b97ad', width=2.5),
-    name='No line (bounded)'), row=1, col=2)
-fig.add_trace(go.Scatter(x=[15,18,17.5,15.5,15], y=[0,1,3.5,3,0],
-    fill='toself', fillcolor='rgba(144,126,160,0.18)',
-    line=dict(color='#907ea0', width=2.5),
-    name='No line (bounded)'), row=1, col=2)
-
-fig.update_xaxes(range=[-3, 7], row=1, col=1)
-fig.update_yaxes(range=[-0.5, 4.5], scaleanchor='x', row=1, col=1)
-fig.update_xaxes(range=[7.5, 19], row=1, col=2)
-fig.update_yaxes(range=[-0.5, 4.5], scaleanchor='x2', row=1, col=2)
-fig.update_layout(showlegend=True, margin=dict(t=40, b=55, l=45, r=20))
-fig.show()
-```
-
-### Existence Theorem {#existence-thm}
+#### Existence Theorem {#existence-thm}
 
 We have seen that extreme points and vertices are equivalent for polyhedra (@thm-equivalence-extreme-vertex), and that their number is finite (@cor-finite-extreme-points). But do they always exist? The following theorem precisely characterizes when a polyhedron has extreme points. It tells us that extreme points exist unless the polyhedron contains an entire line -- a condition that is automatically satisfied when the polyhedron is bounded or when nonnegativity constraints are present (as in LP canonical form).
 
 ::: {#thm-existence-extreme-points}
-## Theorem 6.9 (Existence of Extreme Points)
+## Existence of Extreme Points
 
 Consider a nonempty polyhedron $P$.
 
@@ -412,9 +346,27 @@ $$P \text{ has at least one extreme point} \iff P \text{ does not contain a line
 
 This theorem gives a clean necessary and sufficient condition for the existence of extreme points. In practice, most polyhedra arising in LP do not contain lines (e.g., nonnegativity constraints $x \geq 0$ prevent any line from lying in the feasible set), so extreme points almost always exist.
 
-::: {#cor-polytope-extreme-point}
-## Corollary 6.10
+::: {.proof}
+Write $P = \{x : a_i^\top x \leq b_i, \; i = 1, \ldots, m\}$ with $A$ the matrix of rows $a_i^\top$.
 
+**($\Rightarrow$) Has extreme point $\Rightarrow$ contains no line.** We prove the contrapositive. If $P$ contains a line, there exist $x_0 \in P$ and $d \neq 0$ with $x_0 + \lambda d \in P$ for all $\lambda \in \mathbb{R}$. This forces $Ad = 0$ (otherwise, sending $\lambda \to \pm\infty$ violates some constraint). But then for **any** $\bar{x} \in P$ and any $\lambda$, we have $A(\bar{x} + \lambda d) = A\bar{x} + \lambda Ad = A\bar{x} \leq b$, so $\bar{x} + \lambda d \in P$. Writing $\bar{x} = \tfrac{1}{2}(\bar{x} + \epsilon d) + \tfrac{1}{2}(\bar{x} - \epsilon d)$ with both summands in $P$ and distinct, we see $\bar{x}$ is not an extreme point. Since $\bar{x}$ was arbitrary, $P$ has no extreme points.
+
+**($\Leftarrow$) Contains no line $\Rightarrow$ has extreme point.** Since $P$ contains no line, $\ker(A) = \{0\}$, i.e., $A$ has full column rank $n$. We construct a vertex by an iterative procedure.
+
+Pick any $\bar{x} \in P$ and let $I(\bar{x}) = \{i : a_i^\top \bar{x} = b_i\}$. If the binding constraints $\{a_i : i \in I(\bar{x})\}$ have rank $n$, then $\bar{x}$ is already a vertex and we are done. Otherwise, their rank is some $k < n$.
+
+Since $k < n$, there exists $d \neq 0$ with $a_i^\top d = 0$ for all $i \in I(\bar{x})$. Since $\operatorname{rank}(A) = n$, we know $Ad \neq 0$, so some constraint $j \notin I(\bar{x})$ has $a_j^\top d \neq 0$. Replacing $d$ by $-d$ if necessary, assume there exists such a $j$ with $a_j^\top d > 0$. Define
+
+$$\lambda^* = \min_{\substack{i \notin I(\bar{x}) \\ a_i^\top d > 0}} \frac{b_i - a_i^\top \bar{x}}{a_i^\top d} > 0$$
+
+and set $\bar{x}' = \bar{x} + \lambda^* d$. The point $\bar{x}'$ is feasible: for $i \in I(\bar{x})$, we have $a_i^\top \bar{x}' = b_i$; for $i \notin I(\bar{x})$ with $a_i^\top d \leq 0$, the constraint only gets more slack; and for $i \notin I(\bar{x})$ with $a_i^\top d > 0$, the ratio test ensures $a_i^\top \bar{x}' \leq b_i$.
+
+Crucially, $\bar{x}'$ has at least one **new** binding constraint $j^*$ (the minimizer). Since $a_{j^*}^\top d > 0$ while $a_i^\top d = 0$ for all $i \in I(\bar{x})$, the vector $a_{j^*}$ is linearly independent of $\{a_i : i \in I(\bar{x})\}$. So $\operatorname{rank}\{a_i : i \in I(\bar{x}')\} \geq k + 1$.
+
+Repeat, increasing the rank by at least 1 each step. After at most $n - k$ steps we obtain a point with $n$ linearly independent binding constraints -- a vertex. $\blacksquare$
+:::
+
+::: {#cor-polytope-extreme-point}
 Every **polytope** (bounded polyhedron) contains at least one extreme point.
 :::
 
@@ -425,7 +377,7 @@ Since a polytope is bounded, it cannot contain a line, so the theorem above imme
 The equivalence of extreme points and vertices (@thm-equivalence-extreme-vertex), combined with the existence theorem (@thm-existence-extreme-points), sets the stage for the most important structural result in linear programming. We now arrive at the central result of LP geometry. The Fundamental Theorem tells us that the search for an optimal solution can be restricted to the extreme points of the feasible polyhedron -- a finite set. This is the theoretical justification for the simplex method and explains why linear programs, despite having infinitely many feasible points, can be solved by examining a finite number of candidates.
 
 ::: {#thm-fundamental-lp}
-## Theorem 6.11 (Fundamental Theorem of LP)
+## Fundamental Theorem of LP (Geometric Version)
 
 Suppose the polyhedron $P = \{x : \widetilde{A}x \leq \widetilde{b}\}$ has an extreme point. Consider the LP:
 
@@ -434,9 +386,13 @@ $$\min_x \; c^\top x \quad \text{s.t.} \quad x \in P.$$
 If there exists an optimal solution, there also exists an **optimal solution which is an extreme point**.
 :::
 
-This is the most important structural result about linear programs. It says that we never need to look at interior points of the feasible region -- the optimum is always attained at a corner. Geometrically, a linear objective "tilts" the feasible polyhedron, and the lowest point under this tilt is always a vertex (or a face containing a vertex).
+This is the most important structural result about linear programs. It says that we never need to look at interior points of the feasible region --- the optimum is always attained at a corner. Geometrically, a linear objective "tilts" the feasible polyhedron, and the lowest point under this tilt is always a vertex (or a face containing a vertex).
 
-**Implication:** It suffices to only search among the extreme points of the feasible polyhedron $\{x : Ax \leq b,\; x \geq 0\}$. This is just the idea of the **Simplex method**!
+**Implication:** It suffices to only search among the extreme points of the feasible polyhedron $\{x : Ax \leq b,\; x \geq 0\}$. This is the core idea behind the **Simplex method**!
+
+::: {.callout-note appearance="simple"}
+We call this the **geometric version** because it is stated in terms of extreme points of a polyhedron in inequality form. Later in this chapter ([Section @sec-algebraic-ftlp]), after introducing the equational form and basic feasible solutions (BFS), we will restate this result as the **Algebraic Fundamental Theorem of LP**: if the LP has an optimal solution, it has an optimal *BFS*. The algebraic version is more directly useful for algorithm design, since BFS have a concrete computational representation (a basis $B$ and a solution $x_B = \bar{A}_B^{-1}b$), which is exactly what the simplex method manipulates.
+:::
 
 ### Proof {#fundamental-proof}
 
@@ -756,21 +712,16 @@ Let $I \subseteq [m+n]$ with $|I| = n$. We write $\widetilde{A}_I = (\widetilde{
 ::: {.callout-important}
 ## Algorithm: Check All Extreme Points
 
-```
-For all I in subsets of [m+n] with |I| = n:
-    If A_tilde_I is invertible:       // rows of A_tilde_I are linearly independent
-        Solve linear equation: A_tilde_I x = b_tilde_I
-        Define x^(I) = (A_tilde_I)^{-1} b_tilde_I    // x^(I) is an extreme point candidate
-        If x^(I) in Omega:            // check feasibility
-            Define f^(I) = c^T x^(I)
-        Else:
-            Define f^(I) = +infinity
-    Else:
-        Define f^(I) = +infinity
-End For
+**For** each subset $I \subseteq [m+n]$ with $|I| = n$:
 
-Return: x* = x^(I*), f* = f^(I*), where I* = argmin_I { f^(I) }.
-```
+1. **Check independence.** If $\widetilde{A}_I$ is invertible (i.e., the rows of $\widetilde{A}_I$ are linearly independent):
+    a. **Solve.** Compute the candidate extreme point:
+       $$x^{(I)} = \widetilde{A}_I^{-1}\,\widetilde{b}_I.$$
+    b. **Check feasibility.** If $x^{(I)} \in \Omega$ (i.e., $\widetilde{A}\,x^{(I)} \leq \widetilde{b}$), set $f^{(I)} = c^\top x^{(I)}$. Otherwise, set $f^{(I)} = +\infty$.
+
+2. If $\widetilde{A}_I$ is not invertible, set $f^{(I)} = +\infty$.
+
+**Return:** $I^* = \arg\min_{I} f^{(I)}$, $\;x^* = x^{(I^*)}$, $\;f^* = f^{(I^*)}$.
 :::
 
 ::: {.callout-tip}
@@ -846,84 +797,11 @@ $$P_{\text{eq}} = \{\bar{x} \in \mathbb{R}^{n+m} : \bar{A}\bar{x} = b, \; \bar{x
 | **Use case** | Geometric arguments | Simplex method and algebraic proofs |
 :::
 
-```python
-#| label: fig-slack-variables
-#| fig-cap: "Figure 14.1: A 2D LP in canonical form (left) and its equational form interpretation (right). Slack variables measure the distance from each constraint boundary. At the optimal vertex, certain slacks are zero (binding constraints)."
-#| echo: false
-
-import plotly.graph_objects as go
-from plotly.subplots import make_subplots
-import numpy as np
-
-fig = make_subplots(rows=1, cols=2, subplot_titles=(
-    'Canonical Form: Feasible Region in (x\u2081, x\u2082)',
-    'Slack Variables at Each Vertex'))
-
-# Feasible region: x1 + x2 <= 4, x1 <= 3, x2 <= 3, x1,x2 >= 0
-# Vertices: (0,0), (3,0), (3,1), (1,3), (0,3)
-vx = [0, 3, 3, 1, 0, 0]
-vy = [0, 0, 1, 3, 3, 0]
-
-# Constraint lines
-fig.add_trace(go.Scatter(x=vx, y=vy, fill='toself',
-    fillcolor='rgba(123,143,163,0.18)', line=dict(color='#7b97ad', width=2.5),
-    name='Feasible region', mode='lines'), row=1, col=1)
-
-# Constraint boundary lines
-x_line = np.linspace(-0.5, 4.5, 50)
-fig.add_trace(go.Scatter(x=x_line, y=4-x_line, mode='lines',
-    line=dict(color='#b8995e', dash='dash', width=1.5),
-    name='x\u2081+x\u2082=4'), row=1, col=1)
-fig.add_trace(go.Scatter(x=[3,3], y=[-0.5, 4.5], mode='lines',
-    line=dict(color='#ad8480', dash='dash', width=1.5),
-    name='x\u2081=3'), row=1, col=1)
-fig.add_trace(go.Scatter(x=[-0.5, 4.5], y=[3,3], mode='lines',
-    line=dict(color='#7a9a7e', dash='dash', width=1.5),
-    name='x\u2082=3'), row=1, col=1)
-
-# Vertices with labels
-vert_x = [0, 3, 3, 1, 0]
-vert_y = [0, 0, 1, 3, 3]
-vert_labels = ['O(0,0)', 'A(3,0)', 'B(3,1)', 'C(1,3)', 'D(0,3)']
-
-fig.add_trace(go.Scatter(x=vert_x, y=vert_y, mode='markers+text',
-    marker=dict(color='#b56b6b', size=10, line=dict(width=1, color='white')),
-    text=vert_labels, textposition=['bottom right','bottom right','top right','top right','bottom right'],
-    hovertext=[
-        'O: s\u2081=4, s\u2082=3, s\u2083=3 (no binding)',
-        'A: s\u2081=1, s\u2082=0, s\u2083=3 (x\u2081=3 binding)',
-        'B: s\u2081=0, s\u2082=0, s\u2083=2 (x\u2081+x\u2082=4, x\u2081=3 binding)',
-        'C: s\u2081=0, s\u2082=2, s\u2083=0 (x\u2081+x\u2082=4, x\u2082=3 binding)',
-        'D: s\u2081=1, s\u2082=3, s\u2083=0 (x\u2082=3 binding)'],
-    hoverinfo='text', name='Vertices', showlegend=False), row=1, col=1)
-
-# Right panel: bar chart of slack variables at each vertex
-vertices_names = ['O(0,0)', 'A(3,0)', 'B(3,1)', 'C(1,3)', 'D(0,3)']
-# s1 = 4 - x1 - x2, s2 = 3 - x1, s3 = 3 - x2
-s1_vals = [4, 1, 0, 0, 1]
-s2_vals = [3, 0, 0, 2, 3]
-s3_vals = [3, 3, 2, 0, 0]
-
-fig.add_trace(go.Bar(x=vertices_names, y=s1_vals, name='s\u2081 (x\u2081+x\u2082\u22644)',
-    marker_color='#b8995e', opacity=0.85), row=1, col=2)
-fig.add_trace(go.Bar(x=vertices_names, y=s2_vals, name='s\u2082 (x\u2081\u22643)',
-    marker_color='#ad8480', opacity=0.85), row=1, col=2)
-fig.add_trace(go.Bar(x=vertices_names, y=s3_vals, name='s\u2083 (x\u2082\u22643)',
-    marker_color='#7a9a7e', opacity=0.85), row=1, col=2)
-
-fig.update_xaxes(title='x\u2081', range=[-0.5, 4.5], zeroline=True, row=1, col=1)
-fig.update_yaxes(title='x\u2082', range=[-0.5, 4.5], zeroline=True, scaleanchor='x', row=1, col=1)
-fig.update_xaxes(title='Vertex', row=1, col=2)
-fig.update_yaxes(title='Slack value', row=1, col=2)
-fig.update_layout(barmode='group', showlegend=True,
-    margin=dict(t=48, b=55, l=55, r=20),
-    legend=dict(font=dict(size=10)))
-fig.show()
-```
+![A 2D LP in canonical form (left) and its equational form interpretation (right). Slack variables measure the distance from each constraint boundary. At a vertex, the binding constraints ($s_i = 0$) identify which constraints hold with equality.](figures/slack-variables.svg){#fig-slack-variables}
 
 ### Why Equational Form? {#sec-why-equational}
 
-Why go through the trouble of introducing slack variables? The key insight from the [first part of this chapter](#four-cases) is:
+Why go through the trouble of introducing slack variables? The key insight from the [LP geometry discussion above](#four-cases) is:
 
 > $x_0 \in \mathbb{R}^n$ is an extreme point of $P = \{x : \widetilde{A}x \leq \widetilde{b}\}$ if and only if $n$ linearly independent inequality constraints are binding at $x_0$.
 
@@ -962,76 +840,7 @@ The set $B$ is called the **basis**, and $N = [n+m] \setminus B$ is the **non-ba
 
 The idea is simple: we select $m$ linearly independent columns of $\bar{A}$, set all other variables to zero, and solve the resulting $m \times m$ system.
 
-```python
-#| label: fig-basic-solutions
-#| fig-cap: "Figure 14.2: Block structure of a basic solution. We select m columns of the augmented matrix (the basis), set the remaining variables to zero, and solve the square system."
-#| echo: false
-
-import plotly.graph_objects as go
-
-fig = go.Figure()
-
-# Draw the matrix A_bar
-fig.add_shape(type='rect', x0=0, y0=0, x1=7, y1=4,
-    line=dict(color='#7b97ad', width=2), fillcolor='rgba(123,143,163,0.08)')
-fig.add_annotation(x=3.5, y=4.3, text='<b>\u0100</b>  (m \u00d7 (n+m))',
-    showarrow=False, font=dict(size=14, color='#7b97ad'))
-
-# Highlight basis columns
-for col_x in [1, 3, 5]:
-    fig.add_shape(type='rect', x0=col_x-0.35, y0=0.05, x1=col_x+0.35, y1=3.95,
-        line=dict(color='#b8995e', width=2.5), fillcolor='rgba(184,153,94,0.15)')
-
-fig.add_annotation(x=1, y=-0.4, text='<b>\u0101<sub>i\u2081</sub></b>',
-    showarrow=False, font=dict(size=12, color='#b8995e'))
-fig.add_annotation(x=3, y=-0.4, text='<b>\u0101<sub>i\u2082</sub></b>',
-    showarrow=False, font=dict(size=12, color='#b8995e'))
-fig.add_annotation(x=5, y=-0.4, text='<b>\u0101<sub>i\u2083</sub></b>',
-    showarrow=False, font=dict(size=12, color='#b8995e'))
-
-# x_bar vector
-fig.add_shape(type='rect', x0=8.5, y0=0, x1=9.5, y1=4,
-    line=dict(color='#7b97ad', width=2), fillcolor='rgba(123,143,163,0.08)')
-fig.add_annotation(x=9, y=4.3, text='<b>x\u0304</b>',
-    showarrow=False, font=dict(size=14, color='#7b97ad'))
-
-# Show which entries are nonzero (basic) and zero (non-basic)
-y_positions = [3.4, 2.8, 2.2, 1.6, 1.0, 0.4]
-labels = ['x\u0304<sub>i\u2081</sub>', 'x\u0304<sub>2</sub>', 'x\u0304<sub>i\u2082</sub>', 'x\u0304<sub>4</sub>', 'x\u0304<sub>i\u2083</sub>', 'x\u0304<sub>6</sub>']
-colors = ['#b8995e', '#968a80', '#b8995e', '#968a80', '#b8995e', '#968a80']
-values = ['nonzero', '0', 'nonzero', '0', 'nonzero', '0']
-
-for y, lab, col, val in zip(y_positions, labels, colors, values):
-    fig.add_annotation(x=9, y=y, text=f'{lab}={val}',
-        showarrow=False, font=dict(size=10, color=col))
-
-# b vector
-fig.add_shape(type='rect', x0=11, y0=0, x1=12, y1=4,
-    line=dict(color='#7b97ad', width=2), fillcolor='rgba(123,143,163,0.08)')
-fig.add_annotation(x=11.5, y=4.3, text='<b>b</b>',
-    showarrow=False, font=dict(size=14, color='#7b97ad'))
-
-# Equals sign
-fig.add_annotation(x=10.25, y=2, text='=', showarrow=False,
-    font=dict(size=20, color='#555'))
-
-# Brace for basis
-fig.add_annotation(x=3, y=-1.0,
-    text='B = {i\u2081, i\u2082, i\u2083}  (m=3 linearly independent columns)',
-    showarrow=False, font=dict(size=11, color='#b8995e'))
-
-# Arrow showing the solve step
-fig.add_annotation(x=9, y=-1.0,
-    text='x<sub>B</sub> = \u0100<sub>B</sub><sup>\u207b\u00b9</sup> b,  x<sub>N</sub> = 0',
-    showarrow=False, font=dict(size=11, color='#b56b6b'))
-
-fig.update_layout(
-    xaxis=dict(range=[-1, 13], showgrid=False, zeroline=False, showticklabels=False),
-    yaxis=dict(range=[-1.8, 5], showgrid=False, zeroline=False, showticklabels=False, scaleanchor='x'),
-    showlegend=False, margin=dict(t=10, b=10, l=10, r=10),
-    plot_bgcolor='white')
-fig.show()
-```
+![Block structure of a basic solution. We select $m$ columns of the augmented matrix (the basis), set the remaining variables to zero, and solve the square system.](figures/basic-solutions-block.svg){#fig-basic-solutions}
 
 ### Basic Feasible Solution {#sec-bfs-def}
 
@@ -1063,91 +872,73 @@ $$\bar{c} = \begin{pmatrix} 0 \\ -1 \\ 0 \\ 0 \end{pmatrix}, \quad b = \begin{pm
 
 We enumerate all possible bases $B \subseteq \{1,2,3,4\}$ with $|B| = 2$:
 
-| Basis $B$ | $\bar{A}_B$ | $x_B = \bar{A}_B^{-1}b$ | $\bar{x}^\top$ | Feasible? |
-|---|---|---|---|---|
-| $\{1,2\}$ | $\begin{psmallmatrix} -1 & 1 \\ 1 & 1 \end{psmallmatrix}$ | $\begin{psmallmatrix} 0.5 \\ 1.5 \end{psmallmatrix}$ | $(0.5, 1.5, 0, 0)$ | Yes -- BFS ($a$) |
-| $\{1,3\}$ | $\begin{psmallmatrix} -1 & 1 \\ 1 & 0 \end{psmallmatrix}$ | $\begin{psmallmatrix} 2 \\ 3 \end{psmallmatrix}$ | $(2, 0, 3, 0)$ | Yes -- BFS ($b$) |
-| $\{1,4\}$ | $\begin{psmallmatrix} -1 & 0 \\ 1 & 1 \end{psmallmatrix}$ | $\begin{psmallmatrix} -1 \\ 3 \end{psmallmatrix}$ | $(-1, 0, 0, 3)$ | **No** ($x_1 < 0$, point $c$) |
-| $\{2,3\}$ | $\begin{psmallmatrix} 1 & 1 \\ 1 & 0 \end{psmallmatrix}$ | $\begin{psmallmatrix} 2 \\ -1 \end{psmallmatrix}$ | $(0, 2, -1, 0)$ | **No** ($s_1 < 0$) |
-| $\{2,4\}$ | $\begin{psmallmatrix} 1 & 0 \\ 1 & 1 \end{psmallmatrix}$ | $\begin{psmallmatrix} 1 \\ 1 \end{psmallmatrix}$ | $(0, 1, 0, 1)$ | Yes -- BFS ($d$) |
-| $\{3,4\}$ | $\begin{psmallmatrix} 1 & 0 \\ 0 & 1 \end{psmallmatrix}$ | $\begin{psmallmatrix} 1 \\ 2 \end{psmallmatrix}$ | $(0, 0, 1, 2)$ | Yes -- BFS ($e$) |
+```{=html}
+<table style="width:100%; border-collapse:collapse; font-family:'Palatino Linotype','Palatino','Georgia',serif; font-size:0.95em; color:#3d3530; margin:1em 0;">
+<thead>
+<tr style="border-bottom:2px solid #968a80;">
+  <th style="padding:8px 12px; text-align:left;">Basis <span class="math inline">B</span></th>
+  <th style="padding:8px 12px; text-align:center;"><span class="math inline">\bar{A}_B</span></th>
+  <th style="padding:8px 12px; text-align:center;"><span class="math inline">x_B = \bar{A}_B^{-1}b</span></th>
+  <th style="padding:8px 12px; text-align:center;"><span class="math inline">\bar{x}^\top</span></th>
+  <th style="padding:8px 12px; text-align:left;">Feasible?</th>
+</tr>
+</thead>
+<tbody>
+<tr style="border-bottom:1px solid #e0d9d1;">
+  <td style="padding:8px 12px;"><span class="math inline">\{1,2\}</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">\bigl(\begin{smallmatrix} -1 & 1 \\ 1 & 1 \end{smallmatrix}\bigr)</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">\bigl(\begin{smallmatrix} 0.5 \\ 1.5 \end{smallmatrix}\bigr)</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">(0.5,\, 1.5,\, 0,\, 0)</span></td>
+  <td style="padding:8px 12px; color:#7a9a7e;">Yes — BFS (<em>a</em>)</td>
+</tr>
+<tr style="border-bottom:1px solid #e0d9d1;">
+  <td style="padding:8px 12px;"><span class="math inline">\{1,3\}</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">\bigl(\begin{smallmatrix} -1 & 1 \\ 1 & 0 \end{smallmatrix}\bigr)</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">\bigl(\begin{smallmatrix} 2 \\ 3 \end{smallmatrix}\bigr)</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">(2,\, 0,\, 3,\, 0)</span></td>
+  <td style="padding:8px 12px; color:#7a9a7e;">Yes — BFS (<em>b</em>)</td>
+</tr>
+<tr style="border-bottom:1px solid #e0d9d1;">
+  <td style="padding:8px 12px;"><span class="math inline">\{1,4\}</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">\bigl(\begin{smallmatrix} -1 & 0 \\ 1 & 1 \end{smallmatrix}\bigr)</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">\bigl(\begin{smallmatrix} -1 \\ 3 \end{smallmatrix}\bigr)</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">(-1,\, 0,\, 0,\, 3)</span></td>
+  <td style="padding:8px 12px; color:#c47a6a;"><strong>No</strong> (<span class="math inline">x_1 &lt; 0</span>, point <em>c</em>)</td>
+</tr>
+<tr style="border-bottom:1px solid #e0d9d1;">
+  <td style="padding:8px 12px;"><span class="math inline">\{2,3\}</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">\bigl(\begin{smallmatrix} 1 & 1 \\ 1 & 0 \end{smallmatrix}\bigr)</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">\bigl(\begin{smallmatrix} 2 \\ -1 \end{smallmatrix}\bigr)</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">(0,\, 2,\, -1,\, 0)</span></td>
+  <td style="padding:8px 12px; color:#c47a6a;"><strong>No</strong> (<span class="math inline">s_1 &lt; 0</span>)</td>
+</tr>
+<tr style="border-bottom:1px solid #e0d9d1;">
+  <td style="padding:8px 12px;"><span class="math inline">\{2,4\}</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">\bigl(\begin{smallmatrix} 1 & 0 \\ 1 & 1 \end{smallmatrix}\bigr)</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">\bigl(\begin{smallmatrix} 1 \\ 1 \end{smallmatrix}\bigr)</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">(0,\, 1,\, 0,\, 1)</span></td>
+  <td style="padding:8px 12px; color:#7a9a7e;">Yes — BFS (<em>d</em>)</td>
+</tr>
+<tr style="border-bottom:1px solid #e0d9d1;">
+  <td style="padding:8px 12px;"><span class="math inline">\{3,4\}</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">\bigl(\begin{smallmatrix} 1 & 0 \\ 0 & 1 \end{smallmatrix}\bigr)</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">\bigl(\begin{smallmatrix} 1 \\ 2 \end{smallmatrix}\bigr)</span></td>
+  <td style="padding:8px 12px; text-align:center;"><span class="math inline">(0,\, 0,\, 1,\, 2)</span></td>
+  <td style="padding:8px 12px; color:#7a9a7e;">Yes — BFS (<em>e</em>)</td>
+</tr>
+</tbody>
+</table>
+```
 
 The BFS are exactly the extreme points (vertices) of the feasible polytope.
 
-```python
-#| label: fig-bfs-example
-#| fig-cap: "Figure 14.3: BFS enumeration for the example LP. Green points are BFS (feasible basic solutions = extreme points). The red point is a basic solution that is infeasible. Hover for details."
-#| echo: false
+![BFS enumeration for the example LP. Green points are BFS (feasible basic solutions = extreme points). The red point is a basic solution that is infeasible.](figures/bfs-example.svg){#fig-bfs-example}
 
-import plotly.graph_objects as go
-import numpy as np
-
-fig = go.Figure()
-
-# Feasible region: -x1 + x2 <= 1, x1 + x2 <= 2, x1 >= 0, x2 >= 0
-# Vertices: (0,0), (2,0), (0.5,1.5), (0,1)
-poly_x = [0, 2, 0.5, 0, 0]
-poly_y = [0, 0, 1.5, 1, 0]
-
-fig.add_trace(go.Scatter(x=poly_x, y=poly_y, fill='toself',
-    fillcolor='rgba(122,154,126,0.2)', line=dict(color='#7a9a7e', width=2.5),
-    name='Feasible region', mode='lines'))
-
-# Constraint lines
-xx = np.linspace(-1.5, 3, 100)
-fig.add_trace(go.Scatter(x=xx, y=1+xx, mode='lines',
-    line=dict(color='#b8995e', dash='dash', width=1.5),
-    name='\u2212x\u2081+x\u2082=1'))
-fig.add_trace(go.Scatter(x=xx, y=2-xx, mode='lines',
-    line=dict(color='#ad8480', dash='dash', width=1.5),
-    name='x\u2081+x\u2082=2'))
-
-# BFS points (feasible)
-bfs_x = [0.5, 2, 0, 0]
-bfs_y = [1.5, 0, 1, 0]
-bfs_labels = ['a(0.5,1.5)', 'b(2,0)', 'd(0,1)', 'e(0,0)']
-bfs_bases = ['B={1,2}', 'B={1,3}', 'B={2,4}', 'B={3,4}']
-
-fig.add_trace(go.Scatter(x=bfs_x, y=bfs_y, mode='markers+text',
-    marker=dict(color='#7a9a7e', size=11, symbol='circle',
-    line=dict(width=1.5, color='white')),
-    text=bfs_labels, textposition=['top left', 'bottom right', 'bottom left', 'bottom right'],
-    hovertext=[f'BFS {l}<br>Basis: {b}<br>x\u0304 feasible (\u2265 0)' for l, b in zip(bfs_labels, bfs_bases)],
-    hoverinfo='text', name='BFS (extreme points)'))
-
-# Infeasible basic solution
-fig.add_trace(go.Scatter(x=[-1], y=[0], mode='markers+text',
-    marker=dict(color='#b56b6b', size=11, symbol='x',
-    line=dict(width=1.5, color='white')),
-    text=['c(-1,0)'], textposition='bottom left',
-    hovertext=['Basic solution c(-1,0)<br>Basis: B={1,4}<br>INFEASIBLE (x\u2081 < 0)'],
-    hoverinfo='text', name='Infeasible basic solution'))
-
-# Objective contours
-for val in [0, -0.5, -1, -1.5]:
-    fig.add_trace(go.Scatter(x=[-1.5, 3], y=[-val, -val], mode='lines',
-        line=dict(color='#907ea0', dash='dot', width=1),
-        showlegend=False, hoverinfo='skip'))
-
-# Optimal marker
-fig.add_trace(go.Scatter(x=[0.5], y=[1.5], mode='markers',
-    marker=dict(color='#b56b6b', size=15, symbol='star',
-    line=dict(width=1.5, color='white')),
-    name='Optimal BFS: a(0.5,1.5), f*=\u22121.5'))
-
-fig.update_layout(
-    xaxis=dict(title='x\u2081', range=[-1.8, 3.2], zeroline=True),
-    yaxis=dict(title='x\u2082', range=[-0.8, 2.5], zeroline=True, scaleanchor='x'),
-    showlegend=True, margin=dict(t=20, b=50, l=55, r=20),
-    legend=dict(font=dict(size=10)))
-fig.show()
-```
-
-![The vertex--BFS correspondence. Each vertex $v_i$ of the polytope (left, geometric view) corresponds to a basic feasible solution with a specific set of basic and nonbasic variables (right, algebraic view). Arrows connect each vertex to its BFS representation.](figures/ch14-vertex-bfs.svg){#fig-vertex-bfs}
+![The vertex--BFS correspondence. Each vertex $v_i$ of the polytope (left, geometric view) corresponds to a basic feasible solution with a specific set of basic and nonbasic variables (right, algebraic view).](figures/ch14-vertex-bfs.svg){#fig-vertex-bfs}
 
 ### Extreme Point = Vertex = BFS {#sec-equivalence}
 
-We have now defined basic feasible solutions algebraically through the equational form (@eq-equational-form). The central question is: how do BFS relate to the geometric notions of extreme points and vertices from the [first part of this chapter](#four-cases)? We established there that extreme points and vertices are equivalent for polyhedra in inequality form. We now extend this equivalence to include BFS in the equational form.
+We have now defined basic feasible solutions algebraically through the equational form (@eq-equational-form). The central question is: how do BFS relate to the geometric notions of extreme points and vertices established [earlier in this chapter](#four-cases)? We proved there that extreme points and vertices are equivalent for polyhedra in inequality form. We now extend this equivalence to include BFS in the equational form.
 
 ::: {#thm-equivalence}
 ## Theorem (Equivalence of Extreme Point, Vertex, and BFS)
@@ -1167,7 +958,7 @@ where $\bar{A} \in \mathbb{R}^{m \times (n+m)}$ with $\operatorname{rank}(\bar{A
 $$\text{Extreme point} \iff \text{Vertex} \iff \text{BFS}$$
 :::
 
-The equivalence (1) $\Leftrightarrow$ (2) was established in the [first part of this chapter](#four-cases). The key new piece is the equivalence with BFS. The argument proceeds as follows.
+The equivalence (1) $\Leftrightarrow$ (2) was established [above](#equivalence). The key new piece is the equivalence with BFS. The argument proceeds as follows.
 
 **Vertex $\Rightarrow$ BFS.** We showed that $x_0$ is a vertex if and only if $n$ linearly independent constraints from $\widetilde{A}x \leq \widetilde{b}$ are binding at $x_0$. Let $\mathcal{I}$ be the index set of these binding constraints. In the equational form, binding means $\bar{x}_i = 0$ for $i \in \mathcal{I}$, with $|\mathcal{I}| = n$. Since $\bar{x} \in \mathbb{R}^{n+m}$ has $n+m$ components and $n$ of them are zero, at most $m$ components are nonzero. Let $\bar{\mathcal{I}} = [n+m] \setminus \mathcal{I}$ be the complement (the indices of potentially nonzero entries), so $|\bar{\mathcal{I}}| = m$. Since the binding constraints are linearly independent, the columns $\bar{A}_{\bar{\mathcal{I}}}$ are linearly independent (this follows from the relationship between the row space of $\widetilde{A}_\mathcal{I}$ and the column space of $\bar{A}_{\bar{\mathcal{I}}}$). Setting $B = \bar{\mathcal{I}}$ gives $\bar{A}_B$ invertible, $x_N = 0$, and $x_B = \bar{A}_B^{-1}b$ -- exactly a basic solution. Feasibility ($\bar{x} \geq 0$) is inherited from $\bar{x}^* \in P_{\text{eq}}$.
 
@@ -1190,7 +981,7 @@ Then if the LP has an optimal solution, it has an **optimal BFS**.
 :::
 
 ::: {.proof}
-By the geometric Fundamental Theorem (from the [first part of this chapter](#four-cases)), if $P_{\text{eq}}$ has an extreme point and the LP has an optimal solution, then it has an optimal extreme point. The equational form polyhedron $P_{\text{eq}} = \{\bar{x} : \bar{A}\bar{x} = b, \bar{x} \geq 0\}$ does not contain a line (the nonnegativity constraints $\bar{x} \geq 0$ prevent this), so $P_{\text{eq}}$ has at least one extreme point (by the Existence Theorem). By the equivalence theorem above, extreme points of $P_{\text{eq}}$ are exactly the BFS. Therefore, the LP has an optimal BFS. $\blacksquare$
+By the geometric Fundamental Theorem (@thm-fundamental-lp), if $P_{\text{eq}}$ has an extreme point and the LP has an optimal solution, then it has an optimal extreme point. The equational form polyhedron $P_{\text{eq}} = \{\bar{x} : \bar{A}\bar{x} = b, \bar{x} \geq 0\}$ does not contain a line (the nonnegativity constraints $\bar{x} \geq 0$ prevent this), so $P_{\text{eq}}$ has at least one extreme point (by the Existence Theorem). By the equivalence theorem above, extreme points of $P_{\text{eq}}$ are exactly the BFS. Therefore, the LP has an optimal BFS. $\blacksquare$
 :::
 
 ::: {#cor-finite-bfs}
@@ -1207,7 +998,23 @@ which is finite (though potentially exponential in $m$).
 A BFS corresponds to choosing a basis $B \subseteq [n+m]$ with $|B| = m$. The number of such choices is $\binom{n+m}{m}$, and each choice yields at most one basic solution (since $\bar{A}_B$ being invertible gives a unique solution $x_B = \bar{A}_B^{-1}b$). $\blacksquare$
 :::
 
-This finiteness result is crucial: it means that the search for an optimal solution reduces to examining at most $\binom{n+m}{m}$ candidates. While this number can be exponentially large (for instance, the unit hypercube $\{x : 0 \leq x \leq \mathbf{1}\}$ has $2^n$ vertices), the simplex method avoids enumerating all of them by moving smartly from one BFS to an adjacent one.
+### Why Is the Algebraic Characterization Powerful? {#sec-algebraic-power}
+
+The Algebraic Fundamental Theorem and the finiteness corollary together reveal a profound structural insight: **they transform a continuous optimization problem into a combinatorial one.**
+
+Without this result, solving an LP would mean searching over an infinite, continuous feasible region -- a daunting task. The Algebraic Fundamental Theorem tells us that we can instead restrict attention to the basic feasible solutions, which are completely characterized by algebraic data: a BFS is determined by choosing $m$ linearly independent columns of $A$ (a basis $B$) and solving the system $x_B = A_B^{-1}b$. The Corollary further guarantees that the number of such candidates is finite -- at most $\binom{n+m}{m}$.
+
+This suggests a naïve algorithm: enumerate all $\binom{n+m}{m}$ bases, check which ones give feasible solutions ($x_B = A_B^{-1}b \geq 0$), and return the one with the smallest objective value. While correct, this brute-force approach is hopelessly inefficient -- the number of candidates is exponential in $m$. For instance, the unit hypercube $\{x \in \mathbb{R}^n : 0 \leq x \leq \mathbf{1}\}$ has $2^n$ vertices.
+
+The key question becomes: **can we search over BFS intelligently, without examining all of them?** The answer is the **simplex method**, which we develop in the [next chapter](10-simplex-method.qmd). Instead of enumerating all BFS, the simplex method starts at one BFS and moves to an **adjacent** BFS (one that differs by exactly one basic variable) that has a strictly lower objective value. Each such move is called a **pivot**. Since the objective strictly decreases at each step (in the nondegenerate case) and there are finitely many BFS, the algorithm must terminate at an optimal BFS.
+
+::: {.callout-tip}
+## The Road to Simplex
+
+$$\text{Vertices} = \text{BFS} \quad \xrightarrow{\text{finitely many}} \quad \text{combinatorial search} \quad \xrightarrow{\text{smart pivoting}} \quad \text{simplex method}$$
+
+The Algebraic Fundamental Theorem provides the foundation; the simplex method provides the efficient search strategy.
+:::
 
 ### Caratheodory's Theorem {#sec-caratheodory}
 
@@ -1235,260 +1042,9 @@ $$\min_{t} \; 0 \quad \text{s.t.} \quad At = x_0, \; \mathbf{1}^\top t = 1, \; t
 This LP is feasible (by assumption) and bounded (the objective is constant). By the Algebraic Fundamental Theorem, it has an optimal BFS $t^*$. This BFS has at most $m + 1$ nonzero entries (since the constraint matrix $\binom{A}{\mathbf{1}^\top}$ has $m+1$ rows). Therefore, $x_0 = \sum_{i=1}^n t_i^* x_i$ is a convex combination using at most $m+1$ of the points. $\blacksquare$
 :::
 
-## The Simplex Method {#sec-simplex}
-
-The Algebraic Fundamental Theorem tells us that if an optimal solution exists, there is an optimal BFS. Combined with the finiteness of BFS (@cor-finite-bfs), this reduces the LP to a combinatorial search. We now have all the ingredients to develop the **simplex method** -- a smart way to search over BFS without enumerating all $\binom{n+m}{m}$ of them.
-
-### Setup and Notation {#sec-simplex-setup}
-
-To simplify notation, we drop the "bar" and work directly in the equational form. Our standard form is:
-
-$$\min_{x \in \mathbb{R}^{n+m}} \; c^\top x \quad \text{s.t.} \quad Ax = b, \; x \geq 0,$$
-
-where $A = (A_{\text{orig}} \mid I_m) \in \mathbb{R}^{m \times (n+m)}$, $c = (c_{\text{orig}}^\top, 0^\top)^\top \in \mathbb{R}^{n+m}$, and $b \in \mathbb{R}^m$.
-
-Let $B$ and $N$ denote the sets of **basic** and **non-basic** variable indices, respectively, with $|B| = m$. We partition:
-
-$$A = \begin{pmatrix} A_B & A_N \end{pmatrix}, \qquad x = \begin{pmatrix} x_B \\ x_N \end{pmatrix}, \qquad c = \begin{pmatrix} c_B \\ c_N \end{pmatrix}.$$
-
-The LP becomes:
-
-$$\min \; z = c_B^\top x_B + c_N^\top x_N$$ {#eq-simplex-objective}
-
-$$\text{s.t.} \quad A_B x_B + A_N x_N = b,$$ {#eq-simplex-constraint}
-
-$$x_B \geq 0, \quad x_N \geq 0.$$
-
-### Starting from a BFS {#sec-simplex-start}
-
-Assume that the current basis $B$ gives a BFS. That is, $x_B^* = A_B^{-1}b \geq 0$ and $x_N^* = 0$.
-
-::: {.callout-tip}
-## Initial BFS When $b \geq 0$
-
-If $b \geq 0$, an initial BFS always exists: set $B = \{n+1, n+2, \ldots, n+m\}$ (the slack variables). Then $A_B = I_m$, so $x_B^* = b \geq 0$, and the original variables $x_1 = x_2 = \cdots = x_n = 0$.
-:::
-
-From @eq-simplex-constraint, since $A_B$ is invertible:
-
-$$x_B = A_B^{-1}b - A_B^{-1}A_N x_N = x_B^* - A_B^{-1}A_N x_N.$$ {#eq-basic-from-nonbasic}
-
-### Reduced Costs {#sec-reduced-costs}
-
-Substituting @eq-basic-from-nonbasic into @eq-simplex-objective:
-
-$$z = c_B^\top(A_B^{-1}b - A_B^{-1}A_N x_N) + c_N^\top x_N = c_B^\top A_B^{-1}b + \left(c_N^\top - c_B^\top A_B^{-1}A_N\right) x_N.$$
-
-::: {#def-reduced-cost}
-## Definition (Reduced Cost Vector)
-
-The **reduced cost vector** for the non-basic variables is
-
-$$r_N = c_N - (A_B^{-1}A_N)^\top c_B = c_N - A_N^\top (A_B^{-1})^\top c_B \;\in \mathbb{R}^n.$$
-
-The $j$-th component $r_j$ (for $j \in N$) represents the rate of change of the objective when $x_j$ increases from zero, holding other non-basic variables at zero.
-:::
-
-The objective can thus be written as
-
-$$z = c_B^\top A_B^{-1} b + r_N^\top x_N.$$ {#eq-objective-reduced-cost}
-
-Since $x_N = 0$ at the current BFS, the current objective value is $z^* = c_B^\top A_B^{-1}b$.
-
-### Optimality Test {#sec-optimality-test}
-
-From @eq-objective-reduced-cost, we can read off the optimality condition immediately.
-
-::: {.callout-important}
-## Optimality Condition
-
-If $r_N \geq 0$ (all reduced costs are nonneg), the current BFS is **optimal**. **STOP.**
-
-**Why?** By @eq-objective-reduced-cost, setting any $x_j$ (for $j \in N$) to a positive value will only increase the objective $z = z^* + r_N^\top x_N$, since $r_j \geq 0$ and $x_j \geq 0$.
-:::
-
-### Pivot: Choosing the Entering Variable {#sec-entering-variable}
-
-If $r_N \not\geq 0$, there exists some $q \in N$ with $r_q < 0$. Increasing $x_q$ from zero will decrease the objective. We select $q$ as the **entering variable** (it will enter the basis).
-
-::: {.callout-tip}
-## Entering Variable Selection
-
-Select $q \in N$ such that $r_q < 0$. A common choice is $q = \arg\min_{j \in N} r_j$ (most negative reduced cost), though any $q$ with $r_q < 0$ suffices for correctness.
-:::
-
-### Pivot: Determining the Step Size {#sec-step-size}
-
-When we set $x_q = t > 0$ (and keep all other non-basic variables at zero), @eq-basic-from-nonbasic becomes:
-
-$$x_B = x_B^* - t \cdot A_B^{-1} A_N e_q = x_B^* - t \cdot \Delta_{B,q},$$
-
-where we define the **pivot column**
-
-$$\Delta_{B,q} = A_B^{-1} A_N e_q = A_B^{-1} a_q \in \mathbb{R}^m,$$
-
-and $a_q$ is the $q$-th column of $A$ (the column corresponding to the entering variable). The $i$-th entry $\Delta_{i,q}$ tells us how much $x_i$ (for $i \in B$) changes when $x_q$ increases by 1 unit.
-
-We need $x_B \geq 0$, which means $x_i^* - t \cdot \Delta_{i,q} \geq 0$ for all $i \in B$.
-
-**Case 1: $\Delta_{B,q} \leq 0$ (all entries nonpositive).** Then $x_B = x_B^* - t \cdot \Delta_{B,q} \geq x_B^* \geq 0$ for all $t > 0$. We can increase $t$ without bound, and the objective $z = z^* + r_q \cdot t \to -\infty$. The LP is **unbounded**.
-
-**Case 2: Some $\Delta_{i,q} > 0$.** Let $S(B, q) = \{i \in B : \Delta_{i,q} > 0\}$. For each $i \in S(B,q)$, we need
-
-$$t \leq \frac{x_i^*}{\Delta_{i,q}}.$$
-
-The maximum feasible step is
-
-$$t^* = \min_{i \in B : \Delta_{i,q} > 0} \frac{x_i^*}{\Delta_{i,q}}.$$
-
-### Pivot: Choosing the Leaving Variable {#sec-leaving-variable}
-
-The basic variable that is driven to zero (and thus leaves the basis) is
-
-$$p = \arg\min_{i \in B : \Delta_{i,q} > 0} \frac{x_i^*}{\Delta_{i,q}}.$$
-
-We perform the **pivot** $(p, q)$: remove $p$ from $B$, add $q$.
-
-$$B' = B \cup \{q\} \setminus \{p\}, \qquad N' = N \cup \{p\} \setminus \{q\}.$$
-
-After pivoting, the new BFS has $x_q = t^* > 0$, $x_p = 0$, and the objective has decreased:
-
-$$z_{\text{new}} = z^* + r_q \cdot t^* < z^* \quad (\text{since } r_q < 0 \text{ and } t^* > 0).$$
-
-### The Simplex Algorithm {#sec-simplex-algorithm}
-
-Putting it all together:
-
-::: {.callout-important}
-## The Simplex Method
-
-**Input:** An initial BFS with basis $B$, $x_B^* = A_B^{-1}b \geq 0$.
-
-**Repeat:**
-
-1. **Compute reduced costs:** $r_N = c_N - A_N^\top (A_B^{-1})^\top c_B$.
-
-2. **Optimality test:** If $r_N \geq 0$, **STOP** -- the current BFS is optimal.
-
-3. **Select entering variable:** Choose $q \in N$ with $r_q < 0$.
-
-4. **Compute pivot column:** $\Delta_{B,q} = A_B^{-1} a_q$.
-
-5. **Unboundedness test:** If $\Delta_{B,q} \leq 0$, **STOP** -- the LP is unbounded.
-
-6. **Compute step size:** $t^* = \min_{i \in B : \Delta_{i,q} > 0} \dfrac{x_i^*}{\Delta_{i,q}}$.
-
-7. **Select leaving variable:** $p = \arg\min_{i \in B : \Delta_{i,q} > 0} \dfrac{x_i^*}{\Delta_{i,q}}$.
-
-8. **Pivot:** Update $B \leftarrow B \cup \{q\} \setminus \{p\}$, $N \leftarrow N \cup \{p\} \setminus \{q\}$. Recompute $x_B^* = A_B^{-1}b$.
-:::
-
-Each iteration moves from one BFS to an **adjacent** BFS (one that differs by exactly one basic variable) while strictly decreasing the objective (assuming nondegeneracy). Since there are finitely many BFS, the algorithm terminates.
-
-```python
-#| label: fig-simplex-path
-#| fig-cap: "Figure 14.4: The simplex method traces a path along edges of the feasible polytope, moving from one BFS to an adjacent BFS, always decreasing the objective. Hover over each vertex to see the basis and objective value."
-#| echo: false
-
-import plotly.graph_objects as go
-import numpy as np
-
-fig = go.Figure()
-
-# LP: min -2x1 - 3x2
-# s.t. x1 + x2 <= 4
-#      x1 + 3x2 <= 6
-#      x1, x2 >= 0
-# Vertices: (0,0), (4,0), (3,1), (0,2)
-# Equational form: A = [1 1 1 0; 1 3 0 1], b = [4;6]
-
-poly_x = [0, 4, 3, 0, 0]
-poly_y = [0, 0, 1, 2, 0]
-
-fig.add_trace(go.Scatter(x=poly_x, y=poly_y, fill='toself',
-    fillcolor='rgba(123,143,163,0.15)', line=dict(color='#7b97ad', width=2.5),
-    name='Feasible region', mode='lines'))
-
-# Constraint lines
-xx = np.linspace(-0.5, 5, 100)
-fig.add_trace(go.Scatter(x=xx, y=4-xx, mode='lines',
-    line=dict(color='#b8995e', dash='dash', width=1.2),
-    name='x\u2081+x\u2082=4'))
-fig.add_trace(go.Scatter(x=xx, y=(6-xx)/3, mode='lines',
-    line=dict(color='#ad8480', dash='dash', width=1.2),
-    name='x\u2081+3x\u2082=6'))
-
-# Objective contours
-for val in [0, -3, -6, -9]:
-    fig.add_trace(go.Scatter(x=[-0.5, 5], y=[(-val)/3 + 0.5*(-0.5)*(-2/3), (-val)/3 + 0.5*5*(-2/3)],
-        mode='lines', line=dict(color='#907ea0', dash='dot', width=1),
-        showlegend=False, hoverinfo='skip'))
-
-# BFS vertices
-bfs_points = [(0, 0), (4, 0), (3, 1), (0, 2)]
-bfs_labels = ['(0,0)', '(4,0)', '(3,1)', '(0,2)']
-obj_values = [-2*x - 3*y for x, y in bfs_points]
-bases = ['B={3,4}: slacks', 'B={1,4}: x\u2081,s\u2082', 'B={1,2}: x\u2081,x\u2082', 'B={2,4}: x\u2082,s\u2082']
-
-fig.add_trace(go.Scatter(
-    x=[p[0] for p in bfs_points], y=[p[1] for p in bfs_points],
-    mode='markers+text',
-    marker=dict(color='#8a6e5e', size=10, line=dict(width=1.5, color='white')),
-    text=bfs_labels, textposition=['bottom right', 'bottom right', 'top right', 'top left'],
-    hovertext=[f'BFS {l}<br>{b}<br>z = {v}' for l, b, v in zip(bfs_labels, bases, obj_values)],
-    hoverinfo='text', name='BFS'))
-
-# Simplex path: (0,0) -> (4,0) -> (3,1)
-path_x = [0, 4, 3]
-path_y = [0, 0, 1]
-path_z = [-2*x - 3*y for x, y in zip(path_x, path_y)]
-
-fig.add_trace(go.Scatter(x=path_x, y=path_y, mode='lines+markers',
-    line=dict(color='#b56b6b', width=3),
-    marker=dict(color='#b56b6b', size=8),
-    name='Simplex path'))
-
-# Arrows for simplex direction
-fig.add_annotation(x=2, y=0.08, ax=0.5, ay=0.05, arrowhead=3,
-    arrowcolor='#b56b6b', arrowwidth=2, showarrow=True,
-    text='Pivot 1: z=0\u2192\u22128', font=dict(size=10, color='#b56b6b'))
-fig.add_annotation(x=3.5, y=0.55, ax=3.8, ay=0.15, arrowhead=3,
-    arrowcolor='#b56b6b', arrowwidth=2, showarrow=True,
-    text='Pivot 2: z=\u22128\u2192\u22129', font=dict(size=10, color='#b56b6b'))
-
-# Optimal star
-fig.add_trace(go.Scatter(x=[3], y=[1], mode='markers',
-    marker=dict(color='#b56b6b', size=15, symbol='star',
-    line=dict(width=1.5, color='white')),
-    name='Optimal: (3,1), z*=\u22129'))
-
-fig.update_layout(
-    xaxis=dict(title='x\u2081', range=[-0.8, 5.2], zeroline=True),
-    yaxis=dict(title='x\u2082', range=[-0.8, 3.2], zeroline=True, scaleanchor='x'),
-    showlegend=True, margin=dict(t=20, b=50, l=55, r=20),
-    legend=dict(font=dict(size=10)))
-fig.show()
-```
-
-### Why the Simplex Method Works {#sec-simplex-correctness}
-
-The simplex method rests on three pillars:
-
-1. **Finiteness of BFS.** There are at most $\binom{n+m}{m}$ basic feasible solutions. If each pivot strictly decreases the objective (which happens when the LP is nondegenerate), the algorithm cannot revisit a BFS and must terminate.
-
-2. **Optimality certificate.** When $r_N \geq 0$, the current BFS is provably optimal: @eq-objective-reduced-cost shows that $z = z^* + r_N^\top x_N \geq z^*$ for all feasible $x_N \geq 0$.
-
-3. **Unboundedness detection.** When $\Delta_{B,q} \leq 0$ for some $q$ with $r_q < 0$, we can construct a feasible ray along which the objective decreases without bound.
-
-::: {.callout-tip}
-## Looking Ahead
-
-In this chapter we derived the simplex method assuming an initial BFS is available (e.g., when $b \geq 0$). What if $b$ is not nonnegative? In the next chapter, we develop the **simplex tableau** as a compact bookkeeping device, work through detailed numerical examples, and address the initialization problem via the **auxiliary LP** method. We also study pivoting rules (Dantzig's and Bland's), the phenomenon of degeneracy and cycling, and the oracle complexity of the simplex method.
-:::
-
 ## Summary {.unnumbered}
 
 - **Equational form.** Any LP can be converted to equational (standard) form $\min c^\top x$ subject to $Ax = b$, $x \geq 0$ by introducing slack variables; this canonical form is the starting point for the simplex method.
 - **Basic feasible solutions (BFS).** A BFS corresponds to selecting $m$ linearly independent columns of $A$ (a basis $B$) and setting $x_B = A_B^{-1}b \geq 0$, $x_N = 0$; geometrically, each BFS is a vertex of the feasible polyhedron.
-- **Vertex--BFS equivalence.** The fundamental theorem of LP establishes that vertices, extreme points, and basic feasible solutions are equivalent characterizations of the "corners" of the feasible polyhedron; if an LP has an optimal solution, it has one at a BFS.
-- **Foundation for simplex.** The simplex method exploits this structure by moving from one BFS to an adjacent BFS with a lower objective value, using reduced costs to select the entering variable and the minimum-ratio test for the leaving variable.
+- **Vertex--BFS equivalence.** The Algebraic Fundamental Theorem of LP establishes that vertices, extreme points, and basic feasible solutions are equivalent characterizations of the "corners" of the feasible polyhedron; if an LP has an optimal solution, it has one at a BFS.
+- **From continuous to combinatorial.** The algebraic characterization reduces LP from searching over an infinite feasible region to searching over finitely many (at most $\binom{n+m}{m}$) basic feasible solutions -- setting the stage for the simplex method in the [next chapter](10-simplex-method.qmd).

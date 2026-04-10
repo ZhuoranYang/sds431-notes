@@ -2,95 +2,45 @@
 title: "LP Duality"
 ---
 
-We have seen the [simplex method](10-simplex-method.qmd), which solves a linear program by moving from vertex to vertex. But in addition to algorithm design, we also want to know: **have we found the optimal solution?** How far is our current iterate from being optimal? Duality theory provides the answer. It gives us a systematic way to produce *certificates of optimality* -- upper and lower bounds on the objective value that, when they match, prove we have found the best solution.
+The [simplex method](10-simplex-method.qmd) finds an optimal solution by moving from vertex to vertex. But suppose the algorithm hands you a solution $x^*$ and claims it is optimal. **How do you know it is truly the best?** Simply checking feasibility is not enough --- you need a *certificate* that no feasible point can do better.
 
-The key idea is elegant: for every LP (the "primal"), there is a companion LP (the "dual") whose feasible solutions provide bounds on the primal's optimal value. Weak duality says the bound always holds; strong duality says the bound is tight at optimality. Together with complementary slackness, duality theory forms one of the most powerful and beautiful frameworks in optimization.
+Duality theory provides exactly this certificate. The core idea: for every LP (the **primal**), there is a companion LP (the **dual**) whose feasible solutions provide **upper bounds** on the primal's optimal value. When a primal feasible value matches a dual feasible value, the gap is zero and both must be optimal. This simple idea --- bounding from both sides --- leads to one of the deepest and most useful frameworks in optimization.
+
+## What Will Be Covered {.unnumbered}
+
+- Motivation: certificates of optimality via upper bounds on the objective
+- Constructing the dual LP from primal constraints
+- Weak duality: dual feasible solutions bound the primal optimal value
+- Strong duality: the primal and dual optimal values coincide
+- Complementary slackness and its role in certifying optimality
+- Economic interpretation of dual variables as shadow prices
 
 ## Motivation for Duality {#sec-motivation}
 
-Consider an LP in the standard form (we use maximization here to have a clean form for the dual):
+Consider a maximization LP (duality is most naturally stated in this form):
 
 $$
 \max_{x \in \mathbb{R}^n} \; c^\top x \quad \text{s.t.} \quad Ax \leq b, \quad x \geq 0.
 $$
 
-Let $\Omega = \{x \in \mathbb{R}^n \mid Ax \leq b, \; x \geq 0\}$ be the feasible set, and let $f^* = \max_{x \in \Omega} c^\top x$ be the optimal value.
+Let $\Omega = \{x \in \mathbb{R}^n \mid Ax \leq b, \; x \geq 0\}$ be the feasible set and $f^* = \max_{x \in \Omega} c^\top x$ the optimal value.
 
-Suppose someone asserts that the optimal solution is $x_0 \in \Omega$ and the optimal value is $f_0 = c^\top x_0$. **Can we check this claim?**
+Suppose someone hands you a feasible point $x_0 \in \Omega$ and claims it is optimal. **How do you verify this?**
 
-Since $x_0 \in \Omega$, we know $f_0 = c^\top x_0$ is a **lower bound** on $f^*$ (because $f_0 \leq f^*$). To verify that $f_0 = f^*$, we need to show $f^* \leq f_0$. That is, we need an **upper bound** on the objective.
+- **Lower bound (easy):** Since $x_0$ is feasible, $f_0 = c^\top x_0 \leq f^*$. Any feasible point gives a lower bound on $f^*$.
+- **Upper bound (hard):** To prove $f_0 = f^*$, we need to show that *no* feasible point can do better, i.e., $f^* \leq f_0$. This requires an **upper bound** on $c^\top x$ that holds for *every* $x \in \Omega$.
 
-This is the central question: can we find a certificate -- an upper bound on $c^\top x$ for all feasible $x$ -- that matches our candidate value $f_0$? If so, $x_0$ must be optimal.
+::: {.callout-important}
+## The Central Question
 
-```python
-#| label: fig-duality-motivation
-#| fig-cap: "Figure 16.1: The duality gap between a lower bound (primal feasible value) and an upper bound (dual feasible value). When the gap closes, we have certified optimality."
-#| echo: false
+Can we systematically produce upper bounds on $c^\top x$ over all feasible $x \in \Omega$, using only the constraint data $(A, b)$? If we can find such an upper bound that equals our candidate value $f_0$, then $f_0 = f^*$ and $x_0$ is certified optimal.
+:::
 
-import plotly.graph_objects as go
-
-fig = go.Figure()
-
-# Number line
-fig.add_trace(go.Scatter(x=[-0.5, 10.5], y=[0, 0], mode='lines',
-    line=dict(color='#999999', width=2), showlegend=False, hoverinfo='skip'))
-
-# Lower bound region
-fig.add_trace(go.Scatter(x=[0, 4, 4, 0], y=[-0.3, -0.3, 0.3, 0.3],
-    fill='toself', fillcolor='rgba(122,154,126,0.25)',
-    line=dict(width=0), showlegend=False, hoverinfo='skip'))
-
-# Upper bound region
-fig.add_trace(go.Scatter(x=[7, 10, 10, 7], y=[-0.3, -0.3, 0.3, 0.3],
-    fill='toself', fillcolor='rgba(181,107,107,0.25)',
-    line=dict(width=0), showlegend=False, hoverinfo='skip'))
-
-# Duality gap region
-fig.add_trace(go.Scatter(x=[4, 7, 7, 4], y=[-0.15, -0.15, 0.15, 0.15],
-    fill='toself', fillcolor='rgba(184,153,94,0.2)',
-    line=dict(width=0), showlegend=False, hoverinfo='skip'))
-
-# Primal feasible value (lower bound)
-fig.add_trace(go.Scatter(x=[4], y=[0], mode='markers+text',
-    marker=dict(color='#7a9a7e', size=14, symbol='triangle-right',
-    line=dict(width=1, color='white')),
-    text=['c<sup>T</sup>x<sub>0</sub> (lower bound)'], textposition='top center',
-    name='Primal feasible value', hoverinfo='text',
-    hovertext=['Any feasible x gives c<sup>T</sup>x <= f*']))
-
-# Dual feasible value (upper bound)
-fig.add_trace(go.Scatter(x=[7], y=[0], mode='markers+text',
-    marker=dict(color='#b56b6b', size=14, symbol='triangle-left',
-    line=dict(width=1, color='white')),
-    text=['b<sup>T</sup>y<sub>0</sub> (upper bound)'], textposition='top center',
-    name='Dual feasible value', hoverinfo='text',
-    hovertext=['Any dual feasible y gives b<sup>T</sup>y >= f*']))
-
-# Optimal value
-fig.add_trace(go.Scatter(x=[5.5], y=[0], mode='markers+text',
-    marker=dict(color='#b8995e', size=16, symbol='star',
-    line=dict(width=1, color='white')),
-    text=['f*'], textposition='bottom center',
-    name='Optimal value f*', hoverinfo='text',
-    hovertext=['Optimal value: c<sup>T</sup>x* = b<sup>T</sup>y*']))
-
-# Duality gap annotation
-fig.add_annotation(x=5.5, y=-0.5, text='Duality gap = b<sup>T</sup>y<sub>0</sub> - c<sup>T</sup>x<sub>0</sub>',
-    showarrow=False, font=dict(size=12, color='#b8995e'))
-
-fig.update_layout(
-    xaxis=dict(title='Objective value', range=[-1, 11], showgrid=False,
-               zeroline=False),
-    yaxis=dict(range=[-1, 1.2], showgrid=False, zeroline=False,
-               showticklabels=False),
-    showlegend=True, margin=dict(t=20, b=60, l=40, r=20),
-    legend=dict(orientation='h', yanchor='bottom', y=1.02))
-fig.show()
-```
+![The duality gap between a lower bound (primal feasible value) and an upper bound (dual feasible value). When the gap closes, we have certified optimality.](figures/duality-gap.svg){#fig-duality-motivation}
 
 ## Deriving the Dual LP {#sec-deriving-dual}
 
-We now systematically construct the dual LP. Starting from the primal:
+We now answer the central question by systematically constructing upper bounds on the primal objective. Starting from the primal:
 
 $$
 \text{(Primal)} \quad \max_{x \in \mathbb{R}^n} \; c^\top x \quad \text{s.t.} \quad Ax \leq b, \quad x \geq 0,
@@ -100,41 +50,33 @@ where $A \in \mathbb{R}^{m \times n}$, $b \in \mathbb{R}^m$, and $c \in \mathbb{
 
 ### The Multiplier Idea
 
-For each linear inequality constraint $a_i^\top x \leq b_i$, we associate a **multiplier** $y_i \geq 0$. Since $a_i^\top x \leq b_i$ and $y_i \geq 0$, we have:
+The derivation follows three simple steps: **multiply**, **sum**, and **dominate**.
+
+**Step 1: Multiply.** For each constraint $a_i^\top x \leq b_i$, introduce a **multiplier** $y_i \geq 0$. Multiplying both sides by $y_i$ preserves the inequality direction (since $y_i \geq 0$):
 
 $$
 y_i \cdot a_i^\top x \leq y_i \cdot b_i \quad \forall\, i \in [m].
 $$
 
-Summing up these $m$ inequalities:
+**Step 2: Sum.** Add all $m$ weighted inequalities:
 
 $$
-\sum_{i=1}^{m} y_i \, a_i^\top x \leq \sum_{i=1}^{m} y_i \, b_i.
+\sum_{i=1}^{m} y_i \, a_i^\top x \leq \sum_{i=1}^{m} y_i \, b_i, \qquad \text{i.e.,} \quad (A^\top y)^\top x \leq b^\top y.
 $$
 
-In matrix form, this reads $(A^\top y)^\top x \leq y^\top b$, or equivalently $y^\top A x \leq y^\top b$.
+The left side is a *new* linear function of $x$; the right side is a constant (depending only on $y$).
 
-To obtain an **upper bound** on the objective $c^\top x$, we just need to ensure that:
-
-$$
-\sum_{i=1}^{m} y_i \, a_i \geq c \qquad \left(\text{i.e., } \sum_{i=1}^{m} y_i \, a_{ij} \geq c_j \;\; \forall\, j \in [n]\right).
-$$
-
-In matrix form: $A^\top y \geq c$.
-
-### Why This Gives an Upper Bound
-
-For any $y \in \mathbb{R}^m$ satisfying $A^\top y \geq c$ and $y \geq 0$, it is clear that for any feasible $x$ (i.e., $Ax \leq b$, $x \geq 0$):
+**Step 3: Dominate.** If the combined left side *dominates* the objective --- meaning $A^\top y \geq c$ component-wise --- then for any feasible $x \geq 0$:
 
 $$
-c^\top x \leq x^\top \left(\sum_{i=1}^{m} y_i \, a_i\right) = \sum_{i=1}^{m} y_i \, a_i^\top x \leq \sum_{i=1}^{m} y_i \cdot b_i = y^\top b = b^\top y.
+c^\top x \;\leq\; (A^\top y)^\top x \;\leq\; b^\top y.
 $$
 
-The first inequality uses $A^\top y \geq c$ and $x \geq 0$; the second uses $a_i^\top x \leq b_i$ and $y_i \geq 0$. Therefore, any $f \in \{b^\top y : A^\top y \geq c, \; y \geq 0\}$ satisfies $f \geq f^*$.
+The first "$\leq$" uses $A^\top y \geq c$ and $x \geq 0$; the second uses the summed constraint from Step 2. We have produced an **upper bound** $b^\top y$ on $c^\top x$ that holds for *every* feasible $x$.
 
 ### The Dual LP
 
-To find the **tightest upper bound**, we solve the following LP:
+To find the **tightest upper bound**, we minimize $b^\top y$ over all valid multipliers:
 
 ::: {.callout-note appearance="simple"}
 $$
@@ -150,38 +92,42 @@ Side by side:
 | s.t. $Ax \leq b$ | s.t. $A^\top y \geq c$ |
 | $x \geq 0$ | $y \geq 0$ |
 
-The primal has $n$ decision variables and $m$ constraints (plus sign constraints); the dual has $m$ decision variables and $n$ constraints (plus sign constraints). The data $(A, b, c)$ is shared -- only the roles are swapped.
+Notice the elegant symmetry: the primal has $n$ variables and $m$ constraints; the dual has $m$ variables and $n$ constraints. The data $(A, b, c)$ is shared --- only the roles are swapped. The constraint matrix $A$ becomes $A^\top$, the objective $c$ becomes the right-hand side, and the right-hand side $b$ becomes the objective.
 
-The derivation above assumed the primal has only "$\leq$" constraints and nonnegative variables. In practice, LPs may contain equality constraints, "$\geq$" constraints, or free variables. The next section extends the correspondence to handle all these cases.
+The derivation above assumed the primal has only "$\leq$" constraints and nonnegative variables. In practice, LPs may contain equality constraints, "$\geq$" constraints, or free variables. The next section extends the correspondence to handle all cases.
 
 ## General Primal-Dual Correspondence {#sec-general-correspondence}
 
-More generally, we can establish dual LPs when there are equality constraints or free variables in the primal. The correspondence rules follow from the multiplier derivation.
+The dual we derived assumed the primal has only "$\leq$" constraints and nonneg variables. Real LPs may have equality constraints, "$\geq$" constraints, or free variables. The same multiply-sum-dominate logic extends to all cases --- the key is tracking how each constraint and variable type affects the signs.
 
 ### General Primal Form
 
-Consider the general primal LP (maximization) with:
+Consider a general primal LP (maximization) with:
 
 - $n$ decision variables $x_1, x_2, \ldots, x_n$
-- Sign constraints on $\{x_j, \, j \in [n]\}$: either $x_j \geq 0$, $x_j \leq 0$, or $x_j \in \mathbb{R}$ (free)
-- $m$ linear constraints $\{a_i^\top x \; \square \; b_i, \, i \in [m]\}$ where $\square$ is $\leq$, $=$, or $\geq$
-- Linear objective: $\max \; c^\top x$
+- Sign constraints on each $x_j$: either $x_j \geq 0$, $x_j \leq 0$, or $x_j \in \mathbb{R}$ (free)
+- $m$ linear constraints $a_i^\top x \; \square \; b_i$ where $\square$ is $\leq$, $=$, or $\geq$
+- Objective: $\max \; c^\top x$
 
 ### Deriving the Dual
 
-For each constraint $i \in [m]$, associate a multiplier $y_i$:
+We apply the same recipe, but must handle each case:
 
-- If $a_i^\top x \leq b_i$: we need $y_i \geq 0$ (so that multiplying preserves the inequality direction)
-- If $a_i^\top x \geq b_i$: we need $y_i \leq 0$
-- If $a_i^\top x = b_i$: $y_i$ is **free** (unconstrained in sign)
+**Multiplier signs (from constraint types).** For each constraint $i$, the multiplier $y_i$ must have the right sign so that multiplying preserves a valid upper bound:
 
-Aggregate the linear constraints such that $(\sum_{i=1}^m y_i \, a_i) \cdot x \leq \sum_{i=1}^m y_i \, b_i$. Then require $(\sum_{i=1}^m y_i \, a_i) \cdot x \geq c^\top x$ for all $x$ in the feasible set. The sign constraint on $x_j$ determines the type of the $j$-th dual constraint:
+- $a_i^\top x \leq b_i$: need $y_i \geq 0$ (multiplying by a nonneg number preserves "$\leq$")
+- $a_i^\top x \geq b_i$: need $y_i \leq 0$ (multiplying by a nonpositive number flips "$\geq$" to "$\leq$")
+- $a_i^\top x = b_i$: $y_i$ is **free** (both sides are equal, so any sign works)
 
-- If $x_j \geq 0$: we need $\sum_{i=1}^m y_i \, a_{ij} \geq c_j$ (i.e., "$\geq c_j$")
-- If $x_j \leq 0$: we need $\sum_{i=1}^m y_i \, a_{ij} \leq c_j$ (i.e., "$\leq c_j$")
-- If $x_j \in \mathbb{R}$: we need $\sum_{i=1}^m y_i \, a_{ij} = c_j$ (i.e., "$= c_j$")
+After summing all weighted constraints, we get $(A^\top y)^\top x \leq b^\top y$ for all feasible $x$.
 
-The dual LP is then: minimize $y^\top b = \sum_{i=1}^m y_i \, b_i$ subject to the $n$ constraints on $\sum_{i=1}^m y_i \, a_{ij}$ and the sign constraints on $y_i$.
+**Dual constraint types (from variable signs).** We need the combined left side to dominate the objective: $(A^\top y)_j x_j \geq c_j x_j$ for all feasible $x_j$. The sign constraint on $x_j$ determines what this requires:
+
+- $x_j \geq 0$ (can be positive): need $(A^\top y)_j \geq c_j$, so that $(A^\top y)_j x_j \geq c_j x_j$
+- $x_j \leq 0$ (can be negative): need $(A^\top y)_j \leq c_j$, so the inequality flips correctly
+- $x_j$ free (can be anything): need $(A^\top y)_j = c_j$ exactly (otherwise we could violate domination by choosing $x_j$ with the wrong sign)
+
+The dual LP is: $\min\, b^\top y$ subject to these $n$ constraints and the sign constraints on $y_i$.
 
 ### Correspondence Table
 
@@ -213,19 +159,19 @@ There is a beautiful symmetry: **constraint type** in the primal maps to **varia
 | $\max \; c^\top x$ s.t. $Ax \leq b$, $x \in \mathbb{R}^n$ | $\min \; b^\top y$ s.t. $A^\top y = c$, $y \geq 0$ |
 | $\max \; c^\top x$ s.t. $Ax = b$, $x \geq 0$ | $\min \; b^\top y$ s.t. $A^\top y \geq c$, $y \in \mathbb{R}^m$ |
 
-With the correspondence table established, a natural question arises: if we take the dual of the dual, do we recover the original primal? The answer is yes, confirming that duality is a symmetric relationship with no preferred direction.
+### Dual of the Dual = Primal {#sec-dual-of-dual}
 
-## Dual of the Dual = Primal {#sec-dual-of-dual}
-
-An important and satisfying observation: **the dual of the dual is the primal**. Duality is a symmetric relationship.
+A natural question: if we take the dual of the dual, do we recover the original primal? The answer is yes, confirming that duality is a **symmetric** relationship.
 
 ::: {#thm-dual-of-dual}
-## Theorem 16.1 (Dual of the Dual is the Primal)
+## Dual of the Dual is the Primal
 
 The dual of the dual LP is the primal LP.
 :::
 
 ::: {.proof}
+The strategy is to rewrite the dual as a maximization problem, apply the primal-to-dual recipe, and simplify to recover the original primal.
+
 Consider the dual problem:
 
 $$
@@ -265,20 +211,16 @@ $$
 This is exactly the primal! $\blacksquare$
 :::
 
-::: {.callout-tip}
-## Remark
+Since the dual of the dual is the primal, there is no preferred "direction" --- we can always choose which LP to call primal and which to call dual.
 
-Since the dual of the dual is the primal, there is no preferred "direction" in duality. We can always choose which LP to call the primal and which to call the dual. In practice, we pick whichever formulation is more natural for the application at hand.
-:::
-
-Having established what the dual LP is and that duality is a symmetric relationship, we now turn to the fundamental question: what is the quantitative relationship between the primal and dual optimal values? The answer comes in two stages -- weak duality (an inequality that always holds) and strong duality (equality at optimality).
+With the dual LP defined and duality shown to be symmetric, we turn to the fundamental question: **what is the quantitative relationship between the primal and dual optimal values?** The answer comes in two stages --- weak duality (an inequality that always holds) and strong duality (equality at optimality).
 
 ## Weak Duality {#sec-weak-duality}
 
 We now formalize the bounding relationship between the primal and dual. Let $\Omega_P = \{x : Ax \leq b, \; x \geq 0\}$ denote the primal feasible set and $\Omega_D = \{y : A^\top y \geq c, \; y \geq 0\}$ denote the dual feasible set.
 
 ::: {#thm-weak-duality}
-## Theorem 16.2 (Weak Duality)
+## Weak Duality
 
 If $x$ is feasible for the primal and $y$ is feasible for the dual, then
 
@@ -294,6 +236,8 @@ $$
 :::
 
 ::: {.proof}
+The strategy is to chain two inequalities: first use primal feasibility ($Ax \leq b$) to bound $b^\top y$ from below by $x^\top A^\top y$, then use dual feasibility ($A^\top y \geq c$) to bound $x^\top A^\top y$ from below by $c^\top x$.
+
 Since $x, y$ are feasible for the primal and dual respectively, we have:
 
 $$
@@ -319,7 +263,7 @@ $$
 ### The Duality Gap
 
 ::: {#def-duality-gap}
-## Definition 16.3 (Duality Gap)
+## Duality Gap
 
 For any primal feasible $x$ and dual feasible $y$, the **duality gap** is
 
@@ -333,13 +277,26 @@ By weak duality (@eq-weak-duality), $\text{Gap}(x, y) \geq 0$ for all $(x, y) \i
 ::: {.callout-note appearance="simple"}
 ## Consequences of Weak Duality
 
+Weak duality immediately yields four important structural consequences for the primal-dual pair:
+
 1. If we find primal feasible $x$ and dual feasible $y$ with $c^\top x = b^\top y$, then $x$ is primal optimal and $y$ is dual optimal.
 2. If the primal is unbounded (objective $\to +\infty$), the dual must be **infeasible** (otherwise weak duality would give a finite upper bound).
 3. If the dual is unbounded (objective $\to -\infty$), the primal must be **infeasible**.
 4. The primal and dual **cannot both be unbounded** (this would violate weak duality).
+
+Together, these consequences show that feasible dual solutions serve as certificates of optimality, and that unboundedness in one problem forces infeasibility in the other.
 :::
 
-The following interactive figure lets you explore weak duality concretely. Consider the primal LP $\max\, 3x_1 + 5x_2$ subject to $x_1 \leq 4$, $x_2 \leq 6$, $3x_1 + 2x_2 \leq 18$, $x_1, x_2 \geq 0$, with optimal value $f^* = 36$. For each choice of the dual variable $y_3$, we set $y_1$ and $y_2$ to the tightest dual-feasible values. The left panel shows the primal feasible region together with the objective contour at $f^* = 36$ and the contour at the current dual bound. When the bound is tight ($y_3 = 1$), the two contours merge — a geometric certificate of strong duality. The right panel traces out the dual bound as a piecewise-linear function of $y_3$, with the minimum at $y_3^* = 1$ achieving $g^* = f^* = 36$. (This LP is analyzed in full in @sec-worked-example.)
+The following interactive figure lets you explore weak duality concretely on the LP from @sec-worked-example.
+
+**Setup.** The primal is $\max\, 3x_1 + 5x_2$ subject to $x_1 \leq 4$, $x_2 \leq 6$, $3x_1 + 2x_2 \leq 18$, $x_1, x_2 \geq 0$, with optimal value $f^* = 36$. Its dual is $\min\, 4y_1 + 6y_2 + 18y_3$ subject to $y_1 + 3y_3 \geq 3$, $y_2 + 2y_3 \geq 5$, $y \geq 0$.
+
+**How it works.** Drag the slider to choose $y_3$. The figure automatically sets $y_1$ and $y_2$ to the tightest dual-feasible values (i.e., $y_1 = \max(0, 3 - 3y_3)$ and $y_2 = \max(0, 5 - 2y_3)$), then computes the dual bound $g(y) = 4y_1 + 6y_2 + 18y_3$.
+
+**What to observe:**
+
+- **Left panel:** The green region is the primal feasible set. The dashed gold line is the optimal contour $3x_1 + 5x_2 = 36$. The solid blue line is the contour at the current dual bound $g(y)$. By weak duality, this blue line must lie *above* the gold line (a higher contour value). When $y_3 = 1$, the two lines merge --- the dual bound exactly matches $f^* = 36$.
+- **Right panel:** The dual bound $g(y)$ as a function of $y_3$. It is piecewise-linear and achieves its minimum at $y_3^* = 1$, where $g^* = 36 = f^*$. For any other $y_3$, the bound is strictly larger --- confirming that the gap is positive away from the dual optimum.
 
 ```{=html}
 <style>
@@ -440,11 +397,10 @@ The following interactive figure lets you explore weak duality concretely. Consi
 <script>
 (function() {
   const C = {
-    bg: '#f0ebe5', plotBg: '#faf7f3', text: '#3d3530', grid: '#e0d9d1',
-    axis: '#968a80', blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
+    text: css('--fig-text') || '#3d3530',
+    blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
     terracotta: '#c47a6a', lavender: '#907ea0', rosewood: '#ad8480'
   };
-  const font = {family: "'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif", color: C.text};
 
   const fStar = 36;
   /* Feasible polygon vertices (closed) */
@@ -470,13 +426,7 @@ The following interactive figure lets you explore weak duality concretely. Consi
     return {x1: x1, x2: x2};
   }
 
-  var axisStyle = {
-    gridcolor: C.grid, gridwidth: 1, zerolinecolor: C.axis, zerolinewidth: 1.5,
-    linecolor: C.axis, linewidth: 1,
-    tickfont: {size: 13, family: font.family, color: font.color},
-    titlefont: {size: 15, family: font.family, color: font.color}
-  };
-  var plotCfg = {displayModeBar: false, responsive: true};
+  var font = {family: figFont, color: css('--fig-text')};
 
   /* Precompute dual bound curve */
   var y3Vals = [], gVals = [];
@@ -515,18 +465,16 @@ The following interactive figure lets you explore weak duality concretely. Consi
        name: 'x* = (2, 6)'}
     ];
 
-    var leftLayout = {
-      paper_bgcolor: C.bg, plot_bgcolor: C.plotBg, font: font, height: 440,
+    var leftLayout = themeLayout({
+      height: 440,
       margin: {t: 44, b: 58, l: 64, r: 16},
-      title: {text: 'Primal region & objective contours', font: {size: 15, family: font.family, color: font.color}},
-      xaxis: Object.assign({}, axisStyle, {title: 'x\u2081', range: [-0.8, 6.5]}),
-      yaxis: Object.assign({}, axisStyle, {title: 'x\u2082', range: [-0.8, 8.5], scaleanchor: 'x'}),
+      title: {text: 'Primal region & objective contours', font: {size: 15, family: figFont, color: css('--fig-text')}},
+      xaxis: themeAxis('x\u2081', {range: [-0.8, 6.5]}),
+      yaxis: themeAxis('x\u2082', {range: [-0.8, 8.5], scaleanchor: 'x'}),
       showlegend: true,
-      legend: {x: 0.42, y: 0.02, bgcolor: 'rgba(250,247,243,0.85)',
-               bordercolor: C.grid, borderwidth: 1,
-               font: {size: 11, family: font.family, color: font.color}},
+      legend: Object.assign(legendStyle(), {x: 0.42, y: 0.02, font: {size: 11, family: figFont, color: css('--fig-text')}}),
       hovermode: 'closest'
-    };
+    });
 
     /* --- Right panel: dual bound curve --- */
     var tracedY3 = [], tracedG = [];
@@ -573,19 +521,17 @@ The following interactive figure lets you explore weak duality concretely. Consi
       });
     }
 
-    var rightLayout = {
-      paper_bgcolor: C.bg, plot_bgcolor: C.plotBg, font: font, height: 440,
+    var rightLayout = themeLayout({
+      height: 440,
       margin: {t: 44, b: 58, l: 64, r: 16},
       title: {text: 'Dual bound g(y) = 4y\u2081+6y\u2082+18y\u2083',
-              font: {size: 15, family: font.family, color: font.color}},
-      xaxis: Object.assign({}, axisStyle, {title: 'y\u2083', range: [-0.15, 3.15]}),
-      yaxis: Object.assign({}, axisStyle, {title: 'g(y)', range: [30, 58]}),
+              font: {size: 15, family: figFont, color: css('--fig-text')}},
+      xaxis: themeAxis('y\u2083', {range: [-0.15, 3.15]}),
+      yaxis: themeAxis('g(y)', {range: [30, 58]}),
       showlegend: true,
-      legend: {x: 0.38, y: 0.98, bgcolor: 'rgba(250,247,243,0.85)',
-               bordercolor: C.grid, borderwidth: 1,
-               font: {size: 11, family: font.family, color: font.color}},
+      legend: Object.assign(legendStyle(), {x: 0.38, y: 0.98, font: {size: 11, family: figFont, color: css('--fig-text')}}),
       hovermode: 'closest'
-    };
+    });
 
     /* Info box */
     var info;
@@ -600,8 +546,8 @@ The following interactive figure lets you explore weak duality concretely. Consi
           + ' &ensp; (tightest dual feasible for this y<sub>3</sub>)';
     document.getElementById('lpdual-info').innerHTML = info;
 
-    Plotly.react('lpdual-left', leftTraces, leftLayout, plotCfg);
-    Plotly.react('lpdual-right', rightTraces, rightLayout, plotCfg);
+    Plotly.react('lpdual-left', leftTraces, leftLayout, plotlyConfig);
+    Plotly.react('lpdual-right', rightTraces, rightLayout, plotlyConfig);
   }
 
   document.getElementById('lpdual-y3').addEventListener('input', function() {
@@ -615,100 +561,25 @@ The following interactive figure lets you explore weak duality concretely. Consi
 </script>
 ```
 
-## Primal-Dual Possibilities {#sec-possibilities}
+### Primal-Dual Possibilities {#sec-possibilities}
 
-Combining the Fundamental Theorem of LP (every LP is either infeasible, unbounded, or has a finite optimum) with weak duality, we can enumerate all possible combinations of primal and dual status.
+The Fundamental Theorem of LP says every LP is either infeasible, unbounded, or has a finite optimum. For a primal-dual pair, weak duality further constrains the combinations. Since "both unbounded" would violate @eq-weak-duality (consequence 4 above), exactly **four possibilities** remain:
 
-::: {.callout-important}
-## Remark
+| | **Primal** | **Dual** |
+|:---|:---|:---|
+| 1. | Infeasible | Infeasible |
+| 2. | Infeasible | Unbounded ($\inf = -\infty$) |
+| 3. | Unbounded ($\sup = +\infty$) | Infeasible |
+| 4. | **Finite optimum $f^*$** | **Finite optimum $g^* = f^*$** |
 
-The primal and dual cannot both be unbounded. If (P) is unbounded ($\sup = +\infty$) and (D) is unbounded ($\inf = -\infty$), then we could find primal feasible $x$ with $c^\top x$ arbitrarily large and dual feasible $y$ with $b^\top y$ arbitrarily small, violating weak duality.
-:::
-
-There are exactly **four possibilities** for a primal-dual pair:
-
-1. Both primal and dual are **infeasible**.
-2. Primal is **infeasible** and dual is **unbounded** ($\inf = -\infty$).
-3. Primal is **unbounded** ($\sup = +\infty$) and dual is **infeasible**.
-4. Both primal and dual have **finite optimal values** (and by strong duality, they are equal).
-
-Notice that the fourth case asserts something stronger than weak duality alone can guarantee: not only does a bound exist, but the bound is tight. This is the content of strong duality, which we prove next.
-
-```python
-#| label: fig-primal-dual-table
-#| fig-cap: "Figure 16.2: Primal-dual possibilities table. Green = possible, red = impossible. The only case where both have finite optima exhibits zero duality gap (strong duality)."
-#| echo: false
-
-import plotly.graph_objects as go
-
-# Table data
-row_labels = ['Infeasible', 'Unbounded', 'Finite Optimal']
-col_labels = ['Infeasible', 'Unbounded', 'Finite Optimal']
-
-# Possibility matrix: 1 = possible, 0 = impossible
-z = [[1, 1, 0],
-     [1, 0, 0],
-     [0, 0, 1]]
-
-# Colors
-colors = [['rgba(122,154,126,0.35)', 'rgba(122,154,126,0.35)', 'rgba(181,107,107,0.25)'],
-          ['rgba(122,154,126,0.35)', 'rgba(181,107,107,0.25)', 'rgba(181,107,107,0.25)'],
-          ['rgba(181,107,107,0.25)', 'rgba(181,107,107,0.25)', 'rgba(122,154,126,0.35)']]
-
-text = [['Possible', 'Possible', 'Impossible'],
-        ['Possible', 'Impossible', 'Impossible'],
-        ['Impossible', 'Impossible', 'Possible<br>(zero duality gap)']]
-
-fig = go.Figure()
-
-# Draw cells
-for i in range(3):
-    for j in range(3):
-        fig.add_shape(type='rect',
-            x0=j, x1=j+1, y0=2-i, y1=3-i,
-            fillcolor=colors[i][j],
-            line=dict(color='#968a80', width=1.5))
-        fig.add_annotation(x=j+0.5, y=2.5-i,
-            text=text[i][j],
-            showarrow=False,
-            font=dict(size=13, color='#3a3a3a'))
-
-# Row labels (Dual)
-for i, label in enumerate(row_labels):
-    fig.add_annotation(x=-0.35, y=2.5-i,
-        text=f'<b>{label}</b>',
-        showarrow=False, font=dict(size=12, color='#7b97ad'),
-        xanchor='right')
-
-# Column labels (Primal)
-for j, label in enumerate(col_labels):
-    fig.add_annotation(x=j+0.5, y=3.2,
-        text=f'<b>{label}</b>',
-        showarrow=False, font=dict(size=12, color='#8a6e5e'))
-
-# Axis labels
-fig.add_annotation(x=1.5, y=3.6, text='<b>Primal</b>',
-    showarrow=False, font=dict(size=14, color='#8a6e5e'))
-fig.add_annotation(x=-0.8, y=1.5, text='<b>Dual</b>',
-    showarrow=False, font=dict(size=14, color='#7b97ad'),
-    textangle=-90)
-
-fig.update_layout(
-    xaxis=dict(range=[-1.2, 3.5], showgrid=False, zeroline=False,
-               showticklabels=False),
-    yaxis=dict(range=[-0.3, 4], showgrid=False, zeroline=False,
-               showticklabels=False, scaleanchor='x'),
-    showlegend=False, margin=dict(t=20, b=20, l=20, r=20),
-    plot_bgcolor='white')
-fig.show()
-```
+Case 4 asserts something stronger than weak duality alone: not just that a bound exists, but that the bound is **tight**. This is the content of strong duality, which we prove next.
 
 ## Strong Duality {#sec-strong-duality}
 
 Weak duality (@eq-weak-duality) gives an inequality. The remarkable **strong duality theorem** says that at optimality, the gap vanishes.
 
 ::: {#thm-strong-duality}
-## Theorem 16.4 (Strong Duality)
+## Strong Duality
 
 If one of (P) and (D) has a finite optimal value (and hence an optimal solution), so does the other. Moreover,
 
@@ -721,71 +592,73 @@ That is, the duality gap is zero at optimality.
 
 ### Proof via the Simplex Method {#sec-strong-duality-proof}
 
-The proof strategy is constructive: we run the simplex method on the primal and extract dual variables directly from the final tableau, then verify that these variables are dual feasible with a matching objective value.
+The proof is constructive: we run the simplex method on the primal and extract a dual feasible solution directly from the final tableau, then show it achieves the same objective value.
 
 ::: {.proof}
 **Proof of Strong Duality.**
 
-We prove this by constructing a dual optimal solution from the simplex output. Suppose the primal has a finite optimal value $f^*$ with optimal solution $x^*$. Run the [simplex method](10-simplex-method.qmd) on the primal to obtain an optimal basic feasible solution (BFS).
-
-Let $B$ and $N$ denote the sets of basic and nonbasic variable indices at the optimal BFS. The final simplex dictionary expresses the objective as:
+Suppose the primal $\max\, c^\top x$ s.t. $Ax \leq b$, $x \geq 0$ has a finite optimal value $f^*$. Adding slack variables $w = b - Ax \geq 0$, the equational form is
 
 $$
-\zeta = \zeta^* + \widetilde{c}^\top x_N,
+\max \; c^\top x \quad \text{s.t.} \quad \begin{pmatrix} A & I \end{pmatrix} \begin{pmatrix} x \\ w \end{pmatrix} = b, \quad x \geq 0, \quad w \geq 0.
 $$
 
-where $\widetilde{c} \geq 0$ component-wise (this is the optimality condition for the simplex method -- if any reduced cost were negative, we could improve the objective by bringing that variable into the basis). Here $\zeta^* = f^*$ is the optimal value.
+This LP has $n + m$ variables and $m$ equality constraints. The augmented cost vector is $(c^\top, 0^\top)^\top$ (original variables carry cost $c_j$; slack variables carry cost $0$).
 
-Now consider the full set of variables: the $n$ original decision variables $x_j$ and the $m$ slack variables $w_i = b_i - a_i^\top x$ (so $w = b - Ax$). Define the augmented variable $\bar{x} = \binom{x}{w}$.
+Run the [simplex method](10-simplex-method.qmd) on this LP to obtain an optimal BFS with basis $B$. Let $\mathbf{A}_B$ denote the $m \times m$ submatrix of $(A \mid I)$ formed by the basic columns, and let $c_B$ denote the corresponding cost coefficients.
 
-For each variable, we can read off its **reduced cost** from the final dictionary:
-
-- For each decision variable $x_j$: if $x_j$ is nonbasic, its reduced cost is $\widetilde{c}_j \geq 0$; define $c_j^* = \widetilde{c}_j$. If $x_j$ is basic, define $c_j^* = 0$.
-- For each slack variable $w_i$: if $w_i$ is nonbasic, its reduced cost is $\widetilde{c}_{n+i} \geq 0$; define $d_i^* = \widetilde{c}_{n+i}$. If $w_i$ is basic, define $d_i^* = 0$.
-
-Then the objective can be written (in terms of all variables) as:
+**Step 1: Define the candidate dual solution.**
 
 $$
-\zeta = c^\top x = \zeta^* + (c^*)^\top x + (d^*)^\top w.
+y^* \;=\; (\mathbf{A}_B^{-1})^\top c_B \;\in\; \mathbb{R}^m.
 $$
 
-Now **define $y_i^* = -d_i^*$** for each $i \in [m]$.
+This is the **simplex multiplier** vector --- the same object that appears implicitly in the reduced cost formulas of the simplex method.
 
-**Claim: $y^* \geq 0$.** Since $\widetilde{c} \geq 0$ at optimality, we have $d_i^* \geq 0$ for all $i$. Wait -- we need to be careful with signs here. In the maximization simplex, the optimality condition is that the reduced costs of nonbasic variables are $\leq 0$ (we cannot improve the objective). So $\widetilde{c} \leq 0$ for nonbasic variables. This means $d_i^* \leq 0$, so $y_i^* = -d_i^* \geq 0$.
+**Step 2: Show $y^*$ is dual feasible.**
 
-Substituting $w = b - Ax$ into the expression for $\zeta$:
+At the optimal BFS of a maximization LP, every nonbasic variable has a **nonpositive** reduced cost (otherwise we could improve the objective by bringing it into the basis). We check two types of variables:
 
-$$
-c^\top x = \zeta^* + (c^*)^\top x + (-y^*)^\top (b - Ax) = \zeta^* - b^\top y^* + (c^* + A^\top y^*)^\top x.
-$$
-
-Since the left-hand side is $c^\top x$ and the right-hand side is linear in $x$, this identity must hold for **all** $x$. Matching coefficients:
-
-- **Constant terms**: $0 = \zeta^* - b^\top y^*$, i.e., $\zeta^* = b^\top y^*$.
-- **Coefficient of $x$**: $c = c^* + A^\top y^*$, i.e., $A^\top y^* = c - c^*$.
-
-Since $c^* \geq 0$ (all reduced costs of decision variables are non-negative in the final dictionary after accounting for signs), we get $A^\top y^* \leq c$. For the dual in our convention ($\min b^\top y$ s.t. $A^\top y \geq c$), we need $A^\top y^* \geq c$. The sign conventions work out correctly when we track the simplex algebra carefully: $c^* \leq 0$ for the nonbasic decision variables in a maximization simplex, giving $A^\top y^* \geq c$.
-
-Therefore $y^*$ is **dual feasible** (satisfying $A^\top y^* \geq c$ and $y^* \geq 0$), and
+- *Original variable $x_j$:* Its column in $(A \mid I)$ is $a_j$ (the $j$-th column of $A$). Its reduced cost is
 
 $$
-b^\top y^* = \zeta^* = f^* = \max_{x \in \Omega_P} c^\top x.
+\bar{c}_j = c_j - c_B^\top \mathbf{A}_B^{-1} a_j = c_j - (y^*)^\top a_j \;\leq\; 0,
 $$
 
-By weak duality, $b^\top y^* \geq \min_{y \in \Omega_D} b^\top y \geq \max_{x \in \Omega_P} c^\top x = b^\top y^*$. Thus $y^*$ is dual optimal and the duality gap is zero. $\blacksquare$
+which gives $(A^\top y^*)_j \geq c_j$. Since this holds for every $j \in [n]$, we have $A^\top y^* \geq c$. (If $x_j$ is basic, its reduced cost is zero by definition, so the inequality still holds.)
+
+- *Slack variable $w_i$:* Its column in $(A \mid I)$ is $e_i$ (the $i$-th standard basis vector). Its reduced cost is
+
+$$
+\bar{c}_{n+i} = 0 - c_B^\top \mathbf{A}_B^{-1} e_i = -y_i^* \;\leq\; 0,
+$$
+
+which gives $y_i^* \geq 0$. Therefore $y^* \geq 0$.
+
+Combining: $y^*$ satisfies $A^\top y^* \geq c$ and $y^* \geq 0$, so it is **dual feasible**.
+
+**Step 3: Show the objectives match.**
+
+At the optimal BFS, all nonbasic variables are zero, so
+
+$$
+f^* = c^\top x^* = c_B^\top x_B^* = c_B^\top \mathbf{A}_B^{-1} b = (y^*)^\top b = b^\top y^*.
+$$
+
+**Conclusion.** We have constructed $y^*$ that is dual feasible with $b^\top y^* = f^*$. By weak duality, $b^\top y^* \geq \min_{y \in \Omega_D} b^\top y \geq f^*$. Since $b^\top y^* = f^*$, all inequalities are equalities: $y^*$ is dual optimal and the duality gap is zero. $\blacksquare$
 :::
 
 ::: {.callout-note appearance="simple"}
 ## Key Insight
 
-The simplex method simultaneously solves both the primal and the dual! The optimal dual variables $y^*$ can be read off directly from the final simplex tableau as the negatives of the reduced costs of the slack variables.
+The simplex method simultaneously solves both the primal and the dual! The optimal dual variables are the **simplex multipliers** $y^* = (\mathbf{A}_B^{-1})^\top c_B$, and each $y_i^*$ equals the **negative of the reduced cost** of the $i$-th slack variable $w_i$. You never need to solve the dual LP separately --- it comes for free from the primal simplex tableau.
 :::
 
 ![Relationships between primal and dual linear programs: weak duality provides a bound, strong duality gives equality at optimality, and complementary slackness links the solutions.](figures/lp-duality-relationships.svg){#fig-lp-duality-relationships}
 
-The algebraic proof is constructive: the simplex method produces dual variables for free. But it is natural to ask whether there is a more intuitive, geometric understanding of why duality works. The next section provides exactly that.
+@fig-lp-duality-relationships summarizes the three pillars of LP duality: **weak duality** (the dual always bounds the primal), **strong duality** (the bounds meet at optimality), and **complementary slackness** (which links the structure of optimal solutions). The number line at the bottom illustrates the duality gap shrinking to zero at the optimal pair $(x^*, y^*)$.
 
-@fig-lp-duality-relationships summarizes the three pillars of LP duality. The top row shows the primal-dual pairing: every LP has a partner obtained by transposing $A$ and swapping the roles of $b$ and $c$. The middle row displays the three key results: **weak duality** (the dual objective always lower-bounds the primal), **strong duality** (the bounds meet at optimality), and **complementary slackness** (which links the optimal primal and dual solutions). The number line at the bottom illustrates the duality gap — the interval between any dual-feasible value $b^\top y$ and any primal-feasible value $c^\top x$ — which shrinks to zero at the optimal pair $(x^*, y^*)$.
+The algebraic proof is constructive: the simplex method produces dual variables for free. But is there a more intuitive, geometric understanding of *why* duality works?
 
 ## Geometric Interpretation {#sec-geometric}
 
@@ -830,13 +703,19 @@ The first "$\leq$" uses $A^\top y \geq c$ and $x \geq 0$; the second uses $Ax \l
 ::: {.callout-note appearance="simple"}
 ## The Geometric Essence of LP Duality
 
+The primal-dual pair captures a push-versus-block contest between the objective and the constraints:
+
 - **Primal** = push the objective forward as far as the polytope allows
 - **Dual** = combine constraint walls to form the tightest barrier against forward progress
 - **Weak duality** = the barrier always lies ahead of the farthest reachable point
 - **Strong duality** = at optimality, the barrier *exactly touches* the farthest reachable point
+
+In short, duality theory tells us that the tightest combined barrier exactly meets the farthest reachable point --- there is never a gap between what the polytope permits and what the constraints can certify.
 :::
 
-Drag the slider below to rotate the ray direction $\theta$. As the angle changes, different constraint walls become the binding barrier — the one that stops the ray first. The colored dots along the ray mark where each wall would block it; the star marks the actual exit point (the tightest individual bound).
+**Connection to duality.** The ray picture illustrates the *primal* side: how far can we push in direction $c$ before a wall stops us? Each wall $a_i^\top x \leq b_i$ gives an individual bound $\alpha \leq b_i / (a_i^\top c)$. The tightest wall determines the exit point. The *dual* side does something more powerful: instead of using one wall at a time, it **combines walls** with weights $y_1, \ldots, y_m \geq 0$ to create a synthetic barrier that bounds the objective over the *entire* polytope, not just along a single ray. The dual LP finds the tightest such combination.
+
+Drag the slider below to rotate the ray direction $\theta$. As the angle changes, different constraint walls become the binding barrier. The colored dots mark where each wall would block the ray; the **star** marks the ray's exit point. The **diamond** marks the LP-optimal vertex, and the dashed line shows the dual barrier $c^\top x = b^\top y^*$. The stacked bar decomposes the dual bound into each wall's contribution.
 
 ```{=html}
 <div class="interactive-figure-container" id="geo-wrapper">
@@ -844,7 +723,7 @@ Drag the slider below to rotate the ray direction $\theta$. As the angle changes
   <p class="fig-subtitle">
     Polytope: x<sub>1</sub> &le; 4, &ensp; x<sub>2</sub> &le; 6, &ensp;
     3x<sub>1</sub>+2x<sub>2</sub> &le; 18, &ensp; x &ge; 0.
-    &emsp; The ray from the origin in direction c exits through the most restrictive wall.
+    &emsp; The ray exits through the tightest wall; the dual combines walls to certify the LP optimum.
   </p>
   <div class="slider-row">
     <label for="geo-theta">Direction &theta; =</label>
@@ -858,13 +737,14 @@ Drag the slider below to rotate the ray direction $\theta$. As the angle changes
 <script>
 (function() {
   var C = {
-    bg: '#f0ebe5', plotBg: '#faf7f3', text: '#3d3530', grid: '#e0d9d1',
-    axis: '#968a80', blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
+    text: css('--fig-text') || '#3d3530',
+    blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
     terracotta: '#c47a6a', lavender: '#907ea0', rosewood: '#ad8480'
   };
-  var font = {family: "'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif", color: C.text};
+  var font = {family: figFont, color: css('--fig-text')};
 
   var polyX = [0, 4, 4, 2, 0, 0], polyY = [0, 0, 3, 6, 6, 0];
+  var verts = [[0,0], [4,0], [4,3], [2,6], [0,6]];
   var walls = [
     {a: [1, 0], b: 4, label: 'x\u2081 \u2264 4', color: C.blue,
      lx: [4, 4], ly: [-0.5, 8]},
@@ -873,103 +753,192 @@ Drag the slider below to rotate the ray direction $\theta$. As the angle changes
     {a: [3, 2], b: 18, label: '3x\u2081+2x\u2082 \u2264 18', color: C.terracotta,
      lx: [-0.5, 6.5], ly: [9.75, -0.75]}
   ];
-  var cfg = {displayModeBar: false, responsive: true};
+  var cfg = plotlyConfig;
+  var thCrit = Math.atan(2/3); /* transition angle ~33.69 deg */
+
+  /* Dual optimal solution via complementary slackness.
+     theta < thCrit  => optimum at (4,3): binding x1<=4, 3x1+2x2<=18
+     theta >= thCrit => optimum at (2,6): binding x2<=6, 3x1+2x2<=18 */
+  function dualSol(cx, cy) {
+    if (Math.atan2(cy, cx) <= thCrit)
+      return [cx - 1.5*cy, 0, 0.5*cy];
+    return [0, cy - (2/3)*cx, (1/3)*cx];
+  }
+
+  /* Liang-Barsky line clip to axis rectangle */
+  function clipLn(x1, y1, x2, y2, xlo, xhi, ylo, yhi) {
+    var dx = x2 - x1, dy = y2 - y1;
+    var p = [-dx, dx, -dy, dy];
+    var q = [x1 - xlo, xhi - x1, y1 - ylo, yhi - y1];
+    var t0 = 0, t1 = 1;
+    for (var i = 0; i < 4; i++) {
+      if (Math.abs(p[i]) < 1e-10) { if (q[i] < 0) return null; }
+      else {
+        var r = q[i] / p[i];
+        if (p[i] < 0) { if (r > t0) t0 = r; }
+        else { if (r < t1) t1 = r; }
+      }
+    }
+    return t0 <= t1 ? [x1 + t0*dx, y1 + t0*dy, x1 + t1*dx, y1 + t1*dy] : null;
+  }
 
   function update(deg) {
     var th = deg * Math.PI / 180, cx = Math.cos(th), cy = Math.sin(th);
+
+    /* Ray: individual wall bounds on alpha */
     var bounds = [];
     for (var i = 0; i < walls.length; i++) {
       var d = walls[i].a[0]*cx + walls[i].a[1]*cy;
-      if (d > 1e-9) bounds.push({a: walls[i].b/d, i: i});
+      if (d > 1e-9) bounds.push({a: walls[i].b / d, i: i});
     }
     bounds.sort(function(a, b) { return a.a - b.a; });
+    var aS = bounds[0].a, eX = aS*cx, eY = aS*cy;
 
-    var aS = bounds[0].a, eX = aS*cx, eY = aS*cy, rE = aS*1.25;
+    /* LP optimum: max c^T v over vertices */
+    var bestVal = -1e9, bv = 0;
+    for (var v = 0; v < verts.length; v++) {
+      var val = cx*verts[v][0] + cy*verts[v][1];
+      if (val > bestVal) { bestVal = val; bv = v; }
+    }
+    var oX = verts[bv][0], oY = verts[bv][1];
 
+    /* Dual solution and wall contributions */
+    var y = dualSol(cx, cy);
+    var ctr = [y[0]*4, y[1]*6, y[2]*18];
+    var dVal = ctr[0] + ctr[1] + ctr[2];
+
+    /* Level set line c^T x = bestVal through optimal vertex */
+    var lc = clipLn(oX - 12*cy, oY + 12*cx, oX + 12*cy, oY - 12*cx,
+                    -0.5, 7.0, -0.5, 8.0);
+
+    var rE = aS * 1.2;
     var tr = [
       /* polytope */
       {x: polyX, y: polyY, mode: 'lines', fill: 'toself',
-       fillcolor: 'rgba(122,154,126,0.13)', line: {color: C.sage, width: 2.2},
-       name: 'Feasible polytope', hoverinfo: 'skip'},
-      /* constraint boundary lines (subtle) */
+       fillcolor: 'rgba(122,154,126,0.10)', line: {color: C.sage, width: 2},
+       name: 'Feasible region', hoverinfo: 'skip'},
+      /* constraint boundary lines */
       {x: walls[0].lx, y: walls[0].ly, mode: 'lines',
-       line: {color: C.blue, width: 1, dash: 'dot'}, opacity: 0.45,
+       line: {color: C.blue, width: 1.2, dash: 'dot'}, opacity: 0.35,
        showlegend: false, hoverinfo: 'skip'},
       {x: walls[1].lx, y: walls[1].ly, mode: 'lines',
-       line: {color: C.sage, width: 1, dash: 'dot'}, opacity: 0.45,
+       line: {color: C.sage, width: 1.2, dash: 'dot'}, opacity: 0.35,
        showlegend: false, hoverinfo: 'skip'},
       {x: walls[2].lx, y: walls[2].ly, mode: 'lines',
-       line: {color: C.terracotta, width: 1, dash: 'dot'}, opacity: 0.45,
-       showlegend: false, hoverinfo: 'skip'},
-      /* ray: solid to exit */
-      {x: [0, eX], y: [0, eY], mode: 'lines',
-       line: {color: C.gold, width: 3.5},
-       name: 'Ray x = \u03b1c', hoverinfo: 'skip'},
-      /* ray: faded past exit */
-      {x: [eX, rE*cx], y: [eY, rE*cy], mode: 'lines',
-       line: {color: C.gold, width: 2, dash: 'dash'}, opacity: 0.3,
+       line: {color: C.terracotta, width: 1.2, dash: 'dot'}, opacity: 0.35,
        showlegend: false, hoverinfo: 'skip'}
     ];
+
+    /* dual barrier level set */
+    if (lc) {
+      tr.push({x: [lc[0], lc[2]], y: [lc[1], lc[3]], mode: 'lines',
+        line: {color: C.lavender, width: 2.5, dash: 'dashdot'},
+        name: 'Dual barrier', hoverinfo: 'skip'});
+    }
+
+    /* ray: solid to exit, dashed beyond */
+    tr.push({x: [0, eX], y: [0, eY], mode: 'lines',
+      line: {color: C.gold, width: 3},
+      name: 'Ray x = \u03b1c', hoverinfo: 'skip'});
+    tr.push({x: [eX, rE*cx], y: [eY, rE*cy], mode: 'lines',
+      line: {color: C.gold, width: 1.5, dash: 'dash'}, opacity: 0.3,
+      showlegend: false, hoverinfo: 'skip'});
 
     /* wall hit points */
     for (var j = 0; j < bounds.length; j++) {
       var w = walls[bounds[j].i], al = bounds[j].a;
       var hx = al*cx, hy = al*cy, bind = (j === 0);
-      /* skip non-binding points that are off-screen */
       if (!bind && (hx > 7 || hy > 8.2 || hx < -0.5 || hy < -0.5)) continue;
-      tr.push({
-        x: [hx], y: [hy], mode: 'markers',
-        marker: {size: bind ? 14 : 9, color: w.color,
+      tr.push({x: [hx], y: [hy], mode: 'markers',
+        marker: {size: bind ? 13 : 8, color: w.color,
                  symbol: bind ? 'star' : 'circle',
-                 line: {width: bind ? 1.5 : 1, color: 'white'}},
-        name: (bind ? 'Exit: ' : '') + w.label,
+                 line: {width: bind ? 1.5 : 0.8, color: 'white'}},
+        name: (bind ? 'Exit: ' : 'Wall ') + w.label,
         hovertext: ['\u03b1 = ' + al.toFixed(2) + (bind ? ' (binding)' : '')],
-        hoverinfo: 'text'
-      });
+        hoverinfo: 'text'});
     }
+
+    /* LP optimal vertex */
+    tr.push({x: [oX], y: [oY], mode: 'markers',
+      marker: {size: 12, color: C.lavender, symbol: 'diamond',
+               line: {width: 1.5, color: 'white'}},
+      name: 'Optimum x*',
+      hovertext: ['c\u1d40x* = ' + bestVal.toFixed(2)],
+      hoverinfo: 'text'});
+
+    /* x* label */
+    tr.push({x: [oX + 0.35], y: [oY + 0.3], mode: 'text',
+      text: ['x*'], textfont: {size: 13, color: C.lavender, family: font.family},
+      showlegend: false, hoverinfo: 'skip'});
 
     /* origin */
     tr.push({x: [0], y: [0], mode: 'markers',
-      marker: {size: 6, color: C.text}, showlegend: false, hoverinfo: 'skip'});
+      marker: {size: 5, color: C.text}, showlegend: false, hoverinfo: 'skip'});
 
-    /* direction label */
-    var lr = Math.min(aS*0.4, 2.5);
+    /* c label on ray */
+    var lr = Math.min(aS * 0.4, 2.5);
     tr.push({x: [lr*cx + 0.25*cy], y: [lr*cy - 0.25*cx], mode: 'text',
-      text: ['c'], textfont: {size: 16, color: C.gold, family: font.family},
+      text: ['c'], textfont: {size: 15, color: C.gold, family: font.family},
       showlegend: false, hoverinfo: 'skip'});
 
-    var ax = {gridcolor: C.grid, gridwidth: 1, zerolinecolor: C.axis,
-              zerolinewidth: 1.5, linecolor: C.axis, linewidth: 1,
-              tickfont: {size: 12, family: font.family, color: font.color},
-              titlefont: {size: 14, family: font.family, color: font.color}};
-
-    var layout = {
-      paper_bgcolor: C.bg, plot_bgcolor: C.plotBg, font: font,
-      height: 460, margin: {t: 14, b: 52, l: 56, r: 14},
-      xaxis: Object.assign({title: 'x\u2081', range: [-0.8, 7.2]}, ax),
-      yaxis: Object.assign({title: 'x\u2082', range: [-0.8, 8.5], scaleanchor: 'x'}, ax),
+    Plotly.react('geo-plot', tr, themeLayout({
+      height: 470, margin: {t: 10, b: 48, l: 52, r: 150},
+      xaxis: themeAxis('x\u2081', {range: [-0.8, 7.2]}),
+      yaxis: themeAxis('x\u2082', {range: [-0.8, 8.5], scaleanchor: 'x'}),
       showlegend: true,
-      legend: {x: 0.52, y: 0.01, bgcolor: 'rgba(250,247,243,0.88)',
-               bordercolor: C.grid, borderwidth: 1,
-               font: {size: 10.5, family: font.family, color: font.color}},
+      legend: Object.assign(legendStyle(), {
+        x: 1.02, y: 1, xanchor: 'left', yanchor: 'top',
+        font: {size: 11, family: figFont, color: css('--fig-text')}
+      }),
       hovermode: 'closest'
-    };
+    }), cfg);
 
-    /* info box */
+    /* --- Info box --- */
     var info = '<b>Direction:</b> c = (' + cx.toFixed(3) + ', ' + cy.toFixed(3) + ')';
+
+    /* individual wall bounds */
     info += '<br><b>Wall bounds on \u03b1:</b> &ensp;';
     for (var j = 0; j < bounds.length; j++) {
       var w = walls[bounds[j].i], al = bounds[j].a, bind = (j === 0);
       info += '<span style="color:' + w.color + '">\u25cf</span> '
         + w.label + ': \u03b1 \u2264 ' + al.toFixed(2)
-        + (bind ? ' <b>\u2190 binding</b>' : '') + ' &ensp; ';
+        + (bind ? ' <b>\u2190 exit</b>' : '') + ' &ensp; ';
     }
-    info += '<br><b>Exit:</b> (' + eX.toFixed(2) + ', ' + eY.toFixed(2)
-      + ') at \u03b1* = ' + aS.toFixed(2)
-      + '<br><span style="color:#968a80">The dual LP combines these walls '
-      + 'to produce the tightest upper bound on c<sup>T</sup>x over the entire polytope.</span>';
+
+    /* primal and dual values */
+    info += '<br><b>Ray exit:</b> \u03b1* = ' + aS.toFixed(2)
+      + ' &emsp; <b>LP optimum:</b> c<sup>T</sup>x* = ' + bestVal.toFixed(2)
+      + ' at (' + oX + ',\u2009' + oY + ')';
+    info += '<br><b>Dual certificate:</b> y* = ('
+      + y[0].toFixed(3) + ',\u2009' + y[1].toFixed(3) + ',\u2009' + y[2].toFixed(3) + ')';
+
+    /* stacked bar: dual bound decomposition */
+    var tot = Math.max(dVal, 0.01);
+    info += '<div style="margin:5px 0 2px;display:flex;align-items:center;gap:8px;">'
+      + '<span style="font-size:0.85em;color:#968a80;">b<sup>T</sup>y*\u2009=</span>'
+      + '<div style="flex:1;max-width:400px;display:flex;height:22px;border-radius:4px;'
+      + 'overflow:hidden;border:1px solid #d4c9b8;">';
+    var blab = ['4y\u2081', '6y\u2082', '18y\u2083'];
+    var cols = [C.blue, C.sage, C.terracotta];
+    for (var k = 0; k < 3; k++) {
+      if (ctr[k] > 0.005) {
+        var pct = 100 * ctr[k] / tot;
+        info += '<div style="width:' + pct.toFixed(1) + '%;background:' + cols[k]
+          + ';display:flex;align-items:center;justify-content:center;'
+          + 'color:#fff;font-size:' + (pct > 18 ? '0.78' : '0.68') + 'em;'
+          + 'font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.35);">'
+          + (pct > 14 ? blab[k] + '\u2009=\u2009' + ctr[k].toFixed(2) : ctr[k].toFixed(1))
+          + '</div>';
+      }
+    }
+    info += '</div><span style="font-size:0.92em;font-weight:600;color:#3d3530;">'
+      + '=\u2009' + dVal.toFixed(2) + '</span></div>';
+
+    info += '<div style="font-size:0.82em;color:#968a80;margin-top:1px;">'
+      + 'Strong duality: c<sup>T</sup>x* = b<sup>T</sup>y* = ' + dVal.toFixed(2)
+      + ' \u2014 the combined barrier touches the optimum exactly.</div>';
+
     document.getElementById('geo-info').innerHTML = info;
-    Plotly.react('geo-plot', tr, layout, cfg);
   }
 
   document.getElementById('geo-theta').addEventListener('input', function() {
@@ -987,7 +956,7 @@ The geometric picture -- pushing forward against combined barriers -- gives powe
 
 ## Sensitivity Analysis and Shadow Prices {#sec-sensitivity}
 
-Strong duality (@eq-strong-duality) tells us that the primal and dual optimal values coincide, but it says nothing about what happens when we perturb the problem data. The dual variables have a beautiful economic interpretation: they tell us how sensitive the optimal value is to changes in the right-hand side $b$.
+So far, duality has told us about the *value* of the optimal solution. But in practice, we also want to know: **if we change the problem slightly, how does the optimal value respond?** For instance, if a factory has 100 units of a resource and could acquire 1 more, how much additional profit would that yield? The dual variables answer exactly this question.
 
 ### Perturbed Primal
 
@@ -1017,7 +986,7 @@ $$
 ### Shadow Price Interpretation
 
 ::: {#def-shadow-price}
-## Definition 16.5 (Shadow Price)
+## Shadow Price
 
 The optimal dual variable $y_i^*$ is called the **shadow price** of the $i$-th constraint. It measures the rate of change of the optimal value with respect to the $i$-th constraint's right-hand side:
 
@@ -1028,116 +997,33 @@ $$
 
 Intuitively, $y^* = (y_1^*, \ldots, y_m^*)$ reflects how much the objective changes when we change each constraint by one unit. In economics, $y_i^*$ represents the **marginal value** of relaxing the $i$-th constraint -- if the constraint $a_i^\top x \leq b_i$ represents a resource limit, then $y_i^*$ is the price one should be willing to pay for one additional unit of that resource.
 
-```python
-#| label: fig-sensitivity
-#| fig-cap: "Figure 16.3: Sensitivity analysis. Perturbing the resource constraint bound b₃ (3x₁+2x₂ ≤ b₃) changes the optimal value. The slope of the tangent line equals the shadow price y₃* = 1."
-#| echo: false
-
-import numpy as np
-import plotly.graph_objects as go
-
-# LP: max 3x1 + 5x2
-# s.t.  x1         <= 4
-#              x2   <= 6
-#       3x1 + 2x2  <= b3 (default 18)
-#       x1, x2 >= 0
-
-def solve_lp_b3(b3_val):
-    """Solve by vertex enumeration for this small LP."""
-    b_vec = np.array([4, 6, b3_val])
-    A_mat = np.array([[1, 0], [0, 1], [3, 2]])
-    c_vec = np.array([3, 5])
-
-    from itertools import combinations
-    A_full = np.vstack([-np.eye(2), A_mat])
-    b_full = np.concatenate([np.zeros(2), b_vec])
-
-    best_val = -np.inf
-    best_x = None
-    for idx in combinations(range(5), 2):
-        A_sub = A_full[list(idx), :]
-        if abs(np.linalg.det(A_sub)) < 1e-12:
-            continue
-        x_sub = np.linalg.solve(A_sub, b_full[list(idx)])
-        if np.all(A_full @ x_sub <= b_full + 1e-9):
-            val = c_vec @ x_sub
-            if val > best_val:
-                best_val = val
-                best_x = x_sub.copy()
-    return best_val, best_x
-
-# Compute optimal values for a range of b3
-b3_range = np.linspace(6, 30, 97)
-opt_vals = []
-for b3 in b3_range:
-    val, _ = solve_lp_b3(b3)
-    opt_vals.append(val)
-
-# Default solution
-default_val, default_x = solve_lp_b3(18.0)
-
-fig = go.Figure()
-
-# Plot optimal value as function of b3
-fig.add_trace(go.Scatter(x=b3_range, y=opt_vals, mode='lines',
-    line=dict(color='#7b97ad', width=3),
-    name='f*(b<sub>3</sub>)',
-    hovertemplate='b<sub>3</sub> = %{x:.1f}<br>f* = %{y:.1f}<extra></extra>'))
-
-# Mark the default point
-fig.add_trace(go.Scatter(x=[18.0], y=[default_val], mode='markers',
-    marker=dict(color='#b56b6b', size=14, symbol='star',
-    line=dict(width=1, color='white')),
-    name=f'Default: b<sub>3</sub>=18, f*={default_val:.0f}',
-    hovertemplate='b<sub>3</sub> = 18<br>f* = %{y:.1f}<extra></extra>'))
-
-# Show shadow price as tangent line
-slope = 1.0  # shadow price y3* for this LP
-tangent_x = np.linspace(14, 22, 50)
-tangent_y = default_val + slope * (tangent_x - 18.0)
-fig.add_trace(go.Scatter(x=tangent_x, y=tangent_y, mode='lines',
-    line=dict(color='#b8995e', dash='dash', width=2),
-    name=f'Shadow price slope y<sub>3</sub>* = {slope}',
-    hoverinfo='skip'))
-
-fig.add_annotation(x=21, y=default_val + slope*3 + 0.5,
-    text=f'slope = y<sub>3</sub>* = {slope:.0f}',
-    showarrow=True, arrowhead=2, arrowcolor='#b8995e',
-    ax=-40, ay=30, font=dict(color='#b8995e', size=12))
-
-fig.update_layout(
-    xaxis=dict(title='b<sub>3</sub> (resource constraint: 3x<sub>1</sub>+2x<sub>2</sub> ≤ b<sub>3</sub>)', range=[5, 31]),
-    yaxis=dict(title='Optimal value f*(b<sub>3</sub>)'),
-    showlegend=True, margin=dict(t=20, b=60, l=60, r=20),
-    legend=dict(yanchor='top', y=0.99, xanchor='left', x=0.01))
-fig.show()
-```
+![Sensitivity analysis. Perturbing the resource constraint bound $b_3$ ($3x_1+2x_2 \leq b_3$) changes the optimal value. The slope of the tangent line at the default point $(18, 36)$ equals the shadow price $y_3^* = 1$.](figures/sensitivity.svg){#fig-sensitivity}
 
 ::: {.callout-tip}
 ## Economic Interpretation
 
-Consider a production planning LP where:
+Consider a production planning LP where the decision variables and parameters have the following economic meaning:
 
 - $x_j$ = amount of product $j$ to produce
 - $c_j$ = profit per unit of product $j$
 - $b_i$ = available amount of resource $i$
 - $a_{ij}$ = amount of resource $i$ needed per unit of product $j$
 
-Then $y_i^*$ is the **marginal value of resource $i$**: how much additional profit we could earn if we had one more unit of resource $i$. A resource with $y_i^* = 0$ is not a bottleneck (the constraint is not tight at optimality); a resource with $y_i^* > 0$ is scarce and limits our profit.
+Under this interpretation, the optimal dual variable $y_i^*$ is the **marginal value of resource $i$**: how much additional profit we could earn if we had one more unit of resource $i$. A resource with $y_i^* = 0$ is not a bottleneck (the constraint is not tight at optimality); a resource with $y_i^* > 0$ is scarce and limits our profit.
 :::
 
 Shadow prices tell us how the optimal value changes with perturbations to the right-hand side, but they do not directly characterize the structure of optimal solutions. For that, we need a pointwise condition linking primal and dual optima: complementary slackness.
 
 ## Complementary Slackness {#sec-complementary-slackness}
 
-While strong duality (@eq-strong-duality) tells us the optimal values match, complementary slackness provides a pointwise characterization of optimality: it tells us exactly which constraints must be tight and which variables must be zero at any optimal primal-dual pair.
+Strong duality (@eq-strong-duality) tells us that the optimal values match, but says nothing about the *structure* of optimal solutions. Which constraints are binding? Which variables are positive? Complementary slackness answers both questions: it provides a precise, pointwise link between optimal primal and dual solutions.
 
 ### Slack Variables
 
-Define the **primal slack variables** $w_i = b_i - \sum_{j=1}^n a_{ij} x_j$ (so $w_i \geq 0$ when $x$ is primal feasible) and the **dual slack variables** $z_j = \sum_{i=1}^m a_{ij} y_i - c_j$ (so $z_j \geq 0$ when $y$ is dual feasible).
+We need notation for "how much room" each constraint has. Define the **primal slack** $w_i = b_i - \sum_{j=1}^n a_{ij} x_j$ (nonneg when $x$ is primal feasible; zero when the $i$-th constraint is tight) and the **dual slack** $z_j = \sum_{i=1}^m a_{ij} y_i - c_j$ (nonneg when $y$ is dual feasible; zero when the $j$-th dual constraint is tight).
 
 ::: {#thm-complementary-slackness}
-## Theorem 16.6 (Complementary Slackness)
+## Complementary Slackness
 
 Suppose $x = (x_1, \ldots, x_n)^\top$ is primal feasible and $y = (y_1, \ldots, y_m)^\top$ is dual feasible. Then $x$ and $y$ are optimal for the primal and dual problems respectively **if and only if**
 
@@ -1148,9 +1034,16 @@ $$
 Equivalently, in vector form: $x^\top z = 0$ and $y^\top w = 0$.
 :::
 
-In words: for each primal variable $x_j$, either $x_j = 0$ or the corresponding dual constraint is tight ($z_j = 0$); and for each dual variable $y_i$, either $y_i = 0$ or the corresponding primal constraint is tight ($w_i = 0$). At optimality, there is no "slack" in both a variable and its corresponding constraint simultaneously.
+::: {.callout-note appearance="simple"}
+## In Words
 
-The proof expresses the duality gap (@eq-duality-gap) as a sum of nonnegative terms and uses strong duality (@eq-strong-duality) to force all terms to zero.
+At an optimal pair $(x^*, y^*)$, every variable-constraint pair exhibits a **complementary** relationship:
+
+- **Primal side:** If $x_j^* > 0$ (variable is active), then $z_j = 0$ (dual constraint is tight). If $z_j > 0$ (dual constraint has slack), then $x_j^* = 0$ (variable is inactive).
+- **Dual side:** If $y_i^* > 0$ (multiplier is active), then $w_i = 0$ (primal constraint is tight). If $w_i > 0$ (primal constraint has slack), then $y_i^* = 0$ (multiplier is inactive).
+
+There is never slack on both sides simultaneously --- hence the name "complementary slackness."
+:::
 
 ::: {.proof}
 **Proof of Complementary Slackness.**
@@ -1187,13 +1080,13 @@ Since $x_j \geq 0$ and $z_j \geq 0$ for all $j$, the condition $x^\top z = \sum_
 
 ### Using Complementary Slackness
 
-Complementary slackness is extremely useful in practice for:
+Complementary slackness is one of the most practically useful results in LP theory. Here are three concrete ways to use it:
 
-1. **Recovering the dual solution from the primal**: Given an optimal primal solution $x^*$, we can find the optimal dual solution $y^*$ by solving the system of equations determined by complementary slackness.
+**1. Recovering the dual from the primal.** Given an optimal primal $x^*$, complementary slackness tells you which dual constraints must be tight. For each $j$ with $x_j^* > 0$, you know $z_j = 0$, i.e., $(A^\top y)_j = c_j$. These tight constraints form a linear system that you solve for $y^*$. (This is exactly what the worked example in @sec-worked-example demonstrates.)
 
-2. **Verifying optimality**: Given candidate primal and dual solutions, check that they satisfy complementary slackness (along with feasibility).
+**2. Verifying optimality.** Given candidate solutions $x$ (primal feasible) and $y$ (dual feasible), compute the slacks $w_i = b_i - a_i^\top x$ and $z_j = (A^\top y)_j - c_j$, then check that $x_j z_j = 0$ for all $j$ and $y_i w_i = 0$ for all $i$. If all products vanish, the pair is optimal --- no need to solve anything.
 
-3. **Reducing the dual to a smaller system**: At the optimal primal BFS, let $B$ be the set of basic variables (with $\bar{x}_B > 0$ if nondegenerate). Then complementary slackness implies $z_B = 0$, i.e., the dual constraints corresponding to basic primal variables are tight. This gives $|B| = m$ equations in $n$ unknowns, which (combined with the structure of the simplex) allows us to solve for $y^*$.
+**3. Identifying binding constraints.** At optimality, complementary slackness reveals the *active set* --- the constraints that are tight. If $y_i^* > 0$, the $i$-th primal constraint must be binding ($w_i = 0$). If $y_i^* = 0$, the constraint may or may not be binding but it is not "pushing" against the optimum. This structural information is essential for sensitivity analysis and for understanding which constraints matter.
 
 ## Worked Example {#sec-worked-example}
 
@@ -1235,79 +1128,18 @@ From $y_1^* = 0$: $3y_3^* = 3 \implies y_3^* = 1$. Then $y_2^* + 2(1) = 5 \impli
 **Step 5: Shadow prices.** $y_1^* = 0$ means the constraint $x_1 \leq 4$ is not binding (we have slack $w_1 = 2$), so relaxing it has no effect on the optimum. $y_2^* = 3$ means that increasing the bound on $x_2$ by one unit (from 6 to 7) would increase the optimal profit by approximately 3. $y_3^* = 1$ means relaxing the combined resource constraint by one unit increases profit by approximately 1.
 :::
 
-```python
-#| label: fig-worked-example
-#| fig-cap: "Figure 16.5: Worked example: primal feasible region with objective contours. The optimal vertex (2,6) achieves f* = 36, which equals the dual optimal value."
-#| echo: false
-
-import numpy as np
-import plotly.graph_objects as go
-
-# Primal: max 3x1 + 5x2 s.t. x1<=4, x2<=6, 3x1+2x2<=18, x1,x2>=0
-# Vertices: (0,0), (4,0), (4,3), (2,6), (0,6)
-vx = [0, 4, 4, 2, 0, 0]
-vy = [0, 0, 3, 6, 6, 0]
-
-fig = go.Figure()
-
-fig.add_trace(go.Scatter(x=vx, y=vy, fill='toself',
-    fillcolor='rgba(122,154,126,0.2)', line=dict(color='#7a9a7e', width=2.5),
-    name='Feasible region', mode='lines'))
-
-# Vertices with labels
-vert_pts = [(0,0), (4,0), (4,3), (2,6), (0,6)]
-vert_vals = [3*x+5*y for x,y in vert_pts]
-for (x,y), v in zip(vert_pts, vert_vals):
-    fig.add_trace(go.Scatter(x=[x], y=[y], mode='markers+text',
-        marker=dict(color='#8a6e5e', size=8, line=dict(width=1, color='white')),
-        text=[f'({x},{y}), f={v}'], textposition='top right',
-        textfont=dict(size=10),
-        showlegend=False, hoverinfo='text',
-        hovertext=[f'Vertex ({x},{y})<br>f = {v}']))
-
-# Optimal vertex
-fig.add_trace(go.Scatter(x=[2], y=[6], mode='markers',
-    marker=dict(color='#b56b6b', size=16, symbol='star',
-    line=dict(width=1.5, color='white')),
-    name='Optimal: (2,6), f*=36'))
-
-# Objective contours
-for val in [10, 20, 30, 36]:
-    x_line = np.linspace(-1, 7, 50)
-    y_line = (val - 3*x_line) / 5
-    mask = (y_line >= -1) & (y_line <= 8) & (x_line >= -1) & (x_line <= 6)
-    fig.add_trace(go.Scatter(x=x_line[mask], y=y_line[mask],
-        mode='lines', line=dict(color='#b8995e', dash='dot', width=1.2),
-        showlegend=False, hoverinfo='skip'))
-
-fig.add_annotation(x=4.5, y=4.5, text='3x<sub>1</sub>+5x<sub>2</sub>=36',
-    showarrow=False, font=dict(size=10, color='#b8995e'))
-
-# Constraint labels
-fig.add_annotation(x=4.3, y=1.5, text='x<sub>1</sub>=4',
-    showarrow=False, font=dict(size=10, color='#968a80'))
-fig.add_annotation(x=1, y=6.4, text='x<sub>2</sub>=6',
-    showarrow=False, font=dict(size=10, color='#968a80'))
-fig.add_annotation(x=3.8, y=4.2, text='3x<sub>1</sub>+2x<sub>2</sub>=18',
-    showarrow=False, font=dict(size=10, color='#968a80'))
-
-fig.update_layout(
-    xaxis=dict(title='x<sub>1</sub>', range=[-0.5, 6], zeroline=True),
-    yaxis=dict(title='x<sub>2</sub>', range=[-0.5, 8], zeroline=True, scaleanchor='x'),
-    showlegend=True, margin=dict(t=20, b=60, l=55, r=20))
-fig.show()
-```
+![Worked example: primal feasible region with objective contours at $f = 10, 20, 30, 36$. Each vertex is labeled with its objective value. The optimal vertex $(2,6)$ achieves $f^* = 36$, which equals the dual optimal value.](figures/duality-worked-example.svg){#fig-worked-example}
 
 ## Summary {#sec-summary}
 
 ::: {.callout-note appearance="simple"}
 ## Key Takeaways
 
-1. **Every LP has a dual LP** obtained by introducing multipliers for each constraint. The dual provides bounds on the primal's optimal value.
+1. **Every LP has a dual LP** obtained by the multiply-sum-dominate recipe: weight constraints by multipliers $y \geq 0$, sum to get a combined inequality, require the left side to dominate $c$. The dual minimizes the resulting upper bound.
 
-2. **Weak duality** always holds: every primal feasible value $\leq$ every dual feasible value. This gives certificates of optimality: if the gap is zero, both solutions are optimal.
+2. **Weak duality** always holds: $c^\top x \leq b^\top y$ for every primal feasible $x$ and dual feasible $y$. If the gap is zero, both solutions are optimal.
 
-3. **Strong duality** holds at optimality: the primal and dual optimal values are equal ($c^\top x^* = b^\top y^*$). The proof constructs the dual optimal solution from the simplex tableau.
+3. **Strong duality** holds at optimality: $c^\top x^* = b^\top y^*$. The simplex multipliers $y^* = (\mathbf{A}_B^{-1})^\top c_B$ are automatically dual optimal.
 
 4. **Shadow prices** ($y_i^*$) measure the sensitivity of the optimal value to changes in the right-hand side: $y_i^* = \partial f^* / \partial b_i$.
 

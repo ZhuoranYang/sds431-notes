@@ -13,13 +13,15 @@ Together, these methods round out the first-order optimization toolkit, equippin
 
 Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.
 
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/13-subgradient-proximal-gradient.ipynb) **Subgradient and Proximal Gradient** --- solving the Lasso with subgradient descent and proximal operators
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/14-projected-gradient-frank-wolfe.ipynb) **Projected Gradient and Frank-Wolfe** --- constrained optimization on $\ell_1$-balls with signal recovery
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/15-tv-denoising.ipynb) **TV Denoising** --- total variation image denoising via subgradient descent in PyTorch
-- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/16-coordinate-descent.ipynb) **Coordinate Descent** --- coordinate descent methods and comparisons
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/13-subgradient-proximal-gradient.ipynb) **Subgradient and Proximal Gradient** --- solving the Lasso with subgradient descent and proximal operators
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/14-projected-gradient-frank-wolfe.ipynb) **Projected Gradient and Frank-Wolfe** --- constrained optimization on $\ell_1$-balls with signal recovery
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/15-tv-denoising.ipynb) **TV Denoising** --- total variation image denoising via subgradient descent in PyTorch
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/16-coordinate-descent.ipynb) **Coordinate Descent** --- coordinate descent methods and comparisons
 :::
 
 ## What Will Be Covered {#sec-overview}
+
+This chapter develops the following topics, progressing from the theoretical foundations of nonsmooth analysis to practical constrained optimization algorithms:
 
 - Subgradients and subdifferentials: generalizing the gradient to nonsmooth convex functions
 - Subgradient calculus: chain rule, composition, and pointwise maximum rules
@@ -38,7 +40,7 @@ Recall: if $f$ is convex and differentiable, then
 $$f(y) \geq f(x) + \langle \nabla f(x),\, y - x \rangle.$$
 
 ::: {#def-subgradient}
-## Definition 10.1 (Subgradient)
+## Subgradient
 
 Let $f$ be a convex function. Let $D = \text{dom}(f)$. A **subgradient** of $f$ at $x$ is any vector $g \in \mathbb{R}^n$ satisfying
 
@@ -50,7 +52,7 @@ A subgradient generalizes the notion of a gradient to nonsmooth convex functions
 ![Subgradients as supporting hyperplanes. Left: a smooth convex function has a unique tangent (gradient) at every point. Right: a nonsmooth convex function (e.g., $|x|$) has a "kink" where multiple supporting lines fit below the graph --- each slope in this family is a subgradient. The set of all such slopes forms the subdifferential $\partial f(x)$.](figures/ch06-subgradient-concept.svg){#fig-subgradient-concept}
 
 ::: {#def-subdifferential}
-## Definition 10.2 (Subdifferential)
+## Subdifferential
 
 We define the set of all subgradients of $f$ at $x$ as the **subdifferential** of $f$ at $x$, denoted by $\partial f$:
 
@@ -64,11 +66,13 @@ The subdifferential collects all subgradients at a given point into a single set
 ::: {.callout-tip}
 ## Remarks on Subgradients
 
-1. $\partial f$ exists (nonempty) for convex $f$ for all $x \in \text{int}(D)$.
-2. If $f$ is differentiable $\Rightarrow \partial f(x) = \{\nabla f(x)\}$.
-3. For any $x \notin \text{dom}(f)$, define $\partial f(x) = \emptyset$.
-4. If $\partial f(x)$ is a singleton, $\partial f(x) = \{g\}$, then $f$ is differentiable at $x$ and $g = \nabla f(x)$.
-5. $\partial f(x)$ is a **closed and convex set**.
+The following properties summarize the basic behavior of subdifferentials:
+
+1. $\partial f$ exists (nonempty) for convex $f$ for all $x \in \text{int}(D)$ (existence is guaranteed in the interior of the domain).
+2. If $f$ is differentiable $\Rightarrow \partial f(x) = \{\nabla f(x)\}$ (the subdifferential reduces to the ordinary gradient).
+3. For any $x \notin \text{dom}(f)$, define $\partial f(x) = \emptyset$ (no subgradient exists outside the domain).
+4. If $\partial f(x)$ is a singleton, $\partial f(x) = \{g\}$, then $f$ is differentiable at $x$ and $g = \nabla f(x)$ (a singleton subdifferential implies smoothness).
+5. $\partial f(x)$ is a **closed and convex set** (this geometric property is inherited from the convexity of $f$).
 :::
 
 ::: {#exm-boundary-subdifferentiable}
@@ -111,7 +115,7 @@ $$\partial f(x) = \begin{cases} \{\text{sign}(x)\} & x \neq 0, \\ [-1, 1] & x = 
 ```{=html}
 <div class="figure-container">
   <div id="fig-abs-subgradient"></div>
-  <div class="figure-caption">Figure 10.1: The absolute value function |x| and supporting lines at x=0. Every slope in [-1,1] gives a valid tangent line below the graph.</div>
+  <div class="figure-caption">Figure 8.1: The absolute value function |x| and supporting lines at x=0. Every slope in [-1,1] gives a valid tangent line below the graph.</div>
 </div>
 ```
 
@@ -147,16 +151,18 @@ $$\partial f(x) = \begin{cases} \{f_1'(x)\} & \text{if } f_1(x) > f_2(x), \\ [f_
 ```{=html}
 <div class="figure-container">
   <div id="fig-max-subgradient"></div>
-  <div class="figure-caption">Figure 10.2: The function max{f₁(x), f₂(x)}. At the kink where f₁ = f₂, the subdifferential is the interval [f₂', f₁'].</div>
+  <div class="figure-caption">Figure 8.2: The function max{f₁(x), f₂(x)}. At the kink where f₁ = f₂, the subdifferential is the interval [f₂', f₁'].</div>
 </div>
 ```
 
 ::: {.callout-tip}
 ## Remark: PyTorch and Subgradients
 
-- PyTorch defines gradients using a subgradient. For example, $\partial\,\text{ReLU}(0) = 0$, $\partial\|\cdot\|(0) = 0$.
-- $(\partial \max\{f, g\})(x) = \frac{1}{2}f'(x) + \frac{1}{2}g'(x)$ when $f(x) = g(x)$. (Not exactly a subgradient, but works in practice.)
-- For minimization, use the fact that $\min = -\max$.
+In practice, deep learning frameworks adopt specific conventions for subgradients at points of nondifferentiability:
+
+- PyTorch defines gradients using a subgradient. For example, $\partial\,\text{ReLU}(0) = 0$, $\partial\|\cdot\|(0) = 0$ (choosing the zero subgradient at the kink by convention).
+- $(\partial \max\{f, g\})(x) = \frac{1}{2}f'(x) + \frac{1}{2}g'(x)$ when $f(x) = g(x)$. (Not exactly a subgradient, but works in practice because the set of nondifferentiable points typically has measure zero.)
+- For minimization, use the fact that $\min = -\max$ (so the same conventions apply after a sign flip).
 :::
 
 Having established the definition and basic properties of subgradients, we now develop the calculus rules that make subgradients practically useful. Just as the chain rule is the workhorse of smooth calculus, we need analogous composition and combination rules for subdifferentials.
@@ -170,7 +176,7 @@ Most of the familiar calculus rules for gradients carry over to subgradients, in
 Just as the chain rule is fundamental to calculus with smooth functions, we need a chain rule for subgradients to handle compositions of nonsmooth functions. The following result shows that the familiar chain-rule structure carries over, provided the outer function is differentiable and nondecreasing.
 
 ::: {#thm-chain-rule-subgradients}
-## Theorem 10.3 (Chain Rule for Subgradients)
+## Chain Rule for Subgradients
 
 Let $f : \mathbb{R}^n \to \mathbb{R}$ be a convex function, and $g : \mathbb{R} \to \mathbb{R}$ be a nondecreasing convex function. Suppose $g$ is differentiable. (Note: $g \circ f$ is convex.)
 
@@ -186,7 +192,7 @@ This chain rule says that composing a convex function $f$ with a nondecreasing d
 We often encounter functions that are compositions of multiple convex functions through a differentiable nondecreasing outer function. The following result generalizes the chain rule to this multivariate setting.
 
 ::: {#thm-composition}
-## Theorem 10.4 (Composition)
+## Composition
 
 Suppose $h(x) = g(f_1(x), \ldots, f_m(x))$, where $f_1, \ldots, f_m$ are convex, $g$ is differentiable, nondecreasing, and convex. For any given $x$, let
 
@@ -214,7 +220,7 @@ $$\partial f(x) = 2\|x\|_1 \cdot \partial g(x) = \bigl\{2\|x\|_1 \cdot z \;\big|
 The pointwise maximum of convex functions arises frequently --- for instance, in robust optimization and piecewise linear modeling. The subdifferential of a pointwise maximum is determined by the subdifferentials of the "active" functions, i.e., those achieving the maximum.
 
 ::: {#thm-pointwise-maximum}
-## Theorem 10.5 (Pointwise Maximum)
+## Pointwise Maximum
 
 Let $f_i(x) = \max_{1 \leq i \leq k} f_i(x)$, where $x \in \bigcap_{i=1}^k \text{int}(\text{dom}(f_i))$. Then
 
@@ -242,7 +248,7 @@ Armed with subgradient calculus rules, we can now characterize when a point is o
 For smooth functions, the optimality condition $\nabla f(x^*) = 0$ is the starting point for all optimization algorithms. For nonsmooth convex functions, the analogous condition involves the subdifferential: optimality is equivalent to the zero vector belonging to the subdifferential.
 
 ::: {#thm-unconstrained-optimality}
-## Theorem 10.6 (Unconstrained Optimality)
+## Unconstrained Optimality
 
 Let $f : D \to \mathbb{R}$ be a convex function. Then
 
@@ -256,7 +262,7 @@ This is the nonsmooth analog of the familiar condition $\nabla f(x^*) = 0$ for s
 Consider the problem $\min_{x} f(x)$ subject to $x \in \mathcal{C}$. When a constraint is present, the condition $0 \in \partial f(x^*)$ is too strong --- the minimizer of $f$ over $\mathcal{C}$ may not be a global minimizer of $f$. Instead, optimality requires that no feasible direction can decrease the objective, which is captured by the following condition involving the normal cone.
 
 ::: {#thm-constrained-optimality}
-## Theorem 10.7 (Constrained Optimality)
+## Constrained Optimality
 
 $x^*$ is optimal if and only if there exists $g \in \partial f(x^*)$ such that
 
@@ -332,7 +338,7 @@ So $f(z - t\,g_2) > f(z)$ for all $t > 0$. Thus $-g_2$ is **not** a descent dire
 ```{=html}
 <div class="figure-container">
   <div id="fig-non-descent"></div>
-  <div class="figure-caption">Figure 10.3: Function values along two subgradient directions from z = (1,0). The direction -g₁ descends, but -g₂ does not.</div>
+  <div class="figure-caption">Figure 8.3: Function values along two subgradient directions from z = (1,0). The direction -g₁ descends, but -g₂ does not.</div>
 </div>
 ```
 
@@ -347,7 +353,7 @@ where $x^*$ is any point in $\arg\min_{x \in \mathcal{C}} f(x)$, and the right-h
 **Function class:** We focus on Lipschitz and convex functions. The Lipschitz condition is the natural regularity assumption for nonsmooth optimization --- it bounds how fast the function can change, which in turn bounds the norm of any subgradient.
 
 ::: {#def-lipschitz}
-## Definition 10.8 ($L$-Lipschitz)
+## $L$-Lipschitz
 
 $f$ is $L$-Lipschitz if
 
@@ -361,7 +367,7 @@ An $L$-Lipschitz function cannot change too rapidly: its function values are bou
 With the Lipschitz condition in hand, we can now state the convergence guarantee for projected subgradient descent. Since the method does not guarantee monotone decrease in the objective (as shown in the example above), the convergence is measured in terms of the best iterate seen so far.
 
 ::: {#thm-convergence-projected-subgradient}
-## Theorem 10.9 (Convergence of Projected Subgradient Descent)
+## Convergence of Projected Subgradient Descent
 
 Consider (projected) subgradient descent with stepsizes $\{\alpha^k\}_{k \geq 0}$ on an $L$-Lipschitz convex $f$. Then
 
@@ -426,7 +432,7 @@ $$y^k = \arg\min_{v \in \mathcal{C}} \bigl\{\underbrace{f(x^k) + \langle \nabla 
 ```{=html}
 <div class="figure-container">
   <div id="fig-fw-illustration"></div>
-  <div class="figure-caption">Figure 10.4: Frank-Wolfe iteration: linearize f at x^k, minimize the linear surrogate over C to get y^k, then take a convex combination step.</div>
+  <div class="figure-caption">Figure 8.4: Frank-Wolfe iteration: linearize f at x^k, minimize the linear surrogate over C to get y^k, then take a convex combination step.</div>
 </div>
 ```
 
@@ -435,7 +441,7 @@ $$y^k = \arg\min_{v \in \mathcal{C}} \bigl\{\underbrace{f(x^k) + \langle \nabla 
 Frank-Wolfe converges at a sublinear rate that depends on the smoothness of $f$ (through the Hessian bound $L$) and the "size" of the constraint set (through its diameter $d_{\mathcal{C}}$). The convergence is $O(1/K)$, which is faster than the $O(1/\sqrt{K})$ rate of projected subgradient descent, but only applies when $f$ is smooth.
 
 ::: {#thm-frank-wolfe-convergence}
-## Theorem 10.10 (Frank-Wolfe Convergence)
+## Frank-Wolfe Convergence
 
 Let $d_{\mathcal{C}} = \sup_{x, y \in \mathcal{C}} \|x - y\|$ be the diameter of $\mathcal{C}$. Set $\alpha^k = \frac{2}{k+2}$ for $k \geq 0$.
 
@@ -683,7 +689,7 @@ Even when $\alpha^k \neq 1$, Frank-Wolfe still finds the leading eigenvector.
 ```{=html}
 <div class="figure-container">
   <div id="fig-convergence"></div>
-  <div class="figure-caption">Figure 10.5: Convergence comparison — projected subgradient descent (O(1/√K)) vs. Frank-Wolfe (O(1/K)) on representative problems.</div>
+  <div class="figure-caption">Figure 8.5: Convergence comparison — projected subgradient descent (O(1/√K)) vs. Frank-Wolfe (O(1/K)) on representative problems.</div>
 </div>
 ```
 
@@ -863,3 +869,8 @@ document.addEventListener('DOMContentLoaded', () => {
 - **Projected subgradient descent.** For constrained non-smooth problems $\min_{x \in C} f(x)$, the update $x^{k+1} = \Pi_C(x^k - \alpha^k g^k)$ projects back onto the feasible set after each subgradient step; with diminishing step sizes, convergence is $O(1/\sqrt{K})$.
 - **Frank-Wolfe (conditional gradient) method.** Instead of projecting, Frank-Wolfe linearizes the objective and solves $\min_{s \in C} \nabla f(x^k)^\top s$ at each step, then moves toward the minimizer. This avoids projections entirely---a major advantage when projection is expensive but linear optimization over $C$ is cheap.
 - **Convergence comparison.** Projected subgradient descent achieves $O(1/\sqrt{K})$ for non-smooth problems; Frank-Wolfe achieves $O(1/K)$ for smooth problems over compact sets, with iterates that are sparse convex combinations of vertices of $C$.
+
+::: {.callout-tip}
+## Looking Ahead
+Having developed first-order methods for both unconstrained and constrained problems, we now shift to **linear programming**. The next chapter introduces the LP formulation, the geometry of polyhedra, and the key equivalence between vertices, extreme points, and basic feasible solutions --- the foundation for the simplex method.
+:::

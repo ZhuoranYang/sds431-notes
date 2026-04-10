@@ -2,618 +2,735 @@
 title: "Transformers"
 ---
 
-Adapted from slides by Anna Goldie (Stanford CS 224n), John Hewitt, and Song Han (MIT 6.5940)
+In 2017, a team at Google published a paper titled "Attention Is All You Need." The architecture it introduced --- the **Transformer** --- has since become the foundation of virtually every major AI system: ChatGPT and GPT-4 (OpenAI), Claude (Anthropic), Gemini (Google), LLaMA (Meta), and many more. Beyond language, transformers power image generation (DALL-E, Stable Diffusion), protein structure prediction (AlphaFold), code completion (Copilot), and even chip design.
+
+What makes the transformer so powerful? At its core, it is built from a small set of mathematical operations we have studied throughout this course --- matrix multiplications, softmax normalization, and elementwise nonlinearities --- all trained end-to-end with gradient descent. The key innovation is the **attention mechanism**: a learned, content-dependent weighted average that allows every token in a sequence to dynamically gather information from every other token. This simple idea, combined with positional encodings, residual connections, and layer normalization, scales to networks with hundreds of billions of parameters.
+
+This chapter develops the transformer architecture from the ground up. We start with how words become vectors, build up the attention mechanism step by step, assemble the full decoder architecture, and conclude by analyzing the parameter count of GPT-3 to build concrete intuition for the scale of modern language models.
 
 ::: {.callout-tip}
-## Remark: Prerequisites
+## Companion Notebooks
 
-- [Part 6](17-diffusion-models.qmd): deep generative models, training with gradient descent
-- [Part 2](02-math-background.qmd): linear algebra, matrix operations
+Companion notebooks for this chapter are coming soon.
 :::
 
-The transformer architecture has fundamentally reshaped artificial intelligence. Since the publication of "Attention Is All You Need" in 2017, transformers have become the universal backbone for language models (GPT, Claude, LLaMA), vision models (ViT), protein structure prediction (AlphaFold), and much more. Understanding how transformers work is now essential for anyone working at the intersection of optimization and machine learning.
+## What Will Be Covered {.unnumbered}
 
-At its core, the transformer is built from a small set of mathematical operations --- matrix multiplications, softmax normalization, and elementwise nonlinearities --- all of which are trained end-to-end using the gradient-based optimization methods developed earlier in this course. The key innovation is the **attention mechanism**, which allows each token in a sequence to dynamically attend to every other token, computing a weighted average that captures long-range dependencies. Combined with positional encodings, residual connections, and layer normalization, these attention layers are stacked into deep networks with billions of parameters.
-
-This chapter walks through the transformer architecture from the ground up. We will see how token embeddings map discrete words into continuous vectors, how self-attention computes context-dependent representations, and how the full decoder architecture generates text one token at a time. We also analyze the parameter count of GPT-3 to build concrete intuition for the scale of these models.
-
-## What Will Be Covered {#sec-overview}
-
-- Language tasks and three types of transformer models (encoder-only, decoder-only, encoder-decoder)
+- Language tasks and three types of transformer models
 - Token embedding, positional encoding, and the softmax prediction head
 - The attention mechanism: cross attention and self-attention
-- Multi-head attention, causal masking, MLP layers, residual connections, and layer normalization
-- Full transformer decoder architecture and GPT-3 parameter analysis
+- Multi-head attention, causal masking, MLP layers
+- Residual connections and layer normalization
+- Full transformer decoder architecture
+- GPT-3 parameter analysis
 
-## 1. Motivation {#sec-motivation}
+## From Words to Predictions: The Big Picture {#sec-big-picture}
 
-Transformer models are **revolutionary**. The foundational paper "Attention Is All You Need" (Vaswani et al., 2017) introduced the Transformer architecture, which has since become the backbone of virtually all modern AI systems: ChatGPT/GPT-4 (OpenAI), Claude (Anthropic), Gemini (Google), LLaMA (Meta), and many more.
+Before diving into details, let us sketch the full pipeline of an autoregressive language model like GPT. The model takes a sequence of words (tokens), processes them through many layers, and outputs a probability distribution over what word comes next.
 
-Today, Transformer-based models dominate the LMSYS Chatbot Arena Leaderboard (Chiang et al., 2024), with models like GPT-4-Turbo, Claude 3 Opus, and Gemini 1.5 Pro at the top.
+::: {.callout-note appearance="simple"}
+**The Transformer Pipeline** (using GPT-3 as reference):
 
-Transformers have even shown great promise **outside of NLP**:
+| Stage | Description | Size |
+|:------|:------------|:-----|
+| **Input** | Token sequence $w_1, \ldots, w_L$ (one-hot) | $L \times V$ |
+| **Embedding** | Map tokens to vectors: $x_i = W_E w_i + \text{pe}_i$ | $L \times d$ |
+| **Transformer blocks** | 96 layers of attention + MLP + normalization | $L \times d$ |
+| **Unembedding** | Project to vocabulary: $W_U z_\ell$ | $L \times V$ |
+| **Softmax** | Probability distribution over next token | $L \times V$ |
 
-- **Protein folding:** AlphaFold2 (Jumper et al., 2021) uses attention mechanisms
-- **Image classification:** Vision Transformer (ViT) outperforms ResNet-based baselines (Dosovitskiy et al., 2020)
-- **ML for Systems:** Transformer-based compiler models (GO-one) speed up other Transformer models (Zhou et al., 2020)
+Here $V = 50{,}257$ (vocabulary), $d = 12{,}288$ (model dimension), $L = 2{,}048$ (context window).
+:::
+
+We will now build each component from scratch.
+
+## Motivation: Why Transformers? {#sec-motivation}
+
+### The Landscape of AI Models {#sec-landscape}
+
+Transformers have become the universal architecture across AI:
+
+- **Language:** GPT-4, Claude, LLaMA, Gemini --- all decoder-only transformers
+- **Vision:** Vision Transformer (ViT) matches or exceeds CNNs on image classification
+- **Protein science:** AlphaFold2 uses attention to predict 3D protein structures
+- **Multimodal:** DALL-E 3, Stable Diffusion use transformers for text-conditioned image generation
+
+Today, transformer-based models dominate the LMSYS Chatbot Arena Leaderboard, with models like GPT-4, Claude, and Gemini at the top.
 
 ### Language Tasks {#sec-language-tasks}
 
 ::: {#def-language-tasks}
 ## Two Main Types of Language Tasks
 
-**1. Generative tasks** (conditional generation): e.g., translation, code generation.
-$$\mathbb{P}(\text{text} \mid \text{text / image}).$$
+Language tasks broadly fall into two categories:
 
-**2. Discriminative tasks** (classification): e.g., part-of-speech classification, sentiment analysis.
-$$\mathbb{P}(\text{label} \mid \text{text}).$$
+**1. Generative tasks** (conditional generation): translation, summarization, code generation, dialogue.
+$$\mathbb{P}(\text{output text} \mid \text{input text / image}).$$
+
+**2. Discriminative tasks** (classification): sentiment analysis, part-of-speech tagging, spam detection.
+$$\mathbb{P}(\text{label} \mid \text{input text}).$$
 :::
 
-Understanding this distinction between generative and discriminative tasks is important because it directly determines which type of transformer architecture is appropriate: encoder-only models excel at discriminative tasks, while decoder-only models are designed for generation.
+This distinction directly determines which transformer architecture is appropriate.
 
-## 2. Three Types of Transformer-Based Language Models {#sec-three-types}
+## Three Types of Transformer Models {#sec-three-types}
 
-Depending on the task, transformers come in three flavors that differ in how information flows through the model. The choice between them determines whether the model can "see the whole input at once" (useful for classification) or must generate output one token at a time (necessary for text generation). Understanding these three variants clarifies why modern large language models are almost exclusively decoder-only.
+Depending on the task, transformers come in three variants that differ in how information flows through the model.
 
-### Task Type 1: Encoder-Only (Feature Extraction + Discriminative Tasks) {#sec-encoder-only}
+### Encoder-Only (Feature Extraction) {#sec-encoder-only}
 
 ::: {#def-encoder-only}
 ## Encoder-Only Transformer
 
-An encoder-only transformer creates a **sequence of token-level features** of the input (for discriminative tasks).
+Creates a **sequence of contextual features** from the input.
 
-- **Input:** sequence of tokens $w_1, \ldots, w_L$; $L$ = sequence length
-- **Output:** sequence of features $z_1, z_2, \ldots, z_L \in \mathbb{R}^d$
-
-**Key characteristic:** each $z_\ell$ depends on the *whole* input. That is, $z_\ell$ depends on $\{w_1, \ldots, w_L\}$ for all $\ell \in [L]$.
-
-Extract global features for **downstream tasks** (trained separately using these features):
-
-- **Token-level:** part-of-speech classification
-- **Sentence-level:** sentiment analysis
-
-**Key examples:** BERT, Vision Transformer (ViT)
+- **Input:** tokens $w_1, \ldots, w_L$
+- **Output:** features $z_1, z_2, \ldots, z_L \in \mathbb{R}^d$
+- **Key property:** each $z_\ell$ depends on the **entire** input $\{w_1, \ldots, w_L\}$ (bidirectional attention)
+- **Use case:** downstream classification (sentiment, NER, part-of-speech)
+- **Examples:** BERT, Vision Transformer (ViT)
 :::
 
-### Task Type 2: Decoder-Only (Autoregressive Generation) {#sec-decoder-only}
+### Decoder-Only (Autoregressive Generation) {#sec-decoder-only}
 
 ::: {#def-decoder-only}
 ## Decoder-Only Transformer
 
-A decoder-only transformer generates a sequence of features for **generating the next token**.
+Generates text one token at a time, left to right.
 
-- **Input:** sequence of tokens $w_1, w_2, \ldots, w_L$
-- **Output:** sequence of features $z_1, z_2, \ldots, z_L$
-
-**Key characteristics:**
-
-- Each $z_\ell$ only depends on $w_1, w_2, \ldots, w_\ell$ (**autoregressive** / cannot look into the future)
-- Predict $w_{\ell+1}$ using $z_\ell$ only, via a **softmax prediction layer**
-
-**Key examples:** GPT family, LLaMA, Mistral
+- **Input:** tokens $w_1, w_2, \ldots, w_L$
+- **Output:** features $z_1, z_2, \ldots, z_L$
+- **Key property:** each $z_\ell$ depends only on $w_1, \ldots, w_\ell$ (**autoregressive** --- cannot look into the future)
+- Predict $w_{\ell+1}$ from $z_\ell$ via a **softmax prediction layer**
+- **Examples:** GPT family, LLaMA, Mistral, Claude
 :::
 
-::: {#exm-autoregressive}
-## Autoregressive Generation
-
-We want a model that predicts the next word given context. For "I am a Yale ?", we want:
-$$\mathbb{P}(w_5 \mid w_{1:4}) = \mathbb{P}(\text{"student"} \mid \text{"I am a Yale"}).$$
-
-An **autoregressive LLM** = Decoder-only TF + Prediction Head: $\mathbb{P}_\theta(w_{\ell+1} \mid w_1, \ldots, w_\ell)$.
-
-Autoregressive generation proceeds step by step:
-
-- $\mathbb{P}(\text{"I"} \mid \text{prompt} = \text{"My name is X."})$
-- $\mathbb{P}(\text{"am"} \mid \text{prompt} = \text{"My name is X. I"})$
-- $\mathbb{P}(\text{"a"} \mid \text{prompt} = \text{"My name is X. I am"})$
-- $\mathbb{P}(\text{"Yale"} \mid \text{prompt} = \text{"My name is X. I am a"})$
-- $\mathbb{P}(\text{"student"} \mid \text{prompt} = \text{"My name is X. I am a Yale"})$
-
-Each output word is copied back into the input for the next prediction.
-:::
-
-### Task Type 3: Encoder-Decoder Transformer {#sec-encoder-decoder}
+### Encoder-Decoder {#sec-encoder-decoder}
 
 ::: {#def-encoder-decoder}
 ## Encoder-Decoder Transformer
 
-The original Transformer model (Vaswani et al., 2017). Used for **machine translation** and conditional generation.
+The original architecture from "Attention Is All You Need" (Vaswani et al., 2017). The encoder processes the input into features; the decoder autoregressively generates the output, attending to encoder features via **cross attention**.
 
-The encoder processes the input sequence into features; the decoder autoregressively generates the output, attending to the encoder features via **cross attention**.
-
-Example: ("Hello", "world", "!") $\to$ Encoder $\to$ features $\to$ Decoder $\to$ ("Bonjour", "le", "monde", "!")
+- **Use case:** machine translation, summarization
+- **Example:** T5, the original Transformer
 :::
 
 ::: {.callout-tip}
 ## Remark: Current Landscape
 
-Encoder-decoder models and encoder-only LLMs are **not popular now**.
-
-- **Decoder-only** models are most popular --- GPT family, LLaMA, Mistral
-- Decoder-only models can also perform discriminative tasks
-- Only exception: Vision Transformer (ViT), which is encoder-only
+Decoder-only models dominate modern practice. They can handle both generative and discriminative tasks, making encoder-only and encoder-decoder architectures largely superseded. The main exception is Vision Transformer (ViT), which is encoder-only.
 :::
 
-## 3. Architectures of Transformers {#sec-architecture}
+## Token Embedding {#sec-token-embedding}
 
-*Note: This is the most important part of this class, and it is very complicated.*
-
-There are many components of these neural networks. To introduce the architecture, we equivalently introduce the "forward" function: **How is the input language token sequence transformed into the output?**
-
-::: {.callout-note appearance="simple"}
-**Mental Picture** (using GPT-3 as reference):
-
-- $V$ = vocabulary size = 50,257
-- $d$ = model dimension = 12,288
-- $L$ = sequence length = 2,048
-
-Input: $w_1, \ldots, w_L$ (tokens, $w_i \in \mathbb{R}^V$ one-hot). Transformer (embedding, MLP, attention, layer norm, residual link) produces features $z_1, \ldots, z_L \in \mathbb{R}^d$. Then a prediction layer produces the loss $\ell_1, \ldots, \ell_L$.
-:::
-
-### Prediction Head & Softmax {#sec-prediction-head}
-
-The prediction head is designed according to the task, which determines the loss function. A transformer outputs a real-valued vector $z_\ell \in \mathbb{R}^d$ at each position, but for next-token prediction we need a probability distribution over the vocabulary. The softmax function bridges this gap by converting an arbitrary vector of real numbers ("logits") into a valid probability distribution.
-
-::: {#def-softmax}
-## Softmax Function
-
-For any $N$ real numbers $\{v_i\}_{i \in [N]}$, the **softmax function** gives us a probability distribution over $[N] = \{1, \ldots, N\}$:
-$$\text{Denote: } p = \text{Softmax}(\{v_i\}_{i \in [N]}) \in \mathbb{R}^N.$$
-$$\mathbb{P}(\text{random variable} = i) = p(i) = \frac{\exp(v_i)}{\sum_{j=1}^{N} \exp(v_j)}.$$
-
-Equivalently, $p(i) \propto \exp(v_i)$. **Key insight:** Softmax gives us a distribution.
-:::
-
-The softmax function converts a vector of arbitrary real-valued scores (logits) into a valid probability distribution. The exponential function ensures all outputs are positive, and the normalization ensures they sum to one. Larger logits receive exponentially more probability mass, making softmax a "soft" version of the argmax operation.
-
-::: {.callout-tip}
-## Remark: Decoding (Unembedding) + Softmax
-
-The TF produces a vector $z_\ell \in \mathbb{R}^d$. We can map $z_\ell$ to $\mathbb{R}^N$, then apply softmax:
-$$\underbrace{W_U}_{\mathbb{R}^{N \times d}} \cdot z_\ell = \mathbb{R}^N \xrightarrow{\text{Softmax}} \text{distribution over } [N], \quad \text{e.g., over tokens with } N = V.$$
-
-This is a **softmax linear model**.
-
-**Discriminative task:** e.g., sentiment analysis --- aggregate $z_1, \ldots, z_L$ (e.g., $z = \frac{1}{L}\sum_{\ell=1}^{L} z_\ell$), then feed into a softmax linear classifier: $\mathbb{P}(\text{positive} \mid z) \propto \exp(w^\top z)$.
-
-**Autoregressive generation:** use $z_\ell$ to predict $w_{\ell+1}$ via softmax linear classification.
-:::
-
-### Loss Function for Decoder-Only Model {#sec-loss-function}
-
-With the softmax prediction head in place, we need a loss function to train the model. The natural choice for next-token prediction is to maximize the probability of the correct next token at each position, which leads to the cross-entropy loss. This is equivalent to maximum likelihood estimation and is the standard training objective for all autoregressive language models.
-
-::: {#thm-cross-entropy}
-## Cross-Entropy Loss (Equivalent to MLE)
-
-At each token position $\ell \in [L]$, TF outputs $z_\ell \in \mathbb{R}^d$. After unembedding ($W_U \in \mathbb{R}^{d \times V}$) + softmax, we have a distribution $p_\ell \in \Delta_L$.
-
-The next-token label is $w_{\ell+1}$ (one-hot vector). The loss is:
-$$\text{Loss}(\theta) = -\sum_{\ell=1}^{L-1} w_{\ell+1}^\top \log p_\ell = -\sum_{\ell=1}^{L-1} \log \mathbb{P}_\theta(w_{\ell+1} \mid w_1, \ldots, w_\ell).$$
-
-This is the **cross-entropy loss**, equivalent to **maximum likelihood estimation (MLE)**. Parameters $\theta$ are trained via gradient-based optimization using backpropagation (see [Part 2](02-math-background.qmd) for backpropagation and automatic differentiation).
-:::
-
-The cross-entropy loss penalizes the model for assigning low probability to the correct next token. Minimizing this loss is equivalent to maximizing the likelihood of the training data, which connects transformer training directly to the statistical framework of maximum likelihood estimation studied throughout this course.
-
-### Token Embedding {#sec-token-embedding}
+The first step is to convert discrete words into continuous vectors that a neural network can process.
 
 ::: {#def-token-embedding}
 ## Word/Token Embedding
 
-Each word $w$ (a one-hot vector in $\mathbb{R}^N$) is associated with a vector $x_w \in \mathbb{R}^d$ via an **embedding matrix** $W_E \in \mathbb{R}^{d \times N}$:
+Each word $w$ (a one-hot vector in $\mathbb{R}^V$) is mapped to a dense vector $x_w \in \mathbb{R}^d$ via a learned **embedding matrix** $W_E \in \mathbb{R}^{d \times V}$:
 $$x_i = W_E \, w_i \in \mathbb{R}^d.$$
 
-The embedding matrix is **learned from data**. Input size: $L \times N$. Output size: $L \times d$.
-
-For GPT-3: $L = 2048$, $N = 50{,}257$, $d = 12{,}288$.
+For GPT-3: $V = 50{,}257$ (vocabulary size), $d = 12{,}288$ (embedding dimension), $L = 2{,}048$ (context length).
 :::
 
-The embedding matrix converts discrete tokens (represented as sparse one-hot vectors in a very high-dimensional space $\mathbb{R}^N$) into dense, continuous vectors in a much lower-dimensional space $\mathbb{R}^d$. This is essential because all subsequent operations in the transformer --- attention, MLP layers, optimization --- operate on continuous vectors.
+The embedding matrix converts sparse one-hot vectors in a very high-dimensional space ($\mathbb{R}^V$) into dense, continuous vectors in a much lower-dimensional space ($\mathbb{R}^d$). This is essential because all subsequent operations --- attention, MLP layers, optimization --- operate on continuous vectors.
 
 ::: {.callout-tip}
-## Remark: Why Word Embedding?
+## Remark: Why Embeddings Work
 
-Word embeddings equip words with "distance" to capture similarity. Using **cosine similarity**:
-$$\cos(u, v) = \frac{u^\top v}{\|u\| \cdot \|v\|}.$$
+Word embeddings equip words with geometric structure. Similar words end up **close** in the embedding space (measured by cosine similarity $\cos(u,v) = u^\top v / (\|u\|\|v\|)$). Famously, Word2Vec and GloVe embeddings capture semantic analogies as linear relationships:
 
-Similar words are **close** in the embedded space. Word2Vec and GloVe encode **semantic meaning** --- interesting patterns emerge (e.g., king - man + woman $\approx$ queen). Now we are in Euclidean space and it is easy to operate using calculus.
+$$\text{king} - \text{man} + \text{woman} \approx \text{queen}.$$
+
+Once words live in Euclidean space, we can apply calculus, linear algebra, and all the optimization tools from this course.
 :::
 
-## 4. Attention Mechanism {#sec-attention}
+```{=html}
+<div class="figure-container">
+  <div id="fig-word-embedding"></div>
+  <div class="figure-caption">Figure 18.1: Word embeddings projected to 2D via PCA. Semantically similar words cluster together, and analogical relationships appear as parallel displacements.</div>
+</div>
+```
 
-**Attention** treats each word's representation as a **query** to access and incorporate information from **a set of values**.
+## Prediction Head and Softmax {#sec-prediction-head}
+
+At the output end, the transformer produces a vector $z_\ell \in \mathbb{R}^d$ at each position. For next-token prediction, we need a probability distribution over the vocabulary. The **softmax function** converts raw scores into probabilities.
+
+::: {#def-softmax}
+## Softmax Function
+
+For any vector of real numbers $v = (v_1, \ldots, v_N) \in \mathbb{R}^N$:
+
+$$\text{Softmax}(v)_i = \frac{\exp(v_i)}{\sum_{j=1}^{N} \exp(v_j)}, \qquad i = 1, \ldots, N.$$
+
+This produces a valid probability distribution: all entries are positive and sum to one. Larger logits receive exponentially more probability mass, making softmax a "soft" version of argmax.
+:::
+
+::: {.callout-tip}
+## Remark: Unembedding + Softmax
+
+The transformer output $z_\ell \in \mathbb{R}^d$ is mapped to vocabulary-sized logits via the **unembedding matrix** $W_U \in \mathbb{R}^{V \times d}$, then softmax produces a distribution:
+
+$$\underbrace{W_U}_{\mathbb{R}^{V \times d}} \cdot z_\ell \in \mathbb{R}^V \xrightarrow{\text{Softmax}} \mathbb{P}(w_{\ell+1} \mid w_1, \ldots, w_\ell) \in \Delta_V.$$
+:::
+
+### Loss Function: Cross-Entropy {#sec-loss-function}
+
+The natural training objective is to maximize the probability of the correct next token at each position, leading to the cross-entropy loss.
+
+::: {#def-cross-entropy}
+## Cross-Entropy Loss (Maximum Likelihood)
+
+At each position $\ell$, the transformer outputs a distribution $p_\ell \in \Delta_V$ over the vocabulary. The next-token label is $w_{\ell+1}$. The training loss is:
+
+$$\mathcal{L}(\theta) = -\sum_{\ell=1}^{L-1} \log \mathbb{P}_\theta(w_{\ell+1} \mid w_1, \ldots, w_\ell).$$
+
+This is equivalent to **maximum likelihood estimation (MLE)**, and is minimized via gradient descent with backpropagation.
+:::
+
+### Autoregressive Generation {#sec-autoregressive-generation}
+
+::: {#exm-autoregressive}
+## Autoregressive Generation
+
+Given the prompt "My name is X.", generation proceeds step by step:
+
+| Step | Context | Prediction |
+|:-----|:--------|:-----------|
+| 1 | "My name is X." | $\mathbb{P}(\text{"I"} \mid \text{prompt})$ |
+| 2 | "My name is X. I" | $\mathbb{P}(\text{"am"} \mid \text{context})$ |
+| 3 | "My name is X. I am" | $\mathbb{P}(\text{"a"} \mid \text{context})$ |
+| 4 | "My name is X. I am a" | $\mathbb{P}(\text{"Yale"} \mid \text{context})$ |
+| 5 | "My name is X. I am a Yale" | $\mathbb{P}(\text{"student"} \mid \text{context})$ |
+
+Each generated word is appended to the input for the next prediction. This is why decoder-only models are called **autoregressive**: the output at each step feeds back as input.
+:::
+
+## The Attention Mechanism {#sec-attention}
+
+The central innovation of the transformer is **attention**: a mechanism that computes a weighted average of values, where the weights are determined by learned similarity between a query and a set of keys.
 
 ::: {#def-attention}
 ## Attention
 
-Given a set of vector *values* and a vector *query*, **attention** is a technique to compute a **weighted sum of the values**, dependent on the query. We say the query *attends to* the values.
+Given a set of vector *values* and a vector *query*, **attention** computes a **weighted sum of the values**, dependent on the query. The query *attends to* the values.
 
-Attention is just a **weighted average** --- this is very powerful if the weights are learned!
+- In **attention**, the query matches all keys *softly* (weights between 0 and 1).
+- In a **lookup table**, the query matches one key exactly.
 
-In **attention**, the query matches all keys *softly* (weights between 0 and 1). In a **lookup table**, the query matches one key exactly.
+Attention is just a **weighted average** --- but it becomes very powerful when the weights are learned!
 :::
 
-The power of attention lies in its ability to dynamically route information: each token can selectively focus on the most relevant parts of the input, with the relevance weights learned from data. This is what allows transformers to capture long-range dependencies in sequences.
+### Cross Attention {#sec-cross-attention}
 
-### Cross Attention: The Equations {#sec-cross-attention}
-
-We now formalize the attention computation. The key idea is to use dot products between the query and each key to compute similarity scores, apply softmax to obtain weights, and then return the weighted sum of values. The $1/\sqrt{d_1}$ scaling factor prevents the dot products from growing too large in high dimensions, which would push softmax into regions of near-zero gradient.
+We first formalize attention where the query comes from one source and the key-value pairs from another (this generalizes to self-attention later).
 
 ::: {#thm-cross-attention}
 ## Cross Attention Formula
 
-Suppose we have (key, value) pairs $\{(k_i, v_i)\}_{i \in [L]}$ with $k_i \in \mathbb{R}^{d_1}$, $v_i \in \mathbb{R}^{d'}$, and a query $q \in \mathbb{R}^{d_1}$.
+Given (key, value) pairs $\{(k_i, v_i)\}_{i \in [L]}$ with $k_i \in \mathbb{R}^{d_k}$, $v_i \in \mathbb{R}^{d_v}$, and a query $q \in \mathbb{R}^{d_k}$:
 
-1. **Compute** similarity scores: $e = (q^\top k_1, \ldots, q^\top k_L) \in \mathbb{R}^L$
-2. **Similarity** (attention weights): $\alpha = \text{Softmax}(e) \in \Delta_L$, where
-$$\alpha_i = \frac{\exp(k_i^\top q / \sqrt{d_1})}{\sum_{j=1}^{L} \exp(k_j^\top q / \sqrt{d_1})}.$$
-So $\alpha_i = \mathbb{P}(k_i \text{ is closest to } q)$.
-3. **Aggregation:** $h = \sum_{i=1}^{L} \alpha_i \cdot v_i \in \mathbb{R}^{d'}$
+1. **Similarity scores:** $e_i = q^\top k_i$ for each $i \in [L]$
 
-**Output:** $(q, h)$ where $q \in \mathbb{R}^{d_1}$, $h \in \mathbb{R}^{d'}$.
+2. **Attention weights** (via softmax with scaling):
+$$\alpha_i = \frac{\exp(q^\top k_i / \sqrt{d_k})}{\sum_{j=1}^{L} \exp(q^\top k_j / \sqrt{d_k})}$$
+
+3. **Output** (weighted sum of values):
+$$h = \sum_{i=1}^{L} \alpha_i \cdot v_i \in \mathbb{R}^{d_v}$$
 :::
+
+The $1/\sqrt{d_k}$ scaling factor prevents the dot products from growing too large in high dimensions, which would push softmax into near-zero gradient regions.
 
 ::: {.callout-tip}
-## Remark
+## Remark: Why Scale by $1/\sqrt{d_k}$?
 
-Similarity is captured by $k_i^\top q$. The vector $(k_1^\top q, \ldots, k_L^\top q)$ is called the **attention score**. We can use other functions in addition to softmax (e.g., ReLU).
+If the entries of $q$ and $k_i$ are independent with zero mean and unit variance, then $q^\top k_i$ has variance $d_k$. The scaling ensures the variance of the logits is approximately 1, keeping softmax in a well-behaved regime.
 :::
-
-An important structural property of the attention mechanism has a direct consequence for how we must handle sequential data.
-
-::: {#cor-permutation-invariance}
-## Permutation Invariance
-
-The attention output $\sum_{i=1}^{L} \alpha_i \cdot v_i$ remains the same if we permute key-value pairs $\{(k_i, v_i)\}_{i \in [L]}$, because of the "$\sum$".
-
-**Note:** Ordering in a sequence matters. Natural language has order: "united states" $\neq$ "states united". We will address this with positional embeddings.
-:::
-
-Permutation invariance is both a strength and a limitation. It means attention treats the input as a set rather than a sequence, which is why positional embeddings are essential for tasks where order matters, such as language modeling.
 
 ### Self-Attention {#sec-self-attention}
 
+The breakthrough insight of the transformer is to apply attention *within a single sequence* --- the queries, keys, and values are all computed from the same input. This is **self-attention**.
+
 ![Self-attention mechanism. The input sequence $X$ is projected into queries $Q$, keys $K$, and values $V$ via learned weight matrices. Attention weights are computed as $\mathrm{softmax}(QK^\top/\sqrt{d_k})$, then applied to $V$ to produce context-aware output representations.](figures/ch13-self-attention.svg){#fig-self-attention}
-
-@fig-self-attention illustrates the computation flow. The input matrix $X \in \mathbb{R}^{L \times d}$ is projected through three learned weight matrices to produce queries $Q$, keys $K$, and values $V$. Queries and keys are combined via the scaled dot product $QK^\top / \sqrt{d_k}$ to form a raw attention-score matrix (one row per query token, one column per key token). The softmax normalizes each row into a probability distribution over positions, and the resulting attention weights are multiplied by $V$ to produce the final output — a context-enriched representation where each token's output is a weighted mixture of all value vectors.
-
-In cross attention, the queries and key-value pairs come from different sources (e.g., the decoder queries the encoder). In a transformer's main computation, however, each token in the sequence attends to all other tokens in the same sequence. This is called self-attention, and it is the mechanism that allows each token's representation to incorporate contextual information from the entire input.
 
 ::: {#def-self-attention}
 ## Self-Attention
 
-Self-attention is an attention module where **query, key, value** are all computed from the **same** input vectors. Given post-embedding sequence $X = (x_1, \ldots, x_L) \in \mathbb{R}^{L \times d}$:
-$$Q = X W_Q, \quad K = X W_K, \quad V = X W_V \quad \in \mathbb{R}^{L \times d_1},$$
+Given post-embedding sequence $X = (x_1, \ldots, x_L) \in \mathbb{R}^{L \times d}$, we compute:
 
-where $W_Q, W_K, W_V \in \mathbb{R}^{d \times d_1}$ are learnable weight matrices.
+$$Q = X W_Q, \quad K = X W_K, \quad V = X W_V \quad \in \mathbb{R}^{L \times d_k},$$
 
-For position $\ell$:
-$$\alpha_\ell = \text{Softmax}\!\left(\left\{q_\ell^\top k_j / \sqrt{d_1}\right\}_{j \in [L]}\right) \in \Delta_L.$$
+where $W_Q, W_K, W_V \in \mathbb{R}^{d \times d_k}$ are learnable weight matrices. At position $\ell$:
 
-The output at position $\ell$ is:
-$$h_\ell = \sum_{j=1}^{L} \alpha_{\ell j} \cdot v_j = \sum_{j=1}^{L} \alpha_{\ell j} \cdot (W_V x_j).$$
+$$\alpha_{\ell j} = \frac{\exp(q_\ell^\top k_j / \sqrt{d_k})}{\sum_{s=1}^{L} \exp(q_\ell^\top k_s / \sqrt{d_k})} = \frac{\exp(x_\ell^\top W_Q^\top W_K x_j / \sqrt{d_k})}{\sum_{s=1}^{L} \exp(x_\ell^\top W_Q^\top W_K x_s / \sqrt{d_k})},$$
 
-Here $\alpha_{\ell,j}$ measures the similarity between $\{x_\ell, x_j\}$:
-$$\alpha_{\ell j} = \frac{\exp(q_\ell^\top k_j / \sqrt{d_1})}{\sum_{s=1}^{L} \exp(q_\ell^\top k_s / \sqrt{d_1})} = \frac{\exp(x_\ell^\top W_Q^\top W_K x_j / \sqrt{d_1})}{\sum_{s=1}^{L} \exp(x_\ell^\top W_Q^\top W_K x_s / \sqrt{d_1})}.$$
+and the output is: $h_\ell = \sum_{j=1}^{L} \alpha_{\ell j} \cdot v_j = \sum_{j=1}^{L} \alpha_{\ell j} \cdot (W_V x_j)$.
 :::
 
 ::: {.callout-important}
 ## Algorithm: Self-Attention in Matrix Form
 
-Input: $X \in \mathbb{R}^{L \times d}$, $X = (x_1, x_2, \ldots, x_L)$.
+Given input $X \in \mathbb{R}^{L \times d}$:
 
-1. Map into queries, keys, values: $Q = X W_Q$, $K = X W_K$, $V = X W_V \in \mathbb{R}^{L \times d_1}$
-2. Calculate attention score: $E = Q K^\top \in \mathbb{R}^{L \times L}$
-3. Apply softmax to each row: $P = \text{Softmax}(E / \sqrt{d_1}) \in \mathbb{R}^{L \times L}$
-4. Output = $PV = \text{Softmax}(Q K^\top / \sqrt{d_1}) \cdot V$
+1. Compute projections: $Q = XW_Q$, $K = XW_K$, $V = XW_V$
+2. Compute attention scores: $E = QK^\top \in \mathbb{R}^{L \times L}$
+3. Scale and normalize: $A = \text{Softmax}(E / \sqrt{d_k}) \in \mathbb{R}^{L \times L}$
+4. Output: $H = AV = \text{Softmax}(QK^\top / \sqrt{d_k}) \cdot V \in \mathbb{R}^{L \times d_k}$
 :::
 
-*Figure 12.1: Attention weight matrix visualization. Each row shows how much each token attends to every other token. Brighter cells indicate stronger attention.*
+```{=html}
+<div class="figure-container">
+  <div id="fig-attention-heatmap"></div>
+  <div class="figure-caption">Figure 18.2: Attention weight matrix for a short sentence. Each row shows how much a token attends to every other token. The pattern reveals that tokens attend most strongly to semantically related words.</div>
+</div>
+```
 
-## 5. Position Embedding {#sec-position-embedding}
+### Permutation Invariance {#sec-permutation-invariance}
 
-We want to include token position in the input. Since self-attention is permutation invariant, we need to explicitly encode order.
+::: {#cor-permutation-invariance}
+## Permutation Invariance
+
+The attention output $h = \sum_{i=1}^{L} \alpha_i \cdot v_i$ is unchanged if we permute the key-value pairs $\{(k_i, v_i)\}_{i \in [L]}$.
+:::
+
+This means self-attention treats its input as a **set**, not a sequence. Since word order clearly matters in language ("the cat chased the dog" $\neq$ "the dog chased the cat"), we must explicitly inject positional information. This leads to the next section.
+
+## Three Challenges and Their Solutions {#sec-challenges}
+
+Self-attention is a powerful building block, but it has three limitations that must be addressed before it can serve as the basis for a language model:
+
+| **Challenge** | **Solution** |
+|:------------|:-------------|
+| No notion of token order (permutation invariant) | **Positional embedding** |
+| Can see future tokens during training | **Causal masking** |
+| Output is a linear weighted average (no nonlinearity) | **MLP / feed-forward layers** |
+
+We address each in turn.
+
+### Positional Embedding {#sec-position-embedding}
+
+Since self-attention is permutation invariant, we explicitly encode position by adding a **positional embedding** to each token embedding:
 
 ::: {#def-positional-embedding}
 ## Positional Embedding
 
-A special trick of transformers: the embedding of (token, position) is **additive**:
-$$\text{emb}(\text{token}, \text{position}) = \text{emb}(\text{token}) + \text{emb}(\text{position}).$$
+The embedding of (token, position) is additive:
+$$x_i = W_E \, w_i + \text{pe}_i \in \mathbb{R}^d,$$
 
-So $x_i = \text{emb}(w_i) + \text{pe}_i \in \mathbb{R}^d$, where $d$ = dimension of word embedding.
+where $\text{pe}_i \in \mathbb{R}^d$ encodes position $i$ in the sequence.
 :::
 
-The additive structure of positional embedding is a design choice that keeps the architecture simple: the model receives a single vector per token that encodes both what the token is and where it appears in the sequence. This allows the attention mechanism to use position information when computing relevance scores.
+There are three major approaches:
 
-**Three major practices of position embedding:**
+**1. Absolute (learned) embedding.** Each position $\ell$ gets a learnable vector $\text{pe}_\ell \in \mathbb{R}^d$. Simple but cannot generalize beyond the training context length.
 
-1. **Absolute embedding:** each $\ell \mapsto \text{pe}_\ell$, trained directly. Parameters: $\{\text{pe}_1, \ldots, \text{pe}_L\} \in \mathbb{R}^{L \times d}$.
-2. **Sinusoidal positional encoding** (a special case of 3): use a fixed vector
-$$\vec{p}_t = \begin{pmatrix} \sin(\omega_1 \cdot t) \\ \cos(\omega_1 \cdot t) \\ \sin(\omega_2 \cdot t) \\ \cos(\omega_2 \cdot t) \\ \vdots \\ \sin(\omega_{d/2} \cdot t) \\ \cos(\omega_{d/2} \cdot t) \end{pmatrix}_{d \times 1}.$$
-This encodes **relative** positional information via rotation matrices.
-3. **Relative positional embedding:** embed relative positions $i - j$. Map $(i,j) \mapsto \vec{P}_{i-j}$ with learnable vectors. Used in RoPE (Rotary Position Embedding, used in LLaMA). The attention score formula becomes: $\alpha_i = \text{Softmax}\!\left(\{q_i^\top(k_j + \vec{P}_{i-j})\}_{j \in [L]}\right)$.
+**2. Sinusoidal encoding** (Vaswani et al., 2017). Use fixed sinusoidal functions at different frequencies:
 
-*Figure 12.2: Sinusoidal positional encoding heatmap. Each row is a position, each column a dimension of the encoding vector. Low-frequency sinusoids vary slowly across positions while high-frequency ones oscillate rapidly.*
+$$\vec{p}_t = \begin{pmatrix} \sin(\omega_1 \cdot t) \\ \cos(\omega_1 \cdot t) \\ \sin(\omega_2 \cdot t) \\ \cos(\omega_2 \cdot t) \\ \vdots \\ \sin(\omega_{d/2} \cdot t) \\ \cos(\omega_{d/2} \cdot t) \end{pmatrix}, \qquad \omega_k = \frac{1}{10000^{2k/d}}.$$
 
-## 6. Causal Masking: Don't See the Future {#sec-causal-masking}
+Low-frequency sinusoids vary slowly across positions (capturing coarse position), while high-frequency ones oscillate rapidly (capturing fine position). The key insight is that relative position information is encoded via rotation matrices: $\vec{p}_{t+\Delta}$ can be expressed as a linear function of $\vec{p}_t$.
 
-For autoregressive generation, the model must predict token $w_{\ell+1}$ using only $w_1, \ldots, w_\ell$. But standard self-attention lets every token attend to every other token, including future ones. Causal masking enforces the autoregressive constraint by preventing information from flowing backward in time.
+**3. Rotary Position Embedding (RoPE).** Used in LLaMA and most modern models. Encodes relative positions $i - j$ directly into the attention score:
+$$\alpha_i = \text{Softmax}\!\left(\{q_i^\top(k_j + \vec{P}_{i-j})\}_{j \in [L]}\right).$$
+
+```{=html}
+<div class="figure-container">
+  <div id="fig-positional-encoding"></div>
+  <div class="figure-caption">Figure 18.3: Sinusoidal positional encoding. Each row is a position (0 to 127), each column a dimension of the encoding vector. Low-frequency dimensions (left) vary slowly, while high-frequency dimensions (right) oscillate rapidly.</div>
+</div>
+```
+
+### Causal Masking {#sec-causal-masking}
+
+For autoregressive generation, token $\ell$ must not attend to future tokens $j > \ell$. We enforce this by masking.
 
 ::: {#def-causal-masking}
 ## Causal Masking
 
-In decoder-only models, we need to ensure that token $\ell$ cannot attend to future tokens. We manually set $\alpha_{\ell j} = 0$ for all $j > \ell$.
+Set the attention score to $-\infty$ for all future positions:
 
-To achieve this:
+$$\text{Masked Attention} = \text{Softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}} + M\right) V, \qquad M_{\ell j} = \begin{cases} 0 & \text{if } j \leq \ell, \\ -\infty & \text{if } j > \ell. \end{cases}$$
 
-- If $j > \ell$: set $\text{Mask}_{\ell j} = -\infty$
-- If $j \leq \ell$: set $\text{Mask}_{\ell j} = 0$
-
-$$\text{Attention score} = \text{Softmax}(Q K^\top + \text{Mask}).$$
-
-After softmax, the $-\infty$ elements become **zero**.
-
-**Note:** Only use causal masking for decoder TF. Encoder-only models (like BERT) use full (global) attention.
+After softmax, the $-\infty$ entries become zero, so each token can only attend to itself and previous tokens.
 :::
 
-Causal masking enforces the autoregressive property at the architectural level: by preventing each token from attending to future positions, we ensure that the prediction of $w_{\ell+1}$ depends only on $w_1, \ldots, w_\ell$. This is what makes left-to-right text generation possible during inference.
+![Causal masking in self-attention. Left: global (encoder) attention where all tokens attend to all tokens. Right: causal (decoder) attention where each token only attends to itself and previous tokens.](figures/ch18-causal-masking.svg){#fig-causal-masking width=100%}
 
-*Figure 12.3: Left --- Global (encoder) attention mask: all tokens attend to all tokens. Right --- Causal (decoder) attention mask: each token only attends to itself and previous tokens.*
+::: {.callout-tip}
+## Remark: Encoder vs. Decoder Masking
 
-## 7. Add MLP Layers After Each Attention Layer {#sec-mlp-layer}
+- **Encoder-only** (BERT): uses **global** attention --- every token sees every other token.
+- **Decoder-only** (GPT): uses **causal** masking --- tokens can only look backward.
+:::
 
-Self-attention output $\sum_{j=1}^{L} \alpha_{\ell j} \cdot W_V x_j$ is a weighted average of linear functions of embeddings. We **need to add nonlinearities**.
+### MLP / Feed-Forward Layer {#sec-mlp-layer}
+
+The self-attention output $\sum_j \alpha_{\ell j} \cdot W_V x_j$ is a weighted average of linear functions --- stacking more attention layers without nonlinearities would just produce another weighted average. To give the model nonlinear expressivity, we add a pointwise MLP after each attention layer.
 
 ::: {#def-mlp-layer}
-## MLP / Feed-Forward Layer
+## Feed-Forward (MLP) Layer
 
-The MLP is a 2-layer neural network applied **independently** for each position $\ell \in [L]$:
-$$m_\ell = \text{MLP}(\text{output}_\ell) : \mathbb{R}^{d_1} \to \mathbb{R}^{d_1}$$
-$$= W_2 \cdot \sigma(W_1 x + b_1) + b_2,$$
+A 2-layer neural network applied independently at each position $\ell \in [L]$:
 
-where $\sigma$ is a nonlinearity (ReLU or GELU), $W_1 \in \mathbb{R}^{d_1 \times d_f}$, $b_1 \in \mathbb{R}^{d_f}$, $W_2 \in \mathbb{R}^{d_f \times d_1}$, $b_2 \in \mathbb{R}^{d_1}$.
+$$\text{MLP}(x) = W_2 \cdot \sigma(W_1 x + b_1) + b_2,$$
 
-Typically $d_f \gg d_1$. In GPT-3: $d_f = 4d$.
+where $\sigma$ is a nonlinearity (ReLU or GELU), $W_1 \in \mathbb{R}^{d_f \times d}$, $W_2 \in \mathbb{R}^{d \times d_f}$.
 
-The same MLP is applied independently for each $\ell \in [L]$.
+Typically $d_f = 4d$ (the MLP expands the dimension by 4x, applies the nonlinearity, then projects back).
 :::
 
-## 8. Multi-Head Attention {#sec-multi-head}
+## Multi-Head Attention {#sec-multi-head}
 
-Instead of having a single attention module, we use **multi-head self attention**: multiple ($H$) attention heads in parallel.
+A single attention head can only capture one type of relationship between tokens. In practice, language has many simultaneous structures --- syntactic dependencies, semantic similarity, coreference --- that require different attention patterns. **Multi-head attention** runs multiple attention operations in parallel, each with its own learned projections.
 
 ::: {#def-multi-head-attention}
 ## Multi-Head Attention
 
-$H$ = number of attention heads. Each head has three matrices $\{W_K^h, W_Q^h, W_V^h\}_{h \in [H]}$, each $\in \mathbb{R}^{d \times d_1}$, where $d_1 = d / H$.
+Let $H$ be the number of attention heads. Each head $h$ has its own projection matrices $W_Q^h, W_K^h, W_V^h \in \mathbb{R}^{d \times d_k}$, where $d_k = d / H$.
 
-At each position $\ell$, input $x_\ell \in \mathbb{R}^d$, $d = H \cdot d_1$:
+For each head $h$:
+$$\text{head}^h = \text{Attention}(XW_Q^h, XW_K^h, XW_V^h) \in \mathbb{R}^{L \times d_k}.$$
 
-- Head $h$ looks at $x_\ell^{(h)} \in \mathbb{R}^{d_1}$ (the $h$-th chunk of the vector)
-- $\text{Output}^h = \sum_{j=1}^{L} \alpha_{\ell j}^h \cdot v_j^h$ for each head $h$
-- Final output = $W_O \begin{pmatrix} \text{output}^1 \\ \text{output}^2 \\ \vdots \\ \text{output}^H \end{pmatrix} \in \mathbb{R}^d$, where $W_O \in \mathbb{R}^{d \times d}$ is the output matrix that mixes across heads.
+The outputs from all heads are concatenated and mixed via an output matrix $W_O \in \mathbb{R}^{d \times d}$:
+
+$$\text{MultiHead}(X) = W_O \begin{pmatrix} \text{head}^1 \\ \vdots \\ \text{head}^H \end{pmatrix} \in \mathbb{R}^{L \times d}.$$
 :::
+
+![Multi-head attention: $H$ parallel attention heads with independent projections, concatenated and mixed via $W_O$.](figures/ch18-multi-head-attention.svg){#fig-multi-head-attention width=100%}
 
 ::: {.callout-tip}
-## Remark: Each Head Captures Different Semantics
+## Remark: What Different Heads Learn
 
-Different attention heads learn to attend to different patterns: some heads focus on adjacent tokens, some on syntactic relationships, some on semantic similarity. This is visible when visualizing attention matrices from different heads.
+Empirically, different heads specialize in different patterns:
+
+- Some heads attend to the **previous token** (bigram patterns)
+- Some heads attend to **syntactic heads** (subject-verb agreement)
+- Some heads attend to **semantically similar** words
+- Some heads form **induction heads** that copy patterns from earlier in the context
 :::
 
-## 9. Residual Connections & Layer Normalization {#sec-residual-layernorm}
+## Residual Connections and Layer Normalization {#sec-residual-layernorm}
 
-A transformer decoder stacks dozens (or even nearly a hundred) layers of attention and MLP blocks. Training such deep networks without any architectural tricks would be nearly impossible due to vanishing or exploding gradients. Two key ingredients make deep transformers trainable: residual connections and layer normalization.
+A transformer stacks dozens (or nearly a hundred) layers of attention and MLP blocks. Training such deep networks requires two critical ingredients.
+
+### Residual Connections {#sec-residual}
 
 ::: {#def-residual-connection}
 ## Residual Connection
 
-Instead of $X^{(i)} = \text{Layer}(X^{(i-1)})$, we let:
+Instead of $X^{(i)} = \text{Layer}(X^{(i-1)})$, we use:
 $$X^{(i)} = X^{(i-1)} + \text{Layer}(X^{(i-1)}).$$
 
-That is: $X \mapsto X + \text{MHA}(X)$. Add the input to the output of multi-head attention. This biases the mapping to identity, so we only have to learn "the residual."
+This biases the mapping toward the identity, so each layer only needs to learn "the residual" --- a small correction to its input.
 :::
 
-Residual connections are critical for training deep networks: they provide a direct gradient pathway from the output back to earlier layers, preventing the vanishing gradient problem. From an optimization perspective, they make the loss landscape smoother and easier to navigate.
+Residual connections provide a direct gradient pathway from the output back to early layers, preventing the vanishing gradient problem. From an optimization perspective, they smooth the loss landscape.
 
-Layer normalization complements residual connections by stabilizing the distribution of activations across layers. Without normalization, the scale of hidden representations can drift unpredictably as data passes through many layers, making optimization difficult.
+### Layer Normalization {#sec-layer-norm}
 
 ::: {#def-layer-normalization}
 ## Layer Normalization
 
-Normalization applied to each feature vector **individually**. For a vector $x \in \mathbb{R}^d$:
+For a vector $x \in \mathbb{R}^d$, compute:
 
 - Mean: $\mu = \frac{1}{d} \sum_{j=1}^{d} x_j$
 - Standard deviation: $\sigma = \sqrt{\frac{1}{d} \sum_{j=1}^{d} (x_j - \mu)^2}$
-- Normalization: $v = \frac{x - \mu}{\sigma + \varepsilon}$, where $\varepsilon$ is a small number to avoid numerical instability
+- Normalization: $\text{LayerNorm}(x) = \frac{x - \mu}{\sigma + \varepsilon}$
 
-Do this operation LayerNorm: $x \mapsto v$ for all $x$ in the sequence: $x_1, x_2, \ldots, x_L \in \mathbb{R}^d$.
+Applied independently to each token's feature vector $x_1, x_2, \ldots, x_L$.
 :::
 
-Layer normalization stabilizes training by ensuring that the inputs to each sub-layer have consistent scale, regardless of the activations from previous layers. This is particularly important in deep transformers with many stacked blocks, where without normalization the magnitude of activations can grow or shrink uncontrollably.
+Layer normalization ensures that the inputs to each sub-layer have consistent scale, preventing the magnitude of activations from growing or shrinking uncontrollably across layers.
 
-## 10. Full Transformer Architecture {#sec-full-architecture}
+## The Full Transformer Decoder {#sec-full-architecture}
+
+We now assemble all components into the complete architecture.
 
 ::: {.callout-note appearance="simple"}
-**The Transformer Decoder** is a stack of Transformer Decoder **Blocks**. Each Block consists of:
+**The Transformer Decoder** is a stack of identical **blocks**. Each block consists of:
 
-1. (Masked) Multi-Head Self-Attention
-2. Add & Norm (residual connection + layer norm)
-3. Feed-Forward Network (MLP)
-4. Add & Norm
+1. **(Masked) Multi-Head Self-Attention**
+2. **Add & Norm** (residual connection + layer normalization)
+3. **Feed-Forward Network** (MLP)
+4. **Add & Norm**
 
-Two design choices: **Post-norm** (original): LN after each sub-layer. **Pre-norm** (more popular now): LN before each sub-layer, for better training stability.
+Two design variants: **Post-norm** (original) applies LayerNorm after each sub-layer. **Pre-norm** (more common now) applies LayerNorm before each sub-layer, yielding better training stability.
 :::
+
+![Transformer decoder block: masked multi-head attention followed by feed-forward network, with residual connections and layer normalization around each sub-layer.](figures/ch18-transformer-decoder.svg){#fig-transformer-decoder width=100%}
 
 ::: {.callout-tip}
-## Remark: Revisiting Model Types
+## Remark: Revisiting the Three Model Types
 
-- **Encoder-only:** Do not use causal masking. In training, hide (mask) some random tokens and predict them. Example: BERT.
-- **Decoder-only:** Use causal masking to mask the future. Trained to predict next token. Example: GPT.
-- **Encoder-Decoder:** Output of encoder is fed into decoder blocks, attended by features of decoder using **cross attention** (at each layer). Example: T5.
+- **Encoder-only** (BERT): no causal masking; trained by masking random tokens and predicting them.
+- **Decoder-only** (GPT): causal masking; trained to predict the next token.
+- **Encoder-decoder** (T5): encoder uses global attention; decoder uses causal masking and attends to encoder features via cross attention at each layer.
 :::
 
-## Exercise: Understanding GPT-3 Parameters {#sec-gpt3-exercise}
+## Understanding GPT-3: Parameter Analysis {#sec-gpt3-exercise}
 
-GPT-3 175B: $n_\text{layers} = 96$, $d_\text{model} = 12288$, $n_\text{heads} = 96$, $d_\text{head} = 128$. Context window $L = 2048$, vocabulary size $N = 50257$. Note: $d = H \times d_1$.
+To build concrete intuition for the scale of modern language models, let us count the parameters of GPT-3.
+
+### GPT-3 Model Variants {#sec-gpt3-variants}
+
+| Model | Parameters | Layers | $d_\text{model}$ | Heads | $d_\text{head}$ |
+|:------|:-----------|:-------|:------------------|:------|:-----------------|
+| GPT-3 Small | 125M | 12 | 768 | 12 | 64 |
+| GPT-3 Medium | 350M | 24 | 1,024 | 16 | 64 |
+| GPT-3 Large | 760M | 24 | 1,536 | 16 | 96 |
+| GPT-3 XL | 1.3B | 24 | 2,048 | 24 | 128 |
+| GPT-3 6.7B | 6.7B | 32 | 4,096 | 32 | 128 |
+| GPT-3 13B | 13.0B | 40 | 5,140 | 40 | 128 |
+| **GPT-3 175B** | **175.0B** | **96** | **12,288** | **96** | **128** |
+
+Note: $d_\text{model} = n_\text{heads} \times d_\text{head}$ in all cases.
+
+### Counting Parameters {#sec-counting-params}
 
 ::: {.callout-important}
-## Algorithm: Computing the Number of Parameters
+## Algorithm: GPT-3 175B Parameter Count
 
-1. **Word embedding:** $W_E \in \mathbb{R}^{N \times d}$ $\Rightarrow$ $\#\text{param} = N \cdot d$
-2. **Position embedding:** $W_{PE} \in \mathbb{R}^{L \times d}$ $\Rightarrow$ $\#\text{param} = L \cdot d$
-3. **Each self-attention layer:** Each $W_Q^h, W_K^h, W_V^h \in \mathbb{R}^{d \times d_1}$ $\Rightarrow$ $\#\text{param} = 3 \times d \times d_1 \times H = 3d^2$. Output matrix $W_O \in \mathbb{R}^{d \times d}$ $\Rightarrow$ $d^2$. Total MHA: $4d^2$ per layer $\times n_\text{layer}$.
-4. **MLP layer:** $(W_1, W_2, b_1, b_2)$ $\Rightarrow$ $\approx 4d \times d \times 2 = 8d^2$ per layer $\times n_\text{layer}$.
+Let $d = 12{,}288$, $V = 50{,}257$, $L = 2{,}048$, $n_\text{layers} = 96$.
 
-Neglecting biases and layer norms:
-$$\#\text{param} = N \cdot d + L \cdot d + 12 \cdot d^2 \times n_\text{layer} \approx 174{,}074{,}267{,}648 \approx 174 \times 10^9 \quad (99.5\% \text{ accurate}).$$
+**1. Word embedding:** $W_E \in \mathbb{R}^{V \times d}$ $\Rightarrow$ $V \cdot d \approx 617\text{M}$
+
+**2. Position embedding:** $W_{PE} \in \mathbb{R}^{L \times d}$ $\Rightarrow$ $L \cdot d \approx 25\text{M}$
+
+**3. Self-attention per layer:** $W_Q, W_K, W_V \in \mathbb{R}^{d \times d}$ (each is $H$ heads of $d \times d_k$, totaling $d \times d$), plus $W_O \in \mathbb{R}^{d \times d}$ $\Rightarrow$ $4d^2$ per layer
+
+**4. MLP per layer:** $W_1 \in \mathbb{R}^{4d \times d}$, $W_2 \in \mathbb{R}^{d \times 4d}$ $\Rightarrow$ $8d^2$ per layer
+
+**Total** (neglecting biases and layer norms):
+
+$$\text{Parameters} = V \cdot d + L \cdot d + 12d^2 \times n_\text{layers} \approx 174{,}074{,}267{,}648 \approx 174 \times 10^9.$$
+
+This is 99.5% of the reported 175B parameter count!
 :::
 
-## Transformer Circuits & Residual Stream {#sec-transformer-circuits}
+```{=html}
+<div class="figure-container">
+  <div id="fig-param-breakdown"></div>
+  <div class="figure-caption">Figure 18.4: Parameter distribution in GPT-3 175B. The vast majority of parameters (over 99%) reside in the 96 transformer blocks, with attention and MLP layers each contributing roughly equally.</div>
+</div>
+```
 
-We can view a Transformer as a model that processes a sequence of tokens in multiple layers. In each layer, the vector at the same position is processed by attention, normalization, and MLP. The vector itself is added directly to the next layer by **residual connection**.
+## Transformer Circuits and the Residual Stream {#sec-transformer-circuits}
+
+A useful perspective on transformers comes from viewing the residual connections as a **residual stream** --- a persistent information highway that each attention and MLP layer reads from and writes to.
 
 ::: {#thm-single-layer-attention}
 ## Single-Layer Attention-Only Transformer
 
-For a single-layer attention-only transformer:
+For a single-layer, attention-only transformer, the output logits can be written as:
 
-- Token embedding: $x_0 = W_E \, t$, where $t = \binom{w}{i} \in \mathbb{R}^{L+V}$ (token + position)
-- Attention: $x_1 = x_0 + \sum_{h \in H} h(x_0)$
-- Logits: $T(t) = W_U x_{-1}$ (unembedding)
+$$T(X) = X \underbrace{W_E^\top W_U^\top}_{\text{direct path (residual)}} + \sum_{h=1}^{H} A^h \cdot X \cdot \underbrace{W_E^\top (W_{OV}^h)^\top W_U^\top}_{\text{attention path}},$$
 
-Define the **QK-matrix**: $W_{QK}^h = (W_Q^h)^\top W_K^h / \sqrt{d} \in \mathbb{R}^{d \times d}$
-
-and the **OV-matrix**: $W_{OV}^h = W_O^h W_V^h \in \mathbb{R}^{d \times d}$.
-
-Then: $A^h = \text{Softmax}(X_0 \, W_{QK}^h \, X_0^\top) \in \mathbb{R}^{L \times L}$, and we can write the full model as:
-$$T(x) = X \underbrace{(W_U W_E)^\top}_{\text{residual}} + \sum_{h=1}^{H} A^h \cdot X \cdot \underbrace{(W_U W_{OV}^h W_E)}_{\text{a single matrix}}.$$
-
-where $X$ is the input sequence, $A^h = \text{Softmax}(X \, W_{QK}^h \, X^\top)$.
+where $A^h = \text{Softmax}(X W_{QK}^h X^\top)$ is the attention pattern for head $h$, $W_{QK}^h = W_Q^{h\top} W_K^h / \sqrt{d_k}$ is the **QK-circuit** (which tokens to attend to), and $W_{OV}^h = W_O^h W_V^h$ is the **OV-circuit** (what information to move).
 :::
 
-## Interactive Demos {#sec-interactive-demo}
-
-The following code computes attention weights for a simple self-attention example. Edit and run to explore.
-
-### Self-Attention Computation
-
-```python
-#| eval: false
-import numpy as np
-
-# Simple self-attention example
-np.random.seed(42)
-L = 4  # sequence length
-d = 8  # embedding dimension
-d1 = 4  # attention head dimension
-
-# Simulated token embeddings (e.g., "I", "love", "deep", "learning")
-tokens = ["I", "love", "deep", "learning"]
-X = np.random.randn(L, d)
-
-# Weight matrices
-W_Q = np.random.randn(d, d1) * 0.3
-W_K = np.random.randn(d, d1) * 0.3
-W_V = np.random.randn(d, d1) * 0.3
-
-# Compute Q, K, V
-Q = X @ W_Q  # (L, d1)
-K = X @ W_K
-V = X @ W_V
-
-# Attention scores
-E = Q @ K.T / np.sqrt(d1)  # (L, L)
-print("Raw attention scores (Q K^T / sqrt(d1)):")
-print(np.round(E, 3))
-
-# Softmax (row-wise)
-def softmax(x):
-    e = np.exp(x - x.max(axis=-1, keepdims=True))
-    return e / e.sum(axis=-1, keepdims=True)
-
-alpha = softmax(E)
-print("\nAttention weights (after softmax):")
-for i, tok in enumerate(tokens):
-    weights = ", ".join(f"{tokens[j]}: {alpha[i,j]:.3f}" for j in range(L))
-    print(f"  {tok} attends to -> {weights}")
-
-# Output
-output = alpha @ V
-print(f"\nOutput shape: {output.shape}")
-print(f"Output (first 3 dims):\n{np.round(output[:, :3], 3)}")
-
-# Causal mask for decoder
-print("\n--- With Causal Masking ---")
-mask = np.triu(np.ones((L, L)) * (-1e9), k=1)
-E_masked = E + mask
-alpha_causal = softmax(E_masked)
-print("Causal attention weights:")
-for i, tok in enumerate(tokens):
-    weights = ", ".join(f"{tokens[j]}: {alpha_causal[i,j]:.3f}" for j in range(L))
-    print(f"  {tok} attends to -> {weights}")
-```
-
-### GPT-3 Parameter Count
-
-```python
-#| eval: false
-import numpy as np
-
-# GPT-3 175B configuration
-configs = {
-    "GPT-3 Small":  {"n_params_official": "125M",  "n_layers": 12, "d_model": 768,   "n_heads": 12, "d_head": 64},
-    "GPT-3 Medium": {"n_params_official": "350M",  "n_layers": 24, "d_model": 1024,  "n_heads": 16, "d_head": 64},
-    "GPT-3 Large":  {"n_params_official": "760M",  "n_layers": 24, "d_model": 1536,  "n_heads": 16, "d_head": 96},
-    "GPT-3 XL":     {"n_params_official": "1.3B",  "n_layers": 24, "d_model": 2048,  "n_heads": 24, "d_head": 128},
-    "GPT-3 175B":   {"n_params_official": "175.0B","n_layers": 96, "d_model": 12288, "n_heads": 96, "d_head": 128},
-}
-
-N = 50257  # vocabulary size
-L = 2048   # context window
-
-print(f"Vocabulary size N = {N}")
-print(f"Context window  L = {L}")
-print(f"{'Model':<16} {'Official':>10} {'Computed':>16} {'Accuracy':>10}")
-print("-" * 56)
-
-for name, cfg in configs.items():
-    d = cfg["d_model"]
-    n_layer = cfg["n_layers"]
-
-    # 1. Word embedding: N * d
-    word_emb = N * d
-    # 2. Position embedding: L * d
-    pos_emb = L * d
-    # 3. Self-attention: 4*d^2 per layer
-    attn = 4 * d**2 * n_layer
-    # 4. MLP: 8*d^2 per layer
-    mlp = 8 * d**2 * n_layer
-
-    total = word_emb + pos_emb + attn + mlp
-
-    # Parse official
-    official_str = cfg["n_params_official"]
-    if "B" in official_str:
-        official = float(official_str.replace("B","")) * 1e9
-    else:
-        official = float(official_str.replace("M","")) * 1e6
-
-    accuracy = total / official * 100
-    print(f"{name:<16} {official_str:>10} {total:>16,} {accuracy:>9.1f}%")
-```
-
-*Figure 12.4: Dot product of sinusoidal positional encodings across positions. The diagonal structure shows that nearby positions have similar encodings, encoding relative position information.*
+This decomposition reveals that each attention head performs two distinct functions: the QK-circuit determines **where** to look, while the OV-circuit determines **what** to copy. The residual stream provides a direct path from input to output, so each layer only needs to make incremental contributions.
 
 ::: {.callout-tip}
-## Remark: Looking Ahead
+## Remark: Mechanistic Interpretability
 
-This concludes the course. The optimization foundations developed throughout---from convexity and duality to first-order methods and stochastic optimization---provide the mathematical toolkit for understanding and advancing modern machine learning.
+This "circuits" perspective has led to a growing field of **mechanistic interpretability**, which aims to reverse-engineer the algorithms learned by transformers by studying the QK and OV circuits of individual attention heads. Researchers have identified specific heads that perform induction (pattern completion), heads that handle syntax, and heads that track entities across long contexts.
 :::
+
+```{=html}
+<!-- Plotly.js for interactive figures -->
+<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const plotlyConfig = {responsive: true, displayModeBar: false};
+  const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+  function legendStyle() {
+    return {
+      font: {family: figFont, size: 13, color: css('--fig-text') || '#3d3530'},
+      bgcolor: (css('--fig-bg') || '#f0ebe5') + 'dd',
+      bordercolor: css('--fig-grid') || '#e0d9d1',
+      borderwidth: 1,
+    };
+  }
+
+  function themeLayout(extra = {}) {
+    return Object.assign({
+      paper_bgcolor: css('--fig-bg') || '#f0ebe5',
+      plot_bgcolor: css('--fig-plot-bg') || '#faf7f3',
+      font: { family: figFont, color: css('--fig-text') || '#3d3530', size: 14 },
+    }, extra);
+  }
+
+  function themeAxis(title, extra = {}) {
+    return Object.assign({
+      title: {text: title, font: {family: figFont, size: 14}},
+      gridcolor: css('--fig-grid') || '#e0d9d1',
+      zerolinecolor: css('--fig-grid') || '#e0d9d1',
+      linecolor: css('--fig-axis') || '#968a80',
+      tickfont: {family: figFont, size: 12, color: css('--fig-axis') || '#968a80'},
+    }, extra);
+  }
+
+  // ──────────── Word Embedding Visualization ────────────
+  function renderWordEmbedding() {
+    const el = document.getElementById('fig-word-embedding');
+    if (!el) return;
+    // Simulated 2D PCA projection of word embeddings
+    const words = {
+      // Royalty cluster
+      'king': [2.1, 1.8], 'queen': [1.5, 2.4], 'prince': [2.5, 2.2], 'princess': [1.9, 2.8],
+      // Animals
+      'cat': [-1.8, -0.5], 'dog': [-1.2, -0.8], 'fish': [-2.2, -1.2], 'bird': [-1.5, -1.5],
+      // Actions
+      'run': [0.5, -2.0], 'walk': [0.8, -1.5], 'swim': [-0.2, -2.3], 'fly': [0.1, -1.8],
+      // People
+      'man': [1.0, 0.5], 'woman': [0.4, 1.1], 'boy': [1.4, 0.2], 'girl': [0.8, 0.8],
+    };
+    const groups = {
+      'Royalty': ['king', 'queen', 'prince', 'princess'],
+      'Animals': ['cat', 'dog', 'fish', 'bird'],
+      'Actions': ['run', 'walk', 'swim', 'fly'],
+      'People': ['man', 'woman', 'boy', 'girl'],
+    };
+    const colors = {'Royalty': '#b8995e', 'Animals': '#7a9a7e', 'Actions': '#7b97ad', 'People': '#c47a6a'};
+    const traces = [];
+    for (const [group, wordList] of Object.entries(groups)) {
+      traces.push({
+        x: wordList.map(w => words[w][0]),
+        y: wordList.map(w => words[w][1]),
+        text: wordList,
+        mode: 'markers+text',
+        textposition: 'top center',
+        textfont: {family: figFont, size: 13, color: colors[group]},
+        marker: {size: 10, color: colors[group], symbol: 'circle'},
+        name: group,
+        type: 'scatter',
+      });
+    }
+    // Analogy arrow: king - man + woman ≈ queen
+    traces.push({
+      x: [2.1, 0.4+2.1-1.0], y: [1.8, 1.1+1.8-0.5],
+      mode: 'lines', line: {color: '#3d3530', width: 1.5, dash: 'dot'},
+      showlegend: false,
+    });
+    traces.push({
+      x: [1.0, 0.4], y: [0.5, 1.1],
+      mode: 'lines', line: {color: '#907ea0', width: 1.5, dash: 'dot'},
+      showlegend: false,
+    });
+    Plotly.newPlot(el, traces, themeLayout({
+      height: 420, margin: {t: 30, r: 30, b: 50, l: 60},
+      xaxis: themeAxis('PCA Dimension 1', {zeroline: false}),
+      yaxis: themeAxis('PCA Dimension 2', {zeroline: false}),
+      showlegend: true,
+      legend: Object.assign(legendStyle(), {x: 0.01, y: 0.99}),
+    }), plotlyConfig);
+  }
+
+  // ──────────── Attention Heatmap ────────────
+  function renderAttentionHeatmap() {
+    const el = document.getElementById('fig-attention-heatmap');
+    if (!el) return;
+    const tokens = ['The', 'cat', 'sat', 'on', 'the', 'mat'];
+    const n = tokens.length;
+    // Simulated attention weights (row = query, col = key)
+    const attn = [
+      [0.40, 0.15, 0.10, 0.10, 0.15, 0.10],  // The
+      [0.10, 0.35, 0.10, 0.05, 0.05, 0.35],  // cat → mat
+      [0.05, 0.40, 0.30, 0.10, 0.05, 0.10],  // sat → cat
+      [0.05, 0.05, 0.15, 0.30, 0.05, 0.40],  // on → mat
+      [0.35, 0.05, 0.05, 0.10, 0.35, 0.10],  // the → The
+      [0.05, 0.30, 0.10, 0.15, 0.05, 0.35],  // mat → cat
+    ];
+    Plotly.newPlot(el, [{
+      z: attn, x: tokens, y: tokens,
+      type: 'heatmap',
+      colorscale: [[0, '#faf7f3'], [0.25, '#d4c9b8'], [0.5, '#b8995e'], [0.75, '#ad8480'], [1, '#7b4b3a']],
+      showscale: true,
+      colorbar: {title: {text: 'Weight', font: {family: figFont, size: 12}}, tickfont: {family: figFont, size: 11}},
+      hovertemplate: 'Query: %{y}<br>Key: %{x}<br>Weight: %{z:.2f}<extra></extra>',
+    }], themeLayout({
+      height: 420, margin: {t: 30, r: 80, b: 60, l: 80},
+      xaxis: {title: {text: 'Key', font: {family: figFont, size: 14}}, tickfont: {family: figFont, size: 13}, side: 'bottom'},
+      yaxis: {title: {text: 'Query', font: {family: figFont, size: 14}}, tickfont: {family: figFont, size: 13}, autorange: 'reversed'},
+    }), plotlyConfig);
+  }
+
+  // ──────────── Positional Encoding Heatmap ────────────
+  function renderPositionalEncoding() {
+    const el = document.getElementById('fig-positional-encoding');
+    if (!el) return;
+    const nPos = 128, dModel = 64;
+    const pe = [];
+    for (let pos = 0; pos < nPos; pos++) {
+      const row = [];
+      for (let i = 0; i < dModel; i++) {
+        const dimIdx = Math.floor(i / 2);
+        const omega = 1 / Math.pow(10000, 2 * dimIdx / dModel);
+        row.push(i % 2 === 0 ? Math.sin(omega * pos) : Math.cos(omega * pos));
+      }
+      pe.push(row);
+    }
+    Plotly.newPlot(el, [{
+      z: pe, type: 'heatmap',
+      colorscale: [[0, '#7b97ad'], [0.5, '#faf7f3'], [1, '#c47a6a']],
+      showscale: true,
+      colorbar: {title: {text: 'Value', font: {family: figFont, size: 12}}, tickfont: {family: figFont, size: 11}},
+      hovertemplate: 'Position: %{y}<br>Dimension: %{x}<br>Value: %{z:.3f}<extra></extra>',
+    }], themeLayout({
+      height: 420, margin: {t: 30, r: 80, b: 60, l: 70},
+      xaxis: themeAxis('Encoding Dimension'),
+      yaxis: themeAxis('Position', {autorange: 'reversed'}),
+    }), plotlyConfig);
+  }
+
+  // ──────────── GPT-3 Parameter Breakdown ────────────
+  function renderParamBreakdown() {
+    const el = document.getElementById('fig-param-breakdown');
+    if (!el) return;
+    const d = 12288, nLayers = 96, V = 50257, L = 2048;
+    const embed = V * d;
+    const posEmbed = L * d;
+    const attnPerLayer = 4 * d * d;
+    const mlpPerLayer = 8 * d * d;
+    const totalAttn = attnPerLayer * nLayers;
+    const totalMlp = mlpPerLayer * nLayers;
+    const labels = ['Word Embedding', 'Position Embedding', 'Attention (96 layers)', 'MLP (96 layers)'];
+    const values = [embed, posEmbed, totalAttn, totalMlp];
+    const colors = ['#b8995e', '#907ea0', '#7b97ad', '#7a9a7e'];
+    Plotly.newPlot(el, [{
+      labels: labels, values: values,
+      type: 'pie',
+      marker: {colors: colors, line: {color: '#f0ebe5', width: 2}},
+      textinfo: 'label+percent',
+      textfont: {family: figFont, size: 13},
+      hovertemplate: '%{label}<br>%{value:,.0f} params<br>%{percent}<extra></extra>',
+      hole: 0.35,
+    }], themeLayout({
+      height: 400, margin: {t: 30, r: 30, b: 30, l: 30},
+      showlegend: false,
+    }), plotlyConfig);
+  }
+
+  renderWordEmbedding();
+  renderAttentionHeatmap();
+  renderPositionalEncoding();
+  renderParamBreakdown();
+});
+</script>
+```
 
 ## Summary {.unnumbered}
 
-- **Attention mechanism.** The core operation computes $\operatorname{Attention}(Q,K,V) = \operatorname{softmax}\!\bigl(\frac{QK^\top}{\sqrt{d_k}}\bigr)V$, where queries, keys, and values are linear projections of the input; this allows each token to attend to all other tokens with learned, content-dependent weights.
-- **Positional encoding.** Since self-attention is permutation-equivariant, sinusoidal positional encodings $\operatorname{PE}(pos, 2i) = \sin(pos / 10000^{2i/d})$ inject sequence-order information; causal masking further enforces autoregressive structure by preventing attention to future tokens.
-- **Transformer block.** Each block applies multi-head self-attention followed by a position-wise MLP, with residual connections and layer normalization ($x + \operatorname{Sublayer}(x)$) around each sub-layer---enabling stable training of very deep models.
-- **Multi-head attention.** Running $h$ attention heads in parallel with independent projections $W_i^Q, W_i^K, W_i^V$ lets the model capture diverse relational patterns; outputs are concatenated and linearly projected back to the model dimension.
+- **Token embedding.** Discrete words are mapped to dense vectors $x_i = W_E w_i \in \mathbb{R}^d$ via a learned embedding matrix; positional information is added as $x_i + \text{pe}_i$.
+- **Attention mechanism.** The core operation computes $\text{Attention}(Q,K,V) = \text{softmax}(QK^\top / \sqrt{d_k}) V$, where queries, keys, and values are linear projections of the input; each token attends to all other tokens with learned, content-dependent weights.
+- **Positional encoding.** Since self-attention is permutation invariant, positional embeddings (sinusoidal or learned) inject sequence-order information; causal masking further enforces autoregressive structure by preventing attention to future tokens.
+- **Transformer block.** Each block applies multi-head self-attention followed by a position-wise MLP, with residual connections and layer normalization around each sub-layer, enabling stable training of very deep models.
+- **Multi-head attention.** Running $H$ attention heads in parallel with independent projections lets the model capture diverse relational patterns; outputs are concatenated and projected back to the model dimension.
+- **Scale.** GPT-3 175B has 96 layers, $d = 12{,}288$, and 96 attention heads; over 99% of its $\sim$174B parameters reside in the attention ($4d^2$ per layer) and MLP ($8d^2$ per layer) weights.

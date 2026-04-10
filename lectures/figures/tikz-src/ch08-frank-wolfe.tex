@@ -1,0 +1,135 @@
+\documentclass[tikz,border=12pt]{standalone}
+\usepackage[T1]{fontenc}
+\usepackage{mathpazo}
+\usepackage{amsmath,amssymb}
+\usetikzlibrary{arrows.meta, positioning, calc, decorations.pathreplacing}
+\definecolor{stblue}{HTML}{7B97AD}
+\definecolor{rwgold}{HTML}{B8995E}
+\definecolor{sage}{HTML}{7A9A7E}
+\definecolor{dkbrown}{HTML}{3D3530}
+\definecolor{wmgray}{HTML}{7B7067}
+\definecolor{cream}{HTML}{F9F6F0}
+\definecolor{border}{HTML}{D4C9B8}
+\definecolor{terracotta}{HTML}{C47A6A}
+\definecolor{lavender}{HTML}{907EA0}
+
+\begin{document}
+\begin{tikzpicture}[
+  background rectangle/.style={fill=cream},
+  show background rectangle,
+  every node/.style={text=dkbrown, font=\small},
+  vecstyle/.style={-{Stealth[length=5pt]}, line width=1.1pt},
+]
+
+% ============================================
+% LEFT PANEL: Projected Gradient Descent
+% ============================================
+\begin{scope}[shift={(0,0)}]
+
+  % Title
+  \node[font=\normalsize\bfseries, text=stblue!80!black] at (2.5,4.8) {Projected Gradient Descent};
+
+  % Feasible polytope C — a compact convex shape
+  \coordinate (v1) at (0.8,0.8);
+  \coordinate (v2) at (3.8,0.5);
+  \coordinate (v3) at (4.5,2.2);
+  \coordinate (v4) at (3.5,3.8);
+  \coordinate (v5) at (1.2,3.2);
+
+  \fill[stblue!12] (v1) -- (v2) -- (v3) -- (v4) -- (v5) -- cycle;
+  \draw[stblue, line width=0.9pt] (v1) -- (v2) -- (v3) -- (v4) -- (v5) -- cycle;
+  \node[font=\footnotesize, text=stblue!60!black] at (2.5,1.6) {$\mathcal{C}$};
+
+  % Current point x^k inside feasible set
+  \coordinate (xk) at (2.8,2.5);
+  \fill[dkbrown] (xk) circle (3pt);
+  \node[font=\footnotesize, above left=-1pt] at (xk) {$x^k$};
+
+  % Gradient step goes OUTSIDE the feasible set (to the right and down)
+  \coordinate (grad_target) at (4.8,1.0);
+  \draw[vecstyle, terracotta!80!black] (xk) -- (grad_target);
+  \fill[terracotta!60] (grad_target) circle (3pt);
+  \node[font=\footnotesize, text=terracotta!70!black, right] at (grad_target) {$x^k - \alpha\nabla f(x^k)$};
+
+  % Projection: closest point on boundary back to C
+  % Project onto edge v2--v3, roughly at (4.15,1.35)
+  \coordinate (proj_point) at (4.1,1.3);
+  \draw[vecstyle, sage!80!black, densely dashed] (grad_target) -- (proj_point);
+  \fill[sage] (proj_point) circle (3.5pt);
+  \node[font=\footnotesize, text=sage!70!black, above left=-1pt] at ($(proj_point)+(0.1,0.25)$) {$x^{k+1}$};
+
+  % Labels along arrows
+  \node[font=\scriptsize, text=terracotta!70!black, rotate=-37] at ($(xk)!0.5!(grad_target)+(0.0,0.25)$) {gradient step};
+  \node[font=\scriptsize, text=sage!70!black, rotate=25] at ($(grad_target)!0.5!(proj_point)+(0.05,0.2)$) {project};
+
+  % Right-angle mark at projection
+  \coordinate (mid_edge) at ($(v2)!0.57!(v3)$);
+
+\end{scope}
+
+% ============================================
+% RIGHT PANEL: Frank-Wolfe
+% ============================================
+\begin{scope}[shift={(7.5,0)}]
+
+  % Title
+  \node[font=\normalsize\bfseries, text=lavender!80!black] at (2.5,4.8) {Frank-Wolfe};
+
+  % Same feasible polytope C
+  \coordinate (v1) at (0.8,0.8);
+  \coordinate (v2) at (3.8,0.5);
+  \coordinate (v3) at (4.5,2.2);
+  \coordinate (v4) at (3.5,3.8);
+  \coordinate (v5) at (1.2,3.2);
+
+  \fill[lavender!10] (v1) -- (v2) -- (v3) -- (v4) -- (v5) -- cycle;
+  \draw[lavender, line width=0.9pt] (v1) -- (v2) -- (v3) -- (v4) -- (v5) -- cycle;
+  \node[font=\footnotesize, text=lavender!60!black] at (2.5,1.6) {$\mathcal{C}$};
+
+  % Mark all vertices
+  \foreach \p in {(v1),(v2),(v3),(v4),(v5)}{
+    \fill[wmgray] \p circle (2pt);
+  }
+
+  % Current point x^k
+  \coordinate (xk) at (2.8,2.5);
+  \fill[dkbrown] (xk) circle (3pt);
+  \node[font=\footnotesize, above right=-1pt] at (xk) {$x^k$};
+
+  % Gradient arrow (showing direction, short)
+  \draw[vecstyle, wmgray!70] (xk) -- ++(0.8,0.6);
+  \node[font=\tiny, text=wmgray] at ($(xk)+(1.1,0.7)$) {$\nabla f(x^k)$};
+
+  % Linear minimizer y^k: the vertex that minimizes <grad f, y>
+  % Gradient points upper-right, so minimizer is lower-left vertex
+  \fill[rwgold] (v1) circle (3.5pt);
+  \node[font=\footnotesize, text=rwgold!80!black, below] at ($(v1)+(0,-0.1)$)
+    {$y^k$};
+
+  % Dashed line from x^k to y^k (Frank-Wolfe direction)
+  \draw[terracotta!80!black, line width=1pt, densely dashed] (xk) -- (v1);
+
+  % Convex combination point x^{k+1} along the direction
+  \coordinate (xnew) at ($(xk)!0.35!(v1)$);
+  \fill[sage] (xnew) circle (3.5pt);
+  \node[font=\footnotesize, text=sage!70!black, above left=-1pt] at (xnew) {$x^{k+1}$};
+
+  % Label
+  \node[font=\scriptsize, text=terracotta!60!black, rotate=-40] at ($(xk)!0.65!(v1)+(-0.1,0.2)$)
+    {FW direction};
+
+\end{scope}
+
+% ============================================
+% Bottom comparison note
+% ============================================
+\node[draw=border, fill=cream, rounded corners=4pt, inner sep=6pt,
+  font=\footnotesize, text=dkbrown, align=center]
+  at (5,-1.2) {%
+  PGD: gradient step $\to$ project onto $\mathcal{C}$ (needs \textbf{projection oracle})
+  \hspace{2em}
+  FW: linearize $\to$ minimize over $\mathcal{C}$ $\to$ convex combination (needs \textbf{linear oracle})
+  };
+
+\end{tikzpicture}
+\end{document}

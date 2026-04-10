@@ -57,16 +57,36 @@
 \node[terracotta, font=\small, anchor=west] at (12.5,3.5) {segment};
 \node[terracotta, font=\small, anchor=west] at (12.5,3.0) {escapes!};
 
-% Star shape (non-convex)
-\fill[stblue!10] (11.5,-1.5) ++(90:2)
-  foreach \a in {162,234,306,378} { -- ++(\a:2) }  -- cycle;
-\draw[stblue!60, line width=1.5pt] (11.5,-1.5) ++(90:2)
-  foreach \a in {162,234,306,378} { -- ++(\a:2) }  -- cycle;
+% 5-pointed star (non-convex): alternating outer (R=1.8) and inner (r=0.7) vertices
+\fill[stblue!10]
+  ({11.5+1.8*cos(90)},{-1.5+1.8*sin(90)})
+  -- ({11.5+0.7*cos(126)},{-1.5+0.7*sin(126)})
+  -- ({11.5+1.8*cos(162)},{-1.5+1.8*sin(162)})
+  -- ({11.5+0.7*cos(198)},{-1.5+0.7*sin(198)})
+  -- ({11.5+1.8*cos(234)},{-1.5+1.8*sin(234)})
+  -- ({11.5+0.7*cos(270)},{-1.5+0.7*sin(270)})
+  -- ({11.5+1.8*cos(306)},{-1.5+1.8*sin(306)})
+  -- ({11.5+0.7*cos(342)},{-1.5+0.7*sin(342)})
+  -- ({11.5+1.8*cos(18)},{-1.5+1.8*sin(18)})
+  -- ({11.5+0.7*cos(54)},{-1.5+0.7*sin(54)})
+  -- cycle;
+\draw[stblue!60, line width=1.5pt]
+  ({11.5+1.8*cos(90)},{-1.5+1.8*sin(90)})
+  -- ({11.5+0.7*cos(126)},{-1.5+0.7*sin(126)})
+  -- ({11.5+1.8*cos(162)},{-1.5+1.8*sin(162)})
+  -- ({11.5+0.7*cos(198)},{-1.5+0.7*sin(198)})
+  -- ({11.5+1.8*cos(234)},{-1.5+1.8*sin(234)})
+  -- ({11.5+0.7*cos(270)},{-1.5+0.7*sin(270)})
+  -- ({11.5+1.8*cos(306)},{-1.5+1.8*sin(306)})
+  -- ({11.5+0.7*cos(342)},{-1.5+0.7*sin(342)})
+  -- ({11.5+1.8*cos(18)},{-1.5+1.8*sin(18)})
+  -- ({11.5+0.7*cos(54)},{-1.5+0.7*sin(54)})
+  -- cycle;
 
-% Segment escaping star
-\fill[terracotta] (10.3,-0.3) circle (3pt);
-\fill[terracotta] (12.7,-0.3) circle (3pt);
-\draw[terracotta, line width=1.5pt, dashed] (10.3,-0.3) -- (12.7,-0.3);
+% Segment escaping star (top arm to top-left arm, passes outside through indentation)
+\fill[terracotta] (11.5,-0.3) circle (3pt);
+\fill[terracotta] (10.3,-1.2) circle (3pt);
+\draw[terracotta, line width=1.5pt, dashed] (11.5,-0.3) -- (10.3,-1.2);
 
 \node[wmgray, font=\small] at (11.5,-3.8) {L-shape and star};
 

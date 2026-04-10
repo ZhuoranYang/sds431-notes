@@ -2,8 +2,8 @@
 // Plotly Warmtone theming helpers — shared across all lectures
 // Reads CSS custom properties set by _warmtone.scss (light/dark aware)
 const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
 
 function css(v) {
   return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
@@ -38,7 +38,7 @@ function themeAxis(title, extra) {
 
 // Plotly color sequences matching the Warmtone palette
 const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
 ];
 </script>

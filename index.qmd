@@ -32,7 +32,7 @@ These interactive lecture notes cover the full arc from foundations --- convex s
 
 - **[Gradient Descent](lectures/06-gradient-descent.qmd)** --- How do we find a minimum iteratively? The descent lemma, convergence rates for smooth ($O(1/k)$) and strongly convex ($O(\rho^k)$) objectives, step size selection, and the role of the condition number.
 
-- **[Momentum, Adaptive Methods, and SGD](lectures/07-momentum-adaptive-sgd.qmd)** --- Beyond vanilla gradient descent: momentum methods, Nesterov's accelerated gradient, adaptive methods (AdaGrad, RMSProp, Adam), stochastic gradient descent, and proximal gradient methods for composite objectives.
+- **[Momentum, Adaptive Methods, SGD, and Proximal Gradient](lectures/07-momentum-adaptive-sgd.qmd)** --- Beyond vanilla gradient descent: momentum methods, Nesterov's accelerated gradient, adaptive methods (AdaGrad, RMSProp, Adam), stochastic gradient descent, proximal gradient methods for composite objectives, and modern matrix optimizers (Muon, Shampoo, SOAP) that exploit the spectral geometry of neural network weights.
 
 - **[Constrained First-Order Methods](lectures/08-constrained-first-order.qmd)** --- Optimizing over constrained domains: projected subgradient descent for non-smooth problems, and the Frank-Wolfe (conditional gradient) method when projection is expensive but linear minimization is cheap.
 
@@ -50,7 +50,7 @@ These interactive lecture notes cover the full arc from foundations --- convex s
 
 ### Part V: Second-Order and Interior Point Methods
 
-- **[Newton's Method and Matrix Optimizers](lectures/14-newton-method.qmd)** --- Exploiting curvature: Newton's method achieves quadratic convergence via the Hessian, and modern matrix optimizers (Muon, Shampoo, SOAP) extend preconditioning to neural network weight geometry.
+- **[Newton's Method](lectures/14-newton-method.qmd)** --- Exploiting curvature: Newton's method achieves quadratic convergence via the Hessian. We develop the affine-invariant Newton decrement, backtracking line search, and self-concordance theory that underpins the interior point methods in the next chapter.
 
 - **[The Ellipsoid Method](lectures/15-ellipsoid-method.qmd)** --- The algorithm that settled the polynomial-time solvability of LP: maintain an ellipsoid containing the optimum, and shrink it at each step via a separating hyperplane.
 
@@ -80,3 +80,7 @@ This course assumes familiarity with:
 - Multivariable calculus (partial derivatives, gradients)
 - Basic probability and statistics
 - Some exposure to programming (Python)
+
+## Acknowledgments {.unnumbered}
+
+Part of these lecture notes are based on previous versions of this course taught by [Anna Gilbert](https://annacgilbert.github.io/) and [Dan Spielman](http://cs-www.cs.yale.edu/homes/spielman/). I am grateful to both for their foundational contributions to the course material.

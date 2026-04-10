@@ -50,9 +50,9 @@
 % Panel 3: Non-unique x*
 \nextgroupplot[title={Non-unique $x^*$}, xmin=0, xmax=6, ymin=0, ymax=3,
   xlabel={$x$}, ylabel={$f(x)$}]
-\addplot[sage, thick, smooth, domain=0:6, samples=80] {cos(deg(pi*x/3)) + 1.5};
+\addplot[sage, thick, smooth, domain=0:6, samples=80] {cos(deg(pi*x)) + 1.5};
 \addplot[only marks, mark=star, mark size=4pt, rwgold, mark options={fill=rwgold}]
-  coordinates {(0,0.5) (3,0.5) (6,0.5)};
+  coordinates {(1,0.5) (3,0.5) (5,0.5)};
 
 % Panel 4: Infimum not attained
 \nextgroupplot[title={$f^* = 0$, $x^*$ does not exist}, xmin=0, xmax=5, ymin=-0.1, ymax=1.1,
