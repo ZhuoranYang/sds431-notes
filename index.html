@@ -75,6 +75,50 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -230,19 +274,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  <a href="./lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="./lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  <a href="./lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
   </div>
 </li>
       </ul>
@@ -300,7 +344,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -369,6 +413,7 @@ window.Quarto = {
   </ul></li>
   <li><a href="#textbooks" id="toc-textbooks" class="nav-link" data-scroll-target="#textbooks">Textbooks</a></li>
   <li><a href="#prerequisites" id="toc-prerequisites" class="nav-link" data-scroll-target="#prerequisites">Prerequisites</a></li>
+  <li><a href="#acknowledgments" id="toc-acknowledgments" class="nav-link" data-scroll-target="#acknowledgments">Acknowledgments</a></li>
   </ul>
 </nav>
     </div>
@@ -440,8 +485,8 @@ Figure&nbsp;1: Course roadmap showing the dependency structure across all five p
 <h3 class="anchored" data-anchor-id="part-iii-first-order-methods">Part III: First-Order Methods</h3>
 <ul>
 <li><p><strong><a href="./lectures/06-gradient-descent.html">Gradient Descent</a></strong> — How do we find a minimum iteratively? The descent lemma, convergence rates for smooth (<span class="math inline">O(1/k)</span>) and strongly convex (<span class="math inline">O(\rho^k)</span>) objectives, step size selection, and the role of the condition number.</p></li>
-<li><p><strong><a href="./lectures/07-momentum-adaptive-sgd.html">Momentum, Adaptive Methods, and SGD</a></strong> — Beyond vanilla gradient descent: momentum methods, Nesterov’s accelerated gradient, adaptive methods (AdaGrad, RMSProp, Adam), stochastic gradient descent, and proximal gradient methods for composite objectives.</p></li>
-<li><p><strong><a href="./lectures/08-constrained-first-order.html">Constrained First-Order Methods</a></strong> — Optimizing over constrained domains: projected subgradient descent for non-smooth problems, and the Frank-Wolfe (conditional gradient) method when projection is expensive but linear minimization is cheap.</p></li>
+<li><p><strong><a href="lectures/07-momentum-adaptive-sgd.qmd">Momentum, Adaptive Methods, SGD, and Proximal Gradient</a></strong> — Beyond vanilla gradient descent: momentum methods, Nesterov’s accelerated gradient, adaptive methods (AdaGrad, RMSProp, Adam), stochastic gradient descent, proximal gradient methods for composite objectives, and modern matrix optimizers (Muon, Shampoo, SOAP) that exploit the spectral geometry of neural network weights.</p></li>
+<li><p><strong><a href="lectures/08-constrained-first-order.qmd">Constrained First-Order Methods</a></strong> — Optimizing over constrained domains: projected subgradient descent for non-smooth problems, and the Frank-Wolfe (conditional gradient) method when projection is expensive but linear minimization is cheap.</p></li>
 </ul>
 </section>
 <section id="part-iv-linear-programming" class="level3">
@@ -457,7 +502,7 @@ Figure&nbsp;1: Course roadmap showing the dependency structure across all five p
 <section id="part-v-second-order-and-interior-point-methods" class="level3">
 <h3 class="anchored" data-anchor-id="part-v-second-order-and-interior-point-methods">Part V: Second-Order and Interior Point Methods</h3>
 <ul>
-<li><p><strong><a href="./lectures/14-newton-method.html">Newton’s Method and Matrix Optimizers</a></strong> — Exploiting curvature: Newton’s method achieves quadratic convergence via the Hessian, and modern matrix optimizers (Muon, Shampoo, SOAP) extend preconditioning to neural network weight geometry.</p></li>
+<li><p><strong><a href="./lectures/14-newton-method.html">Newton’s Method</a></strong> — Exploiting curvature: Newton’s method achieves quadratic convergence via the Hessian. We develop the affine-invariant Newton decrement, backtracking line search, and self-concordance theory that underpins the interior point methods in the next chapter.</p></li>
 <li><p><strong><a href="./lectures/15-ellipsoid-method.html">The Ellipsoid Method</a></strong> — The algorithm that settled the polynomial-time solvability of LP: maintain an ellipsoid containing the optimum, and shrink it at each step via a separating hyperplane.</p></li>
 <li><p><strong><a href="./lectures/16-interior-point-methods.html">Interior Point Methods</a></strong> — The modern workhorse for constrained optimization: logarithmic barriers, the central path, and Newton-based path-following with <span class="math inline">O(\sqrt{m}\log(1/\varepsilon))</span> iteration complexity.</p></li>
 </ul>
@@ -487,6 +532,10 @@ Figure&nbsp;1: Course roadmap showing the dependency structure across all five p
 <li>Basic probability and statistics</li>
 <li>Some exposure to programming (Python)</li>
 </ul>
+</section>
+<section id="acknowledgments" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="acknowledgments">Acknowledgments</h2>
+<p>Part of these lecture notes are based on previous versions of this course taught by <a href="https://annacgilbert.github.io/">Anna Gilbert</a> and <a href="http://cs-www.cs.yale.edu/homes/spielman/">Dan Spielman</a>. I am grateful to both for their foundational contributions to the course material.</p>
 
 
 </section>
@@ -902,50 +951,6 @@ Figure&nbsp;1: Course roadmap showing the dependency structure across all five p
   </div>
 </nav>
 </div> <!-- /content -->
-<script>
-// Plotly Warmtone theming helpers — shared across all lectures
-// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
-const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
-
-function css(v) {
-  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-}
-
-function legendStyle() {
-  return {
-    font: {family: figFont, size: 13, color: css('--fig-text')},
-    bgcolor: css('--fig-bg') + 'dd',
-    bordercolor: css('--fig-grid'),
-    borderwidth: 1,
-  };
-}
-
-function themeLayout(extra) {
-  return Object.assign({
-    paper_bgcolor: css('--fig-bg'),
-    plot_bgcolor: css('--fig-plot-bg'),
-    font: {family: figFont, color: css('--fig-text'), size: 14},
-  }, extra || {});
-}
-
-function themeAxis(title, extra) {
-  return Object.assign({
-    title: {text: title, font: {family: figFont, size: 14}},
-    gridcolor: css('--fig-grid'),
-    zerolinecolor: css('--fig-grid'),
-    linecolor: css('--fig-axis'),
-    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
-  }, extra || {});
-}
-
-// Plotly color sequences matching the Warmtone palette
-const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
-];
-</script>
 <script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
 (function() {
   let previousOnload = window.onload;

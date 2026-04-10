@@ -75,6 +75,50 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -230,19 +274,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  <a href="../lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  <a href="../lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
   </div>
 </li>
       </ul>
@@ -300,7 +344,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -356,22 +400,24 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-convex-sets-overview" id="toc-sec-convex-sets-overview" class="nav-link active" data-scroll-target="#sec-convex-sets-overview"><span class="header-section-number">3.1</span> What Will Be Covered</a></li>
-  <li><a href="#sec-basics-of-optimization" id="toc-sec-basics-of-optimization" class="nav-link" data-scroll-target="#sec-basics-of-optimization"><span class="header-section-number">3.2</span> Basics of Optimization</a>
+  <li><a href="#what-will-be-covered" id="toc-what-will-be-covered" class="nav-link active" data-scroll-target="#what-will-be-covered">What Will Be Covered</a></li>
+  <li><a href="#sec-basics-of-optimization" id="toc-sec-basics-of-optimization" class="nav-link" data-scroll-target="#sec-basics-of-optimization"><span class="header-section-number">3.1</span> Basics of Optimization</a>
   <ul class="collapse">
-  <li><a href="#sec-oracle-model" id="toc-sec-oracle-model" class="nav-link" data-scroll-target="#sec-oracle-model"><span class="header-section-number">3.2.1</span> Oracle Computation Model</a></li>
+  <li><a href="#sec-oracle-model" id="toc-sec-oracle-model" class="nav-link" data-scroll-target="#sec-oracle-model"><span class="header-section-number">3.1.1</span> Oracle Computation Model</a></li>
   </ul></li>
-  <li><a href="#sec-solution-concepts" id="toc-sec-solution-concepts" class="nav-link" data-scroll-target="#sec-solution-concepts"><span class="header-section-number">3.3</span> Solution Concepts in Optimization</a>
+  <li><a href="#sec-solution-concepts" id="toc-sec-solution-concepts" class="nav-link" data-scroll-target="#sec-solution-concepts"><span class="header-section-number">3.2</span> Solution Concepts in Optimization</a>
   <ul class="collapse">
-  <li><a href="#sec-optimal-solution" id="toc-sec-optimal-solution" class="nav-link" data-scroll-target="#sec-optimal-solution"><span class="header-section-number">3.3.1</span> Optimal Solution and Optimal Value</a></li>
-  <li><a href="#sec-local-global" id="toc-sec-local-global" class="nav-link" data-scroll-target="#sec-local-global"><span class="header-section-number">3.3.2</span> Local and Global Minima</a></li>
-  <li><a href="#sec-compact-sets" id="toc-sec-compact-sets" class="nav-link" data-scroll-target="#sec-compact-sets"><span class="header-section-number">3.3.3</span> Compact Sets and the Weierstrass Theorem</a></li>
+  <li><a href="#sec-optimal-solution" id="toc-sec-optimal-solution" class="nav-link" data-scroll-target="#sec-optimal-solution"><span class="header-section-number">3.2.1</span> Optimal Solution and Optimal Value</a></li>
+  <li><a href="#sec-local-global" id="toc-sec-local-global" class="nav-link" data-scroll-target="#sec-local-global"><span class="header-section-number">3.2.2</span> Local and Global Minima</a></li>
+  <li><a href="#sec-necessary-conditions" id="toc-sec-necessary-conditions" class="nav-link" data-scroll-target="#sec-necessary-conditions"><span class="header-section-number">3.2.3</span> Necessary Conditions for Local Optimality</a></li>
+  <li><a href="#sec-compact-sets" id="toc-sec-compact-sets" class="nav-link" data-scroll-target="#sec-compact-sets"><span class="header-section-number">3.2.4</span> Compact Sets and the Weierstrass Theorem</a></li>
   </ul></li>
-  <li><a href="#sec-convex-sets" id="toc-sec-convex-sets" class="nav-link" data-scroll-target="#sec-convex-sets"><span class="header-section-number">3.4</span> Convex Sets</a>
+  <li><a href="#sec-convex-sets" id="toc-sec-convex-sets" class="nav-link" data-scroll-target="#sec-convex-sets"><span class="header-section-number">3.3</span> Convex Sets</a>
   <ul class="collapse">
-  <li><a href="#sec-convex-def" id="toc-sec-convex-def" class="nav-link" data-scroll-target="#sec-convex-def"><span class="header-section-number">3.4.1</span> Definition and Examples</a></li>
-  <li><a href="#sec-operations-convex-sets" id="toc-sec-operations-convex-sets" class="nav-link" data-scroll-target="#sec-operations-convex-sets"><span class="header-section-number">3.4.2</span> Operations That Preserve Convexity of Sets</a></li>
-  <li><a href="#sec-convex-combination" id="toc-sec-convex-combination" class="nav-link" data-scroll-target="#sec-convex-combination"><span class="header-section-number">3.4.3</span> Convex Combination and Convex Hull</a></li>
+  <li><a href="#sec-convex-def" id="toc-sec-convex-def" class="nav-link" data-scroll-target="#sec-convex-def"><span class="header-section-number">3.3.1</span> Definition and Examples</a></li>
+  <li><a href="#sec-operations-convex-sets" id="toc-sec-operations-convex-sets" class="nav-link" data-scroll-target="#sec-operations-convex-sets"><span class="header-section-number">3.3.2</span> Operations That Preserve Convexity of Sets</a></li>
+  <li><a href="#sec-separating-hyperplane" id="toc-sec-separating-hyperplane" class="nav-link" data-scroll-target="#sec-separating-hyperplane"><span class="header-section-number">3.3.3</span> Separating Hyperplane Theorems</a></li>
+  <li><a href="#sec-convex-combination" id="toc-sec-convex-combination" class="nav-link" data-scroll-target="#sec-convex-combination"><span class="header-section-number">3.3.4</span> Convex Combination and Convex Hull</a></li>
   </ul></li>
   <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   </ul>
@@ -401,8 +447,8 @@ window.Quarto = {
 
 <p>Before we can solve optimization problems, we need to agree on what a “solution” actually means. Does a minimum always exist? If it does, is it the best we can do globally or only locally? These questions are not mere formalities — they determine which algorithms are trustworthy and which guarantees we can rely on. In this chapter we pin down the fundamental vocabulary of optimization: optimal solutions, optimal values, and the critical distinction between local and global minima.</p>
 <p>With these concepts in hand, we turn to the geometric foundation of tractable optimization: <strong>convex sets</strong>. The feasible region of every well-behaved optimization problem — from linear programs to semidefinite programs — is built from convex sets. Understanding convexity is essential because it is the single property that makes an optimization problem “tractable”: on convex sets, local information reliably points toward global solutions. We develop the theory of convex sets here and will build on it throughout the rest of the course.</p>
-<section id="sec-convex-sets-overview" class="level2" data-number="3.1">
-<h2 data-number="3.1" class="anchored" data-anchor-id="sec-convex-sets-overview"><span class="header-section-number">3.1</span> What Will Be Covered</h2>
+<section id="what-will-be-covered" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="what-will-be-covered">What Will Be Covered</h2>
 <ul>
 <li>Basics of optimization: the oracle computation model, runtime and accuracy trade-offs</li>
 <li>Solution concepts: optimal solutions, optimal values, local and global minima</li>
@@ -411,8 +457,8 @@ window.Quarto = {
 <li>Convex combinations and convex hulls</li>
 </ul>
 </section>
-<section id="sec-basics-of-optimization" class="level2" data-number="3.2">
-<h2 data-number="3.2" class="anchored" data-anchor-id="sec-basics-of-optimization"><span class="header-section-number">3.2</span> Basics of Optimization</h2>
+<section id="sec-basics-of-optimization" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="sec-basics-of-optimization"><span class="header-section-number">3.1</span> Basics of Optimization</h2>
 <p>The general optimization problem is:</p>
 <p><span class="math display">\min_{x} \; f(x) \quad \text{subject to} \quad g_i(x) \leq 0, \; i=1,\ldots,m, \quad h_i(x)=0, \; i=1,\ldots,k, \quad x \in \mathcal{X} \subseteq \mathbb{R}^n.</span></p>
 <p>Here <span class="math inline">f</span> is the <strong>objective function</strong>, <span class="math inline">x</span> is the <strong>decision variable</strong>, <span class="math inline">g_i</span> are <strong>inequality constraint functions</strong>, <span class="math inline">h_i</span> are <strong>equality constraint functions</strong>, and <span class="math inline">\mathcal{X}</span> is the <strong>constraint set</strong>.</p>
@@ -468,8 +514,8 @@ window.Quarto = {
 <p><strong>Given accuracy <span class="math inline">\varepsilon</span>, what is the minimum computational cost to achieve it?</strong></p>
 </blockquote>
 <p>This is the question that complexity theory for optimization aims to answer.</p>
-<section id="sec-oracle-model" class="level3" data-number="3.2.1">
-<h3 data-number="3.2.1" class="anchored" data-anchor-id="sec-oracle-model"><span class="header-section-number">3.2.1</span> Oracle Computation Model</h3>
+<section id="sec-oracle-model" class="level3" data-number="3.1.1">
+<h3 data-number="3.1.1" class="anchored" data-anchor-id="sec-oracle-model"><span class="header-section-number">3.1.1</span> Oracle Computation Model</h3>
 <p>Counting individual arithmetic operations (<span class="math inline">+, -, \times, /</span>) is too fine-grained to be useful for comparing optimization algorithms. A gradient descent step and a Newton step both involve arithmetic, but they differ fundamentally in what <strong>information</strong> they use about the objective function. The right abstraction is to count the number of <strong>information queries</strong> an algorithm makes.</p>
 <p>We model an iterative optimization algorithm as a dialogue between an <strong>optimizer</strong> and an <strong>oracle</strong>. At each iteration <span class="math inline">t</span>, the optimizer queries the oracle at a point <span class="math inline">x_t</span> and receives information about <span class="math inline">f</span> at that point. Different oracle models capture different levels of information:</p>
 <div class="callout callout-style-simple callout-note">
@@ -498,28 +544,21 @@ window.Quarto = {
 <p>Throughout this course, we characterize algorithm performance by: (a) <strong>asymptotic growth</strong> of oracle complexity as a function of problem dimension <span class="math inline">n</span> and accuracy <span class="math inline">\varepsilon</span>, and (b) <strong>worst-case</strong> guarantees over a function class.</p>
 </section>
 </section>
-<section id="sec-solution-concepts" class="level2" data-number="3.3">
-<h2 data-number="3.3" class="anchored" data-anchor-id="sec-solution-concepts"><span class="header-section-number">3.3</span> Solution Concepts in Optimization</h2>
-<section id="sec-optimal-solution" class="level3" data-number="3.3.1">
-<h3 data-number="3.3.1" class="anchored" data-anchor-id="sec-optimal-solution"><span class="header-section-number">3.3.1</span> Optimal Solution and Optimal Value</h3>
+<section id="sec-solution-concepts" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="sec-solution-concepts"><span class="header-section-number">3.2</span> Solution Concepts in Optimization</h2>
+<section id="sec-optimal-solution" class="level3" data-number="3.2.1">
+<h3 data-number="3.2.1" class="anchored" data-anchor-id="sec-optimal-solution"><span class="header-section-number">3.2.1</span> Optimal Solution and Optimal Value</h3>
 <div id="def-optimal-solution" class="theorem definition">
 <p><span class="theorem-title"><strong>Definition 3.2 (Optimal Solution)</strong></span> An <strong>optimal solution</strong> <span class="math inline">x^*</span> is defined as <span class="math inline">\operatorname{argmin} f(x)</span> subject to <span class="math inline">x \in \Omega</span>. Also called the “solution” or “global solution”. <span class="math inline">x^*</span> is the point in <span class="math inline">\Omega</span> that minimizes <span class="math inline">f</span>:</p>
 <p><span class="math display">f(x^*) \leq f(x) \quad \forall \, x \in \Omega.</span></p>
-<p>Note:</p>
-<ul>
-<li><span class="math inline">x^*</span> may not exist.</li>
-<li><span class="math inline">x^*</span> may not be unique.</li>
-</ul>
+<p>Two important caveats: the optimal solution <span class="math inline">x^*</span> may not exist (the infimum may not be attained), and even when it does exist, it may not be unique (multiple feasible points may achieve the same minimum value).</p>
 </div>
 <p>In words, an optimal solution is a feasible point that achieves the smallest possible objective value. The two caveats – non-existence and non-uniqueness – are important to keep in mind throughout optimization theory.</p>
 <div id="def-optimal-value" class="theorem definition">
 <p><span class="theorem-title"><strong>Definition 3.3 (Optimal Value)</strong></span> The <strong>optimal value</strong> <span class="math inline">f^*</span> is defined as:</p>
 <p><span class="math display">f^* = \inf \{y \in \mathbb{R} : \exists \, x \in \Omega \;\text{s.t.}\; y = f(x)\}.</span></p>
 <p><span class="math inline">f^*</span> is the largest number satisfying <span class="math inline">f^* \leq f(x)</span> for all <span class="math inline">x \in \Omega</span>.</p>
-<ul>
-<li><span class="math inline">f^*</span> may not exist (unbounded).</li>
-<li>It is possible that <span class="math inline">f^*</span> exists while <span class="math inline">x^*</span> does not.</li>
-</ul>
+<p>Note that <span class="math inline">f^*</span> may not exist if the problem is unbounded below (<span class="math inline">f^* = -\infty</span>). It is also possible that <span class="math inline">f^*</span> exists while <span class="math inline">x^*</span> does not — for instance, when the infimum is approached but never attained.</p>
 </div>
 <p>The optimal value captures the “best achievable cost” over the feasible set. Unlike the optimal solution, <span class="math inline">f^*</span> is always well-defined (possibly <span class="math inline">\pm\infty</span>), so it serves as a useful benchmark even when no minimizer exists.</p>
 <div id="exm-various-cases" class="theorem example">
@@ -555,8 +594,8 @@ Figure&nbsp;3.1: Four scenarios for optimization problems: unique optimum (top-l
 </div>
 </div>
 </section>
-<section id="sec-local-global" class="level3" data-number="3.3.2">
-<h3 data-number="3.3.2" class="anchored" data-anchor-id="sec-local-global"><span class="header-section-number">3.3.2</span> Local and Global Minima</h3>
+<section id="sec-local-global" class="level3" data-number="3.2.2">
+<h3 data-number="3.2.2" class="anchored" data-anchor-id="sec-local-global"><span class="header-section-number">3.2.2</span> Local and Global Minima</h3>
 <p>Even when an optimal solution exists, a practical algorithm typically has access only to local information – the function value and gradient at the current iterate. This raises a fundamental concern: the algorithm may find a point that looks optimal “nearby” but is far from the true global optimum. The following definitions make the distinction between local and global optimality precise.</p>
 <div id="def-local-global-minima" class="theorem definition">
 <p><span class="theorem-title"><strong>Definition 3.4 (Local and Global Minima)</strong></span> Consider the optimization problem <span class="math inline">\min_x f(x)</span> subject to <span class="math inline">x \in \Omega</span>. A point <span class="math inline">\bar{x}</span> is said to be a:</p>
@@ -574,11 +613,7 @@ Figure&nbsp;3.1: Four scenarios for optimization problems: unique optimum (top-l
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>The hierarchy of minima:</p>
-<ul>
-<li>Strict local (global) minima <span class="math inline">\subseteq</span> Local (global) minima</li>
-<li>(Strict) global minima <span class="math inline">\subseteq</span> (Strict) local minima</li>
-</ul>
+<p>These four notions form a natural hierarchy: every strict local minimum is a local minimum, and every global minimum is also a local minimum. In particular, strict global <span class="math inline">\subseteq</span> global <span class="math inline">\subseteq</span> local, and strict local <span class="math inline">\subseteq</span> local. The central goal of convex optimization is to identify conditions under which local minima are automatically global.</p>
 </div>
 </div>
 </div>
@@ -611,8 +646,73 @@ Figure&nbsp;3.2: A function with multiple local minima (circles) and local maxim
 </figure>
 </div>
 </section>
-<section id="sec-compact-sets" class="level3" data-number="3.3.3">
-<h3 data-number="3.3.3" class="anchored" data-anchor-id="sec-compact-sets"><span class="header-section-number">3.3.3</span> Compact Sets and the Weierstrass Theorem</h3>
+<section id="sec-necessary-conditions" class="level3" data-number="3.2.3">
+<h3 data-number="3.2.3" class="anchored" data-anchor-id="sec-necessary-conditions"><span class="header-section-number">3.2.3</span> Necessary Conditions for Local Optimality</h3>
+<p>Now that we have defined local and global minima, a natural question arises: <strong>how can we recognize a local minimum when we find one?</strong> In practice, we cannot check every point in a neighborhood — instead, we need conditions that a local minimizer <em>must</em> satisfy. These are called <strong>necessary conditions</strong> for local optimality. They do not guarantee that a point is a local minimum (that would require <em>sufficient</em> conditions), but they narrow the search: any point that fails a necessary condition can be immediately ruled out.</p>
+<p>The following results apply to <strong>unconstrained</strong> optimization problems <span class="math inline">\min_{x \in \mathbb{R}^n} f(x)</span>, where there are no constraints on <span class="math inline">x</span>. This is the setting where calculus gives us the cleanest characterizations.</p>
+<section id="sec-first-order-necessary" class="level4" data-number="3.2.3.1">
+<h4 data-number="3.2.3.1" class="anchored" data-anchor-id="sec-first-order-necessary"><span class="header-section-number">3.2.3.1</span> First-Order Necessary Condition</h4>
+<div id="thm-first-order-necessary" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 3.1 (First-Order Necessary Condition)</strong></span> Consider the unconstrained problem <span class="math inline">\min_{x} f(x)</span> where <span class="math inline">f : \mathbb{R}^n \to \mathbb{R}</span> is differentiable. If <span class="math inline">x^*</span> is a local minimizer, then</p>
+<p><span class="math display">\nabla f(x^*) = 0.</span></p>
+</div>
+<p>A point satisfying <span class="math inline">\nabla f(x^*) = 0</span> is called a <strong>stationary point</strong>. The theorem says that every local minimizer must be a stationary point — but the converse is false. A stationary point could also be a local maximum or a saddle point.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><em>Strategy.</em> We show that <span class="math inline">\nabla f(x^*)</span> cannot have any nonzero component. If it did, we could move in the direction <span class="math inline">-\nabla f(x^*)</span> and decrease <span class="math inline">f</span>, contradicting local minimality.</p>
+<p>Consider any direction <span class="math inline">d \in \mathbb{R}^n</span> and any small <span class="math inline">\alpha &gt; 0</span>. Since <span class="math inline">x^*</span> is a local minimizer, we have</p>
+<p><span class="math display">f(x^* + \alpha \, d) \geq f(x^*) \quad \forall \, \alpha \in (0, \varepsilon),</span></p>
+<p>for some <span class="math inline">\varepsilon &gt; 0</span>. By Taylor expansion:</p>
+<p><span class="math display">f(x^* + \alpha \, d) = f(x^*) + \alpha \, d^\top \nabla f(x^*) + o(\alpha).</span></p>
+<p>Therefore <span class="math inline">\alpha \, d^\top \nabla f(x^*) + o(\alpha) \geq 0</span>. Dividing by <span class="math inline">\alpha &gt; 0</span> and taking <span class="math inline">\alpha \to 0</span>:</p>
+<p><span class="math display">d^\top \nabla f(x^*) \geq 0.</span></p>
+<p>But we can also choose the direction <span class="math inline">-d</span>, which by the same argument gives <span class="math inline">-d^\top \nabla f(x^*) \geq 0</span>, i.e., <span class="math inline">d^\top \nabla f(x^*) \leq 0</span>.</p>
+<p>Combining both inequalities: <span class="math inline">d^\top \nabla f(x^*) = 0</span> for every <span class="math inline">d \in \mathbb{R}^n</span>. This is only possible if <span class="math inline">\nabla f(x^*) = 0</span>. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Intuition
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The gradient <span class="math inline">\nabla f(x^*)</span> points in the direction of steepest ascent. If the gradient is nonzero, we can decrease <span class="math inline">f</span> by moving in the direction <span class="math inline">-\nabla f(x^*)</span> — so <span class="math inline">x^*</span> cannot be a local minimum. Therefore, at a local minimum, the gradient must vanish: there is no direction of local descent.</p>
+</div>
+</div>
+</section>
+<section id="sec-second-order-necessary" class="level4" data-number="3.2.3.2">
+<h4 data-number="3.2.3.2" class="anchored" data-anchor-id="sec-second-order-necessary"><span class="header-section-number">3.2.3.2</span> Second-Order Necessary Condition</h4>
+<p>The first-order condition <span class="math inline">\nabla f(x^*) = 0</span> eliminates points where the gradient is nonzero, but it cannot distinguish between local minima, local maxima, and saddle points — all three satisfy <span class="math inline">\nabla f = 0</span>. To tell them apart, we need to examine the <strong>curvature</strong> of <span class="math inline">f</span> at <span class="math inline">x^*</span>, which is captured by the Hessian matrix <span class="math inline">\nabla^2 f(x^*)</span>.</p>
+<div id="thm-second-order-necessary" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 3.2 (Second-Order Necessary Condition)</strong></span> Consider the unconstrained problem <span class="math inline">\min_{x} f(x)</span> where <span class="math inline">f : \mathbb{R}^n \to \mathbb{R}</span> is twice differentiable. If <span class="math inline">x^*</span> is a local minimizer, then</p>
+<p><span class="math display">\nabla f(x^*) = 0 \quad \text{and} \quad \nabla^2 f(x^*) \succeq 0.</span></p>
+<p>That is, the Hessian at <span class="math inline">x^*</span> must be positive semidefinite.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>From <a href="#thm-first-order-necessary" class="quarto-xref">Theorem&nbsp;<span>3.1</span></a>, we already know <span class="math inline">\nabla f(x^*) = 0</span>. It remains to show <span class="math inline">\nabla^2 f(x^*) \succeq 0</span>.</p>
+<p>Consider the Taylor expansion of <span class="math inline">f</span> around <span class="math inline">x^*</span>: for any direction <span class="math inline">d \in \mathbb{R}^n</span> and small <span class="math inline">\alpha &gt; 0</span>,</p>
+<p><span class="math display">f(x^* + \alpha \, d) = f(x^*) + \alpha \, \underbrace{\nabla f(x^*)^\top d}_{= \, 0} + \tfrac{\alpha^2}{2} \, d^\top \nabla^2 f(x^*) \, d + o(\alpha^2).</span></p>
+<p>Since <span class="math inline">x^*</span> is a local minimizer, <span class="math inline">f(x^* + \alpha \, d) \geq f(x^*)</span>, which gives</p>
+<p><span class="math display">\frac{f(x^* + \alpha \, d) - f(x^*)}{\alpha^2} = \tfrac{1}{2} \, d^\top \nabla^2 f(x^*) \, d + o(1) \geq 0.</span></p>
+<p>Taking <span class="math inline">\alpha \to 0</span>, we obtain <span class="math inline">d^\top \nabla^2 f(x^*) \, d \geq 0</span> for every <span class="math inline">d \in \mathbb{R}^n</span>. By definition, this means <span class="math inline">\nabla^2 f(x^*) \succeq 0</span>. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Why these conditions matter.</strong> Most optimization algorithms — gradient descent, Newton’s method, quasi-Newton methods — are designed to find stationary points (<span class="math inline">\nabla f = 0</span>). The first-order necessary condition tells us that this is the right target: every local minimizer is a stationary point. The second-order condition gives an additional test: if the Hessian at a stationary point has a negative eigenvalue, that point is <em>not</em> a local minimum (it is a saddle point), and we should keep searching.</p>
+<p>For <strong>convex</strong> functions, the situation is much simpler: every stationary point is automatically a global minimum. This is the key insight that makes convex optimization tractable, and we will prove it formally in the next chapter.</p>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-compact-sets" class="level3" data-number="3.2.4">
+<h3 data-number="3.2.4" class="anchored" data-anchor-id="sec-compact-sets"><span class="header-section-number">3.2.4</span> Compact Sets and the Weierstrass Theorem</h3>
 <p>To state the Weierstrass theorem – our first major existence result for optimization – we need a few topological concepts. The notions of interior, boundary, and compactness tell us about the “shape” of the feasible set and whether minimizing sequences can escape or converge to points outside it.</p>
 <div id="def-interior" class="theorem definition">
 <p><span class="theorem-title"><strong>Definition 3.5 (Interior)</strong></span> For <span class="math inline">S \subseteq \mathbb{R}^n</span>, <span class="math inline">x</span> is in the <strong>interior</strong> of <span class="math inline">S</span> if there exists <span class="math inline">\varepsilon &gt; 0</span> such that <span class="math inline">B(x, \varepsilon) \subseteq S</span>.</p>
@@ -627,26 +727,26 @@ Figure&nbsp;3.2: A function with multiple local minima (circles) and local maxim
 </div>
 <p>The distinction between open and closed sets matters because closed sets “contain their boundary,” which is exactly the property needed to trap minimizing sequences inside the feasible region.</p>
 <div id="def-closed-open-set" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 3.7 (Closed Set, Open Set)</strong></span> &nbsp;</p>
-<ul>
-<li><span class="math inline">S</span> is <strong>closed</strong> if <span class="math inline">\partial S \subseteq S</span>. E.g., <span class="math inline">[0,1]</span>.</li>
-<li><span class="math inline">S</span> is <strong>open</strong> if <span class="math inline">S = \text{interior}(S)</span>. E.g., <span class="math inline">(0,1)</span>.</li>
-</ul>
-<p>There are sets that are neither open nor closed, e.g., <span class="math inline">(0,1] = \{t : 0 &lt; t \leq 1\}</span>.</p>
+<p><span class="theorem-title"><strong>Definition 3.7 (Closed Set, Open Set)</strong></span> A set <span class="math inline">S \subseteq \mathbb{R}^n</span> is <strong>closed</strong> if it contains its entire boundary, <span class="math inline">\partial S \subseteq S</span> (e.g., <span class="math inline">[0,1]</span>), and <strong>open</strong> if it contains none of its boundary, <span class="math inline">S = \text{interior}(S)</span> (e.g., <span class="math inline">(0,1)</span>). These two properties are not exhaustive: some sets are neither open nor closed, such as <span class="math inline">(0,1] = \{t : 0 &lt; t \leq 1\}</span>, which contains one boundary point but not the other.</p>
 </div>
 <p>Closedness alone is not enough to guarantee that a minimum exists – the set <span class="math inline">[0, \infty)</span> is closed but a decreasing function can still escape to infinity. We also need boundedness. The combination of both properties is called compactness.</p>
 <div id="def-bounded-compact-set" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 3.8 (Bounded, Compact Set)</strong></span> &nbsp;</p>
-<ul>
-<li><span class="math inline">S</span> is <strong>bounded</strong> if there exists <span class="math inline">r</span> such that <span class="math inline">S \subseteq B(0, r)</span>, i.e., for all <span class="math inline">x \in S</span>, <span class="math inline">\|x\|_2 \leq r</span>.</li>
-<li><span class="math inline">S \subseteq \mathbb{R}^n</span> is <strong>compact</strong> if <span class="math inline">S</span> is bounded and closed.</li>
-</ul>
-<p><strong>Property:</strong> If <span class="math inline">\{a_n\}_{n \geq 1} \subseteq S</span> is a sequence with a limit <span class="math inline">a^* = \lim_{n \to \infty} a_n</span>, and <span class="math inline">S</span> is compact, then <span class="math inline">a^* \in S</span>.</p>
+<p><span class="theorem-title"><strong>Definition 3.8 (Bounded, Compact Set)</strong></span> A set <span class="math inline">S</span> is <strong>bounded</strong> if it fits inside some ball, i.e., there exists <span class="math inline">r &gt; 0</span> such that <span class="math inline">S \subseteq B(0, r)</span>. A set <span class="math inline">S \subseteq \mathbb{R}^n</span> is <strong>compact</strong> if it is both bounded and closed. Compactness has the following sequential characterization: if <span class="math inline">\{a_n\}_{n \geq 1} \subseteq S</span> is a sequence with a limit <span class="math inline">a^* = \lim_{n \to \infty} a_n</span>, and <span class="math inline">S</span> is compact, then <span class="math inline">a^* \in S</span>.</p>
+</div>
+<div id="fig-topology-concepts" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-topology-concepts-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch03-topology-concepts.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;3.3: Left — Interior point p has an \varepsilon-ball fully contained in S; boundary point q straddles inside and outside. Right — Open sets exclude their boundary (dashed), closed sets include it (solid). A set is compact if and only if it is both closed and bounded."><img src="figures/ch03-topology-concepts.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-topology-concepts-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.3: Left — Interior point <span class="math inline">p</span> has an <span class="math inline">\varepsilon</span>-ball fully contained in <span class="math inline">S</span>; boundary point <span class="math inline">q</span> straddles inside and outside. Right — Open sets exclude their boundary (dashed), closed sets include it (solid). A set is compact if and only if it is both closed and bounded.
+</figcaption>
+</figure>
 </div>
 <p>Compactness is the key topological property that guarantees limits stay inside the set. In optimization, compact feasible sets ensure that minimizing sequences cannot “escape to infinity” (ruled out by boundedness) or converge to a boundary point outside the set (ruled out by closedness). Both failure modes appeared in <a href="#exm-various-cases" class="quarto-xref">Example&nbsp;<span>3.1</span></a>: Case 2 showed escape to infinity on an unbounded set, and Case 4 showed a minimizing sequence whose limit lies outside the domain.</p>
 <p>With compactness in hand, we can now state the most fundamental existence result in optimization. The Weierstrass theorem answers a question that has been implicit since we introduced optimal solutions: under what conditions can we be sure that a minimizer actually exists, rather than having an infimum that is never attained?</p>
 <div id="thm-weierstrass" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 3.1 (Weierstrass Extreme Value Theorem)</strong></span> If <span class="math inline">S</span> is a nonempty compact set and <span class="math inline">f</span> is a continuous function, then there exists <span class="math inline">x^*</span> such that</p>
+<p><span class="theorem-title"><strong>Theorem 3.3 (Weierstrass Extreme Value Theorem)</strong></span> If <span class="math inline">S</span> is a nonempty compact set and <span class="math inline">f</span> is a continuous function, then there exists <span class="math inline">x^*</span> such that</p>
 <p><span class="math display">f(x^*) = \inf\{f(x) : x \in S\}.</span></p>
 <p>That is, the infimum is attained in the set.</p>
 </div>
@@ -669,12 +769,12 @@ Figure&nbsp;3.2: A function with multiple local minima (circles) and local maxim
 </div>
 </section>
 </section>
-<section id="sec-convex-sets" class="level2" data-number="3.4">
-<h2 data-number="3.4" class="anchored" data-anchor-id="sec-convex-sets"><span class="header-section-number">3.4</span> Convex Sets</h2>
+<section id="sec-convex-sets" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="sec-convex-sets"><span class="header-section-number">3.3</span> Convex Sets</h2>
 <p>The Weierstrass theorem tells us <em>when</em> a minimizer exists, but it says nothing about <em>how hard</em> it is to find one. As we saw, a function can have many local minima, and a generic optimization algorithm has no way to distinguish a local minimum from the global one. This is where <strong>convexity</strong> changes the story entirely. When the feasible set (and later, the objective function) is convex, every local minimum is automatically a global minimum. This single property is what separates “tractable” optimization from “intractable” optimization, and it is the reason convexity occupies a central place in this course.</p>
 <p>We have seen that the feasible set of an LP in canonical form (<span class="math inline">\min c^\top x</span> s.t. <span class="math inline">Ax \leq b</span>, <span class="math inline">x \geq 0</span>) is an intersection of halfspaces. To understand the geometry of such feasible sets, we now develop the theory of convex sets, which will be used throughout the remainder of the course.</p>
-<section id="sec-convex-def" class="level3" data-number="3.4.1">
-<h3 data-number="3.4.1" class="anchored" data-anchor-id="sec-convex-def"><span class="header-section-number">3.4.1</span> Definition and Examples</h3>
+<section id="sec-convex-def" class="level3" data-number="3.3.1">
+<h3 data-number="3.3.1" class="anchored" data-anchor-id="sec-convex-def"><span class="header-section-number">3.3.1</span> Definition and Examples</h3>
 <div id="def-convex-set" class="theorem definition">
 <p><span class="theorem-title"><strong>Definition 3.9 (Convex Set)</strong></span> A set <span class="math inline">C \subseteq \mathbb{R}^n</span> is <strong>convex</strong> if for all <span class="math inline">x, y \in C</span> and all <span class="math inline">t \in [0, 1]</span>,</p>
 <p><span id="eq-convex-set-def"><span class="math display">t \, x + (1 - t) \, y \in C. \tag{3.1}</span></span></p>
@@ -684,10 +784,10 @@ Figure&nbsp;3.2: A function with multiple local minima (circles) and local maxim
 <div id="fig-convex-sets" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-convex-sets-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="figures/ch03-convex-sets.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;3.3: Left — Convex sets (every line segment between two points stays inside). Right — Non-convex sets (some line segments escape the boundary)."><img src="figures/ch03-convex-sets.svg" class="img-fluid figure-img"></a>
+<a href="figures/ch03-convex-sets.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;3.4: Left — Convex sets (every line segment between two points stays inside). Right — Non-convex sets (some line segments escape the boundary)."><img src="figures/ch03-convex-sets.svg" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-convex-sets-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3.3: Left — Convex sets (every line segment between two points stays inside). Right — Non-convex sets (some line segments escape the boundary).
+Figure&nbsp;3.4: Left — Convex sets (every line segment between two points stays inside). Right — Non-convex sets (some line segments escape the boundary).
 </figcaption>
 </figure>
 </div>
@@ -703,6 +803,16 @@ Figure&nbsp;3.3: Left — Convex sets (every line segment between two points sta
 <li><strong>Affine subspace:</strong> <span class="math inline">\{x : Ax = b\}</span>, <span class="math inline">A \in \mathbb{R}^{m \times n}</span>. Equality constraints define affine subspaces.</li>
 <li><strong>Polyhedron:</strong> <span class="math inline">\{x : Ax \leq b\}</span>. The feasible set of any linear program is a polyhedron – an intersection of finitely many halfspaces.</li>
 </ol>
+</div>
+<div id="fig-convex-examples" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-convex-examples-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch03-convex-examples.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;3.5: Common convex sets in \mathbb{R}^2. Left — a hyperplane a^\top x = b divides the plane into two halfspaces. Center — the \ell_1, \ell_2, and \ell_\infty unit balls are all convex. Right — a polyhedron is the intersection of finitely many halfspaces."><img src="figures/ch03-convex-examples.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-convex-examples-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3.5: Common convex sets in <span class="math inline">\mathbb{R}^2</span>. Left — a hyperplane <span class="math inline">a^\top x = b</span> divides the plane into two halfspaces. Center — the <span class="math inline">\ell_1</span>, <span class="math inline">\ell_2</span>, and <span class="math inline">\ell_\infty</span> unit balls are all convex. Right — a polyhedron is the intersection of finitely many halfspaces.
+</figcaption>
+</figure>
 </div>
 <div class="proof">
 <p><span class="proof-title"><em>Proof</em>. </span><strong>Proof that Halfspaces are Convex.</strong></p>
@@ -722,10 +832,10 @@ Figure&nbsp;3.3: Left — Convex sets (every line segment between two points sta
 </div>
 <p>The proofs above share a common pattern: take two arbitrary points <span class="math inline">x, y</span> in the set, form the convex combination <span class="math inline">tx + (1-t)y</span>, and verify that the defining property of the set still holds. While this direct approach works for simple sets like halfspaces and norm balls, it becomes tedious for more complex sets. The next section provides a toolkit of <em>operations</em> that preserve convexity, letting us build up complicated feasible sets from simpler pieces without repeating this argument each time.</p>
 </section>
-<section id="sec-operations-convex-sets" class="level3" data-number="3.4.2">
-<h3 data-number="3.4.2" class="anchored" data-anchor-id="sec-operations-convex-sets"><span class="header-section-number">3.4.2</span> Operations That Preserve Convexity of Sets</h3>
+<section id="sec-operations-convex-sets" class="level3" data-number="3.3.2">
+<h3 data-number="3.3.2" class="anchored" data-anchor-id="sec-operations-convex-sets"><span class="header-section-number">3.3.2</span> Operations That Preserve Convexity of Sets</h3>
 <div id="thm-operations-convex-sets" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 3.2 (Operations Preserving Convexity of Sets)</strong></span> The following operations preserve convexity:</p>
+<p><span class="theorem-title"><strong>Theorem 3.4 (Operations Preserving Convexity of Sets)</strong></span> The following operations preserve convexity:</p>
 <ol type="1">
 <li><strong>Intersection:</strong> If <span class="math inline">C_1, C_2</span> are convex, then <span class="math inline">C_1 \cap C_2</span> is convex. More generally, <span class="math inline">\bigcap_{\alpha \in A} C_\alpha</span> is convex for any (possibly infinite) index set <span class="math inline">A</span>.</li>
 <li><strong>Affine image:</strong> If <span class="math inline">C</span> is convex and <span class="math inline">f(x) = Ax + b</span> is an affine map, then <span class="math inline">f(C) = \{Ax + b : x \in C\}</span> is convex.</li>
@@ -737,8 +847,24 @@ Figure&nbsp;3.3: Left — Convex sets (every line segment between two points sta
 </div>
 <p>These rules are the building blocks for establishing that complex feasible sets are convex without going back to the definition each time. For instance, the feasible set of a linear program <span class="math inline">\{x : Ax \leq b\}</span> is convex because it is an intersection of halfspaces (rule 1), and the image of a convex set under a linear map remains convex (rule 2). By composing these rules, one can handle most constraint sets encountered in practice.</p>
 <div class="proof">
-<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof (Intersection preserves convexity).</strong></p>
-<p>Let <span class="math inline">x, y \in C_1 \cap C_2</span> and <span class="math inline">\lambda \in [0,1]</span>. Since <span class="math inline">x, y \in C_1</span> and <span class="math inline">C_1</span> is convex, we have <span class="math inline">\lambda x + (1-\lambda)y \in C_1</span>. By the same reasoning applied to <span class="math inline">C_2</span>, we get <span class="math inline">\lambda x + (1-\lambda)y \in C_2</span>. Therefore <span class="math inline">\lambda x + (1-\lambda)y \in C_1 \cap C_2</span>, confirming that the intersection satisfies the definition of convexity. This completes the proof. <span class="math inline">\blacksquare</span></p>
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof of <a href="#thm-operations-convex-sets" class="quarto-xref">Theorem&nbsp;<span>3.4</span></a>.</strong> We prove each rule by taking two arbitrary points in the resulting set, forming their convex combination, and verifying the defining property. Throughout, all vectors lie in the appropriate <span class="math inline">\mathbb{R}^n</span> (or <span class="math inline">\mathbb{R}^{n_1} \times \mathbb{R}^{n_2}</span> for products) and <span class="math inline">\lambda \in [0,1]</span>.</p>
+<p><strong>Rule 1 (Intersection).</strong> Let <span class="math inline">x, y \in C_1 \cap C_2</span>. Since <span class="math inline">x, y \in C_1</span> and <span class="math inline">C_1</span> is convex, <span class="math inline">\lambda x + (1-\lambda)y \in C_1</span>. By the same reasoning, <span class="math inline">\lambda x + (1-\lambda)y \in C_2</span>. Therefore <span class="math inline">\lambda x + (1-\lambda)y \in C_1 \cap C_2</span>.</p>
+<p>For the general case <span class="math inline">\bigcap_{\alpha \in A} C_\alpha</span>: if <span class="math inline">x, y \in \bigcap_\alpha C_\alpha</span>, then <span class="math inline">x, y \in C_\alpha</span> for every <span class="math inline">\alpha \in A</span>. By convexity of each <span class="math inline">C_\alpha</span>, <span class="math inline">\lambda x + (1-\lambda)y \in C_\alpha</span> for every <span class="math inline">\alpha</span>, hence <span class="math inline">\lambda x + (1-\lambda)y \in \bigcap_\alpha C_\alpha</span>. Note that the index set <span class="math inline">A</span> can be uncountably infinite — this is why the positive semidefinite cone <span class="math inline">\mathbb{S}_+^n = \{X : v^\top X v \geq 0 \;\forall\, v\}</span> is convex: it is an intersection of infinitely many halfspaces (one for each direction <span class="math inline">v \in \mathbb{R}^n</span>).</p>
+<p><strong>Rule 2 (Affine image).</strong> Let <span class="math inline">f(x) = Ax + b</span> where <span class="math inline">A \in \mathbb{R}^{m \times n}</span> and <span class="math inline">b \in \mathbb{R}^m</span>. We must show <span class="math inline">f(C) = \{Ax + b : x \in C\}</span> is convex. Let <span class="math inline">u, v \in f(C)</span>, so there exist <span class="math inline">x_1, x_2 \in C</span> with <span class="math inline">u = Ax_1 + b</span> and <span class="math inline">v = Ax_2 + b</span>. Then:</p>
+<p><span class="math display">\lambda u + (1-\lambda)v = \lambda(Ax_1 + b) + (1-\lambda)(Ax_2 + b) = A\bigl(\underbrace{\lambda x_1 + (1-\lambda)x_2}_{\in \, C}\bigr) + b \in f(C),</span></p>
+<p>where the key step uses the <strong>linearity</strong> of the affine map: the weights <span class="math inline">\lambda</span> and <span class="math inline">(1-\lambda)</span> pass through <span class="math inline">A</span> and <span class="math inline">b</span> collects into a single copy. Since <span class="math inline">C</span> is convex, <span class="math inline">\lambda x_1 + (1-\lambda)x_2 \in C</span>, so the result lies in <span class="math inline">f(C)</span>.</p>
+<p><strong>Rule 3 (Affine preimage).</strong> Let <span class="math inline">f(x) = Ax + b</span> with <span class="math inline">A \in \mathbb{R}^{m \times n}</span>, <span class="math inline">b \in \mathbb{R}^m</span>, and <span class="math inline">C \subseteq \mathbb{R}^m</span> convex. We must show <span class="math inline">f^{-1}(C) = \{x \in \mathbb{R}^n : Ax + b \in C\}</span> is convex. Let <span class="math inline">x_1, x_2 \in f^{-1}(C)</span>, so <span class="math inline">Ax_1 + b \in C</span> and <span class="math inline">Ax_2 + b \in C</span>. Then:</p>
+<p><span class="math display">A\bigl(\lambda x_1 + (1-\lambda)x_2\bigr) + b = \lambda\underbrace{(Ax_1 + b)}_{\in \, C} + (1-\lambda)\underbrace{(Ax_2 + b)}_{\in \, C} \in C,</span></p>
+<p>where the membership follows from convexity of <span class="math inline">C</span>. Therefore <span class="math inline">\lambda x_1 + (1-\lambda)x_2 \in f^{-1}(C)</span>. This rule is particularly useful: it immediately implies that any set defined by linear equalities and inequalities is convex. For instance, the solution set <span class="math inline">\{x : Ax = b\}</span> is the preimage of <span class="math inline">\{b\}</span> (a convex singleton) under the linear map <span class="math inline">x \mapsto Ax</span>, and the set <span class="math inline">\{x : \|Ax + b\| \leq r\}</span> is the preimage of a norm ball under an affine map.</p>
+<p><strong>Rule 4 (Scaling and translation).</strong> This is a special case of Rule 2 with the affine map <span class="math inline">f(x) = \alpha x + \beta</span>, where <span class="math inline">\alpha \in \mathbb{R}</span> and <span class="math inline">\beta \in \mathbb{R}^n</span>. For completeness: let <span class="math inline">u, v \in \alpha C + \beta</span>, so <span class="math inline">u = \alpha x_1 + \beta</span> and <span class="math inline">v = \alpha x_2 + \beta</span> for some <span class="math inline">x_1, x_2 \in C</span>. Then:</p>
+<p><span class="math display">\lambda u + (1-\lambda)v = \alpha\bigl(\lambda x_1 + (1-\lambda)x_2\bigr) + \beta \in \alpha C + \beta,</span></p>
+<p>since <span class="math inline">\lambda x_1 + (1-\lambda)x_2 \in C</span> by convexity.</p>
+<p><strong>Rule 5 (Cartesian product).</strong> Let <span class="math inline">(x_1, y_1), (x_2, y_2) \in C_1 \times C_2</span> where <span class="math inline">C_1 \subseteq \mathbb{R}^{n_1}</span> and <span class="math inline">C_2 \subseteq \mathbb{R}^{n_2}</span>. The convex combination is:</p>
+<p><span class="math display">\lambda(x_1, y_1) + (1-\lambda)(x_2, y_2) = \bigl(\underbrace{\lambda x_1 + (1-\lambda)x_2}_{\in \, C_1}, \;\; \underbrace{\lambda y_1 + (1-\lambda)y_2}_{\in \, C_2}\bigr) \in C_1 \times C_2.</span></p>
+<p>The convex combination distributes component-wise, and each component stays in its respective convex set by convexity of <span class="math inline">C_1</span> and <span class="math inline">C_2</span>. This extends by induction to any finite product: <span class="math inline">C_1 \times C_2 \times \cdots \times C_k</span> is convex if each <span class="math inline">C_i</span> is convex. In the multivariate setting, this is frequently used when different blocks of variables have independent constraints (e.g., <span class="math inline">x \in [0,1]^n</span> is convex because it is the product <span class="math inline">[0,1] \times \cdots \times [0,1]</span>).</p>
+<p><strong>Rule 6 (Minkowski sum).</strong> Let <span class="math inline">u, v \in C_1 + C_2</span>, so <span class="math inline">u = x_1 + y_1</span> and <span class="math inline">v = x_2 + y_2</span> for some <span class="math inline">x_1, x_2 \in C_1 \subseteq \mathbb{R}^n</span> and <span class="math inline">y_1, y_2 \in C_2 \subseteq \mathbb{R}^n</span>. Then:</p>
+<p><span class="math display">\lambda u + (1-\lambda)v = \underbrace{\bigl(\lambda x_1 + (1-\lambda)x_2\bigr)}_{\in \, C_1} + \underbrace{\bigl(\lambda y_1 + (1-\lambda)y_2\bigr)}_{\in \, C_2} \in C_1 + C_2.</span></p>
+<p>The key insight is that the convex combination of two sums can be rewritten as a sum of two convex combinations, each staying in its respective set. The Minkowski sum arises naturally in robust optimization: if the nominal constraint set is <span class="math inline">C_1</span> and the uncertainty set is <span class="math inline">C_2</span>, then the “inflated” feasible region <span class="math inline">C_1 + C_2</span> remains convex. <span class="math inline">\blacksquare</span></p>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -753,20 +879,258 @@ Figure&nbsp;3.3: Left — Convex sets (every line segment between two points sta
 <p>A polyhedron <span class="math inline">\{x : Ax \leq b\}</span> is convex because it is the intersection of halfspaces, each of which is convex. This is a direct consequence of the intersection rule.</p>
 </div>
 </div>
-<p>An important geometric consequence of convexity is that disjoint convex sets can always be separated by a hyperplane. The <strong>separating hyperplane theorem</strong> states that if two convex sets <span class="math inline">C</span> and <span class="math inline">D</span> are disjoint (<span class="math inline">C \cap D = \emptyset</span>), then there exists a hyperplane <span class="math inline">\{x : a^\top x = b\}</span> such that <span class="math inline">a^\top x \leq b</span> for all <span class="math inline">x \in C</span> and <span class="math inline">a^\top x \geq b</span> for all <span class="math inline">x \in D</span>. This result is fundamental to duality theory and to the geometric understanding of optimality conditions: at an optimal point of a constrained problem, the objective’s level set is “separated” from the feasible set by a supporting hyperplane.</p>
+<p>The following interactive figure illustrates the most important operations. The contrast between intersection (convex) and union (not convex) is especially illuminating: convexity is preserved by “narrowing” a set (intersection) but destroyed by “widening” it (union).</p>
+<div class="figure-container">
+  <div id="fig-set-operations"></div>
+  <div class="figure-caption">Figure: Operations on convex sets. (a) Intersection preserves convexity. (b) Union does NOT preserve convexity — the red segment leaves the set. (c) Affine image (rotation + scaling) of an ellipse remains convex. (d) Minkowski sum of a triangle and a disk produces a "rounded triangle," still convex.</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const cfg = {responsive: true, displayModeBar: false};
+
+  // Helper: generate ellipse points
+  function ellipse(cx, cy, rx, ry, angle, N) {
+    const xs = [], ys = [];
+    const c = Math.cos(angle), s = Math.sin(angle);
+    for (let i = 0; i <= N; i++) {
+      const t = 2 * Math.PI * i / N;
+      const ex = rx * Math.cos(t), ey = ry * Math.sin(t);
+      xs.push(cx + c*ex - s*ey);
+      ys.push(cy + s*ex + c*ey);
+    }
+    return {x: xs, y: ys};
+  }
+
+  // Helper: generate regular polygon
+  function polygon(cx, cy, r, sides, rot) {
+    const xs = [], ys = [];
+    for (let i = 0; i <= sides; i++) {
+      const a = rot + 2*Math.PI*i/sides;
+      xs.push(cx + r*Math.cos(a));
+      ys.push(cy + r*Math.sin(a));
+    }
+    return {x: xs, y: ys};
+  }
+
+  // ========== (a) Intersection ==========
+  const e1 = ellipse(0.3, 0, 1.2, 0.8, 0.3, 120);
+  const e2 = ellipse(-0.3, 0, 1.2, 0.8, -0.3, 120);
+
+  // Compute intersection region by sampling
+  function inEllipse(px, py, cx, cy, rx, ry, angle) {
+    const c = Math.cos(-angle), s = Math.sin(-angle);
+    const dx = px-cx, dy = py-cy;
+    const lx = c*dx - s*dy, ly = s*dx + c*dy;
+    return (lx/rx)*(lx/rx) + (ly/ry)*(ly/ry) <= 1;
+  }
+  const intX = [], intY = [];
+  for (let i = 0; i <= 200; i++) {
+    const a = 2*Math.PI*i/200;
+    for (let r = 0; r <= 1.3; r += 0.01) {
+      const px = r*Math.cos(a), py = r*Math.sin(a);
+      if (inEllipse(px,py,0.3,0,1.2,0.8,0.3) && inEllipse(px,py,-0.3,0,1.2,0.8,-0.3)) {
+        intX.push(px); intY.push(py); break;
+      }
+    }
+  }
+
+  // ========== (b) Union (NOT convex) ==========
+  // Two circles with gap
+  const c1 = ellipse(-1, 0, 0.7, 0.7, 0, 80);
+  const c2 = ellipse(1, 0, 0.7, 0.7, 0, 80);
+
+  // ========== (c) Affine image ==========
+  const origE = ellipse(0, 0, 1, 0.5, 0, 100);
+  // Apply A = [[1.2, 0.6],[0.3, 0.9]], b = [0, 0]
+  const affX = [], affY = [];
+  for (let i = 0; i < origE.x.length; i++) {
+    affX.push(1.2*origE.x[i] + 0.6*origE.y[i]);
+    affY.push(0.3*origE.x[i] + 0.9*origE.y[i]);
+  }
+
+  // ========== (d) Minkowski sum: triangle + disk ==========
+  const tri = polygon(0, 0, 1.0, 3, Math.PI/2);
+  // Minkowski sum with disk of radius 0.3
+  const minkX = [], minkY = [];
+  const rd = 0.3;
+  for (let i = 0; i < tri.x.length - 1; i++) {
+    const x1 = tri.x[i], y1 = tri.y[i];
+    const x2 = tri.x[i+1], y2 = tri.y[i+1];
+    // Edge direction
+    const dx = x2-x1, dy = y2-y1;
+    const len = Math.sqrt(dx*dx+dy*dy);
+    const nx = -dy/len, ny = dx/len; // outward normal
+    // Offset edge
+    const ox1 = x1+rd*nx, oy1 = y1+rd*ny;
+    const ox2 = x2+rd*nx, oy2 = y2+rd*ny;
+    // Arc at vertex i+1
+    const a1 = Math.atan2(ny, nx);
+    const nx2_ = i+1 < tri.x.length-1 ? -(tri.y[i+2]-tri.y[i+1]) : -(tri.y[1]-tri.y[0]);
+    const ny2_ = i+1 < tri.x.length-1 ? (tri.x[i+2]-tri.x[i+1]) : (tri.x[1]-tri.x[0]);
+    const len2 = Math.sqrt(nx2_*nx2_+ny2_*ny2_);
+    const a2 = Math.atan2(ny2_/len2, nx2_/len2);
+    // Add edge points
+    for (let t = 0; t <= 1; t += 0.05) {
+      minkX.push(ox1 + t*(ox2-ox1));
+      minkY.push(oy1 + t*(oy2-oy1));
+    }
+    // Add rounded corner
+    let startA = a1, endA = a2;
+    if (endA < startA) endA += 2*Math.PI;
+    for (let t = 0; t <= 1; t += 0.05) {
+      const a = startA + t*(endA-startA);
+      minkX.push(x2 + rd*Math.cos(a));
+      minkY.push(y2 + rd*Math.sin(a));
+    }
+  }
+
+  const traces = [
+    // (a) Intersection
+    {x: e1.x, y: e1.y, mode: 'lines', line: {color: '#7b97ad', width: 2},
+     fill: 'toself', fillcolor: 'rgba(123,151,173,0.12)', xaxis: 'x', yaxis: 'y',
+     showlegend: false, hoverinfo: 'skip'},
+    {x: e2.x, y: e2.y, mode: 'lines', line: {color: '#b8995e', width: 2},
+     fill: 'toself', fillcolor: 'rgba(184,153,94,0.12)', xaxis: 'x', yaxis: 'y',
+     showlegend: false, hoverinfo: 'skip'},
+    {x: intX, y: intY, mode: 'markers', marker: {color: '#7a9a7e', size: 2.5},
+     xaxis: 'x', yaxis: 'y', showlegend: false, hoverinfo: 'skip'},
+
+    // (b) Union (NOT convex)
+    {x: c1.x, y: c1.y, mode: 'lines', line: {color: '#7b97ad', width: 2},
+     fill: 'toself', fillcolor: 'rgba(123,151,173,0.18)', xaxis: 'x2', yaxis: 'y2',
+     showlegend: false, hoverinfo: 'skip'},
+    {x: c2.x, y: c2.y, mode: 'lines', line: {color: '#b8995e', width: 2},
+     fill: 'toself', fillcolor: 'rgba(184,153,94,0.18)', xaxis: 'x2', yaxis: 'y2',
+     showlegend: false, hoverinfo: 'skip'},
+    // Line segment that leaves the union
+    {x: [-0.5, 0.5], y: [0.5, 0.5], mode: 'lines', line: {color: '#c47a6a', width: 3, dash: 'dash'},
+     xaxis: 'x2', yaxis: 'y2', showlegend: false, hoverinfo: 'skip'},
+    {x: [-0.5, 0.5], y: [0.5, 0.5], mode: 'markers', marker: {color: '#c47a6a', size: 7},
+     xaxis: 'x2', yaxis: 'y2', showlegend: false, hoverinfo: 'skip'},
+
+    // (c) Affine image
+    {x: origE.x, y: origE.y, mode: 'lines', line: {color: '#7b97ad', width: 2, dash: 'dot'},
+     fill: 'toself', fillcolor: 'rgba(123,151,173,0.10)', xaxis: 'x3', yaxis: 'y3',
+     showlegend: false, hoverinfo: 'skip'},
+    {x: affX, y: affY, mode: 'lines', line: {color: '#7a9a7e', width: 2.5},
+     fill: 'toself', fillcolor: 'rgba(122,154,126,0.18)', xaxis: 'x3', yaxis: 'y3',
+     showlegend: false, hoverinfo: 'skip'},
+
+    // (d) Minkowski sum
+    {x: tri.x, y: tri.y, mode: 'lines', line: {color: '#7b97ad', width: 2, dash: 'dot'},
+     xaxis: 'x4', yaxis: 'y4', showlegend: false, hoverinfo: 'skip'},
+    {x: minkX, y: minkY, mode: 'lines', line: {color: '#7a9a7e', width: 2.5},
+     fill: 'toself', fillcolor: 'rgba(122,154,126,0.15)', xaxis: 'x4', yaxis: 'y4',
+     showlegend: false, hoverinfo: 'skip'},
+  ];
+
+  const ann = (text, x, y, col) => ({
+    text: '<b>'+text+'</b>', x, y, xref:'paper', yref:'paper',
+    showarrow:false, font:{size:13, color:col||'#3d3530'}
+  });
+
+  const layout = {
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: {family: '"Source Serif 4", Georgia, serif', size: 12},
+    height: 440,
+    grid: {rows: 2, columns: 2, pattern: 'independent', xgap: 0.08, ygap: 0.12},
+    xaxis:  {domain:[0,0.44], zeroline:false, showgrid:false, showticklabels:false, scaleanchor:'y'},
+    yaxis:  {domain:[0.55,1], zeroline:false, showgrid:false, showticklabels:false},
+    xaxis2: {domain:[0.56,1], zeroline:false, showgrid:false, showticklabels:false, scaleanchor:'y2'},
+    yaxis2: {domain:[0.55,1], zeroline:false, showgrid:false, showticklabels:false},
+    xaxis3: {domain:[0,0.44], zeroline:false, showgrid:false, showticklabels:false, scaleanchor:'y3'},
+    yaxis3: {domain:[0,0.45], zeroline:false, showgrid:false, showticklabels:false},
+    xaxis4: {domain:[0.56,1], zeroline:false, showgrid:false, showticklabels:false, scaleanchor:'y4'},
+    yaxis4: {domain:[0,0.45], zeroline:false, showgrid:false, showticklabels:false},
+    margin: {t:10, b:10, l:10, r:10},
+    annotations: [
+      ann('(a) Intersection (convex)', 0.22, 1.02, '#7a9a7e'),
+      ann('(b) Union (NOT convex)', 0.78, 1.02, '#c47a6a'),
+      ann('(c) Affine image (convex)', 0.22, 0.50, '#7a9a7e'),
+      ann('(d) Minkowski sum (convex)', 0.78, 0.50, '#7a9a7e'),
+      {text:'C₁∩C₂', x:0, y:0, xref:'x', yref:'y', showarrow:false, font:{size:14, color:'#7a9a7e'}},
+      {text:'C₁∪C₂', x:0, y:0.8, xref:'x2', yref:'y2', showarrow:false, font:{size:13, color:'#7b7067'}},
+      {text:'✗', x:0, y:0.5, xref:'x2', yref:'y2', showarrow:false, font:{size:18, color:'#c47a6a'}},
+      {text:'C', x:-0.2, y:-0.15, xref:'x3', yref:'y3', showarrow:false, font:{size:13, color:'#7b97ad'}},
+      {text:'A·C+b', x:0.7, y:0.5, xref:'x3', yref:'y3', showarrow:false, font:{size:13, color:'#7a9a7e'}},
+      {text:'C⊕B(0,r)', x:0, y:-0.75, xref:'x4', yref:'y4', showarrow:false, font:{size:13, color:'#7a9a7e'}},
+    ],
+  };
+  Plotly.newPlot('fig-set-operations', traces, layout, cfg);
+});
+</script>
+</section>
+<section id="sec-separating-hyperplane" class="level3" data-number="3.3.3">
+<h3 data-number="3.3.3" class="anchored" data-anchor-id="sec-separating-hyperplane"><span class="header-section-number">3.3.3</span> Separating Hyperplane Theorems</h3>
+<p>An important geometric consequence of convexity is that disjoint convex sets can always be “pulled apart” by a flat surface. This idea — that a hyperplane can be placed between two non-overlapping convex sets — is one of the most fundamental results in convex analysis. It underpins <strong>duality theory</strong> (every dual variable corresponds to a separating hyperplane), <strong>optimality conditions</strong> (at an optimal point, the objective’s level set is separated from the feasible set), and algorithms like the <strong>ellipsoid method</strong> (which uses separating hyperplanes to cut the search space in half).</p>
+<p>We state two versions: a basic separation theorem that always works, and a strict separation theorem that requires an additional boundedness condition.</p>
+<div id="thm-separating-hyperplane" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 3.5 (Separating Hyperplane Theorem)</strong></span> Let <span class="math inline">C, D \subseteq \mathbb{R}^n</span> be two convex sets with <span class="math inline">C \cap D = \emptyset</span>. Then there exists <span class="math inline">a \in \mathbb{R}^n</span> (<span class="math inline">a \neq 0</span>) and <span class="math inline">b \in \mathbb{R}</span> such that</p>
+<p><span class="math display">a^\top x \leq b \quad \forall \, x \in C, \qquad a^\top x \geq b \quad \forall \, x \in D.</span></p>
+<p>In words: two disjoint convex sets can always be separated by a hyperplane <span class="math inline">\{x : a^\top x = b\}</span>.</p>
+</div>
 <div id="fig-separating-hyperplane" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-separating-hyperplane-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="figures/ch01-separating-hyperplane.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;3.4: The separating hyperplane theorem: two disjoint convex sets C and D can always be separated by a hyperplane a^\top x = b. The normal vector a points from C toward D, and the hyperplane passes between the two sets."><img src="figures/ch01-separating-hyperplane.svg" class="img-fluid figure-img"></a>
+<a href="figures/ch01-separating-hyperplane.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-6" title="Figure&nbsp;3.6: The separating hyperplane theorem: two disjoint convex sets C and D can always be separated by a hyperplane a^\top x = b. The normal vector a points from C toward D, and the hyperplane passes between the two sets."><img src="figures/ch01-separating-hyperplane.svg" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-separating-hyperplane-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3.4: The separating hyperplane theorem: two disjoint convex sets <span class="math inline">C</span> and <span class="math inline">D</span> can always be separated by a hyperplane <span class="math inline">a^\top x = b</span>. The normal vector <span class="math inline">a</span> points from <span class="math inline">C</span> toward <span class="math inline">D</span>, and the hyperplane passes between the two sets.
+Figure&nbsp;3.6: The separating hyperplane theorem: two disjoint convex sets <span class="math inline">C</span> and <span class="math inline">D</span> can always be separated by a hyperplane <span class="math inline">a^\top x = b</span>. The normal vector <span class="math inline">a</span> points from <span class="math inline">C</span> toward <span class="math inline">D</span>, and the hyperplane passes between the two sets.
 </figcaption>
 </figure>
 </div>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Strict Separation Is Not Always Possible
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>One might hope for <strong>strict</strong> separation: <span class="math inline">a^\top x &lt; b</span> for all <span class="math inline">x \in C</span> and <span class="math inline">a^\top x &gt; b</span> for all <span class="math inline">x \in D</span>. However, this is <em>not</em> always possible, even for disjoint convex sets. Consider in <span class="math inline">\mathbb{R}^2</span>:</p>
+<p><span class="math display">C = \{(x_1, x_2) : x_2 \leq 0\}, \qquad D = \{(x_1, x_2) : x_2 \geq 1/x_1, \; x_1 &gt; 0\}.</span></p>
+<p>Both sets are convex and disjoint, but they “approach” each other asymptotically as <span class="math inline">x_1 \to \infty</span>: the gap between them shrinks to zero without ever closing. No hyperplane can strictly separate them — any separating hyperplane must pass through the “asymptotic contact point.” The issue is that neither set is bounded.</p>
+</div>
+</div>
+<p>To guarantee strict separation, we need at least one of the sets to be bounded, which prevents this “asymptotic touching” phenomenon.</p>
+<div id="thm-strict-separation" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 3.6 (Strict Separating Hyperplane Theorem)</strong></span> Let <span class="math inline">C, D \subseteq \mathbb{R}^n</span> be two <strong>closed</strong> convex sets with at least one of them <strong>bounded</strong> (i.e., compact). If <span class="math inline">C \cap D = \emptyset</span>, then there exists <span class="math inline">a \in \mathbb{R}^n</span> (<span class="math inline">a \neq 0</span>) and <span class="math inline">b \in \mathbb{R}</span> such that</p>
+<p><span class="math display">a^\top x &lt; b \quad \forall \, x \in C, \qquad a^\top x &gt; b \quad \forall \, x \in D.</span></p>
+<p>That is, the separating hyperplane strictly separates the two sets (no points lie on the hyperplane itself).</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof of <a href="#thm-strict-separation" class="quarto-xref">Theorem&nbsp;<span>3.6</span></a>.</strong></p>
+<p><em>Strategy.</em> We find the closest pair of points between <span class="math inline">C</span> and <span class="math inline">D</span>, then construct a hyperplane perpendicular to the line segment connecting them, passing through the midpoint. Compactness ensures the closest pair exists with a strictly positive gap.</p>
+<p><strong>Step 1: The distance is positive and attained.</strong> Define the distance between <span class="math inline">C</span> and <span class="math inline">D</span> as</p>
+<p><span class="math display">\text{dist}(C, D) = \inf\{\|u - v\|_2 : u \in C, \; v \in D\}.</span></p>
+<p>We claim this infimum is positive and attained. Without loss of generality, suppose <span class="math inline">C</span> is compact. Define the “thickened” set <span class="math inline">\widetilde{D} = \{v \in D : \inf_{u \in C}\|u - v\| \leq \text{dist}(C,D) + 1\}</span>. Then <span class="math inline">\widetilde{D}</span> is bounded (since it is within distance <span class="math inline">\text{dist}(C,D) + 1 + \text{diam}(C)</span> of any point in <span class="math inline">C</span>), and <span class="math inline">\text{dist}(C, D) = \text{dist}(C, \widetilde{D})</span>. Since <span class="math inline">(u,v) \mapsto \|u - v\|</span> is continuous and <span class="math inline">C \times \widetilde{D}</span> is compact, the infimum is attained: there exist <span class="math inline">c \in C</span> and <span class="math inline">d \in D</span> with <span class="math inline">\|c - d\|_2 = \text{dist}(C, D)</span>.</p>
+<p>Since <span class="math inline">C \cap D = \emptyset</span> and both are closed, we have <span class="math inline">\text{dist}(C, D) &gt; 0</span>.</p>
+<p><strong>Step 2: Construct the separating hyperplane.</strong> Define the hyperplane with normal vector <span class="math inline">a = d - c</span> passing through the midpoint <span class="math inline">\tfrac{c + d}{2}</span>:</p>
+<p><span class="math display">f(x) = a^\top x - b, \quad \text{where} \quad a = d - c, \quad b = \frac{\|d\|_2^2 - \|c\|_2^2}{2}.</span></p>
+<p>One can verify that <span class="math inline">f\!\left(\frac{c+d}{2}\right) = 0</span>, so the hyperplane passes through the midpoint.</p>
+<p><strong>Step 3: Verify separation.</strong> We claim <span class="math inline">f(x) &gt; 0</span> for all <span class="math inline">x \in D</span> and <span class="math inline">f(x) &lt; 0</span> for all <span class="math inline">x \in C</span>. The key insight is that the closest-point pair <span class="math inline">(c, d)</span> satisfies a variational inequality: for any <span class="math inline">x \in D</span>, the point <span class="math inline">d</span> minimizes <span class="math inline">\|c - v\|</span> over <span class="math inline">v \in D</span>, so <span class="math inline">(d - c)^\top(x - d) \geq 0</span> for all <span class="math inline">x \in D</span> (this is the first-order optimality condition for projecting <span class="math inline">c</span> onto the convex set <span class="math inline">D</span>). Similarly, <span class="math inline">(c - d)^\top(x - c) \geq 0</span> for all <span class="math inline">x \in C</span>. These inequalities, combined with <span class="math inline">\|d - c\|_2 &gt; 0</span>, yield the strict separation. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Summary of separating hyperplane theorems.</strong> The key takeaway is:</p>
+<ul>
+<li><strong>Disjoint convex sets</strong> <span class="math inline">\Longrightarrow</span> can be separated by a hyperplane (non-strict).</li>
+<li><strong>Disjoint, closed, one bounded</strong> <span class="math inline">\Longrightarrow</span> can be <strong>strictly</strong> separated.</li>
+</ul>
+<p>The proof also tells us <em>how to construct</em> the separating hyperplane: find the closest pair of points between the two sets, and place the hyperplane perpendicular to the segment connecting them. This constructive insight is used in algorithms like the ellipsoid method and in proving strong duality.</p>
+</div>
+</div>
+</div>
 </section>
-<section id="sec-convex-combination" class="level3" data-number="3.4.3">
-<h3 data-number="3.4.3" class="anchored" data-anchor-id="sec-convex-combination"><span class="header-section-number">3.4.3</span> Convex Combination and Convex Hull</h3>
+<section id="sec-convex-combination" class="level3" data-number="3.3.4">
+<h3 data-number="3.3.4" class="anchored" data-anchor-id="sec-convex-combination"><span class="header-section-number">3.3.4</span> Convex Combination and Convex Hull</h3>
 <p>The definition of a convex set requires that the line segment between any two points stays inside the set. A natural generalization asks: what about “weighted averages” of more than two points? This leads to the notion of convex combinations, which in turn lets us define the convex hull – the smallest convex set containing a given collection of points.</p>
 <div id="def-convex-combination" class="theorem definition">
 <p><span class="theorem-title"><strong>Definition 3.10 (Convex Combination)</strong></span> Given <span class="math inline">x_1, x_2, \ldots, x_k \in \mathbb{R}^n</span>, a <strong>convex combination</strong> of <span class="math inline">x_1, \ldots, x_k</span> is a point</p>
@@ -779,7 +1143,7 @@ Figure&nbsp;3.4: The separating hyperplane theorem: two disjoint convex sets <sp
 <p><span class="math display">\text{CH}(x_1, \ldots, x_k) = \left\{\sum_{i=1}^{k} t_i \, x_i \;\middle|\; t_i \geq 0, \; \sum_{i=1}^{k} t_i = 1 \right\}.</span></p>
 </div>
 <div id="thm-convex-hull-is-convex" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 3.3 (Convex Hull is Convex)</strong></span> The convex hull is always a convex set.</p>
+<p><span class="theorem-title"><strong>Theorem 3.7 (Convex Hull is Convex)</strong></span> The convex hull is always a convex set.</p>
 </div>
 <p>The convex hull of a set of points is the smallest convex set containing all of them. Geometrically, it is the shape you get by “stretching a rubber band” around the points. This theorem confirms that forming convex combinations of convex combinations still yields a convex combination.</p>
 <div class="proof">
@@ -796,10 +1160,10 @@ Figure&nbsp;3.4: The separating hyperplane theorem: two disjoint convex sets <sp
 <div id="fig-convex-hull" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-convex-hull-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="figures/ch03-convex-hull.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;3.5: Convex hull of a set of points x_1, \ldots, x_7. The convex hull (shaded polygon) is the smallest convex set containing all the points. Small dots show random convex combinations, all of which lie inside the hull."><img src="figures/ch03-convex-hull.svg" class="img-fluid figure-img"></a>
+<a href="figures/ch03-convex-hull.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-7" title="Figure&nbsp;3.7: Convex hull of a set of points x_1, \ldots, x_7. The convex hull (shaded polygon) is the smallest convex set containing all the points. Small dots show random convex combinations, all of which lie inside the hull."><img src="figures/ch03-convex-hull.svg" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-convex-hull-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;3.5: Convex hull of a set of points <span class="math inline">x_1, \ldots, x_7</span>. The convex hull (shaded polygon) is the smallest convex set containing all the points. Small dots show random convex combinations, all of which lie inside the hull.
+Figure&nbsp;3.7: Convex hull of a set of points <span class="math inline">x_1, \ldots, x_7</span>. The convex hull (shaded polygon) is the smallest convex set containing all the points. Small dots show random convex combinations, all of which lie inside the hull.
 </figcaption>
 </figure>
 </div>
@@ -809,10 +1173,25 @@ Figure&nbsp;3.5: Convex hull of a set of points <span class="math inline">x_1, \
 <h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
 <ul>
 <li><strong>Solution concepts.</strong> Feasible, locally optimal, and globally optimal solutions are distinguished; the Weierstrass theorem guarantees existence of an optimum when the feasible set is compact and the objective is continuous.</li>
+<li><strong>Necessary conditions.</strong> At a local minimum of a differentiable function, <span class="math inline">\nabla f(x^*) = 0</span> (first-order) and <span class="math inline">\nabla^2 f(x^*) \succeq 0</span> (second-order). These conditions narrow the search for optima to stationary points.</li>
 <li><strong>Convex sets.</strong> A set <span class="math inline">C</span> is convex if <span class="math inline">\lambda x + (1-\lambda)y \in C</span> for all <span class="math inline">x,y \in C</span> and <span class="math inline">\lambda \in [0,1]</span>; intersections, affine images, and Minkowski sums preserve convexity.</li>
 <li><strong>Building blocks.</strong> Halfspaces, polyhedra, norm balls, ellipsoids, and cones are all convex. The feasible set of any linear program is a polyhedron (intersection of halfspaces).</li>
+<li><strong>Separating hyperplanes.</strong> Disjoint convex sets can always be separated by a hyperplane. Strict separation requires closedness and boundedness of at least one set. This result underpins duality theory and optimality conditions.</li>
 <li><strong>Convex hulls.</strong> The convex hull <span class="math inline">\operatorname{conv}(S)</span> is the smallest convex set containing <span class="math inline">S</span>; it is itself convex and plays a central role in the geometry of linear programming.</li>
 </ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Looking Ahead
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>With convex sets in hand, the next chapter introduces <strong>convex functions</strong> — functions whose epigraph is a convex set. We develop three equivalent characterizations (the chord inequality, the first-order condition, and the Hessian test) and a toolkit of operations that preserve convexity. The payoff: for convex functions, every local minimum is a global minimum.</p>
+</div>
+</div>
 
 
 </section>
@@ -1231,50 +1610,6 @@ Figure&nbsp;3.5: Convex hull of a set of points <span class="math inline">x_1, \
   </div>
 </nav>
 </div> <!-- /content -->
-<script>
-// Plotly Warmtone theming helpers — shared across all lectures
-// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
-const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
-
-function css(v) {
-  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-}
-
-function legendStyle() {
-  return {
-    font: {family: figFont, size: 13, color: css('--fig-text')},
-    bgcolor: css('--fig-bg') + 'dd',
-    bordercolor: css('--fig-grid'),
-    borderwidth: 1,
-  };
-}
-
-function themeLayout(extra) {
-  return Object.assign({
-    paper_bgcolor: css('--fig-bg'),
-    plot_bgcolor: css('--fig-plot-bg'),
-    font: {family: figFont, color: css('--fig-text'), size: 14},
-  }, extra || {});
-}
-
-function themeAxis(title, extra) {
-  return Object.assign({
-    title: {text: title, font: {family: figFont, size: 14}},
-    gridcolor: css('--fig-grid'),
-    zerolinecolor: css('--fig-grid'),
-    linecolor: css('--fig-axis'),
-    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
-  }, extra || {});
-}
-
-// Plotly color sequences matching the Warmtone palette
-const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
-];
-</script>
 <script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
 (function() {
   let previousOnload = window.onload;

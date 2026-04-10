@@ -23,41 +23,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -110,6 +75,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -265,19 +274,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  <a href="../lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  <a href="../lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
   </div>
 </li>
       </ul>
@@ -335,7 +344,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -391,38 +400,43 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-overview" id="toc-sec-overview" class="nav-link active" data-scroll-target="#sec-overview"><span class="header-section-number">10.1</span> What Will Be Covered</a></li>
-  <li><a href="#sec-equational-form" id="toc-sec-equational-form" class="nav-link" data-scroll-target="#sec-equational-form"><span class="header-section-number">10.2</span> From Canonical to Equational Form</a></li>
+  <li><a href="#what-will-be-covered" id="toc-what-will-be-covered" class="nav-link active" data-scroll-target="#what-will-be-covered">What Will Be Covered</a></li>
+  <li><a href="#sec-equational-form" id="toc-sec-equational-form" class="nav-link" data-scroll-target="#sec-equational-form"><span class="header-section-number">10.1</span> From Canonical to Equational Form</a></li>
+  <li><a href="#sec-derivation" id="toc-sec-derivation" class="nav-link" data-scroll-target="#sec-derivation"><span class="header-section-number">10.2</span> Deriving the Simplex Method</a>
+  <ul class="collapse">
+  <li><a href="#sec-setup" id="toc-sec-setup" class="nav-link" data-scroll-target="#sec-setup"><span class="header-section-number">10.2.1</span> Setup and Notation</a></li>
+  <li><a href="#sec-starting-bfs" id="toc-sec-starting-bfs" class="nav-link" data-scroll-target="#sec-starting-bfs"><span class="header-section-number">10.2.2</span> Starting from a BFS</a></li>
+  <li><a href="#sec-reduced-costs" id="toc-sec-reduced-costs" class="nav-link" data-scroll-target="#sec-reduced-costs"><span class="header-section-number">10.2.3</span> Reduced Costs</a></li>
+  <li><a href="#sec-optimality" id="toc-sec-optimality" class="nav-link" data-scroll-target="#sec-optimality"><span class="header-section-number">10.2.4</span> Optimality Condition</a></li>
+  <li><a href="#sec-pivot-mechanism" id="toc-sec-pivot-mechanism" class="nav-link" data-scroll-target="#sec-pivot-mechanism"><span class="header-section-number">10.2.5</span> The Pivot Mechanism</a></li>
+  <li><a href="#sec-simplex-algorithm" id="toc-sec-simplex-algorithm" class="nav-link" data-scroll-target="#sec-simplex-algorithm"><span class="header-section-number">10.2.6</span> The Simplex Algorithm</a></li>
+  <li><a href="#sec-why-simplex" id="toc-sec-why-simplex" class="nav-link" data-scroll-target="#sec-why-simplex"><span class="header-section-number">10.2.7</span> Why the Simplex Method Works</a></li>
+  </ul></li>
   <li><a href="#sec-tableau" id="toc-sec-tableau" class="nav-link" data-scroll-target="#sec-tableau"><span class="header-section-number">10.3</span> The Simplex Tableau</a>
   <ul class="collapse">
-  <li><a href="#sec-tableau-setup" id="toc-sec-tableau-setup" class="nav-link" data-scroll-target="#sec-tableau-setup"><span class="header-section-number">10.3.1</span> Setting Up the Tableau</a></li>
+  <li><a href="#sec-tableau-setup" id="toc-sec-tableau-setup" class="nav-link" data-scroll-target="#sec-tableau-setup"><span class="header-section-number">10.3.1</span> Tableau Quantities</a></li>
   <li><a href="#sec-dictionary" id="toc-sec-dictionary" class="nav-link" data-scroll-target="#sec-dictionary"><span class="header-section-number">10.3.2</span> The Dictionary Form</a></li>
   <li><a href="#sec-tableau-layout" id="toc-sec-tableau-layout" class="nav-link" data-scroll-target="#sec-tableau-layout"><span class="header-section-number">10.3.3</span> The Tableau Layout</a></li>
+  <li><a href="#sec-pivoting" id="toc-sec-pivoting" class="nav-link" data-scroll-target="#sec-pivoting"><span class="header-section-number">10.3.4</span> Pivoting in Tableau Notation</a></li>
   </ul></li>
-  <li><a href="#sec-pivoting" id="toc-sec-pivoting" class="nav-link" data-scroll-target="#sec-pivoting"><span class="header-section-number">10.4</span> Simplex Pivoting</a>
+  <li><a href="#sec-full-algorithm" id="toc-sec-full-algorithm" class="nav-link" data-scroll-target="#sec-full-algorithm"><span class="header-section-number">10.4</span> The Full Simplex Algorithm (Tableau Form)</a></li>
+  <li><a href="#sec-example" id="toc-sec-example" class="nav-link" data-scroll-target="#sec-example"><span class="header-section-number">10.5</span> Worked Example</a></li>
+  <li><a href="#sec-initialization" id="toc-sec-initialization" class="nav-link" data-scroll-target="#sec-initialization"><span class="header-section-number">10.6</span> Simplex Initialization via Auxiliary LP</a>
   <ul class="collapse">
-  <li><a href="#sec-entering" id="toc-sec-entering" class="nav-link" data-scroll-target="#sec-entering"><span class="header-section-number">10.4.1</span> Choosing the Entering Variable</a></li>
-  <li><a href="#sec-ratio-test" id="toc-sec-ratio-test" class="nav-link" data-scroll-target="#sec-ratio-test"><span class="header-section-number">10.4.2</span> Choosing the Leaving Variable: The Ratio Test</a></li>
-  <li><a href="#sec-pivot-effect" id="toc-sec-pivot-effect" class="nav-link" data-scroll-target="#sec-pivot-effect"><span class="header-section-number">10.4.3</span> Effect of a Pivot</a></li>
+  <li><a href="#sec-aux-idea" id="toc-sec-aux-idea" class="nav-link" data-scroll-target="#sec-aux-idea"><span class="header-section-number">10.6.1</span> The Key Idea</a></li>
+  <li><a href="#sec-aux-why" id="toc-sec-aux-why" class="nav-link" data-scroll-target="#sec-aux-why"><span class="header-section-number">10.6.2</span> Why This Works</a></li>
+  <li><a href="#sec-init-algorithm" id="toc-sec-init-algorithm" class="nav-link" data-scroll-target="#sec-init-algorithm"><span class="header-section-number">10.6.3</span> The Initialization Algorithm</a></li>
+  <li><a href="#sec-aux-example" id="toc-sec-aux-example" class="nav-link" data-scroll-target="#sec-aux-example"><span class="header-section-number">10.6.4</span> Example</a></li>
   </ul></li>
-  <li><a href="#sec-full-algorithm" id="toc-sec-full-algorithm" class="nav-link" data-scroll-target="#sec-full-algorithm"><span class="header-section-number">10.5</span> The Full Simplex Algorithm</a></li>
-  <li><a href="#sec-example" id="toc-sec-example" class="nav-link" data-scroll-target="#sec-example"><span class="header-section-number">10.6</span> Worked Example</a></li>
-  <li><a href="#sec-initialization" id="toc-sec-initialization" class="nav-link" data-scroll-target="#sec-initialization"><span class="header-section-number">10.7</span> Simplex Initialization via Auxiliary LP</a>
+  <li><a href="#sec-pivoting-rules" id="toc-sec-pivoting-rules" class="nav-link" data-scroll-target="#sec-pivoting-rules"><span class="header-section-number">10.7</span> Pivoting Rules</a>
   <ul class="collapse">
-  <li><a href="#sec-easy-init" id="toc-sec-easy-init" class="nav-link" data-scroll-target="#sec-easy-init"><span class="header-section-number">10.7.1</span> The Easy Case: <span class="math inline">b \geq 0</span></a></li>
-  <li><a href="#sec-hard-init" id="toc-sec-hard-init" class="nav-link" data-scroll-target="#sec-hard-init"><span class="header-section-number">10.7.2</span> The Hard Case: Some <span class="math inline">b_i &lt; 0</span></a></li>
+  <li><a href="#sec-dantzig" id="toc-sec-dantzig" class="nav-link" data-scroll-target="#sec-dantzig"><span class="header-section-number">10.7.1</span> Dantzig’s Rule</a></li>
+  <li><a href="#sec-degeneracy" id="toc-sec-degeneracy" class="nav-link" data-scroll-target="#sec-degeneracy"><span class="header-section-number">10.7.2</span> Degeneracy and Cycling</a></li>
+  <li><a href="#sec-bland" id="toc-sec-bland" class="nav-link" data-scroll-target="#sec-bland"><span class="header-section-number">10.7.3</span> Bland’s Rule</a></li>
+  <li><a href="#sec-oracle-complexity" id="toc-sec-oracle-complexity" class="nav-link" data-scroll-target="#sec-oracle-complexity"><span class="header-section-number">10.7.4</span> Oracle Complexity</a></li>
   </ul></li>
-  <li><a href="#sec-pivoting-rules" id="toc-sec-pivoting-rules" class="nav-link" data-scroll-target="#sec-pivoting-rules"><span class="header-section-number">10.8</span> Pivoting Rules</a>
-  <ul class="collapse">
-  <li><a href="#sec-dantzig" id="toc-sec-dantzig" class="nav-link" data-scroll-target="#sec-dantzig"><span class="header-section-number">10.8.1</span> Dantzig’s Rule</a></li>
-  <li><a href="#sec-degeneracy" id="toc-sec-degeneracy" class="nav-link" data-scroll-target="#sec-degeneracy"><span class="header-section-number">10.8.2</span> Degeneracy and Cycling</a></li>
-  <li><a href="#sec-bland" id="toc-sec-bland" class="nav-link" data-scroll-target="#sec-bland"><span class="header-section-number">10.8.3</span> Bland’s Rule</a></li>
-  <li><a href="#sec-oracle-complexity" id="toc-sec-oracle-complexity" class="nav-link" data-scroll-target="#sec-oracle-complexity"><span class="header-section-number">10.8.4</span> Oracle Complexity</a></li>
-  <li><a href="#sec-oracle-model" id="toc-sec-oracle-model" class="nav-link" data-scroll-target="#sec-oracle-model"><span class="header-section-number">10.8.5</span> The Oracle Model</a></li>
-  <li><a href="#sec-complexity-guarantee" id="toc-sec-complexity-guarantee" class="nav-link" data-scroll-target="#sec-complexity-guarantee"><span class="header-section-number">10.8.6</span> Complexity Guarantee</a></li>
-  </ul></li>
-  <li><a href="#sec-step-by-step" id="toc-sec-step-by-step" class="nav-link" data-scroll-target="#sec-step-by-step"><span class="header-section-number">10.9</span> Simplex Method Step by Step</a></li>
-  <li><a href="#sec-summary" id="toc-sec-summary" class="nav-link" data-scroll-target="#sec-summary"><span class="header-section-number">10.10</span> Summary</a></li>
+  <li><a href="#sec-step-by-step" id="toc-sec-step-by-step" class="nav-link" data-scroll-target="#sec-step-by-step"><span class="header-section-number">10.8</span> Simplex Method Step by Step</a></li>
+  <li><a href="#sec-summary" id="toc-sec-summary" class="nav-link" data-scroll-target="#sec-summary"><span class="header-section-number">10.9</span> Summary</a></li>
   </ul>
 </nav>
     </div>
@@ -448,14 +462,15 @@ window.Quarto = {
 </header>
 
 
-<p>The simplex method is the most celebrated algorithm for solving linear programs. Rather than enumerating all vertices of the feasible polyhedron – which we showed in <a href="../lectures/09-lp-formulation-geometry.html">Part 6</a> requires checking up to <span class="math inline">\binom{m+n}{n}</span> candidates – the simplex method <em>smartly navigates</em> from one vertex to an adjacent one, improving the objective at every step. Each move is called a <strong>pivot</strong>, and the algorithm terminates when no further improvement is possible, certifying optimality.</p>
-<p>In this chapter we develop the full simplex algorithm from scratch. We begin by reformulating the LP using the <strong>simplex tableau</strong>, a compact bookkeeping device that encodes the current basic feasible solution and all the information needed to decide the next pivot. We then describe the <strong>pivoting</strong> mechanism: how to choose an entering variable (which non-basic variable should become basic?) and a leaving variable (which basic variable should exit the basis?). We assemble these pieces into the complete <strong>five-step simplex algorithm</strong>, illustrate it on a worked numerical example, and address the critical question of <strong>initialization</strong> – how to find a starting BFS when one is not immediately available. Finally, we discuss <strong>pivoting rules</strong> (Dantzig’s rule and Bland’s rule), the phenomenon of <strong>degeneracy</strong> and cycling, and the <strong>oracle complexity</strong> of the simplex method.</p>
-<section id="sec-overview" class="level2" data-number="10.1">
-<h2 data-number="10.1" class="anchored" data-anchor-id="sec-overview"><span class="header-section-number">10.1</span> What Will Be Covered</h2>
+<p>The simplex method is the most celebrated algorithm for solving linear programs. In the <a href="../lectures/09-lp-formulation-geometry.html">previous chapter</a>, the Algebraic Fundamental Theorem of LP revealed that vertices of the feasible polyhedron are exactly the basic feasible solutions (BFS), and that if an optimal solution exists, it can be found at a BFS. This transforms the LP from a continuous optimization problem into a combinatorial search over at most <span class="math inline">\binom{n+m}{m}</span> candidates. Rather than enumerating all of them, the simplex method <em>smartly navigates</em> from one BFS to an adjacent one, improving the objective at every step. Each move is called a <strong>pivot</strong>, and the algorithm terminates when no further improvement is possible, certifying optimality.</p>
+<p>In this chapter we develop the full simplex algorithm from scratch. We begin by deriving the method from first principles: starting at a BFS, we use the algebra of the equational form to discover <strong>reduced costs</strong> (which tell us whether the current solution is optimal), the <strong>pivot mechanism</strong> (how to move to a better neighboring BFS), and the conditions for <strong>unboundedness</strong>. We then introduce the <strong>simplex tableau</strong> as a compact bookkeeping device that organizes these quantities for efficient computation. We assemble these pieces into the complete <strong>five-step simplex algorithm</strong>, illustrate it on a worked numerical example, and address the critical question of <strong>initialization</strong> – how to find a starting BFS when one is not immediately available. Finally, we discuss <strong>pivoting rules</strong> (Dantzig’s rule and Bland’s rule), the phenomenon of <strong>degeneracy</strong> and cycling, and the <strong>oracle complexity</strong> of the simplex method.</p>
+<section id="what-will-be-covered" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="what-will-be-covered">What Will Be Covered</h2>
+<p>This chapter builds the simplex algorithm piece by piece, from first-principles derivation to practical pivoting strategies:</p>
 <ul>
-<li>The simplex tableau: dictionary form, relative costs, and transformed constraints</li>
-<li>The pivoting mechanism: entering variable, leaving variable, and the ratio test</li>
-<li>The full five-step simplex algorithm</li>
+<li>Deriving the simplex method: reduced costs, optimality condition, and the pivot mechanism</li>
+<li>The simplex tableau: a compact bookkeeping device for efficient implementation</li>
+<li>The full five-step simplex algorithm in tableau form</li>
 <li>A detailed worked example tracing the simplex method through multiple iterations</li>
 <li>Initialization via the Auxiliary LP (Aux-LP)</li>
 <li>Pivoting rules: Dantzig’s rule and Bland’s rule</li>
@@ -473,9 +488,9 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
 </figure>
 </div>
 </section>
-<section id="sec-equational-form" class="level2" data-number="10.2">
-<h2 data-number="10.2" class="anchored" data-anchor-id="sec-equational-form"><span class="header-section-number">10.2</span> From Canonical to Equational Form</h2>
-<p>Recall from <a href="../lectures/09-lp-formulation-geometry.html">Part 6</a> that a linear program in <strong>canonical form</strong> is:</p>
+<section id="sec-equational-form" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="sec-equational-form"><span class="header-section-number">10.1</span> From Canonical to Equational Form</h2>
+<p>Recall from the <a href="../lectures/09-lp-formulation-geometry.html">previous chapter</a> that a linear program in <strong>canonical form</strong> is:</p>
 <p><span class="math display">\min \sum_{j=1}^{n} c_j x_j \quad \text{s.t.} \quad \sum_{j=1}^{n} a_{ij} x_j \leq b_i \;\; \forall\, i \in [m], \quad x_j \geq 0 \;\; \forall\, j \in [n].</span></p>
 <p>We convert this to <strong>equational form</strong> by introducing <span class="math inline">m</span> slack variables <span class="math inline">x_{n+1}, \ldots, x_{n+m}</span>:</p>
 <p><span class="math display">x_{n+i} = b_i - \sum_{j=1}^{n} a_{ij} x_j \geq 0, \quad \forall\, i \in [m].</span></p>
@@ -485,41 +500,227 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
 <p><span class="math display">c = \begin{pmatrix} c_1 \\ \vdots \\ c_n \\ 0 \\ \vdots \\ 0 \end{pmatrix} \in \mathbb{R}^{n+m}, \quad A = \begin{pmatrix} a_{11} &amp; \cdots &amp; a_{1n} &amp; 1 &amp; 0 &amp; \cdots &amp; 0 \\ \vdots &amp; &amp; \vdots &amp; 0 &amp; 1 &amp; \cdots &amp; 0 \\ a_{m1} &amp; \cdots &amp; a_{mn} &amp; 0 &amp; 0 &amp; \cdots &amp; 1 \end{pmatrix} \in \mathbb{R}^{m \times (n+m)}.</span></p>
 <p>The <span class="math inline">m</span> columns corresponding to slack variables form an identity matrix, which will play a crucial role in initialization.</p>
 </section>
-<section id="sec-tableau" class="level2" data-number="10.3">
-<h2 data-number="10.3" class="anchored" data-anchor-id="sec-tableau"><span class="header-section-number">10.3</span> The Simplex Tableau</h2>
-<p>The simplex tableau is the central data structure of the simplex method. It compactly represents the current basic feasible solution and all the information needed to decide the next pivot.</p>
-<section id="sec-tableau-setup" class="level3" data-number="10.3.1">
-<h3 data-number="10.3.1" class="anchored" data-anchor-id="sec-tableau-setup"><span class="header-section-number">10.3.1</span> Setting Up the Tableau</h3>
-<p>Let <span class="math inline">B \subseteq [n+m]</span> be a set of <span class="math inline">m</span> indices. If <span class="math inline">B</span> yields a <strong>basic feasible solution</strong> (BFS), we denote:</p>
-<p><span class="math display">x_B^* = A_B^{-1} b \geq 0,</span></p>
-<p>where <span class="math inline">A_B</span> is the <span class="math inline">m \times m</span> submatrix of <span class="math inline">A</span> formed by the columns indexed by <span class="math inline">B</span>. Feasibility requires <span class="math inline">x_B^* \geq 0</span>. The full BFS is <span class="math inline">x = (x_B^*, 0)</span> – basic variables take the values <span class="math inline">x_B^*</span>, non-basic variables are zero.</p>
-<p>Writing <span class="math inline">N = [n+m] \setminus B</span> for the non-basic index set, the equational form LP becomes:</p>
-<p><span class="math display">\min \; \zeta = c_B^\top x_B + c_N^\top x_N \quad \text{s.t.} \quad A_B x_B + A_N x_N = b, \;\; x_B, x_N \geq 0.</span></p>
-<p>Since <span class="math inline">A_B</span> is invertible at a BFS, we can solve for <span class="math inline">x_B</span>:</p>
-<p><span class="math display">x_B = A_B^{-1} b - A_B^{-1} A_N x_N.</span></p>
-<p>Substituting into the objective:</p>
-<p><span class="math display">\zeta = c_B^\top (A_B^{-1} b - A_B^{-1} A_N x_N) + c_N^\top x_N = c_B^\top A_B^{-1} b + \bigl(c_N - (A_B^{-1} A_N)^\top c_B\bigr)^\top x_N.</span></p>
-<div id="def-simplex-quantities" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 10.1 (Definition 15.1 (Simplex Tableau Quantities))</strong></span> Given a basis <span class="math inline">B</span> with BFS <span class="math inline">x_B^* = A_B^{-1} b \geq 0</span>, define:</p>
+<section id="sec-derivation" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="sec-derivation"><span class="header-section-number">10.2</span> Deriving the Simplex Method</h2>
+<p>Before introducing the simplex tableau (a compact bookkeeping device), let us derive the simplex method from first principles. The key idea is simple: <strong>start at a BFS and move to a neighboring BFS with a lower objective value, repeating until no improvement is possible.</strong></p>
+<section id="sec-setup" class="level3" data-number="10.2.1">
+<h3 data-number="10.2.1" class="anchored" data-anchor-id="sec-setup"><span class="header-section-number">10.2.1</span> Setup and Notation</h3>
+<p>Let <span class="math inline">B</span> and <span class="math inline">N</span> denote the sets of <strong>basic</strong> and <strong>non-basic</strong> variable indices, respectively, with <span class="math inline">|B| = m</span>. We partition:</p>
+<p><span class="math display">A = \begin{pmatrix} A_B &amp; A_N \end{pmatrix}, \qquad x = \begin{pmatrix} x_B \\ x_N \end{pmatrix}, \qquad c = \begin{pmatrix} c_B \\ c_N \end{pmatrix}.</span></p>
+<p>The LP becomes:</p>
+<p><span id="eq-simplex-lp"><span class="math display">\min \; z = c_B^\top x_B + c_N^\top x_N \quad \text{s.t.} \quad A_B x_B + A_N x_N = b, \;\; x_B \geq 0, \; x_N \geq 0. \tag{10.1}</span></span></p>
+</section>
+<section id="sec-starting-bfs" class="level3" data-number="10.2.2">
+<h3 data-number="10.2.2" class="anchored" data-anchor-id="sec-starting-bfs"><span class="header-section-number">10.2.2</span> Starting from a BFS</h3>
+<p>Assume that the current basis <span class="math inline">B</span> gives a BFS. That is, <span class="math inline">x_B^* = A_B^{-1}b \geq 0</span> and <span class="math inline">x_N^* = 0</span>.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Initial BFS When <span class="math inline">b \geq 0</span>
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If <span class="math inline">b \geq 0</span>, an initial BFS is immediate: set <span class="math inline">B = \{n+1, n+2, \ldots, n+m\}</span> (the slack variables). Then <span class="math inline">A_B = I_m</span>, so <span class="math inline">x_B^* = b \geq 0</span>, and the original variables <span class="math inline">x_1 = x_2 = \cdots = x_n = 0</span>. When <span class="math inline">b \not\geq 0</span>, finding an initial BFS is itself nontrivial – we address this in <a href="#sec-initialization" class="quarto-xref"><span>Section 10.6</span></a>.</p>
+</div>
+</div>
+<p>Since <span class="math inline">A_B</span> is invertible, we can express the basic variables in terms of the non-basic ones:</p>
+<p><span id="eq-basic-from-nonbasic"><span class="math display">x_B = A_B^{-1}b - A_B^{-1}A_N x_N = x_B^* - A_B^{-1}A_N x_N. \tag{10.2}</span></span></p>
+<p>This is the key equation: it tells us exactly how the basic variables respond when we perturb the non-basic variables away from zero.</p>
+</section>
+<section id="sec-reduced-costs" class="level3" data-number="10.2.3">
+<h3 data-number="10.2.3" class="anchored" data-anchor-id="sec-reduced-costs"><span class="header-section-number">10.2.3</span> Reduced Costs</h3>
+<p>Substituting <a href="#eq-basic-from-nonbasic" class="quarto-xref">Equation&nbsp;<span>10.2</span></a> into the objective of <a href="#eq-simplex-lp" class="quarto-xref">Equation&nbsp;<span>10.1</span></a>:</p>
+<p><span class="math display">z = c_B^\top(x_B^* - A_B^{-1}A_N x_N) + c_N^\top x_N = c_B^\top x_B^* + \left(c_N - (A_B^{-1}A_N)^\top c_B\right)^\top x_N.</span></p>
+<p>The coefficient of <span class="math inline">x_N</span> in this expression is so important that it gets its own name.</p>
+<div id="def-reduced-cost" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 10.1 (Definition (Reduced Cost Vector))</strong></span> The <strong>reduced cost vector</strong> for the non-basic variables is</p>
+<p><span class="math display">r_N = c_N - (A_B^{-1}A_N)^\top c_B = c_N - A_N^\top (A_B^{-1})^\top c_B \;\in \mathbb{R}^n.</span></p>
+<p>The <span class="math inline">j</span>-th component <span class="math inline">r_j</span> (for <span class="math inline">j \in N</span>) represents the <strong>rate of change of the objective</strong> when <span class="math inline">x_j</span> increases from zero, holding other non-basic variables at zero.</p>
+</div>
+<p>The objective can thus be written as:</p>
+<p><span id="eq-objective-reduced"><span class="math display">z = \underbrace{c_B^\top A_B^{-1} b}_{z^* \text{ (current value)}} + r_N^\top x_N. \tag{10.3}</span></span></p>
+<p>Since <span class="math inline">x_N = 0</span> at the current BFS, the current objective value is <span class="math inline">z^* = c_B^\top A_B^{-1}b</span>.</p>
+</section>
+<section id="sec-optimality" class="level3" data-number="10.2.4">
+<h3 data-number="10.2.4" class="anchored" data-anchor-id="sec-optimality"><span class="header-section-number">10.2.4</span> Optimality Condition</h3>
+<p>From <a href="#eq-objective-reduced" class="quarto-xref">Equation&nbsp;<span>10.3</span></a>, we can read off the optimality condition immediately.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Optimality Condition
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If <span class="math inline">r_N \geq 0</span> (all reduced costs are nonneg), the current BFS is <strong>optimal</strong>. <strong>STOP.</strong></p>
+<p><strong>Why?</strong> Since <span class="math inline">x_N \geq 0</span> (feasibility) and <span class="math inline">r_N \geq 0</span>, we have <span class="math inline">z = z^* + r_N^\top x_N \geq z^*</span> for every feasible point. The current BFS achieves the minimum.</p>
+</div>
+</div>
+</section>
+<section id="sec-pivot-mechanism" class="level3" data-number="10.2.5">
+<h3 data-number="10.2.5" class="anchored" data-anchor-id="sec-pivot-mechanism"><span class="header-section-number">10.2.5</span> The Pivot Mechanism</h3>
+<p>This is the heart of the simplex method. The reduced cost equation <a href="#eq-objective-reduced" class="quarto-xref">Equation&nbsp;<span>10.3</span></a> tells us <span class="math inline">z = z^* + r_N^\top x_N</span>, and we want to decrease <span class="math inline">z</span>. Currently all non-basic variables are zero. The entire strategy reduces to two questions.</p>
+<section id="question-1-which-non-basic-variable-should-we-increase" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="question-1-which-non-basic-variable-should-we-increase">Question 1: Which non-basic variable should we increase?</h4>
+<p>Scan the reduced cost vector <span class="math inline">r_N</span>. If some component <span class="math inline">r_q &lt; 0</span>, then increasing <span class="math inline">x_q</span> from zero will decrease the objective (since the contribution is <span class="math inline">r_q \cdot x_q &lt; 0</span>). We select such a <span class="math inline">q</span> as the <strong>entering variable</strong>.</p>
+<p>If no such <span class="math inline">q</span> exists – that is, <span class="math inline">r_N \geq 0</span> – then increasing <em>any</em> non-basic variable can only increase or maintain the objective. <strong>We are already at the optimum.</strong> This is the optimality condition from <a href="#sec-optimality" class="quarto-xref"><span>Section 10.2.4</span></a>.</p>
+</section>
+<section id="question-2-how-far-can-we-increase-x_q" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="question-2-how-far-can-we-increase-x_q">Question 2: How far can we increase <span class="math inline">x_q</span>?</h4>
+<p>We want to push <span class="math inline">x_q</span> as large as possible (to decrease <span class="math inline">z</span> as much as possible), but we must maintain feasibility: all basic variables must stay nonneg. Setting <span class="math inline">x_q = t &gt; 0</span> and keeping all other non-basic variables at zero, <a href="#eq-basic-from-nonbasic" class="quarto-xref">Equation&nbsp;<span>10.2</span></a> gives:</p>
+<p><span class="math display">x_B = x_B^* - t \cdot d_q, \qquad \text{where } d_q = A_B^{-1} a_q \in \mathbb{R}^m</span></p>
+<p>is the <strong>pivot column</strong> (<span class="math inline">a_q</span> is the <span class="math inline">q</span>-th column of <span class="math inline">A</span>). The <span class="math inline">i</span>-th entry <span class="math inline">d_{iq}</span> tells us how much basic variable <span class="math inline">x_i</span> decreases when <span class="math inline">x_q</span> increases by one unit.</p>
+<p>The feasibility requirement <span class="math inline">x_B \geq 0</span> – i.e., <span class="math inline">x_i^* - t \cdot d_{iq} \geq 0</span> for all <span class="math inline">i \in B</span> – determines how far we can go:</p>
 <ul>
-<li><strong>Transformed RHS (current BFS values):</strong> <span class="math inline">\widetilde{b} = A_B^{-1} b = x_B^*</span></li>
-<li><strong>Transformed constraint matrix:</strong> <span class="math inline">\widetilde{A} = A_B^{-1} A_N</span></li>
-<li><strong>Relative cost vector:</strong> <span class="math inline">\widetilde{c} = c_N - \widetilde{A}^\top c_B = c_N - A_N^\top (A_B^{-\top}) c_B</span></li>
-<li><strong>Current objective value:</strong> <span class="math inline">\widetilde{\zeta} = c_B^\top \widetilde{b} = c_B^\top A_B^{-1} b = c_B^\top x_B^*</span></li>
+<li><p><strong>If <span class="math inline">d_{iq} \leq 0</span> for all <span class="math inline">i \in B</span>:</strong> No basic variable decreases when <span class="math inline">x_q</span> grows. We can push <span class="math inline">t \to \infty</span>, and the objective <span class="math inline">z = z^* + r_q \cdot t \to -\infty</span>. The LP is <strong>unbounded</strong>.</p></li>
+<li><p><strong>If some <span class="math inline">d_{iq} &gt; 0</span>:</strong> These basic variables <em>do</em> decrease as <span class="math inline">x_q</span> grows. The tightest constraint determines the maximum step:</p></li>
+</ul>
+<p><span class="math display">t^* = \min_{i \in B : d_{iq} &gt; 0} \frac{x_i^*}{d_{iq}}.</span></p>
+<p>The basic variable that hits zero first is the <strong>leaving variable</strong> – it exits the basis to make room for <span class="math inline">x_q</span>:</p>
+<p><span class="math display">p = \arg\min_{i \in B : d_{iq} &gt; 0} \frac{x_i^*}{d_{iq}}.</span></p>
+</section>
+<section id="the-pivot" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="the-pivot">The Pivot</h4>
+<p>We swap <span class="math inline">q</span> into the basis and <span class="math inline">p</span> out:</p>
+<p><span class="math display">B' = B \cup \{q\} \setminus \{p\}, \qquad N' = N \cup \{p\} \setminus \{q\}.</span></p>
+<p>The new BFS has <span class="math inline">x_q = t^* &gt; 0</span>, <span class="math inline">x_p = 0</span>, and the objective has strictly decreased:</p>
+<p><span class="math display">z_{\text{new}} = z^* + r_q \cdot t^* &lt; z^* \quad (\text{since } r_q &lt; 0 \text{ and } t^* &gt; 0).</span></p>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Summary of the Pivot Logic
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><span class="math display">\boxed{r_q &lt; 0 \text{ ?}} \;\xrightarrow{\;\text{yes}\;}\; \boxed{\text{increase } x_q} \;\xrightarrow{\;x_i^* = 0\;}\; \boxed{\text{swap } q \leftrightarrow p} \;\rightarrow\; \text{better BFS}</span></p>
+<ul>
+<li>No <span class="math inline">r_q &lt; 0</span> exists <span class="math inline">\;\Rightarrow\;</span> <strong>optimal</strong> (stop).</li>
+<li>No basic variable blocks the increase <span class="math inline">\;\Rightarrow\;</span> <strong>unbounded</strong> (stop).</li>
 </ul>
 </div>
+</div>
+</section>
+</section>
+<section id="sec-simplex-algorithm" class="level3" data-number="10.2.6">
+<h3 data-number="10.2.6" class="anchored" data-anchor-id="sec-simplex-algorithm"><span class="header-section-number">10.2.6</span> The Simplex Algorithm</h3>
+<p>Putting it all together:</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>The Simplex Method
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Input:</strong> An initial BFS with basis <span class="math inline">B</span>, <span class="math inline">x_B^* = A_B^{-1}b \geq 0</span>.</p>
+<p><strong>Repeat:</strong></p>
+<ol type="1">
+<li><p><strong>Compute reduced costs:</strong> <span class="math inline">r_N = c_N - A_N^\top (A_B^{-1})^\top c_B</span>.</p></li>
+<li><p><strong>Optimality test:</strong> If <span class="math inline">r_N \geq 0</span>, <strong>STOP</strong> – the current BFS is optimal.</p></li>
+<li><p><strong>Select entering variable:</strong> Choose <span class="math inline">q \in N</span> with <span class="math inline">r_q &lt; 0</span>.</p></li>
+<li><p><strong>Compute pivot column:</strong> <span class="math inline">d_q = A_B^{-1} a_q</span>.</p></li>
+<li><p><strong>Unboundedness test:</strong> If <span class="math inline">d_q \leq 0</span>, <strong>STOP</strong> – the LP is unbounded.</p></li>
+<li><p><strong>Compute step size and leaving variable:</strong></p></li>
+</ol>
+<p><span class="math display">t^* = \min_{i \in B : d_{iq} &gt; 0} \frac{x_i^*}{d_{iq}}, \qquad p = \arg\min_{i \in B : d_{iq} &gt; 0} \frac{x_i^*}{d_{iq}}.</span></p>
+<ol start="7" type="1">
+<li><strong>Pivot:</strong> Update <span class="math inline">B \leftarrow B \cup \{q\} \setminus \{p\}</span>, <span class="math inline">N \leftarrow N \cup \{p\} \setminus \{q\}</span>. Recompute <span class="math inline">x_B^* = A_B^{-1}b</span>.</li>
+</ol>
+</div>
+</div>
+<p>Each iteration moves from one BFS to an <strong>adjacent</strong> BFS (one that differs by exactly one basic variable) while strictly decreasing the objective (assuming nondegeneracy). Since there are finitely many BFS, the algorithm terminates.</p>
+</section>
+<section id="sec-why-simplex" class="level3" data-number="10.2.7">
+<h3 data-number="10.2.7" class="anchored" data-anchor-id="sec-why-simplex"><span class="header-section-number">10.2.7</span> Why the Simplex Method Works</h3>
+<p>The correctness of the simplex method rests on three pillars:</p>
+<ol type="1">
+<li><p><strong>Finiteness of BFS.</strong> There are at most <span class="math inline">\binom{n+m}{m}</span> basic feasible solutions. If each pivot strictly decreases the objective (which happens when the LP is nondegenerate), the algorithm cannot revisit a BFS and must terminate.</p></li>
+<li><p><strong>Optimality certificate.</strong> When <span class="math inline">r_N \geq 0</span>, the current BFS is provably optimal: <a href="#eq-objective-reduced" class="quarto-xref">Equation&nbsp;<span>10.3</span></a> shows that <span class="math inline">z = z^* + r_N^\top x_N \geq z^*</span> for all feasible <span class="math inline">x_N \geq 0</span>.</p></li>
+<li><p><strong>Unboundedness detection.</strong> When <span class="math inline">d_q \leq 0</span> for some <span class="math inline">q</span> with <span class="math inline">r_q &lt; 0</span>, we can construct a feasible ray along which the objective decreases without bound.</p></li>
+</ol>
+</section>
+</section>
+<section id="sec-tableau" class="level2" data-number="10.3">
+<h2 data-number="10.3" class="anchored" data-anchor-id="sec-tableau"><span class="header-section-number">10.3</span> The Simplex Tableau</h2>
+<p>The derivation in <a href="12-dual-simplex.html#sec-derivation" class="quarto-xref"><span>Section 12.4</span></a> gives us everything we need to run the simplex method. But look at what each iteration requires: computing <span class="math inline">A_B^{-1}b</span>, <span class="math inline">A_B^{-1}A_N</span>, and <span class="math inline">r_N</span> – all involving <span class="math inline">A_B^{-1}</span>, which changes at every pivot. Rather than recomputing these from scratch, we organize them into a single data structure – the <strong>simplex tableau</strong> – that can be updated cheaply after each pivot.</p>
+<section id="sec-tableau-setup" class="level3" data-number="10.3.1">
+<h3 data-number="10.3.1" class="anchored" data-anchor-id="sec-tableau-setup"><span class="header-section-number">10.3.1</span> Tableau Quantities</h3>
+<p>In <a href="#sec-reduced-costs" class="quarto-xref"><span>Section 10.2.3</span></a> we derived two key equations. The <strong>constraint equation</strong> (<a href="#eq-basic-from-nonbasic" class="quarto-xref">Equation&nbsp;<span>10.2</span></a>):</p>
+<p><span class="math display">x_B = \underbrace{A_B^{-1}b}_{\text{current BFS}} - \underbrace{A_B^{-1}A_N}_{\text{exchange rates}} \, x_N,</span></p>
+<p>and the <strong>objective equation</strong> (<a href="#eq-objective-reduced" class="quarto-xref">Equation&nbsp;<span>10.3</span></a>):</p>
+<p><span class="math display">z = \underbrace{c_B^\top A_B^{-1}b}_{\text{current value}} + \underbrace{r_N^\top}_{\text{reduced costs}} x_N.</span></p>
+<p>The simplex tableau collects these quantities under a compact notation.</p>
+<div id="def-simplex-quantities" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 10.2 (Simplex Tableau Quantities)</strong></span> Given a basis <span class="math inline">B</span> with BFS <span class="math inline">x_B^* = A_B^{-1} b \geq 0</span>, define:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 23%">
+<col style="width: 19%">
+<col style="width: 40%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Symbol</th>
+<th>Definition</th>
+<th>Meaning</th>
+<th>Role in derivation</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\widetilde{b}</span></td>
+<td><span class="math inline">A_B^{-1} b</span></td>
+<td>Current BFS values</td>
+<td><span class="math inline">x_B^*</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\widetilde{A}</span></td>
+<td><span class="math inline">A_B^{-1} A_N</span></td>
+<td>How basic variables respond to non-basic ones</td>
+<td>Exchange coefficients in <a href="#eq-basic-from-nonbasic" class="quarto-xref">Equation&nbsp;<span>10.2</span></a></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\widetilde{c}</span></td>
+<td><span class="math inline">c_N - \widetilde{A}^\top c_B</span></td>
+<td>Cost of increasing each non-basic variable</td>
+<td>Reduced costs <span class="math inline">r_N</span> from <a href="#def-reduced-cost" class="quarto-xref">Definition&nbsp;<span>10.1</span></a></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\widetilde{\zeta}</span></td>
+<td><span class="math inline">c_B^\top \widetilde{b}</span></td>
+<td>Current objective value</td>
+<td><span class="math inline">z^*</span> from <a href="#eq-objective-reduced" class="quarto-xref">Equation&nbsp;<span>10.3</span></a></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The tilde notation is simply shorthand: <span class="math inline">\widetilde{c}</span> is the reduced cost vector <span class="math inline">r_N</span>, <span class="math inline">\widetilde{b}</span> is the current BFS <span class="math inline">x_B^*</span>, and <span class="math inline">\widetilde{A}</span> is the matrix that tells us how the basic variables change when the non-basic variables move away from zero.</p>
 </section>
 <section id="sec-dictionary" class="level3" data-number="10.3.2">
 <h3 data-number="10.3.2" class="anchored" data-anchor-id="sec-dictionary"><span class="header-section-number">10.3.2</span> The Dictionary Form</h3>
-<p>Using these quantities, we can write the LP in <strong>dictionary form</strong>:</p>
-<p><span id="eq-dictionary-form"><span class="math display">\min_{x_N} \; \zeta = \widetilde{\zeta} + \widetilde{c}^\top x_N \quad \text{s.t.} \quad x_B = \widetilde{b} - \widetilde{A}\, x_N, \;\; x_B, x_N \geq 0. \tag{10.1}</span></span></p>
-<p>This is equivalent to the original LP, but expressed entirely in terms of the non-basic variables <span class="math inline">x_N</span>. At the current BFS, <span class="math inline">x_N = 0</span>, so <span class="math inline">x_B = \widetilde{b}</span> and <span class="math inline">\zeta = \widetilde{\zeta}</span>.</p>
+<p>Substituting the tableau quantities, the two key equations become:</p>
+<p><span class="math display">\zeta = \widetilde{\zeta} + \widetilde{c}^\top x_N, \qquad x_B = \widetilde{b} - \widetilde{A}\, x_N.</span></p>
+<p>Together, these give the LP in <strong>dictionary form</strong>:</p>
+<p><span id="eq-dictionary-form"><span class="math display">\min_{x_N} \; \zeta = \widetilde{\zeta} + \widetilde{c}^\top x_N \quad \text{s.t.} \quad x_B = \widetilde{b} - \widetilde{A}\, x_N, \;\; x_B, x_N \geq 0. \tag{10.4}</span></span></p>
+<p>This is equivalent to the original LP, but expressed entirely in terms of the non-basic variables <span class="math inline">x_N</span>. At the current BFS, <span class="math inline">x_N = 0</span>, so <span class="math inline">x_B = \widetilde{b}</span> and <span class="math inline">\zeta = \widetilde{\zeta}</span>. The dictionary makes the pivot logic transparent: to improve the objective, find a non-basic variable with <span class="math inline">\widetilde{c}_q &lt; 0</span> and increase it until some basic variable hits zero.</p>
 </section>
 <section id="sec-tableau-layout" class="level3" data-number="10.3.3">
 <h3 data-number="10.3.3" class="anchored" data-anchor-id="sec-tableau-layout"><span class="header-section-number">10.3.3</span> The Tableau Layout</h3>
-<p>The simplex tableau is a compact matrix representation of the dictionary:</p>
-<p><span id="eq-tableau-form"><span class="math display">\text{Tableau:} \quad \begin{pmatrix} \widetilde{\zeta} &amp; \widetilde{c}^\top \\ \widetilde{b} &amp; -\widetilde{A} \end{pmatrix} \quad \Longleftrightarrow \quad \begin{pmatrix} \zeta \\ x_B \end{pmatrix} = \begin{pmatrix} \widetilde{\zeta} &amp; \widetilde{c}^\top \\ \widetilde{b} &amp; -\widetilde{A} \end{pmatrix} \begin{pmatrix} 1 \\ x_N \end{pmatrix}. \tag{10.2}</span></span></p>
-<p>The <strong>columns</strong> correspond to non-basic variables (currently set to zero), and the <strong>rows</strong> correspond to basic variables (currently at positive values <span class="math inline">\widetilde{b}</span>).</p>
+<p>The dictionary can be written as a single matrix equation:</p>
+<p><span id="eq-tableau-form"><span class="math display">\begin{pmatrix} \zeta \\ x_B \end{pmatrix} = \begin{pmatrix} \widetilde{\zeta} &amp; \widetilde{c}^\top \\ \widetilde{b} &amp; -\widetilde{A} \end{pmatrix} \begin{pmatrix} 1 \\ x_N \end{pmatrix}. \tag{10.5}</span></span></p>
+<p>The matrix on the right is the <strong>simplex tableau</strong>:</p>
+<p><span class="math display">\text{Tableau} = \begin{pmatrix} \widetilde{\zeta} &amp; \widetilde{c}^\top \\ \hline \widetilde{b} &amp; -\widetilde{A} \end{pmatrix}.</span></p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -531,52 +732,28 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
 </div>
 <div class="callout-body-container callout-body">
 <ul>
-<li>The top row gives the current objective value <span class="math inline">\widetilde{\zeta}</span> and the relative costs <span class="math inline">\widetilde{c}^\top</span>.</li>
-<li>The remaining rows give the current BFS values <span class="math inline">\widetilde{b}</span> and the exchange coefficients <span class="math inline">-\widetilde{A}</span>.</li>
-<li><strong>Optimality test:</strong> If <span class="math inline">\widetilde{c} \geq 0</span> (all relative costs nonneg), the current BFS is optimal.</li>
-<li><strong>Pivoting</strong> amounts to choosing a column <span class="math inline">q \in N</span> and a row <span class="math inline">p \in B</span> to swap.</li>
+<li><strong>Top-left entry</strong> <span class="math inline">\widetilde{\zeta}</span>: current objective value.</li>
+<li><strong>Top row</strong> <span class="math inline">\widetilde{c}^\top</span>: reduced costs of non-basic variables. Negative entries signal room for improvement.</li>
+<li><strong>Left column</strong> <span class="math inline">\widetilde{b}</span>: current values of basic variables (the BFS).</li>
+<li><strong>Body</strong> <span class="math inline">-\widetilde{A}</span>: exchange coefficients – column <span class="math inline">q</span> tells you how <span class="math inline">x_B</span> changes when <span class="math inline">x_q</span> increases.</li>
+<li><strong>Optimality test:</strong> If <span class="math inline">\widetilde{c} \geq 0</span>, the current BFS is optimal.</li>
+<li><strong>Pivoting:</strong> Choose a column <span class="math inline">q</span> with <span class="math inline">\widetilde{c}_q &lt; 0</span> (entering) and a row <span class="math inline">p</span> via the ratio test (leaving), then swap.</li>
 </ul>
 </div>
 </div>
 </section>
-</section>
-<section id="sec-pivoting" class="level2" data-number="10.4">
-<h2 data-number="10.4" class="anchored" data-anchor-id="sec-pivoting"><span class="header-section-number">10.4</span> Simplex Pivoting</h2>
-<p>With the tableau (<a href="#eq-tableau-form" class="quarto-xref">Equation&nbsp;<span>10.2</span></a>) encoding the current BFS and its associated data, we can now describe the mechanism that drives the simplex method forward. A <strong>pivot</strong> is a single iteration of the simplex method. It moves from one BFS to an adjacent BFS by swapping one variable into the basis and one out.</p>
-<section id="sec-entering" class="level3" data-number="10.4.1">
-<h3 data-number="10.4.1" class="anchored" data-anchor-id="sec-entering"><span class="header-section-number">10.4.1</span> Choosing the Entering Variable</h3>
-<p>The entering variable <span class="math inline">q</span> is a non-basic variable whose relative cost is negative, meaning that increasing <span class="math inline">x_q</span> from zero will decrease the objective.</p>
-<div id="def-entering-variable" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 10.2 (Definition 15.2 (Entering Variable))</strong></span> Choose <span class="math inline">q \in N</span> such that <span class="math inline">\widetilde{c}_q &lt; 0</span>. This means increasing <span class="math inline">x_q</span> from zero will decrease the objective value.</p>
-<p>If no such <span class="math inline">q</span> exists (i.e., <span class="math inline">\widetilde{c}_j \geq 0</span> for all <span class="math inline">j \in N</span>), then the current BFS is <strong>optimal</strong>.</p>
-</div>
-</section>
-<section id="sec-ratio-test" class="level3" data-number="10.4.2">
-<h3 data-number="10.4.2" class="anchored" data-anchor-id="sec-ratio-test"><span class="header-section-number">10.4.2</span> Choosing the Leaving Variable: The Ratio Test</h3>
-<p>Once we have chosen the entering variable <span class="math inline">q</span>, we need to determine how much we can increase <span class="math inline">x_q</span> while keeping all basic variables nonneg. The dictionary form (<a href="#eq-dictionary-form" class="quarto-xref">Equation&nbsp;<span>10.1</span></a>) shows that increasing <span class="math inline">x_q</span> decreases some basic variables, and the ratio test determines the maximum feasible step.</p>
-<p>Setting <span class="math inline">x_j = 0</span> for all <span class="math inline">j \in N \setminus \{q\}</span> and <span class="math inline">x_q = t \geq 0</span>, the basic variables become:</p>
-<p><span class="math display">x_B = \widetilde{b} - t \cdot \widetilde{A}_q,</span></p>
-<p>where <span class="math inline">\widetilde{A}_q</span> is the <span class="math inline">q</span>-th column of <span class="math inline">\widetilde{A}</span> (the column corresponding to the entering variable). For each basic variable <span class="math inline">i \in B</span>:</p>
-<p><span class="math display">x_i = \widetilde{b}_i - t \cdot \widetilde{A}_{iq}.</span></p>
-<p>We need <span class="math inline">x_i \geq 0</span> for all <span class="math inline">i \in B</span>. For any <span class="math inline">i</span> with <span class="math inline">\widetilde{A}_{iq} &gt; 0</span>, this requires <span class="math inline">t \leq \widetilde{b}_i / \widetilde{A}_{iq}</span>.</p>
+<section id="sec-pivoting" class="level3" data-number="10.3.4">
+<h3 data-number="10.3.4" class="anchored" data-anchor-id="sec-pivoting"><span class="header-section-number">10.3.4</span> Pivoting in Tableau Notation</h3>
+<p>The pivot mechanism from <a href="#sec-pivot-mechanism" class="quarto-xref"><span>Section 10.2.5</span></a> translates directly into tableau language. In terms of the tableau quantities:</p>
+<ul>
+<li><p><strong>Entering variable:</strong> Choose <span class="math inline">q \in N</span> with <span class="math inline">\widetilde{c}_q &lt; 0</span>. The pivot column is <span class="math inline">\widetilde{A}_q</span> (column <span class="math inline">q</span> of <span class="math inline">\widetilde{A}</span>), which plays the role of <span class="math inline">d_q = A_B^{-1}a_q</span> from the derivation.</p></li>
+<li><p><strong>Ratio test:</strong> For each row <span class="math inline">i \in B</span> with <span class="math inline">\widetilde{A}_{iq} &gt; 0</span>, compute the ratio <span class="math inline">\widetilde{b}_i / \widetilde{A}_{iq}</span>. The smallest ratio determines the step size and leaving variable:</p></li>
+</ul>
 <div id="def-ratio-test" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 10.3 (Definition 15.3 (Ratio Test and Leaving Variable))</strong></span> The maximum step size is:</p>
-<p><span id="eq-ratio-test"><span class="math display">t^* = \min\left\{\frac{\widetilde{b}_i}{\widetilde{A}_{iq}} : \widetilde{A}_{iq} &gt; 0, \;\; i \in B\right\}. \tag{10.3}</span></span></p>
-<ul>
-<li>If <span class="math inline">\widetilde{A}_{iq} \leq 0</span> for all <span class="math inline">i \in B</span>, then <span class="math inline">x_q</span> can be increased without bound, and the LP is <strong>unbounded</strong>.</li>
-<li>Otherwise, the <strong>leaving variable</strong> is:</li>
-</ul>
-<p><span class="math display">p = \arg\min_{i \in B}\left\{\frac{\widetilde{b}_i}{\widetilde{A}_{iq}} : \widetilde{A}_{iq} &gt; 0\right\}.</span></p>
+<p><span class="theorem-title"><strong>Definition 10.3 (Ratio Test (Tableau Form))</strong></span> <span id="eq-ratio-test"><span class="math display">t^* = \min\left\{\frac{\widetilde{b}_i}{\widetilde{A}_{iq}} : \widetilde{A}_{iq} &gt; 0, \;\; i \in B\right\}, \qquad p = \arg\min_{i \in B}\left\{\frac{\widetilde{b}_i}{\widetilde{A}_{iq}} : \widetilde{A}_{iq} &gt; 0\right\}. \tag{10.6}</span></span></p>
 </div>
-</section>
-<section id="sec-pivot-effect" class="level3" data-number="10.4.3">
-<h3 data-number="10.4.3" class="anchored" data-anchor-id="sec-pivot-effect"><span class="header-section-number">10.4.3</span> Effect of a Pivot</h3>
-<p>After pivoting with entering variable <span class="math inline">q</span> and leaving variable <span class="math inline">p</span>:</p>
 <ul>
-<li><span class="math inline">x_p \leftarrow 0</span> (leaves the basis, becomes non-basic)</li>
-<li><span class="math inline">x_q \leftarrow t^* = \widetilde{b}_p / \widetilde{A}_{pq} \geq 0</span> (enters the basis)</li>
-<li>All other variables remain unchanged</li>
-<li>The basis updates: <span class="math inline">B' = \{j \in B : j \neq p\} \cup \{q\}</span>, <span class="math inline">N' = \{j \in N : j \neq q\} \cup \{p\}</span></li>
+<li><strong>After the pivot:</strong> <span class="math inline">x_p \leftarrow 0</span>, <span class="math inline">x_q \leftarrow t^* = \widetilde{b}_p / \widetilde{A}_{pq}</span>, and the basis updates to <span class="math inline">B' = (B \setminus \{p\}) \cup \{q\}</span>.</li>
 </ul>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -589,17 +766,17 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
 </div>
 <div class="callout-body-container callout-body">
 <ol type="1">
-<li><strong>Feasibility is maintained:</strong> The ratio test ensures no basic variable becomes negative.</li>
-<li><strong>The objective decreases (or stays the same):</strong> The objective changes by <span class="math inline">-t^* \cdot |\widetilde{c}_q| = \widetilde{c}_q \cdot \widetilde{b}_p / \widetilde{A}_{pq} \leq 0</span> since <span class="math inline">\widetilde{c}_q &lt; 0</span> and <span class="math inline">\widetilde{b}_p / \widetilde{A}_{pq} \geq 0</span>.</li>
-<li><strong>Degeneracy warning:</strong> If <span class="math inline">\widetilde{b}_p = 0</span>, then <span class="math inline">t^* = 0</span> and the objective does not decrease. This is the phenomenon of <strong>degeneracy</strong>.</li>
+<li><strong>Feasibility is maintained:</strong> The ratio test ensures <span class="math inline">x_B \geq 0</span> after the update.</li>
+<li><strong>The objective improves:</strong> The change is <span class="math inline">\Delta\zeta = \widetilde{c}_q \cdot t^* \leq 0</span>, since <span class="math inline">\widetilde{c}_q &lt; 0</span> and <span class="math inline">t^* \geq 0</span>.</li>
+<li><strong>Degeneracy warning:</strong> If <span class="math inline">\widetilde{b}_p = 0</span>, then <span class="math inline">t^* = 0</span> and the objective does not decrease. The basis changes, but the BFS point stays put. This is <strong>degeneracy</strong> – we return to it in <a href="#sec-degeneracy" class="quarto-xref"><span>Section 10.7.2</span></a>.</li>
 </ol>
 </div>
 </div>
 </section>
 </section>
-<section id="sec-full-algorithm" class="level2" data-number="10.5">
-<h2 data-number="10.5" class="anchored" data-anchor-id="sec-full-algorithm"><span class="header-section-number">10.5</span> The Full Simplex Algorithm</h2>
-<p>We now assemble the pieces into the complete simplex algorithm.</p>
+<section id="sec-full-algorithm" class="level2" data-number="10.4">
+<h2 data-number="10.4" class="anchored" data-anchor-id="sec-full-algorithm"><span class="header-section-number">10.4</span> The Full Simplex Algorithm (Tableau Form)</h2>
+<p>The simplex method from <a href="#sec-simplex-algorithm" class="quarto-xref"><span>Section 10.2.6</span></a> can now be expressed concisely as a five-step loop over the tableau:</p>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -619,60 +796,20 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
 <p><strong>Step 5 (Pivot):</strong> Update <span class="math inline">B \leftarrow (B \setminus \{p\}) \cup \{q\}</span>, <span class="math inline">N \leftarrow (N \setminus \{q\}) \cup \{p\}</span>. Go to Step 1.</p>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-simplex-flowchart</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 15.1: Flowchart of the simplex method. The algorithm iterates through tableau computation, optimality check, entering variable selection, ratio test, and pivoting."</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Boxes</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>boxes <span class="op">=</span> [</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    (<span class="fl">0.5</span>, <span class="fl">0.92</span>, <span class="st">'Step 1: Compute tableau&lt;br&gt;(c</span><span class="ch">\u0303</span><span class="st">, A</span><span class="ch">\u0303</span><span class="st">, b</span><span class="ch">\u0303</span><span class="st">, </span><span class="ch">\u03b6\u0303</span><span class="st">)'</span>),</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    (<span class="fl">0.5</span>, <span class="fl">0.74</span>, <span class="st">'Step 2: All c</span><span class="ch">\u0303\u2c7c</span><span class="st"> </span><span class="ch">\u2265</span><span class="st"> 0 ?'</span>),</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>    (<span class="fl">0.5</span>, <span class="fl">0.56</span>, <span class="st">'Step 3: Choose entering&lt;br&gt;variable q with c</span><span class="ch">\u0303</span><span class="st">q &lt; 0'</span>),</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    (<span class="fl">0.5</span>, <span class="fl">0.38</span>, <span class="st">'Step 4: Ratio test&lt;br&gt;All A</span><span class="ch">\u0303\u1d62</span><span class="st">q </span><span class="ch">\u2264</span><span class="st"> 0 ?'</span>),</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    (<span class="fl">0.5</span>, <span class="fl">0.20</span>, <span class="st">'Step 5: Pivot&lt;br&gt;B </span><span class="ch">\u2190</span><span class="st"> (B</span><span class="ch">\\</span><span class="sc">{p}</span><span class="st">)</span><span class="ch">\u222a</span><span class="sc">{q}</span><span class="st">'</span>),</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> [<span class="st">'#7b97ad'</span>, <span class="st">'#b8995e'</span>, <span class="st">'#7a9a7e'</span>, <span class="st">'#b8995e'</span>, <span class="st">'#907ea0'</span>]</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (x, y, txt), col <span class="kw">in</span> <span class="bu">zip</span>(boxes, colors):</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    fig.add_shape(<span class="bu">type</span><span class="op">=</span><span class="st">'rect'</span>,</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>        x0<span class="op">=</span>x<span class="op">-</span><span class="fl">0.22</span>, y0<span class="op">=</span>y<span class="op">-</span><span class="fl">0.06</span>, x1<span class="op">=</span>x<span class="op">+</span><span class="fl">0.22</span>, y1<span class="op">=</span>y<span class="op">+</span><span class="fl">0.06</span>,</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>        line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span>col, width<span class="op">=</span><span class="dv">2</span>), fillcolor<span class="op">=</span><span class="ss">f'rgba(</span><span class="sc">{</span><span class="bu">int</span>(col[<span class="dv">1</span>:<span class="dv">3</span>],<span class="dv">16</span>)<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span><span class="bu">int</span>(col[<span class="dv">3</span>:<span class="dv">5</span>],<span class="dv">16</span>)<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span><span class="bu">int</span>(col[<span class="dv">5</span>:<span class="dv">7</span>],<span class="dv">16</span>)<span class="sc">}</span><span class="ss">,0.12)'</span>)</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>    fig.add_annotation(x<span class="op">=</span>x, y<span class="op">=</span>y, text<span class="op">=</span>txt, showarrow<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>        font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">11</span>), align<span class="op">=</span><span class="st">'center'</span>)</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Arrows between boxes (vertical flow)</span></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(boxes)<span class="op">-</span><span class="dv">1</span>):</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    fig.add_annotation(x<span class="op">=</span><span class="fl">0.5</span>, y<span class="op">=</span>boxes[i][<span class="dv">1</span>]<span class="op">-</span><span class="fl">0.06</span>, ax<span class="op">=</span><span class="fl">0.5</span>, ay<span class="op">=</span>boxes[i<span class="op">+</span><span class="dv">1</span>][<span class="dv">1</span>]<span class="op">+</span><span class="fl">0.06</span>,</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>        xref<span class="op">=</span><span class="st">'x'</span>, yref<span class="op">=</span><span class="st">'y'</span>, axref<span class="op">=</span><span class="st">'x'</span>, ayref<span class="op">=</span><span class="st">'y'</span>,</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>        showarrow<span class="op">=</span><span class="va">True</span>, arrowhead<span class="op">=</span><span class="dv">2</span>, arrowsize<span class="op">=</span><span class="fl">1.2</span>, arrowcolor<span class="op">=</span><span class="st">'#555'</span>)</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Loop back arrow from Step 5 to Step 1</span></span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">0.28</span>, y<span class="op">=</span><span class="fl">0.20</span>, ax<span class="op">=</span><span class="fl">0.28</span>, ay<span class="op">=</span><span class="fl">0.92</span>,</span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    xref<span class="op">=</span><span class="st">'x'</span>, yref<span class="op">=</span><span class="st">'y'</span>, axref<span class="op">=</span><span class="st">'x'</span>, ayref<span class="op">=</span><span class="st">'y'</span>,</span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    showarrow<span class="op">=</span><span class="va">True</span>, arrowhead<span class="op">=</span><span class="dv">2</span>, arrowsize<span class="op">=</span><span class="fl">1.2</span>, arrowcolor<span class="op">=</span><span class="st">'#907ea0'</span>)</span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">0.22</span>, y<span class="op">=</span><span class="fl">0.56</span>, text<span class="op">=</span><span class="st">'loop'</span>, showarrow<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">9</span>, color<span class="op">=</span><span class="st">'#907ea0'</span>))</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Side labels for STOP conditions</span></span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">0.82</span>, y<span class="op">=</span><span class="fl">0.74</span>, text<span class="op">=</span><span class="st">'Yes </span><span class="ch">\u2192</span><span class="st"> OPTIMAL'</span>, showarrow<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">11</span>, color<span class="op">=</span><span class="st">'#7a9a7e'</span>))</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">0.82</span>, y<span class="op">=</span><span class="fl">0.38</span>, text<span class="op">=</span><span class="st">'Yes </span><span class="ch">\u2192</span><span class="st"> UNBOUNDED'</span>, showarrow<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">11</span>, color<span class="op">=</span><span class="st">'#b56b6b'</span>))</span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    xaxis<span class="op">=</span><span class="bu">dict</span>(<span class="bu">range</span><span class="op">=</span>[<span class="dv">0</span>, <span class="fl">1.1</span>], visible<span class="op">=</span><span class="va">False</span>),</span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    yaxis<span class="op">=</span><span class="bu">dict</span>(<span class="bu">range</span><span class="op">=</span>[<span class="fl">0.08</span>, <span class="fl">1.02</span>], visible<span class="op">=</span><span class="va">False</span>),</span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>    showlegend<span class="op">=</span><span class="va">False</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">10</span>, b<span class="op">=</span><span class="dv">10</span>, l<span class="op">=</span><span class="dv">10</span>, r<span class="op">=</span><span class="dv">10</span>),</span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>    height<span class="op">=</span><span class="dv">520</span>, width<span class="op">=</span><span class="dv">550</span>)</span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="fig-simplex-flowchart" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-simplex-flowchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/simplex-flowchart.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;10.2: Flowchart of the simplex method. The algorithm iterates through tableau computation, optimality check, entering variable selection, ratio test, and pivoting."><img src="figures/simplex-flowchart.svg" class="img-fluid figure-img" style="width:85.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-simplex-flowchart-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10.2: Flowchart of the simplex method. The algorithm iterates through tableau computation, optimality check, entering variable selection, ratio test, and pivoting.
+</figcaption>
+</figure>
+</div>
 <p>The five-step algorithm above is the complete specification of the simplex method. To make the mechanics concrete, we now work through a small example by hand, tracing every tableau computation and pivot decision.</p>
 </section>
-<section id="sec-example" class="level2" data-number="10.6">
-<h2 data-number="10.6" class="anchored" data-anchor-id="sec-example"><span class="header-section-number">10.6</span> Worked Example</h2>
+<section id="sec-example" class="level2" data-number="10.5">
+<h2 data-number="10.5" class="anchored" data-anchor-id="sec-example"><span class="header-section-number">10.5</span> Worked Example</h2>
 <p>Let us trace the simplex method on a concrete LP with <span class="math inline">n = 2</span> decision variables and <span class="math inline">m = 2</span> constraints.</p>
 <div id="exm-simplex-worked" class="theorem example">
 <p><span class="theorem-title"><strong>Example 10.1 (Simplex Method on a 2D LP)</strong></span> Consider the LP in canonical form:</p>
@@ -772,236 +909,143 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
 <p>Computing the new relative costs: <span class="math inline">\widetilde{c} \geq 0</span> (both components nonneg). <strong>STOP – optimal!</strong></p>
 <p>The simplex method found the optimal solution <span class="math inline">x^* = (0.5, 1.5)</span> with <span class="math inline">\zeta^* = -1.5</span> in two pivots, visiting BFS <span class="math inline">e \to d \to a</span>.</p>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-simplex-path</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 15.2: The simplex method traces a path along edges of the feasible polytope. Starting from the origin (BFS e), it pivots to BFS d, then to the optimal BFS a. Hover over vertices for details."</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Feasible region vertices (in order for polygon)</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>poly_x <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">2</span>, <span class="fl">0.5</span>, <span class="dv">0</span>, <span class="dv">0</span>]</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>poly_y <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">1.5</span>, <span class="dv">1</span>, <span class="dv">0</span>]</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="co"># BFS points</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>bfs <span class="op">=</span> {</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">'e'</span>: (<span class="dv">0</span>, <span class="dv">0</span>, <span class="st">'B={3,4}, </span><span class="ch">\u03b6</span><span class="st">=0'</span>),</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">'d'</span>: (<span class="dv">0</span>, <span class="dv">1</span>, <span class="st">'B={2,4}, </span><span class="ch">\u03b6</span><span class="st">=</span><span class="ch">\u2212</span><span class="st">1'</span>),</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">'a'</span>: (<span class="fl">0.5</span>, <span class="fl">1.5</span>, <span class="st">'B={1,2}, </span><span class="ch">\u03b6</span><span class="st">=</span><span class="ch">\u2212</span><span class="st">1.5 (optimal)'</span>),</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">'b'</span>: (<span class="dv">2</span>, <span class="dv">0</span>, <span class="st">'B={1,3}, </span><span class="ch">\u03b6</span><span class="st">=0'</span>),</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Feasible region</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>poly_x, y<span class="op">=</span>poly_y, fill<span class="op">=</span><span class="st">'toself'</span>,</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    fillcolor<span class="op">=</span><span class="st">'rgba(123,143,163,0.15)'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7b97ad'</span>, width<span class="op">=</span><span class="fl">2.5</span>),</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Feasible region'</span>, mode<span class="op">=</span><span class="st">'lines'</span>))</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Constraint lines (extended)</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="co"># -x1 + x2 = 1</span></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>xx <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">0.5</span>, <span class="dv">3</span>, <span class="dv">100</span>)</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>xx, y<span class="op">=</span>xx<span class="op">+</span><span class="dv">1</span>, mode<span class="op">=</span><span class="st">'lines'</span>,</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#968a80'</span>, dash<span class="op">=</span><span class="st">'dot'</span>, width<span class="op">=</span><span class="fl">1.2</span>),</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'</span><span class="ch">\u2212</span><span class="st">x</span><span class="ch">\u2081</span><span class="st">+x</span><span class="ch">\u2082</span><span class="st">=1'</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="co"># x1 + x2 = 2</span></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>xx, y<span class="op">=</span><span class="dv">2</span><span class="op">-</span>xx, mode<span class="op">=</span><span class="st">'lines'</span>,</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#968a80'</span>, dash<span class="op">=</span><span class="st">'dot'</span>, width<span class="op">=</span><span class="fl">1.2</span>),</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'x</span><span class="ch">\u2081</span><span class="st">+x</span><span class="ch">\u2082</span><span class="st">=2'</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Objective contours</span></span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> val <span class="kw">in</span> [<span class="dv">0</span>, <span class="op">-</span><span class="fl">0.5</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="fl">1.5</span>]:</span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="dv">3</span>], y<span class="op">=</span>[val, val], mode<span class="op">=</span><span class="st">'lines'</span>,</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>        line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b8995e'</span>, dash<span class="op">=</span><span class="st">'dash'</span>, width<span class="op">=</span><span class="dv">1</span>),</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>        showlegend<span class="op">=</span>(val <span class="op">==</span> <span class="dv">0</span>),</span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span><span class="st">'Objective contours'</span> <span class="cf">if</span> val <span class="op">==</span> <span class="dv">0</span> <span class="cf">else</span> <span class="st">''</span>,</span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>        hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="co"># Simplex path</span></span>
-<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a>path_x <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">0.5</span>]</span>
-<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>path_y <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">1</span>, <span class="fl">1.5</span>]</span>
-<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>path_x, y<span class="op">=</span>path_y, mode<span class="op">=</span><span class="st">'lines+markers'</span>,</span>
-<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, width<span class="op">=</span><span class="dv">3</span>),</span>
-<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">10</span>, color<span class="op">=</span><span class="st">'#b56b6b'</span>, symbol<span class="op">=</span><span class="st">'circle'</span>,</span>
-<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Simplex path'</span>))</span>
-<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a><span class="co"># Add arrows along simplex path</span></span>
-<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="dv">0</span>, y<span class="op">=</span><span class="fl">0.5</span>, ax<span class="op">=</span><span class="dv">0</span>, ay<span class="op">=</span><span class="fl">0.1</span>,</span>
-<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>    xref<span class="op">=</span><span class="st">'x'</span>, yref<span class="op">=</span><span class="st">'y'</span>, axref<span class="op">=</span><span class="st">'x'</span>, ayref<span class="op">=</span><span class="st">'y'</span>,</span>
-<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>    showarrow<span class="op">=</span><span class="va">True</span>, arrowhead<span class="op">=</span><span class="dv">2</span>, arrowsize<span class="op">=</span><span class="fl">1.5</span>, arrowcolor<span class="op">=</span><span class="st">'#b56b6b'</span>)</span>
-<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">0.25</span>, y<span class="op">=</span><span class="fl">1.25</span>, ax<span class="op">=</span><span class="fl">0.05</span>, ay<span class="op">=</span><span class="fl">1.05</span>,</span>
-<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    xref<span class="op">=</span><span class="st">'x'</span>, yref<span class="op">=</span><span class="st">'y'</span>, axref<span class="op">=</span><span class="st">'x'</span>, ayref<span class="op">=</span><span class="st">'y'</span>,</span>
-<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>    showarrow<span class="op">=</span><span class="va">True</span>, arrowhead<span class="op">=</span><span class="dv">2</span>, arrowsize<span class="op">=</span><span class="fl">1.5</span>, arrowcolor<span class="op">=</span><span class="st">'#b56b6b'</span>)</span>
-<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a><span class="co"># BFS labels</span></span>
-<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> label, (bx, by, info) <span class="kw">in</span> bfs.items():</span>
-<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>    fig.add_trace(go.Scatter(x<span class="op">=</span>[bx], y<span class="op">=</span>[by], mode<span class="op">=</span><span class="st">'markers+text'</span>,</span>
-<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>        marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#8a6e5e'</span>, size<span class="op">=</span><span class="dv">9</span>, line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">1</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a>        text<span class="op">=</span>[label], textposition<span class="op">=</span><span class="st">'top right'</span>,</span>
-<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>        textfont<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">13</span>, color<span class="op">=</span><span class="st">'#8a6e5e'</span>),</span>
-<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>        hovertext<span class="op">=</span>[<span class="ss">f'BFS </span><span class="sc">{</span>label<span class="sc">}</span><span class="ss">: (</span><span class="sc">{</span>bx<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>by<span class="sc">}</span><span class="ss">)&lt;br&gt;</span><span class="sc">{</span>info<span class="sc">}</span><span class="ss">'</span>],</span>
-<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>        hoverinfo<span class="op">=</span><span class="st">'text'</span>, showlegend<span class="op">=</span><span class="va">False</span>))</span>
-<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimal star</span></span>
-<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="fl">0.5</span>], y<span class="op">=</span>[<span class="fl">1.5</span>], mode<span class="op">=</span><span class="st">'markers'</span>,</span>
-<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">15</span>, symbol<span class="op">=</span><span class="st">'star'</span>,</span>
-<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">1</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Optimal: (0.5, 1.5)'</span>))</span>
-<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a><span class="co"># Iteration annotations</span></span>
-<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=-</span><span class="fl">0.18</span>, y<span class="op">=</span><span class="fl">0.5</span>, text<span class="op">=</span><span class="st">'Iter 1'</span>, showarrow<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>    font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">10</span>, color<span class="op">=</span><span class="st">'#b56b6b'</span>))</span>
-<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">0.05</span>, y<span class="op">=</span><span class="fl">1.35</span>, text<span class="op">=</span><span class="st">'Iter 2'</span>, showarrow<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>    font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">10</span>, color<span class="op">=</span><span class="st">'#b56b6b'</span>))</span>
-<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-84"><a href="#cb2-84" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
-<span id="cb2-85"><a href="#cb2-85" aria-hidden="true" tabindex="-1"></a>    xaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'x</span><span class="ch">\u2081</span><span class="st">'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">2.8</span>], zeroline<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb2-86"><a href="#cb2-86" aria-hidden="true" tabindex="-1"></a>    yaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'x</span><span class="ch">\u2082</span><span class="st">'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">2.3</span>], zeroline<span class="op">=</span><span class="va">True</span>, scaleanchor<span class="op">=</span><span class="st">'x'</span>),</span>
-<span id="cb2-87"><a href="#cb2-87" aria-hidden="true" tabindex="-1"></a>    showlegend<span class="op">=</span><span class="va">True</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">20</span>, b<span class="op">=</span><span class="dv">50</span>, l<span class="op">=</span><span class="dv">55</span>, r<span class="op">=</span><span class="dv">20</span>))</span>
-<span id="cb2-88"><a href="#cb2-88" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-tableau-iterations</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 15.3: Interactive simplex tableau at each iteration. Use the dropdown to see how the tableau evolves as the simplex method pivots from one BFS to the next."</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Iteration data</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>iterations <span class="op">=</span> [</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">'title'</span>: <span class="st">'Iteration 0: B={3,4}, N={1,2}'</span>,</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">'B'</span>: [<span class="dv">3</span>, <span class="dv">4</span>], <span class="st">'N'</span>: [<span class="dv">1</span>, <span class="dv">2</span>],</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">'b_tilde'</span>: [<span class="dv">1</span>, <span class="dv">2</span>],</span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">'A_tilde'</span>: [[<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>], [<span class="dv">1</span>, <span class="dv">1</span>]],</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">'c_tilde'</span>: [<span class="dv">0</span>, <span class="op">-</span><span class="dv">1</span>],</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">'zeta'</span>: <span class="dv">0</span>,</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">'entering'</span>: <span class="st">'q=2 (c</span><span class="ch">\u0303\u2082</span><span class="st">=</span><span class="ch">\u2212</span><span class="st">1&lt;0)'</span>,</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        <span class="st">'leaving'</span>: <span class="st">'p=3 (min{1/1, 2/1}=1)'</span>,</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">'status'</span>: <span class="st">'Not optimal: c</span><span class="ch">\u0303\u2082</span><span class="st"> = </span><span class="ch">\u2212</span><span class="st">1 &lt; 0'</span></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">'title'</span>: <span class="st">'Iteration 1: B={2,4}, N={1,3}'</span>,</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">'B'</span>: [<span class="dv">2</span>, <span class="dv">4</span>], <span class="st">'N'</span>: [<span class="dv">1</span>, <span class="dv">3</span>],</span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>        <span class="st">'b_tilde'</span>: [<span class="dv">1</span>, <span class="dv">1</span>],</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="st">'A_tilde'</span>: [[<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>], [<span class="dv">2</span>, <span class="op">-</span><span class="dv">1</span>]],</span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        <span class="st">'c_tilde'</span>: [<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>],</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        <span class="st">'zeta'</span>: <span class="op">-</span><span class="dv">1</span>,</span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        <span class="st">'entering'</span>: <span class="st">'q=1 (c</span><span class="ch">\u0303\u2081</span><span class="st">=</span><span class="ch">\u2212</span><span class="st">1&lt;0)'</span>,</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        <span class="st">'leaving'</span>: <span class="st">'p=4 (min{</span><span class="ch">\u2014</span><span class="st">, 1/2}=0.5)'</span>,</span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">'status'</span>: <span class="st">'Not optimal: c</span><span class="ch">\u0303\u2081</span><span class="st"> = </span><span class="ch">\u2212</span><span class="st">1 &lt; 0'</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    {</span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        <span class="st">'title'</span>: <span class="st">'Iteration 2: B={1,2}, N={3,4}'</span>,</span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>        <span class="st">'B'</span>: [<span class="dv">1</span>, <span class="dv">2</span>], <span class="st">'N'</span>: [<span class="dv">3</span>, <span class="dv">4</span>],</span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>        <span class="st">'b_tilde'</span>: [<span class="fl">0.5</span>, <span class="fl">1.5</span>],</span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>        <span class="st">'A_tilde'</span>: [[<span class="fl">0.5</span>, <span class="op">-</span><span class="fl">0.5</span>], [<span class="fl">0.5</span>, <span class="fl">0.5</span>]],</span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>        <span class="st">'c_tilde'</span>: [<span class="fl">0.5</span>, <span class="fl">0.5</span>],</span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>        <span class="st">'zeta'</span>: <span class="op">-</span><span class="fl">1.5</span>,</span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        <span class="st">'entering'</span>: <span class="st">'None'</span>,</span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        <span class="st">'leaving'</span>: <span class="st">'None'</span>,</span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>        <span class="st">'status'</span>: <span class="st">'OPTIMAL: all c</span><span class="ch">\u0303</span><span class="st"> </span><span class="ch">\u2265</span><span class="st"> 0'</span></span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    }</span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Build table for each iteration</span></span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k, it <span class="kw">in</span> <span class="bu">enumerate</span>(iterations):</span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Build header</span></span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>    header <span class="op">=</span> [<span class="st">''</span>] <span class="op">+</span> [<span class="ss">f'x&lt;sub&gt;</span><span class="sc">{</span>j<span class="sc">}</span><span class="ss">&lt;/sub&gt;'</span> <span class="cf">for</span> j <span class="kw">in</span> it[<span class="st">'N'</span>]]</span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Build rows</span></span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    row_obj <span class="op">=</span> [<span class="ss">f'</span><span class="ch">\u03b6\u0303</span><span class="ss"> = </span><span class="sc">{</span>it[<span class="st">"zeta"</span>]<span class="sc">}</span><span class="ss">'</span>] <span class="op">+</span> [<span class="ss">f'</span><span class="sc">{</span>v<span class="sc">:+.1f}</span><span class="ss">'</span> <span class="cf">for</span> v <span class="kw">in</span> it[<span class="st">'c_tilde'</span>]]</span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    rows <span class="op">=</span> [row_obj]</span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> i_idx, i_val <span class="kw">in</span> <span class="bu">enumerate</span>(it[<span class="st">'B'</span>]):</span>
-<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>        row <span class="op">=</span> [<span class="ss">f'x&lt;sub&gt;</span><span class="sc">{</span>i_val<span class="sc">}</span><span class="ss">&lt;/sub&gt; = </span><span class="sc">{</span>it[<span class="st">"b_tilde"</span>][i_idx]<span class="sc">:.1f}</span><span class="ss">'</span>]</span>
-<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> j_idx <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(it[<span class="st">'N'</span>])):</span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>            row.append(<span class="ss">f'</span><span class="sc">{</span><span class="op">-</span>it[<span class="st">"A_tilde"</span>][i_idx][j_idx]<span class="sc">:+.1f}</span><span class="ss">'</span>)</span>
-<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>        rows.append(row)</span>
-<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>    cells_vals <span class="op">=</span> <span class="bu">list</span>(<span class="bu">zip</span>(<span class="op">*</span>rows))</span>
-<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>    header_vals <span class="op">=</span> header</span>
-<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>    fill_colors <span class="op">=</span> []</span>
-<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> col_idx <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(header)):</span>
-<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>        col_colors <span class="op">=</span> []</span>
-<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> row_idx <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(rows)):</span>
-<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> row_idx <span class="op">==</span> <span class="dv">0</span>:</span>
-<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>                col_colors.append(<span class="st">'rgba(184,153,94,0.15)'</span>)</span>
-<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>            <span class="cf">else</span>:</span>
-<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>                col_colors.append(<span class="st">'rgba(123,143,163,0.08)'</span>)</span>
-<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>        fill_colors.append(col_colors)</span>
-<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    fig.add_trace(go.Table(</span>
-<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>        header<span class="op">=</span><span class="bu">dict</span>(values<span class="op">=</span>header_vals,</span>
-<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>            fill_color<span class="op">=</span><span class="st">'rgba(123,143,163,0.25)'</span>,</span>
-<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>            font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">13</span>), align<span class="op">=</span><span class="st">'center'</span>, height<span class="op">=</span><span class="dv">30</span>),</span>
-<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>        cells<span class="op">=</span><span class="bu">dict</span>(values<span class="op">=</span>cells_vals,</span>
-<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>            fill_color<span class="op">=</span>fill_colors,</span>
-<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>            font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">13</span>), align<span class="op">=</span><span class="st">'center'</span>, height<span class="op">=</span><span class="dv">28</span>),</span>
-<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>        visible<span class="op">=</span>(k <span class="op">==</span> <span class="dv">0</span>)</span>
-<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>    ))</span>
-<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a><span class="co"># Add dropdown buttons</span></span>
-<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>buttons <span class="op">=</span> []</span>
-<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k, it <span class="kw">in</span> <span class="bu">enumerate</span>(iterations):</span>
-<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a>    vis <span class="op">=</span> [<span class="va">False</span>] <span class="op">*</span> <span class="bu">len</span>(iterations)</span>
-<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>    vis[k] <span class="op">=</span> <span class="va">True</span></span>
-<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>    label <span class="op">=</span> it[<span class="st">'title'</span>]</span>
-<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>    status_text <span class="op">=</span> <span class="ss">f"&lt;b&gt;</span><span class="sc">{</span>it[<span class="st">'status'</span>]<span class="sc">}</span><span class="ss">&lt;/b&gt;"</span></span>
-<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> it[<span class="st">'entering'</span>] <span class="op">!=</span> <span class="st">'None'</span>:</span>
-<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>        status_text <span class="op">+=</span> <span class="ss">f"&lt;br&gt;Entering: </span><span class="sc">{</span>it[<span class="st">'entering'</span>]<span class="sc">}</span><span class="ss">&lt;br&gt;Leaving: </span><span class="sc">{</span>it[<span class="st">'leaving'</span>]<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>    buttons.append(<span class="bu">dict</span>(</span>
-<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>label,</span>
-<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>        method<span class="op">=</span><span class="st">'update'</span>,</span>
-<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>        args<span class="op">=</span>[{<span class="st">'visible'</span>: vis},</span>
-<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a>              {<span class="st">'annotations'</span>: [<span class="bu">dict</span>(</span>
-<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a>                  x<span class="op">=</span><span class="fl">0.5</span>, y<span class="op">=-</span><span class="fl">0.15</span>, xref<span class="op">=</span><span class="st">'paper'</span>, yref<span class="op">=</span><span class="st">'paper'</span>,</span>
-<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a>                  text<span class="op">=</span>status_text, showarrow<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>                  font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">12</span>), align<span class="op">=</span><span class="st">'center'</span>)]}]</span>
-<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a>    ))</span>
-<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
-<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>    updatemenus<span class="op">=</span>[<span class="bu">dict</span>(</span>
-<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>        <span class="bu">type</span><span class="op">=</span><span class="st">'dropdown'</span>, direction<span class="op">=</span><span class="st">'down'</span>,</span>
-<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="fl">0.5</span>, xanchor<span class="op">=</span><span class="st">'center'</span>, y<span class="op">=</span><span class="fl">1.15</span>, yanchor<span class="op">=</span><span class="st">'top'</span>,</span>
-<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a>        buttons<span class="op">=</span>buttons,</span>
-<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a>        font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">12</span>))],</span>
-<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a>    annotations<span class="op">=</span>[<span class="bu">dict</span>(</span>
-<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="fl">0.5</span>, y<span class="op">=-</span><span class="fl">0.15</span>, xref<span class="op">=</span><span class="st">'paper'</span>, yref<span class="op">=</span><span class="st">'paper'</span>,</span>
-<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a>        text<span class="op">=</span><span class="ss">f"&lt;b&gt;</span><span class="sc">{</span>iterations[<span class="dv">0</span>][<span class="st">'status'</span>]<span class="sc">}</span><span class="ss">&lt;/b&gt;&lt;br&gt;Entering: </span><span class="sc">{</span>iterations[<span class="dv">0</span>][<span class="st">'entering'</span>]<span class="sc">}</span><span class="ss">&lt;br&gt;Leaving: </span><span class="sc">{</span>iterations[<span class="dv">0</span>][<span class="st">'leaving'</span>]<span class="sc">}</span><span class="ss">"</span>,</span>
-<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a>        showarrow<span class="op">=</span><span class="va">False</span>, font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">12</span>), align<span class="op">=</span><span class="st">'center'</span>)],</span>
-<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>    margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">60</span>, b<span class="op">=</span><span class="dv">80</span>, l<span class="op">=</span><span class="dv">20</span>, r<span class="op">=</span><span class="dv">20</span>), height<span class="op">=</span><span class="dv">280</span>)</span>
-<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="fig-simplex-path" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-simplex-path-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/simplex-path.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;10.3: The simplex method traces a path along edges of the feasible polytope. Starting from the origin (BFS e), it pivots to BFS d, then to the optimal BFS a at (0.5, 1.5) with \zeta^* = -1.5."><img src="figures/simplex-path.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-simplex-path-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10.3: The simplex method traces a path along edges of the feasible polytope. Starting from the origin (BFS <span class="math inline">e</span>), it pivots to BFS <span class="math inline">d</span>, then to the optimal BFS <span class="math inline">a</span> at <span class="math inline">(0.5, 1.5)</span> with <span class="math inline">\zeta^* = -1.5</span>.
+</figcaption>
+</figure>
+</div>
+<div id="fig-simplex-tableau" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-simplex-tableau-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/simplex-tableau.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;10.4: The simplex tableau at each iteration. The method starts with basis B=\{3,4\} (slack variables), pivots twice, and terminates at the optimal basis B=\{1,2\} with x^* = (\frac{1}{2}, \frac{3}{2}) and f^* = -\frac{3}{2}. Red entries indicate negative reduced costs that trigger a pivot; green entries confirm optimality."><img src="figures/simplex-tableau.svg" class="img-fluid figure-img" style="width:85.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-simplex-tableau-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10.4: The simplex tableau at each iteration. The method starts with basis <span class="math inline">B=\{3,4\}</span> (slack variables), pivots twice, and terminates at the optimal basis <span class="math inline">B=\{1,2\}</span> with <span class="math inline">x^* = (\frac{1}{2}, \frac{3}{2})</span> and <span class="math inline">f^* = -\frac{3}{2}</span>. Red entries indicate negative reduced costs that trigger a pivot; green entries confirm optimality.
+</figcaption>
+</figure>
+</div>
+<!-- Remove obsolete interactive tableau -->
+<div style="display:none;">
+<script>
+(function() {
+  var iterations = [
+    {title: 'Iteration 0: B={3,4}, N={1,2}', B: [3,4], N: [1,2],
+     b_tilde: [1,2], A_tilde: [[-1,1],[1,1]], c_tilde: [0,-1], zeta: 0,
+     entering: 'q=2 (c\u0303\u2082=\u22121<0)', leaving: 'p=3 (min{1/1, 2/1}=1)',
+     status: 'Not optimal: c\u0303\u2082 = \u22121 < 0'},
+    {title: 'Iteration 1: B={2,4}, N={1,3}', B: [2,4], N: [1,3],
+     b_tilde: [1,1], A_tilde: [[-1,1],[2,-1]], c_tilde: [-1,1], zeta: -1,
+     entering: 'q=1 (c\u0303\u2081=\u22121<0)', leaving: 'p=4 (min{\u2014, 1/2}=0.5)',
+     status: 'Not optimal: c\u0303\u2081 = \u22121 < 0'},
+    {title: 'Iteration 2: B={1,2}, N={3,4}', B: [1,2], N: [3,4],
+     b_tilde: [0.5,1.5], A_tilde: [[0.5,-0.5],[0.5,0.5]], c_tilde: [0.5,0.5], zeta: -1.5,
+     entering: 'None', leaving: 'None',
+     status: 'OPTIMAL: all c\u0303 \u2265 0'}
+  ];
+
+  function fmt(v) { return (v >= 0 ? '+' : '') + v.toFixed(1); }
+
+  var allTraces = [];
+  for (var k = 0; k < iterations.length; k++) {
+    var it = iterations[k];
+    var header = ['', 'x<sub>' + it.N[0] + '</sub>', 'x<sub>' + it.N[1] + '</sub>'];
+    var col0 = ['\u03b6\u0303 = ' + it.zeta];
+    var col1 = [fmt(it.c_tilde[0])];
+    var col2 = [fmt(it.c_tilde[1])];
+    var fc0 = ['rgba(184,153,94,0.15)'];
+    var fc1 = ['rgba(184,153,94,0.15)'];
+    var fc2 = ['rgba(184,153,94,0.15)'];
+    for (var r = 0; r < it.B.length; r++) {
+      col0.push('x<sub>' + it.B[r] + '</sub> = ' + it.b_tilde[r].toFixed(1));
+      col1.push(fmt(-it.A_tilde[r][0]));
+      col2.push(fmt(-it.A_tilde[r][1]));
+      fc0.push('rgba(123,143,163,0.08)');
+      fc1.push('rgba(123,143,163,0.08)');
+      fc2.push('rgba(123,143,163,0.08)');
+    }
+    allTraces.push({
+      type: 'table',
+      header: {values: header, fill: {color: 'rgba(123,143,163,0.25)'},
+        font: {size: 13}, align: 'center', height: 30},
+      cells: {values: [col0, col1, col2], fill: {color: [fc0, fc1, fc2]},
+        font: {size: 13}, align: 'center', height: 28},
+      visible: (k === 0)
+    });
+  }
+
+  var buttons = [];
+  for (var k = 0; k < iterations.length; k++) {
+    var vis = [false, false, false]; vis[k] = true;
+    var it = iterations[k];
+    var statusText = '<b>' + it.status + '</b>';
+    if (it.entering !== 'None') {
+      statusText += '<br>Entering: ' + it.entering + '<br>Leaving: ' + it.leaving;
+    }
+    buttons.push({label: it.title, method: 'update',
+      args: [{visible: vis},
+        {annotations: [{x: 0.5, y: -0.15, xref: 'paper', yref: 'paper',
+          text: statusText, showarrow: false, font: {size: 12}, align: 'center'}]}]
+    });
+  }
+
+  var initStatus = '<b>' + iterations[0].status + '</b><br>Entering: ' + iterations[0].entering + '<br>Leaving: ' + iterations[0].leaving;
+
+  var layout = themeLayout({
+    updatemenus: [{type: 'dropdown', direction: 'down',
+      x: 0.5, xanchor: 'center', y: 1.15, yanchor: 'top',
+      buttons: buttons, font: {size: 12}}],
+    annotations: [{x: 0.5, y: -0.15, xref: 'paper', yref: 'paper',
+      text: initStatus, showarrow: false, font: {size: 12}, align: 'center'}],
+    margin: {t: 60, b: 80, l: 20, r: 20}, height: 280
+  });
+
+  Plotly.newPlot('fig-tableau-iterations', allTraces, layout, plotlyConfig);
+})();
+</script>
+</div>
 <p>The worked example above started from the slack-variable basis <span class="math inline">B = \{3, 4\}</span>, which was immediately feasible because <span class="math inline">b \geq 0</span>. But what happens when some right-hand-side entries are negative and the slack-variable basis is infeasible? We need a systematic method for finding an initial BFS.</p>
 </section>
-<section id="sec-initialization" class="level2" data-number="10.7">
-<h2 data-number="10.7" class="anchored" data-anchor-id="sec-initialization"><span class="header-section-number">10.7</span> Simplex Initialization via Auxiliary LP</h2>
-<p>The simplex algorithm requires an initial BFS to start. But how do we find one? This is itself a nontrivial problem. The solution is elegant: we solve an <strong>auxiliary LP</strong> whose feasibility is guaranteed, and whose optimal solution provides a starting BFS for the original problem.</p>
-<section id="sec-easy-init" class="level3" data-number="10.7.1">
-<h3 data-number="10.7.1" class="anchored" data-anchor-id="sec-easy-init"><span class="header-section-number">10.7.1</span> The Easy Case: <span class="math inline">b \geq 0</span></h3>
-<p>Consider the canonical form LP with slack variables:</p>
-<p><span class="math display">\min \; c^\top x \quad \text{s.t.} \quad Ax = b, \;\; x \geq 0, \;\; x \in \mathbb{R}^{n+m},</span></p>
-<p>where <span class="math inline">A</span> includes the identity block from the slack variables. If <span class="math inline">b \geq 0</span> (all RHS entries are nonneg), we can immediately set:</p>
-<p><span class="math display">B = \{n+1, n+2, \ldots, n+m\} \quad \text{(the slack variables)}.</span></p>
-<p>This gives the BFS <span class="math inline">x = (0, \ldots, 0, b_1, \ldots, b_m)</span>, which is feasible since <span class="math inline">b \geq 0</span>.</p>
-</section>
-<section id="sec-hard-init" class="level3" data-number="10.7.2">
-<h3 data-number="10.7.2" class="anchored" data-anchor-id="sec-hard-init"><span class="header-section-number">10.7.2</span> The Hard Case: Some <span class="math inline">b_i &lt; 0</span></h3>
-<p>When some <span class="math inline">b_i &lt; 0</span>, the slack-variable basis is infeasible. We construct an <strong>auxiliary LP</strong> by introducing a new variable <span class="math inline">x_0 \geq 0</span>:</p>
+<section id="sec-initialization" class="level2" data-number="10.6">
+<h2 data-number="10.6" class="anchored" data-anchor-id="sec-initialization"><span class="header-section-number">10.6</span> Simplex Initialization via Auxiliary LP</h2>
+<p>The simplex method requires a starting BFS. When <span class="math inline">b \geq 0</span>, this is easy: use the slack-variable basis <span class="math inline">B = \{n+1, \ldots, n+m\}</span>, which gives <span class="math inline">x_B^* = b \geq 0</span> (as we noted in <a href="#sec-starting-bfs" class="quarto-xref"><span>Section 10.2.2</span></a>). But what if some <span class="math inline">b_i &lt; 0</span>? Then <span class="math inline">x_B^* = b</span> has negative entries, so the slack-variable basis is <em>infeasible</em>. We cannot simply pick a basis and hope it works – we need a systematic method to either find a feasible BFS or certify that none exists.</p>
+<section id="sec-aux-idea" class="level3" data-number="10.6.1">
+<h3 data-number="10.6.1" class="anchored" data-anchor-id="sec-aux-idea"><span class="header-section-number">10.6.1</span> The Key Idea</h3>
+<p>The idea is beautifully simple: <strong>reduce the feasibility problem to an optimization problem that we already know how to solve.</strong></p>
+<p>We introduce an auxiliary variable <span class="math inline">x_0 \geq 0</span> that acts as a “buffer.” We subtract <span class="math inline">x_0</span> from the left-hand side of every constraint:</p>
+<p><span class="math display">\sum_{j=1}^{n} a_{ij} x_j - x_0 \leq b_i, \quad \forall\, i \in [m].</span></p>
+<p>By making <span class="math inline">x_0</span> large enough, we can satisfy <em>any</em> constraint, even those with <span class="math inline">b_i &lt; 0</span>. The question is: can we shrink <span class="math inline">x_0</span> all the way down to zero while keeping all constraints satisfied? If yes, then with <span class="math inline">x_0 = 0</span> the constraints reduce to the original ones, and we have found a feasible point for the original LP.</p>
+<p>This leads to the <strong>Auxiliary LP</strong>: minimize <span class="math inline">x_0</span> subject to the modified constraints.</p>
 <div id="def-auxiliary-lp" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 10.4 (Definition 15.4 (Auxiliary LP))</strong></span> Given the original LP <span class="math inline">\min c^\top x</span> s.t. <span class="math inline">\sum_{j=1}^n a_{ij} x_j \leq b_i</span>, <span class="math inline">x_j \geq 0</span>, the <strong>Auxiliary LP</strong> is:</p>
+<p><span class="theorem-title"><strong>Definition 10.4 (Auxiliary LP)</strong></span> Given the original LP <span class="math inline">\min c^\top x</span> s.t. <span class="math inline">\sum_{j=1}^n a_{ij} x_j \leq b_i</span>, <span class="math inline">x_j \geq 0</span>, the <strong>Auxiliary LP</strong> is:</p>
 <p><span class="math display">\text{(Aux-LP)} \quad \min \; x_0 \quad \text{s.t.} \quad \sum_{j=1}^{n} a_{ij} x_j - x_0 \leq b_i \;\; \forall\, i \in [m], \quad x_j \geq 0 \;\; \forall\, j \in \{0, 1, \ldots, n\}.</span></p>
 </div>
-<p>The auxiliary variable <span class="math inline">x_0</span> acts as a “slack buffer” that absorbs the infeasibility: by making <span class="math inline">x_0</span> large enough, all constraints can be satisfied.</p>
-<div id="thm-aux-lp-properties" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 10.1 (Theorem 15.5 (Properties of the Auxiliary LP))</strong></span> The Auxiliary LP has the following properties:</p>
-<ol type="1">
-<li><p><strong>The Aux-LP is always feasible.</strong> Setting <span class="math inline">x_1 = \cdots = x_n = 0</span> and <span class="math inline">x_0 = -\min_i b_i</span> (which is positive when some <span class="math inline">b_i &lt; 0</span>) gives a feasible solution. After adding slack variables, this yields a BFS with <span class="math inline">B = \{n+1, \ldots, n+m\}</span> (plus possibly <span class="math inline">x_0</span> replacing one slack).</p></li>
-<li><p><strong>The original LP is feasible if and only if the optimal value of the Aux-LP is zero</strong> (i.e., <span class="math inline">x_0^* = 0</span>).</p></li>
-<li><p><strong>If the Aux-LP optimal value is zero, the optimal BFS of the Aux-LP provides a starting BFS for the original LP</strong> (after dropping <span class="math inline">x_0</span>).</p></li>
-</ol>
-</div>
+</section>
+<section id="sec-aux-why" class="level3" data-number="10.6.2">
+<h3 data-number="10.6.2" class="anchored" data-anchor-id="sec-aux-why"><span class="header-section-number">10.6.2</span> Why This Works</h3>
+<p>The Aux-LP has three key properties:</p>
+<p><strong>Property 1: The Aux-LP is always feasible (and we can find a starting BFS).</strong></p>
+<p>Set <span class="math inline">x_1 = \cdots = x_n = 0</span>. The <span class="math inline">i</span>-th constraint becomes <span class="math inline">-x_0 \leq b_i</span>, i.e., <span class="math inline">x_0 \geq -b_i</span>. Choosing <span class="math inline">x_0 = \max_i(-b_i) = -\min_i b_i &gt; 0</span> satisfies all constraints. After adding slack variables <span class="math inline">s_1, \ldots, s_m</span>, the equational form of the Aux-LP is:</p>
+<p><span class="math display">\sum_{j=1}^{n} a_{ij} x_j - x_0 + s_i = b_i, \quad s_i \geq 0.</span></p>
+<p>With <span class="math inline">x_j = 0</span> for <span class="math inline">j \geq 1</span> and <span class="math inline">x_0 = -\min_i b_i</span>, the slack values are <span class="math inline">s_i = b_i + x_0</span>. For the row <span class="math inline">k</span> where <span class="math inline">b_k</span> is most negative, <span class="math inline">s_k = 0</span>. This gives an initial BFS with basis <span class="math inline">B = \{x_0, s_1, \ldots, s_m\} \setminus \{s_k\}</span> – we replace the slack <span class="math inline">s_k</span> with <span class="math inline">x_0</span> in the basis.</p>
+<p><strong>Property 2: The original LP is feasible <span class="math inline">\iff</span> the optimal value of the Aux-LP is zero.</strong></p>
+<ul>
+<li>(<span class="math inline">\Rightarrow</span>) If the original LP has a feasible point <span class="math inline">x^*</span>, then <span class="math inline">(x_0, x^*) = (0, x^*)</span> satisfies all Aux-LP constraints (they reduce to the original constraints when <span class="math inline">x_0 = 0</span>). Since <span class="math inline">x_0 \geq 0</span>, the minimum of the Aux-LP is at most 0, hence exactly 0.</li>
+<li>(<span class="math inline">\Leftarrow</span>) If the Aux-LP achieves <span class="math inline">x_0^* = 0</span>, the accompanying <span class="math inline">x^*</span> satisfies the original constraints (plug <span class="math inline">x_0 = 0</span> back in).</li>
+</ul>
+<p><strong>Property 3: The optimal BFS of the Aux-LP provides a starting BFS for the original LP.</strong></p>
+<p>When <span class="math inline">x_0^* = 0</span>, the Aux-LP’s optimal BFS consists of values for <span class="math inline">x_1, \ldots, x_n</span> and the slack variables <span class="math inline">s_1, \ldots, s_m</span> that satisfy <span class="math inline">Ax + s = b</span>, <span class="math inline">x, s \geq 0</span>. We need to extract a BFS for the original LP from this.</p>
+<ul>
+<li><strong>Generic case (<span class="math inline">x_0</span> is non-basic):</strong> Since non-basic variables are zero, <span class="math inline">x_0 = 0</span> is already enforced. The remaining basic variables (a subset of <span class="math inline">x_1, \ldots, x_n, s_1, \ldots, s_m</span>) form a valid BFS for the original equational form. Simply drop <span class="math inline">x_0</span> from the non-basic set.</li>
+<li><strong>Degenerate case (<span class="math inline">x_0</span> is basic with value 0):</strong> Here <span class="math inline">x_0</span> sits in the basis at value zero. We must pivot <span class="math inline">x_0</span> out of the basis before proceeding. Choose any non-basic original variable <span class="math inline">x_j</span> (or slack <span class="math inline">s_j</span>) with a nonzero entry in <span class="math inline">x_0</span>’s row, and perform one additional pivot to swap <span class="math inline">x_0</span> out. This pivot does not change the BFS values (since <span class="math inline">x_0 = 0</span>), it merely adjusts which variables are labeled basic vs.&nbsp;non-basic.</li>
+</ul>
+</section>
+<section id="sec-init-algorithm" class="level3" data-number="10.6.3">
+<h3 data-number="10.6.3" class="anchored" data-anchor-id="sec-init-algorithm"><span class="header-section-number">10.6.3</span> The Initialization Algorithm</h3>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1013,32 +1057,71 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
 </div>
 <div class="callout-body-container callout-body">
 <ol type="1">
-<li><strong>Check</strong> if <span class="math inline">b \geq 0</span>. If so, use <span class="math inline">B = \{n+1, \ldots, n+m\}</span> (slack variables) as the initial basis. Done.</li>
-<li><strong>Otherwise</strong>, formulate the Auxiliary LP and solve it using the simplex method (the Aux-LP itself has an obvious initial BFS).</li>
-<li><strong>If</strong> the optimal value of the Aux-LP is zero, the optimal BFS becomes the initial BFS for the original LP. Run simplex from here.</li>
-<li><strong>If</strong> the optimal value of the Aux-LP is positive, the original LP is <strong>infeasible</strong>.</li>
+<li><p><strong>Check</strong> if <span class="math inline">b \geq 0</span>. If so, use <span class="math inline">B = \{n+1, \ldots, n+m\}</span> (slack variables) as the initial basis. <strong>Done.</strong></p></li>
+<li><p><strong>Formulate the Aux-LP:</strong> Add the buffer variable <span class="math inline">x_0</span> to every constraint. The objective is <span class="math inline">\min x_0</span>.</p></li>
+<li><p><strong>Find a starting BFS for the Aux-LP:</strong> Set <span class="math inline">x_j = 0</span> for <span class="math inline">j = 1, \ldots, n</span> and <span class="math inline">x_0 = -\min_i b_i</span>. The row with the most negative <span class="math inline">b_i</span> contributes <span class="math inline">x_0</span> to the basis in place of its slack variable.</p></li>
+<li><p><strong>Solve the Aux-LP</strong> using the simplex method.</p></li>
+<li><p><strong>Interpret the result:</strong></p>
+<ul>
+<li>If the optimal value is <strong>zero</strong>: extract the BFS (dropping <span class="math inline">x_0</span>) and use it to initialize simplex on the original LP.</li>
+<li>If the optimal value is <strong>positive</strong>: the original LP is <strong>infeasible</strong>.</li>
+</ul></li>
 </ol>
 </div>
 </div>
+</section>
+<section id="sec-aux-example" class="level3" data-number="10.6.4">
+<h3 data-number="10.6.4" class="anchored" data-anchor-id="sec-aux-example"><span class="header-section-number">10.6.4</span> Example</h3>
 <div id="exm-aux-lp" class="theorem example">
 <p><span class="theorem-title"><strong>Example 10.2 (Auxiliary LP Example)</strong></span> Consider the LP:</p>
 <p><span class="math display">\min \; -x_1 + x_2 - x_3 \quad \text{s.t.} \quad 2x_1 - x_2 + 2x_3 \leq 4, \;\; 2x_1 - 3x_2 + x_3 \leq -5, \;\; -x_1 + x_2 - 2x_3 \leq -1, \;\; x_1, x_2, x_3 \geq 0.</span></p>
-<p>Since <span class="math inline">b_2 = -5 &lt; 0</span> and <span class="math inline">b_3 = -1 &lt; 0</span>, we cannot directly start simplex. The Auxiliary LP is:</p>
+<p>Here <span class="math inline">b = (4, -5, -1)^\top</span>, so <span class="math inline">b_2 = -5 &lt; 0</span> and <span class="math inline">b_3 = -1 &lt; 0</span>. The slack-variable basis gives <span class="math inline">x_B = b</span>, which has negative entries – we cannot start simplex directly.</p>
+<p><strong>Construct the Aux-LP.</strong> Subtract <span class="math inline">x_0</span> from each constraint:</p>
 <p><span class="math display">\min \; x_0 \quad \text{s.t.} \quad 2x_1 - x_2 + 2x_3 - x_0 \leq 4, \;\; 2x_1 - 3x_2 + x_3 - x_0 \leq -5, \;\; -x_1 + x_2 - 2x_3 - x_0 \leq -1, \;\; x_0, x_1, x_2, x_3 \geq 0.</span></p>
-<p>We can initialize the Aux-LP with <span class="math inline">x_1 = x_2 = x_3 = 0</span>, <span class="math inline">x_0 = 5</span> (since <span class="math inline">-\min_i b_i = 5</span>). Running simplex on the Aux-LP, if the optimal value is 0, we extract the BFS and continue with the original objective.</p>
+<p><strong>Find a starting BFS for the Aux-LP.</strong> Set <span class="math inline">x_1 = x_2 = x_3 = 0</span> and <span class="math inline">x_0 = -\min_i b_i = -(-5) = 5</span>. Adding slack variables <span class="math inline">s_1, s_2, s_3</span>:</p>
+<p><span class="math display">s_1 = 4 + 5 = 9, \qquad s_2 = -5 + 5 = 0, \qquad s_3 = -1 + 5 = 4.</span></p>
+<p>Since <span class="math inline">s_2 = 0</span>, the initial basis for the Aux-LP is <span class="math inline">B = \{x_0, s_1, s_3\}</span> (we replace <span class="math inline">s_2</span> with <span class="math inline">x_0</span>). This is a valid BFS: all basic variables are nonneg (<span class="math inline">x_0 = 5, s_1 = 9, s_3 = 4</span>).</p>
+<p><strong>Solve the Aux-LP.</strong> In equational form with slack variables, the Aux-LP constraints are:</p>
+<p><span class="math display">\begin{aligned}
+2x_1 - x_2 + 2x_3 - x_0 + s_1 &amp;= 4, \\
+2x_1 - 3x_2 + x_3 - x_0 + s_2 &amp;= -5, \\
+-x_1 + x_2 - 2x_3 - x_0 + s_3 &amp;= -1.
+\end{aligned}</span></p>
+<p>The objective is <span class="math inline">\min x_0</span>. Since <span class="math inline">x_0</span> is basic, we express the objective in terms of non-basic variables by using the second row (where <span class="math inline">x_0</span> entered) to eliminate <span class="math inline">x_0</span>:</p>
+<p><span class="math display">x_0 = 2x_1 - 3x_2 + x_3 - s_2 - 5 \quad \Longrightarrow \quad z = x_0 = 5 + (2x_1 - 3x_2 + x_3 - s_2).</span></p>
+<p>Reading off the reduced costs: <span class="math inline">r_{x_1} = 2</span>, <span class="math inline">r_{x_2} = -3</span>, <span class="math inline">r_{x_3} = 1</span>, <span class="math inline">r_{s_2} = -1</span>. Since <span class="math inline">r_{x_2} = -3 &lt; 0</span>, variable <span class="math inline">x_2</span> should enter the basis. The simplex method proceeds from here, pivoting to decrease <span class="math inline">x_0</span> until (if possible) <span class="math inline">x_0 = 0</span>.</p>
+<p><strong>Interpret the result.</strong> If simplex drives <span class="math inline">x_0^*</span> to zero, the accompanying values of <span class="math inline">(x_1, x_2, x_3, s_1, s_2, s_3)</span> form a BFS for the original LP. We then switch the objective back to <span class="math inline">\min(-x_1 + x_2 - x_3)</span> and continue simplex from this starting BFS. If instead <span class="math inline">x_0^* &gt; 0</span> at optimality, the original LP is infeasible — no assignment of <span class="math inline">x_1, x_2, x_3 \geq 0</span> can satisfy all the original constraints.</p>
+</div>
+<div class="callout callout-style-default callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Two-Phase Simplex
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The procedure above is often called the <strong>two-phase simplex method</strong>:</p>
+<ul>
+<li><strong>Phase I:</strong> Solve the Aux-LP to find a feasible BFS (or detect infeasibility).</li>
+<li><strong>Phase II:</strong> Starting from that BFS, solve the original LP.</li>
+</ul>
+<p>The two phases use exactly the same simplex machinery — the only difference is the objective function. Phase I minimizes the artificial variable <span class="math inline">x_0</span>; Phase II minimizes the original cost <span class="math inline">c^\top x</span>.</p>
+</div>
 </div>
 <p>With the auxiliary LP, we can now initialize the simplex method on any LP — the last remaining gap in the algorithm. The final design choice is the pivoting rule: among all non-basic variables with negative relative cost, which one should enter the basis? This choice turns out to have deep implications for whether the algorithm terminates at all.</p>
 </section>
 </section>
-<section id="sec-pivoting-rules" class="level2" data-number="10.8">
-<h2 data-number="10.8" class="anchored" data-anchor-id="sec-pivoting-rules"><span class="header-section-number">10.8</span> Pivoting Rules</h2>
+<section id="sec-pivoting-rules" class="level2" data-number="10.7">
+<h2 data-number="10.7" class="anchored" data-anchor-id="sec-pivoting-rules"><span class="header-section-number">10.7</span> Pivoting Rules</h2>
 <p>The simplex algorithm leaves freedom in <strong>Step 3</strong>: how to choose the entering variable <span class="math inline">q</span> among all non-basic variables with negative relative cost. Different choices lead to different pivoting rules, with significant implications for termination and performance.</p>
-<section id="sec-dantzig" class="level3" data-number="10.8.1">
-<h3 data-number="10.8.1" class="anchored" data-anchor-id="sec-dantzig"><span class="header-section-number">10.8.1</span> Dantzig’s Rule</h3>
+<section id="sec-dantzig" class="level3" data-number="10.7.1">
+<h3 data-number="10.7.1" class="anchored" data-anchor-id="sec-dantzig"><span class="header-section-number">10.7.1</span> Dantzig’s Rule</h3>
 <div id="def-dantzig-rule" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 10.5 (Definition 15.6 (Dantzig’s Pivoting Rule))</strong></span> <strong>Entering variable:</strong> Choose the non-basic variable with the <strong>most negative</strong> relative cost:</p>
+<p><span class="theorem-title"><strong>Definition 10.5 (Dantzig’s Pivoting Rule)</strong></span> <strong>Entering variable:</strong> Choose the non-basic variable with the <strong>most negative</strong> relative cost:</p>
 <p><span class="math display">q = \arg\min_{j \in N} \left\{\widetilde{c}_j : \widetilde{c}_j &lt; 0\right\}.</span></p>
-<p><strong>Leaving variable:</strong> Perform the ratio test (<a href="#eq-ratio-test" class="quarto-xref">Equation&nbsp;<span>10.3</span></a>). If there are ties, break by choosing the <strong>smallest index</strong>:</p>
+<p><strong>Leaving variable:</strong> Perform the ratio test (<a href="#eq-ratio-test" class="quarto-xref">Equation&nbsp;<span>10.6</span></a>). If there are ties, break by choosing the <strong>smallest index</strong>:</p>
 <p><span class="math display">p = \arg\min_{i \in B} \left\{\frac{\widetilde{b}_i}{\widetilde{A}_{iq}} : \widetilde{A}_{iq} &gt; 0\right\}.</span></p>
 </div>
 <p>Dantzig’s rule is intuitive: pick the variable that decreases the objective the fastest (per unit increase). However, it has a serious flaw.</p>
@@ -1056,10 +1139,10 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
 </div>
 </div>
 </section>
-<section id="sec-degeneracy" class="level3" data-number="10.8.2">
-<h3 data-number="10.8.2" class="anchored" data-anchor-id="sec-degeneracy"><span class="header-section-number">10.8.2</span> Degeneracy and Cycling</h3>
+<section id="sec-degeneracy" class="level3" data-number="10.7.2">
+<h3 data-number="10.7.2" class="anchored" data-anchor-id="sec-degeneracy"><span class="header-section-number">10.7.2</span> Degeneracy and Cycling</h3>
 <div id="def-degeneracy" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 10.6 (Definition 15.7 (Degeneracy))</strong></span> A BFS is <strong>degenerate</strong> if some basic variable has value zero, i.e., <span class="math inline">\widetilde{b}_i = 0</span> for some <span class="math inline">i \in B</span> (equivalently, <span class="math inline">x_B^*</span> contains a zero entry).</p>
+<p><span class="theorem-title"><strong>Definition 10.6 (Degeneracy)</strong></span> A BFS is <strong>degenerate</strong> if some basic variable has value zero, i.e., <span class="math inline">\widetilde{b}_i = 0</span> for some <span class="math inline">i \in B</span> (equivalently, <span class="math inline">x_B^*</span> contains a zero entry).</p>
 </div>
 <p>When a BFS is degenerate, a pivot may produce <span class="math inline">t^* = 0</span>, meaning the objective does not improve. The basis changes but the BFS point does not move. If a sequence of such zero-step pivots returns to a previously visited basis, the algorithm <strong>cycles</strong> and never terminates.</p>
 <div id="exm-cycling" class="theorem example">
@@ -1068,23 +1151,23 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
 <p>The initial BFS has <span class="math inline">\widetilde{b}_1 = \widetilde{b}_2 = 0</span> (degenerate). Under Dantzig’s rule, the simplex method cycles through a sequence of bases, returning to the starting basis without improving the objective.</p>
 </div>
 <div id="thm-cycling" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 10.2 (Theorem 15.8 (Cycling and Non-Termination))</strong></span> If the simplex method fails to terminate, then it must cycle – that is, it revisits the same basis.</p>
+<p><span class="theorem-title"><strong>Theorem 10.1 (Cycling and Non-Termination)</strong></span> If the simplex method fails to terminate, then it must cycle – that is, it revisits the same basis.</p>
 </div>
 <div class="proof">
 <p><span class="proof-title"><em>Proof</em>. </span>The number of possible bases is finite (at most <span class="math inline">\binom{n+m}{m}</span>). If the algorithm does not terminate, it must visit some basis twice. Since the simplex method is deterministic given a pivot rule, once it revisits a basis, it will repeat the same sequence of pivots indefinitely. <span class="math inline">\blacksquare</span></p>
 </div>
 </section>
-<section id="sec-bland" class="level3" data-number="10.8.3">
-<h3 data-number="10.8.3" class="anchored" data-anchor-id="sec-bland"><span class="header-section-number">10.8.3</span> Bland’s Rule</h3>
+<section id="sec-bland" class="level3" data-number="10.7.3">
+<h3 data-number="10.7.3" class="anchored" data-anchor-id="sec-bland"><span class="header-section-number">10.7.3</span> Bland’s Rule</h3>
 <p>Since Dantzig’s rule can cycle, we need a pivoting rule that guarantees termination. Bland’s rule resolves the cycling problem by using a simple, deterministic tie-breaking strategy: always choose the variable with the <strong>smallest index</strong>.</p>
 <div id="def-bland-rule" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 10.7 (Definition 15.9 (Bland’s Pivoting Rule))</strong></span> <strong>Entering variable:</strong> Choose the non-basic variable with <strong>smallest index</strong> among those with negative relative cost:</p>
+<p><span class="theorem-title"><strong>Definition 10.7 (Bland’s Pivoting Rule)</strong></span> <strong>Entering variable:</strong> Choose the non-basic variable with <strong>smallest index</strong> among those with negative relative cost:</p>
 <p><span class="math display">q = \min\left\{j \in N : \widetilde{c}_j &lt; 0\right\}.</span></p>
-<p><strong>Leaving variable:</strong> Perform the ratio test (<a href="#eq-ratio-test" class="quarto-xref">Equation&nbsp;<span>10.3</span></a>). If there are ties, break by choosing the <strong>smallest index</strong>:</p>
+<p><strong>Leaving variable:</strong> Perform the ratio test (<a href="#eq-ratio-test" class="quarto-xref">Equation&nbsp;<span>10.6</span></a>). If there are ties, break by choosing the <strong>smallest index</strong>:</p>
 <p><span class="math display">p = \arg\min_{i \in B}\left\{\frac{\widetilde{b}_i}{\widetilde{A}_{iq}} : \widetilde{A}_{iq} &gt; 0\right\}, \quad \text{with ties broken by smallest } i.</span></p>
 </div>
 <div id="thm-bland-termination" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 10.3 (Theorem 15.10 (Bland’s Rule Guarantees Termination))</strong></span> The simplex method with Bland’s rule <strong>always terminates</strong>.</p>
+<p><span class="theorem-title"><strong>Theorem 10.2 (Bland’s Rule Guarantees Termination)</strong></span> The simplex method with Bland’s rule <strong>always terminates</strong>.</p>
 </div>
 <p>This is a remarkable result. The simple prescription “choose the smallest index” is enough to break all possible cycling patterns, regardless of how degenerate the LP is.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
@@ -1137,12 +1220,11 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
 </div>
 <p>Bland’s rule resolves the termination question: the simplex method always finishes in finitely many steps. But “finite” is a weak guarantee — it says nothing about whether the algorithm is efficient. The natural next question is: how many pivots does the simplex method require as a function of the problem size?</p>
 </section>
-<section id="sec-oracle-complexity" class="level3" data-number="10.8.4">
-<h3 data-number="10.8.4" class="anchored" data-anchor-id="sec-oracle-complexity"><span class="header-section-number">10.8.4</span> Oracle Complexity</h3>
+<section id="sec-oracle-complexity" class="level3" data-number="10.7.4">
+<h3 data-number="10.7.4" class="anchored" data-anchor-id="sec-oracle-complexity"><span class="header-section-number">10.7.4</span> Oracle Complexity</h3>
 <p>To analyze the efficiency of the simplex method, we use the <strong>oracle computational model</strong>.</p>
-</section>
-<section id="sec-oracle-model" class="level3" data-number="10.8.5">
-<h3 data-number="10.8.5" class="anchored" data-anchor-id="sec-oracle-model"><span class="header-section-number">10.8.5</span> The Oracle Model</h3>
+<section id="sec-oracle-model" class="level4" data-number="10.7.4.1">
+<h4 data-number="10.7.4.1" class="anchored" data-anchor-id="sec-oracle-model"><span class="header-section-number">10.7.4.1</span> The Oracle Model</h4>
 <p>In the oracle model, an iterative algorithm interacts with an <strong>oracle</strong> that provides information for each update:</p>
 <ul>
 <li>The <strong>simplex algorithm</strong> maintains the current basis <span class="math inline">B</span>.</li>
@@ -1153,8 +1235,8 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
 <p>The <strong>oracle complexity</strong> is the number of queries (= the number of pivots):</p>
 <p><span class="math display">\text{Oracle complexity} = \#\text{ queries of } \{\widetilde{b}, \widetilde{c}, \widetilde{A}\} = \#\text{ pivots } (p, q).</span></p>
 </section>
-<section id="sec-complexity-guarantee" class="level3" data-number="10.8.6">
-<h3 data-number="10.8.6" class="anchored" data-anchor-id="sec-complexity-guarantee"><span class="header-section-number">10.8.6</span> Complexity Guarantee</h3>
+<section id="sec-complexity-guarantee" class="level4" data-number="10.7.4.2">
+<h4 data-number="10.7.4.2" class="anchored" data-anchor-id="sec-complexity-guarantee"><span class="header-section-number">10.7.4.2</span> Complexity Guarantee</h4>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1173,123 +1255,109 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
 <p>Despite this worst-case behavior, the simplex method is remarkably efficient in practice. Empirically, the number of pivots is typically <span class="math inline">O(m)</span> to <span class="math inline">O(m \log n)</span> – far from the exponential worst case. This practical efficiency, combined with the method’s ability to exploit problem structure and warm-start from nearby solutions, is why simplex remains the algorithm of choice for most LP solvers.</p>
 </section>
 </section>
-<section id="sec-step-by-step" class="level2" data-number="10.9">
-<h2 data-number="10.9" class="anchored" data-anchor-id="sec-step-by-step"><span class="header-section-number">10.9</span> Simplex Method Step by Step</h2>
-<p>The following visualization traces the simplex method step by step on the worked example. Use the slider to advance through iterations and observe how the entering and leaving variable selection drives the algorithm from one BFS to the next.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-simplex-interactive</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 15.4: Interactive simplex method demo. Use the slider to step through pivot iterations. The red arrow shows the direction of movement, and the highlighted vertex is the current BFS."</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Feasible region</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>poly_x <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">2</span>, <span class="fl">0.5</span>, <span class="dv">0</span>, <span class="dv">0</span>]</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>poly_y <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">0</span>, <span class="fl">1.5</span>, <span class="dv">1</span>, <span class="dv">0</span>]</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Simplex path: e -&gt; d -&gt; a</span></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>path <span class="op">=</span> [</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>    {<span class="st">'label'</span>: <span class="st">'e'</span>, <span class="st">'x'</span>: <span class="dv">0</span>, <span class="st">'y'</span>: <span class="dv">0</span>, <span class="st">'B'</span>: <span class="st">'{3,4}'</span>, <span class="st">'obj'</span>: <span class="dv">0</span>,</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>     <span class="st">'desc'</span>: <span class="st">'Start: BFS e at origin.&lt;br&gt;c</span><span class="ch">\u0303</span><span class="st"> = (0, </span><span class="ch">\u2212</span><span class="st">1). Enter q=2, leave p=3.'</span>},</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    {<span class="st">'label'</span>: <span class="st">'d'</span>, <span class="st">'x'</span>: <span class="dv">0</span>, <span class="st">'y'</span>: <span class="dv">1</span>, <span class="st">'B'</span>: <span class="st">'{2,4}'</span>, <span class="st">'obj'</span>: <span class="op">-</span><span class="dv">1</span>,</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>     <span class="st">'desc'</span>: <span class="st">'After pivot (3,2): BFS d.&lt;br&gt;c</span><span class="ch">\u0303</span><span class="st"> = (</span><span class="ch">\u2212</span><span class="st">1, 1). Enter q=1, leave p=4.'</span>},</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    {<span class="st">'label'</span>: <span class="st">'a'</span>, <span class="st">'x'</span>: <span class="fl">0.5</span>, <span class="st">'y'</span>: <span class="fl">1.5</span>, <span class="st">'B'</span>: <span class="st">'{1,2}'</span>, <span class="st">'obj'</span>: <span class="op">-</span><span class="fl">1.5</span>,</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>     <span class="st">'desc'</span>: <span class="st">'After pivot (4,1): BFS a.&lt;br&gt;c</span><span class="ch">\u0303</span><span class="st"> = (0.5, 0.5) </span><span class="ch">\u2265</span><span class="st"> 0. OPTIMAL!'</span>},</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Non-visited BFS</span></span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>other_bfs <span class="op">=</span> [</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    {<span class="st">'label'</span>: <span class="st">'b'</span>, <span class="st">'x'</span>: <span class="dv">2</span>, <span class="st">'y'</span>: <span class="dv">0</span>},</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>frames <span class="op">=</span> []</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> step <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(path)):</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>    frame_data <span class="op">=</span> []</span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Feasible region</span></span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    frame_data.append(go.Scatter(x<span class="op">=</span>poly_x, y<span class="op">=</span>poly_y, fill<span class="op">=</span><span class="st">'toself'</span>,</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>        fillcolor<span class="op">=</span><span class="st">'rgba(123,143,163,0.15)'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7b97ad'</span>, width<span class="op">=</span><span class="fl">2.5</span>),</span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span><span class="st">'Feasible region'</span>, mode<span class="op">=</span><span class="st">'lines'</span>))</span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Constraint lines</span></span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>    xx <span class="op">=</span> np.linspace(<span class="op">-</span><span class="fl">0.5</span>, <span class="dv">3</span>, <span class="dv">50</span>)</span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    frame_data.append(go.Scatter(x<span class="op">=</span>xx.tolist(), y<span class="op">=</span>(xx<span class="op">+</span><span class="dv">1</span>).tolist(), mode<span class="op">=</span><span class="st">'lines'</span>,</span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>        line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#968a80'</span>, dash<span class="op">=</span><span class="st">'dot'</span>, width<span class="op">=</span><span class="dv">1</span>), showlegend<span class="op">=</span><span class="va">False</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    frame_data.append(go.Scatter(x<span class="op">=</span>xx.tolist(), y<span class="op">=</span>(<span class="dv">2</span><span class="op">-</span>xx).tolist(), mode<span class="op">=</span><span class="st">'lines'</span>,</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>        line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#968a80'</span>, dash<span class="op">=</span><span class="st">'dot'</span>, width<span class="op">=</span><span class="dv">1</span>), showlegend<span class="op">=</span><span class="va">False</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Other BFS (gray)</span></span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> ob <span class="kw">in</span> other_bfs:</span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>        frame_data.append(go.Scatter(x<span class="op">=</span>[ob[<span class="st">'x'</span>]], y<span class="op">=</span>[ob[<span class="st">'y'</span>]], mode<span class="op">=</span><span class="st">'markers+text'</span>,</span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>            marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#aaa'</span>, size<span class="op">=</span><span class="dv">7</span>), text<span class="op">=</span>[ob[<span class="st">'label'</span>]],</span>
-<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a>            textposition<span class="op">=</span><span class="st">'bottom right'</span>, textfont<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">10</span>, color<span class="op">=</span><span class="st">'#aaa'</span>),</span>
-<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>            showlegend<span class="op">=</span><span class="va">False</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Visited path so far</span></span>
-<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>    px <span class="op">=</span> [p[<span class="st">'x'</span>] <span class="cf">for</span> p <span class="kw">in</span> path[:step<span class="op">+</span><span class="dv">1</span>]]</span>
-<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>    py <span class="op">=</span> [p[<span class="st">'y'</span>] <span class="cf">for</span> p <span class="kw">in</span> path[:step<span class="op">+</span><span class="dv">1</span>]]</span>
-<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>    frame_data.append(go.Scatter(x<span class="op">=</span>px, y<span class="op">=</span>py, mode<span class="op">=</span><span class="st">'lines'</span>,</span>
-<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>        line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, width<span class="op">=</span><span class="dv">3</span>, dash<span class="op">=</span><span class="st">'solid'</span>),</span>
-<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span><span class="st">'Simplex path'</span>, showlegend<span class="op">=</span>(step <span class="op">==</span> <span class="dv">0</span>)))</span>
-<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Visited vertices</span></span>
-<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(step<span class="op">+</span><span class="dv">1</span>):</span>
-<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>        p <span class="op">=</span> path[k]</span>
-<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>        is_current <span class="op">=</span> (k <span class="op">==</span> step)</span>
-<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a>        sz <span class="op">=</span> <span class="dv">14</span> <span class="cf">if</span> is_current <span class="cf">else</span> <span class="dv">8</span></span>
-<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a>        sym <span class="op">=</span> <span class="st">'star'</span> <span class="cf">if</span> (is_current <span class="kw">and</span> step <span class="op">==</span> <span class="bu">len</span>(path)<span class="op">-</span><span class="dv">1</span>) <span class="cf">else</span> (<span class="st">'circle'</span> <span class="cf">if</span> <span class="kw">not</span> is_current <span class="cf">else</span> <span class="st">'diamond'</span>)</span>
-<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a>        col <span class="op">=</span> <span class="st">'#b56b6b'</span> <span class="cf">if</span> is_current <span class="cf">else</span> <span class="st">'#8a6e5e'</span></span>
-<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>        frame_data.append(go.Scatter(x<span class="op">=</span>[p[<span class="st">'x'</span>]], y<span class="op">=</span>[p[<span class="st">'y'</span>]], mode<span class="op">=</span><span class="st">'markers+text'</span>,</span>
-<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a>            marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span>col, size<span class="op">=</span>sz, symbol<span class="op">=</span>sym, line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>            text<span class="op">=</span>[p[<span class="st">'label'</span>]], textposition<span class="op">=</span><span class="st">'top left'</span>,</span>
-<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>            textfont<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">12</span>, color<span class="op">=</span>col),</span>
-<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>            hovertext<span class="op">=</span>[<span class="ss">f"BFS </span><span class="sc">{</span>p[<span class="st">'label'</span>]<span class="sc">}</span><span class="ss">: (</span><span class="sc">{</span>p[<span class="st">'x'</span>]<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>p[<span class="st">'y'</span>]<span class="sc">}</span><span class="ss">)&lt;br&gt;B=</span><span class="sc">{</span>p[<span class="st">'B'</span>]<span class="sc">}</span><span class="ss">, </span><span class="ch">\u03b6</span><span class="ss">=</span><span class="sc">{</span>p[<span class="st">'obj'</span>]<span class="sc">}</span><span class="ss">"</span>],</span>
-<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>            hoverinfo<span class="op">=</span><span class="st">'text'</span>, showlegend<span class="op">=</span><span class="va">False</span>))</span>
-<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Arrow to next if not last</span></span>
-<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a>    annotations <span class="op">=</span> []</span>
-<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> step <span class="op">&lt;</span> <span class="bu">len</span>(path) <span class="op">-</span> <span class="dv">1</span>:</span>
-<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a>        nx <span class="op">=</span> path[step<span class="op">+</span><span class="dv">1</span>][<span class="st">'x'</span>]</span>
-<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>        ny <span class="op">=</span> path[step<span class="op">+</span><span class="dv">1</span>][<span class="st">'y'</span>]</span>
-<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>        cx <span class="op">=</span> path[step][<span class="st">'x'</span>]</span>
-<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>        cy <span class="op">=</span> path[step][<span class="st">'y'</span>]</span>
-<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a>        mx <span class="op">=</span> (cx <span class="op">+</span> nx) <span class="op">/</span> <span class="dv">2</span></span>
-<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>        my <span class="op">=</span> (cy <span class="op">+</span> ny) <span class="op">/</span> <span class="dv">2</span></span>
-<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a>        annotations.append(<span class="bu">dict</span>(x<span class="op">=</span>nx, y<span class="op">=</span>ny, ax<span class="op">=</span>cx, ay<span class="op">=</span>cy,</span>
-<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a>            xref<span class="op">=</span><span class="st">'x'</span>, yref<span class="op">=</span><span class="st">'y'</span>, axref<span class="op">=</span><span class="st">'x'</span>, ayref<span class="op">=</span><span class="st">'y'</span>,</span>
-<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a>            showarrow<span class="op">=</span><span class="va">True</span>, arrowhead<span class="op">=</span><span class="dv">3</span>, arrowsize<span class="op">=</span><span class="fl">1.5</span>, arrowcolor<span class="op">=</span><span class="st">'#b56b6b'</span>,</span>
-<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>            arrowwidth<span class="op">=</span><span class="dv">2</span>))</span>
-<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Info annotation</span></span>
-<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a>    annotations.append(<span class="bu">dict</span>(</span>
-<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span><span class="fl">0.02</span>, y<span class="op">=</span><span class="fl">0.02</span>, xref<span class="op">=</span><span class="st">'paper'</span>, yref<span class="op">=</span><span class="st">'paper'</span>,</span>
-<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a>        text<span class="op">=</span><span class="ss">f"&lt;b&gt;Step </span><span class="sc">{</span>step<span class="sc">}</span><span class="ss">: B=</span><span class="sc">{</span>path[step][<span class="st">'B'</span>]<span class="sc">}</span><span class="ss">, </span><span class="ch">\u03b6</span><span class="ss">=</span><span class="sc">{</span>path[step][<span class="st">'obj'</span>]<span class="sc">}</span><span class="ss">&lt;/b&gt;&lt;br&gt;</span><span class="sc">{</span>path[step][<span class="st">'desc'</span>]<span class="sc">}</span><span class="ss">"</span>,</span>
-<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>        showarrow<span class="op">=</span><span class="va">False</span>, font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">11</span>), align<span class="op">=</span><span class="st">'left'</span>,</span>
-<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a>        bgcolor<span class="op">=</span><span class="st">'rgba(255,255,255,0.85)'</span>, bordercolor<span class="op">=</span><span class="st">'#7b97ad'</span>, borderwidth<span class="op">=</span><span class="dv">1</span>))</span>
-<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>    frames.append(go.Frame(data<span class="op">=</span>frame_data, name<span class="op">=</span><span class="bu">str</span>(step),</span>
-<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>        layout<span class="op">=</span>go.Layout(annotations<span class="op">=</span>annotations)))</span>
-<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a><span class="co"># Initial figure</span></span>
-<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure(data<span class="op">=</span>frames[<span class="dv">0</span>].data, frames<span class="op">=</span>frames,</span>
-<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>    layout<span class="op">=</span>go.Layout(</span>
-<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a>        xaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'x</span><span class="ch">\u2081</span><span class="st">'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">2.8</span>], zeroline<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>        yaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'x</span><span class="ch">\u2082</span><span class="st">'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">2.3</span>], zeroline<span class="op">=</span><span class="va">True</span>, scaleanchor<span class="op">=</span><span class="st">'x'</span>),</span>
-<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a>        showlegend<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a>        annotations<span class="op">=</span>frames[<span class="dv">0</span>].layout.annotations,</span>
-<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a>        margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">20</span>, b<span class="op">=</span><span class="dv">70</span>, l<span class="op">=</span><span class="dv">55</span>, r<span class="op">=</span><span class="dv">20</span>),</span>
-<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>        sliders<span class="op">=</span>[<span class="bu">dict</span>(</span>
-<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a>            active<span class="op">=</span><span class="dv">0</span>, pad<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">40</span>),</span>
-<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a>            steps<span class="op">=</span>[<span class="bu">dict</span>(args<span class="op">=</span>[[<span class="bu">str</span>(k)], <span class="bu">dict</span>(mode<span class="op">=</span><span class="st">'immediate'</span>,</span>
-<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a>                frame<span class="op">=</span><span class="bu">dict</span>(duration<span class="op">=</span><span class="dv">0</span>, redraw<span class="op">=</span><span class="va">True</span>))],</span>
-<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>                label<span class="op">=</span><span class="ss">f'Step </span><span class="sc">{</span>k<span class="sc">}</span><span class="ss">'</span>, method<span class="op">=</span><span class="st">'animate'</span>)</span>
-<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> k <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(frames))],</span>
-<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>            currentvalue<span class="op">=</span><span class="bu">dict</span>(prefix<span class="op">=</span><span class="st">''</span>, visible<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a>            x<span class="op">=</span><span class="fl">0.1</span>, <span class="bu">len</span><span class="op">=</span><span class="fl">0.8</span>)]))</span>
-<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="sec-summary" class="level2" data-number="10.10">
-<h2 data-number="10.10" class="anchored" data-anchor-id="sec-summary"><span class="header-section-number">10.10</span> Summary</h2>
+<section id="sec-step-by-step" class="level2" data-number="10.8">
+<h2 data-number="10.8" class="anchored" data-anchor-id="sec-step-by-step"><span class="header-section-number">10.8</span> Simplex Method Step by Step</h2>
+<p>The following visualization traces the simplex method step by step on the worked example. Use the slider to advance through iterations and observe how the entering and leaving variable selection drives the algorithm from one BFS to the next.</p>
+<div id="fig-simplex-interactive" style="width:100%;max-width:700px;margin:auto;"></div>
+<p class="figure-caption" style="text-align:center;margin-top:0.5em;">Figure 10.4: Interactive simplex method demo. Use the slider to step through pivot iterations. The red arrow shows the direction of movement, and the highlighted vertex is the current BFS.</p>
+<script>
+(function() {
+  var poly_x = [0, 2, 0.5, 0, 0];
+  var poly_y = [0, 0, 1.5, 1, 0];
+
+  var path = [
+    {label: 'e', x: 0, y: 0, B: '{3,4}', obj: 0,
+     desc: 'Start: BFS e at origin.<br>c\u0303 = (0, \u22121). Enter q=2, leave p=3.'},
+    {label: 'd', x: 0, y: 1, B: '{2,4}', obj: -1,
+     desc: 'After pivot (3,2): BFS d.<br>c\u0303 = (\u22121, 1). Enter q=1, leave p=4.'},
+    {label: 'a', x: 0.5, y: 1.5, B: '{1,2}', obj: -1.5,
+     desc: 'After pivot (4,1): BFS a.<br>c\u0303 = (0.5, 0.5) \u2265 0. OPTIMAL!'}
+  ];
+
+  var xx = Array.from({length: 50}, function(_, i) { return -0.5 + 3.5 * i / 49; });
+
+  var frames = [];
+  for (var step = 0; step < path.length; step++) {
+    var frameData = [];
+
+    // Feasible region
+    frameData.push({x: poly_x, y: poly_y, fill: 'toself',
+      fillcolor: 'rgba(123,143,163,0.15)', line: {color: '#7b97ad', width: 2.5},
+      name: 'Feasible region', mode: 'lines'});
+
+    // Constraint lines
+    frameData.push({x: xx, y: xx.map(function(v){return v+1;}), mode: 'lines',
+      line: {color: '#968a80', dash: 'dot', width: 1}, showlegend: false, hoverinfo: 'skip'});
+    frameData.push({x: xx, y: xx.map(function(v){return 2-v;}), mode: 'lines',
+      line: {color: '#968a80', dash: 'dot', width: 1}, showlegend: false, hoverinfo: 'skip'});
+
+    // Other BFS (gray)
+    frameData.push({x: [2], y: [0], mode: 'markers+text',
+      marker: {color: '#aaa', size: 7}, text: ['b'],
+      textposition: 'bottom right', textfont: {size: 10, color: '#aaa'},
+      showlegend: false, hoverinfo: 'skip'});
+
+    // Visited path so far
+    var px = [], py = [];
+    for (var k = 0; k <= step; k++) { px.push(path[k].x); py.push(path[k].y); }
+    frameData.push({x: px, y: py, mode: 'lines',
+      line: {color: '#b56b6b', width: 3}, name: 'Simplex path', showlegend: false});
+
+    // Visited vertices
+    for (var k = 0; k <= step; k++) {
+      var p = path[k];
+      var isCurrent = (k === step);
+      var sz = isCurrent ? 14 : 8;
+      var sym = (isCurrent && step === path.length-1) ? 'star' : (isCurrent ? 'diamond' : 'circle');
+      var col = isCurrent ? '#b56b6b' : '#8a6e5e';
+      frameData.push({x: [p.x], y: [p.y], mode: 'markers+text',
+        marker: {color: col, size: sz, symbol: sym, line: {width: 1.5, color: 'white'}},
+        text: [p.label], textposition: 'top left',
+        textfont: {size: 12, color: col},
+        hovertext: ['BFS ' + p.label + ': (' + p.x + ',' + p.y + ')<br>B=' + p.B + ', \u03b6=' + p.obj],
+        hoverinfo: 'text', showlegend: false});
+    }
+
+    // Annotations
+    var anns = [];
+    if (step < path.length - 1) {
+      anns.push({x: path[step+1].x, y: path[step+1].y,
+        ax: path[step].x, ay: path[step].y,
+        xref: 'x', yref: 'y', axref: 'x', ayref: 'y',
+        showarrow: true, arrowhead: 3, arrowsize: 1.5, arrowcolor: '#b56b6b', arrowwidth: 2});
+    }
+    anns.push({x: 0.02, y: 0.02, xref: 'paper', yref: 'paper',
+      text: '<b>Step ' + step + ': B=' + path[step].B + ', \u03b6=' + path[step].obj + '</b><br>' + path[step].desc,
+      showarrow: false, font: {size: 11}, align: 'left',
+      bgcolor: 'rgba(255,255,255,0.85)', bordercolor: '#7b97ad', borderwidth: 1});
+
+    frames.push({data: frameData, name: String(step), layout: {annotations: anns}});
+  }
+
+  var sliderSteps = [];
+  for (var k = 0; k < frames.length; k++) {
+    sliderSteps.push({args: [[String(k)], {mode: 'immediate', frame: {duration: 0, redraw: true}}],
+      label: 'Step ' + k, method: 'animate'});
+  }
+
+  var layout = themeLayout({
+    xaxis: themeAxis('x\u2081', {range: [-0.5, 2.8], zeroline: true, showline: true}),
+    yaxis: themeAxis('x\u2082', {range: [-0.5, 2.3], zeroline: true, scaleanchor: 'x', showline: true}),
+    showlegend: false,
+    annotations: frames[0].layout.annotations,
+    margin: {t: 20, b: 70, l: 55, r: 20},
+    sliders: [{active: 0, pad: {t: 40}, steps: sliderSteps,
+      currentvalue: {prefix: '', visible: true}, x: 0.1, len: 0.8}]
+  });
+
+  Plotly.newPlot('fig-simplex-interactive', frames[0].data, layout, plotlyConfig)
+    .then(function() { return Plotly.addFrames('fig-simplex-interactive', frames); });
+})();
+</script>
+</section>
+<section id="sec-summary" class="level2" data-number="10.9">
+<h2 data-number="10.9" class="anchored" data-anchor-id="sec-summary"><span class="header-section-number">10.9</span> Summary</h2>
 <p>The simplex method is a complete algorithm for linear programming. Let us recap its key components:</p>
 <div class="callout callout-style-simple callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1744,50 +1812,6 @@ Figure&nbsp;10.1: The simplex method traverses vertices of the feasible polytope
   </div>
 </nav>
 </div> <!-- /content -->
-<script>
-// Plotly Warmtone theming helpers — shared across all lectures
-// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
-const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
-
-function css(v) {
-  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-}
-
-function legendStyle() {
-  return {
-    font: {family: figFont, size: 13, color: css('--fig-text')},
-    bgcolor: css('--fig-bg') + 'dd',
-    bordercolor: css('--fig-grid'),
-    borderwidth: 1,
-  };
-}
-
-function themeLayout(extra) {
-  return Object.assign({
-    paper_bgcolor: css('--fig-bg'),
-    plot_bgcolor: css('--fig-plot-bg'),
-    font: {family: figFont, color: css('--fig-text'), size: 14},
-  }, extra || {});
-}
-
-function themeAxis(title, extra) {
-  return Object.assign({
-    title: {text: title, font: {family: figFont, size: 14}},
-    gridcolor: css('--fig-grid'),
-    zerolinecolor: css('--fig-grid'),
-    linecolor: css('--fig-axis'),
-    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
-  }, extra || {});
-}
-
-// Plotly color sequences matching the Warmtone palette
-const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
-];
-</script>
 <script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
 (function() {
   let previousOnload = window.onload;

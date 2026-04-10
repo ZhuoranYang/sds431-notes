@@ -23,41 +23,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -110,6 +75,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -265,19 +274,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  <a href="../lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  <a href="../lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
   </div>
 </li>
       </ul>
@@ -335,7 +344,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -391,41 +400,50 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-overview" id="toc-sec-overview" class="nav-link active" data-scroll-target="#sec-overview"><span class="header-section-number">18.1</span> What Will Be Covered</a></li>
-  <li><a href="#sec-motivation" id="toc-sec-motivation" class="nav-link" data-scroll-target="#sec-motivation"><span class="header-section-number">18.2</span> 1. Motivation</a>
+  <li><a href="#what-will-be-covered" id="toc-what-will-be-covered" class="nav-link active" data-scroll-target="#what-will-be-covered">What Will Be Covered</a></li>
+  <li><a href="#sec-big-picture" id="toc-sec-big-picture" class="nav-link" data-scroll-target="#sec-big-picture"><span class="header-section-number">18.1</span> From Words to Predictions: The Big Picture</a></li>
+  <li><a href="#sec-motivation" id="toc-sec-motivation" class="nav-link" data-scroll-target="#sec-motivation"><span class="header-section-number">18.2</span> Motivation: Why Transformers?</a>
   <ul class="collapse">
-  <li><a href="#sec-language-tasks" id="toc-sec-language-tasks" class="nav-link" data-scroll-target="#sec-language-tasks"><span class="header-section-number">18.2.1</span> Language Tasks</a></li>
+  <li><a href="#sec-landscape" id="toc-sec-landscape" class="nav-link" data-scroll-target="#sec-landscape"><span class="header-section-number">18.2.1</span> The Landscape of AI Models</a></li>
+  <li><a href="#sec-language-tasks" id="toc-sec-language-tasks" class="nav-link" data-scroll-target="#sec-language-tasks"><span class="header-section-number">18.2.2</span> Language Tasks</a></li>
   </ul></li>
-  <li><a href="#sec-three-types" id="toc-sec-three-types" class="nav-link" data-scroll-target="#sec-three-types"><span class="header-section-number">18.3</span> 2. Three Types of Transformer-Based Language Models</a>
+  <li><a href="#sec-three-types" id="toc-sec-three-types" class="nav-link" data-scroll-target="#sec-three-types"><span class="header-section-number">18.3</span> Three Types of Transformer Models</a>
   <ul class="collapse">
-  <li><a href="#sec-encoder-only" id="toc-sec-encoder-only" class="nav-link" data-scroll-target="#sec-encoder-only"><span class="header-section-number">18.3.1</span> Task Type 1: Encoder-Only (Feature Extraction + Discriminative Tasks)</a></li>
-  <li><a href="#sec-decoder-only" id="toc-sec-decoder-only" class="nav-link" data-scroll-target="#sec-decoder-only"><span class="header-section-number">18.3.2</span> Task Type 2: Decoder-Only (Autoregressive Generation)</a></li>
-  <li><a href="#sec-encoder-decoder" id="toc-sec-encoder-decoder" class="nav-link" data-scroll-target="#sec-encoder-decoder"><span class="header-section-number">18.3.3</span> Task Type 3: Encoder-Decoder Transformer</a></li>
+  <li><a href="#sec-encoder-only" id="toc-sec-encoder-only" class="nav-link" data-scroll-target="#sec-encoder-only"><span class="header-section-number">18.3.1</span> Encoder-Only (Feature Extraction)</a></li>
+  <li><a href="#sec-decoder-only" id="toc-sec-decoder-only" class="nav-link" data-scroll-target="#sec-decoder-only"><span class="header-section-number">18.3.2</span> Decoder-Only (Autoregressive Generation)</a></li>
+  <li><a href="#sec-encoder-decoder" id="toc-sec-encoder-decoder" class="nav-link" data-scroll-target="#sec-encoder-decoder"><span class="header-section-number">18.3.3</span> Encoder-Decoder</a></li>
   </ul></li>
-  <li><a href="#sec-architecture" id="toc-sec-architecture" class="nav-link" data-scroll-target="#sec-architecture"><span class="header-section-number">18.4</span> 3. Architectures of Transformers</a>
+  <li><a href="#sec-token-embedding" id="toc-sec-token-embedding" class="nav-link" data-scroll-target="#sec-token-embedding"><span class="header-section-number">18.4</span> Token Embedding</a></li>
+  <li><a href="#sec-prediction-head" id="toc-sec-prediction-head" class="nav-link" data-scroll-target="#sec-prediction-head"><span class="header-section-number">18.5</span> Prediction Head and Softmax</a>
   <ul class="collapse">
-  <li><a href="#sec-prediction-head" id="toc-sec-prediction-head" class="nav-link" data-scroll-target="#sec-prediction-head"><span class="header-section-number">18.4.1</span> Prediction Head &amp; Softmax</a></li>
-  <li><a href="#sec-loss-function" id="toc-sec-loss-function" class="nav-link" data-scroll-target="#sec-loss-function"><span class="header-section-number">18.4.2</span> Loss Function for Decoder-Only Model</a></li>
-  <li><a href="#sec-token-embedding" id="toc-sec-token-embedding" class="nav-link" data-scroll-target="#sec-token-embedding"><span class="header-section-number">18.4.3</span> Token Embedding</a></li>
+  <li><a href="#sec-loss-function" id="toc-sec-loss-function" class="nav-link" data-scroll-target="#sec-loss-function"><span class="header-section-number">18.5.1</span> Loss Function: Cross-Entropy</a></li>
+  <li><a href="#sec-autoregressive-generation" id="toc-sec-autoregressive-generation" class="nav-link" data-scroll-target="#sec-autoregressive-generation"><span class="header-section-number">18.5.2</span> Autoregressive Generation</a></li>
   </ul></li>
-  <li><a href="#sec-attention" id="toc-sec-attention" class="nav-link" data-scroll-target="#sec-attention"><span class="header-section-number">18.5</span> 4. Attention Mechanism</a>
+  <li><a href="#sec-attention" id="toc-sec-attention" class="nav-link" data-scroll-target="#sec-attention"><span class="header-section-number">18.6</span> The Attention Mechanism</a>
   <ul class="collapse">
-  <li><a href="#sec-cross-attention" id="toc-sec-cross-attention" class="nav-link" data-scroll-target="#sec-cross-attention"><span class="header-section-number">18.5.1</span> Cross Attention: The Equations</a></li>
-  <li><a href="#sec-self-attention" id="toc-sec-self-attention" class="nav-link" data-scroll-target="#sec-self-attention"><span class="header-section-number">18.5.2</span> Self-Attention</a></li>
+  <li><a href="#sec-cross-attention" id="toc-sec-cross-attention" class="nav-link" data-scroll-target="#sec-cross-attention"><span class="header-section-number">18.6.1</span> Cross Attention</a></li>
+  <li><a href="#sec-self-attention" id="toc-sec-self-attention" class="nav-link" data-scroll-target="#sec-self-attention"><span class="header-section-number">18.6.2</span> Self-Attention</a></li>
+  <li><a href="#sec-permutation-invariance" id="toc-sec-permutation-invariance" class="nav-link" data-scroll-target="#sec-permutation-invariance"><span class="header-section-number">18.6.3</span> Permutation Invariance</a></li>
   </ul></li>
-  <li><a href="#sec-position-embedding" id="toc-sec-position-embedding" class="nav-link" data-scroll-target="#sec-position-embedding"><span class="header-section-number">18.6</span> 5. Position Embedding</a></li>
-  <li><a href="#sec-causal-masking" id="toc-sec-causal-masking" class="nav-link" data-scroll-target="#sec-causal-masking"><span class="header-section-number">18.7</span> 6. Causal Masking: Don’t See the Future</a></li>
-  <li><a href="#sec-mlp-layer" id="toc-sec-mlp-layer" class="nav-link" data-scroll-target="#sec-mlp-layer"><span class="header-section-number">18.8</span> 7. Add MLP Layers After Each Attention Layer</a></li>
-  <li><a href="#sec-multi-head" id="toc-sec-multi-head" class="nav-link" data-scroll-target="#sec-multi-head"><span class="header-section-number">18.9</span> 8. Multi-Head Attention</a></li>
-  <li><a href="#sec-residual-layernorm" id="toc-sec-residual-layernorm" class="nav-link" data-scroll-target="#sec-residual-layernorm"><span class="header-section-number">18.10</span> 9. Residual Connections &amp; Layer Normalization</a></li>
-  <li><a href="#sec-full-architecture" id="toc-sec-full-architecture" class="nav-link" data-scroll-target="#sec-full-architecture"><span class="header-section-number">18.11</span> 10. Full Transformer Architecture</a></li>
-  <li><a href="#sec-gpt3-exercise" id="toc-sec-gpt3-exercise" class="nav-link" data-scroll-target="#sec-gpt3-exercise"><span class="header-section-number">18.12</span> Exercise: Understanding GPT-3 Parameters</a></li>
-  <li><a href="#sec-transformer-circuits" id="toc-sec-transformer-circuits" class="nav-link" data-scroll-target="#sec-transformer-circuits"><span class="header-section-number">18.13</span> Transformer Circuits &amp; Residual Stream</a></li>
-  <li><a href="#sec-interactive-demo" id="toc-sec-interactive-demo" class="nav-link" data-scroll-target="#sec-interactive-demo"><span class="header-section-number">18.14</span> Interactive Demos</a>
+  <li><a href="#sec-challenges" id="toc-sec-challenges" class="nav-link" data-scroll-target="#sec-challenges"><span class="header-section-number">18.7</span> Three Challenges and Their Solutions</a>
   <ul class="collapse">
-  <li><a href="#self-attention-computation" id="toc-self-attention-computation" class="nav-link" data-scroll-target="#self-attention-computation"><span class="header-section-number">18.14.1</span> Self-Attention Computation</a></li>
-  <li><a href="#gpt-3-parameter-count" id="toc-gpt-3-parameter-count" class="nav-link" data-scroll-target="#gpt-3-parameter-count"><span class="header-section-number">18.14.2</span> GPT-3 Parameter Count</a></li>
+  <li><a href="#sec-position-embedding" id="toc-sec-position-embedding" class="nav-link" data-scroll-target="#sec-position-embedding"><span class="header-section-number">18.7.1</span> Positional Embedding</a></li>
+  <li><a href="#sec-causal-masking" id="toc-sec-causal-masking" class="nav-link" data-scroll-target="#sec-causal-masking"><span class="header-section-number">18.7.2</span> Causal Masking</a></li>
+  <li><a href="#sec-mlp-layer" id="toc-sec-mlp-layer" class="nav-link" data-scroll-target="#sec-mlp-layer"><span class="header-section-number">18.7.3</span> MLP / Feed-Forward Layer</a></li>
   </ul></li>
+  <li><a href="#sec-multi-head" id="toc-sec-multi-head" class="nav-link" data-scroll-target="#sec-multi-head"><span class="header-section-number">18.8</span> Multi-Head Attention</a></li>
+  <li><a href="#sec-residual-layernorm" id="toc-sec-residual-layernorm" class="nav-link" data-scroll-target="#sec-residual-layernorm"><span class="header-section-number">18.9</span> Residual Connections and Layer Normalization</a>
+  <ul class="collapse">
+  <li><a href="#sec-residual" id="toc-sec-residual" class="nav-link" data-scroll-target="#sec-residual"><span class="header-section-number">18.9.1</span> Residual Connections</a></li>
+  <li><a href="#sec-layer-norm" id="toc-sec-layer-norm" class="nav-link" data-scroll-target="#sec-layer-norm"><span class="header-section-number">18.9.2</span> Layer Normalization</a></li>
+  </ul></li>
+  <li><a href="#sec-full-architecture" id="toc-sec-full-architecture" class="nav-link" data-scroll-target="#sec-full-architecture"><span class="header-section-number">18.10</span> The Full Transformer Decoder</a></li>
+  <li><a href="#sec-gpt3-exercise" id="toc-sec-gpt3-exercise" class="nav-link" data-scroll-target="#sec-gpt3-exercise"><span class="header-section-number">18.11</span> Understanding GPT-3: Parameter Analysis</a>
+  <ul class="collapse">
+  <li><a href="#sec-gpt3-variants" id="toc-sec-gpt3-variants" class="nav-link" data-scroll-target="#sec-gpt3-variants"><span class="header-section-number">18.11.1</span> GPT-3 Model Variants</a></li>
+  <li><a href="#sec-counting-params" id="toc-sec-counting-params" class="nav-link" data-scroll-target="#sec-counting-params"><span class="header-section-number">18.11.2</span> Counting Parameters</a></li>
+  </ul></li>
+  <li><a href="#sec-transformer-circuits" id="toc-sec-transformer-circuits" class="nav-link" data-scroll-target="#sec-transformer-circuits"><span class="header-section-number">18.12</span> Transformer Circuits and the Residual Stream</a></li>
   <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   </ul>
 </nav>
@@ -452,110 +470,151 @@ window.Quarto = {
 </header>
 
 
-<p>Adapted from slides by Anna Goldie (Stanford CS 224n), John Hewitt, and Song Han (MIT 6.5940)</p>
+<p>In 2017, a team at Google published a paper titled “Attention Is All You Need.” The architecture it introduced — the <strong>Transformer</strong> — has since become the foundation of virtually every major AI system: ChatGPT and GPT-4 (OpenAI), Claude (Anthropic), Gemini (Google), LLaMA (Meta), and many more. Beyond language, transformers power image generation (DALL-E, Stable Diffusion), protein structure prediction (AlphaFold), code completion (Copilot), and even chip design.</p>
+<p>What makes the transformer so powerful? At its core, it is built from a small set of mathematical operations we have studied throughout this course — matrix multiplications, softmax normalization, and elementwise nonlinearities — all trained end-to-end with gradient descent. The key innovation is the <strong>attention mechanism</strong>: a learned, content-dependent weighted average that allows every token in a sequence to dynamically gather information from every other token. This simple idea, combined with positional encodings, residual connections, and layer normalization, scales to networks with hundreds of billions of parameters.</p>
+<p>This chapter develops the transformer architecture from the ground up. We start with how words become vectors, build up the attention mechanism step by step, assemble the full decoder architecture, and conclude by analyzing the parameter count of GPT-3 to build concrete intuition for the scale of modern language models.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Remark: Prerequisites
+<span class="screen-reader-only">Tip</span>Companion Notebooks
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<ul>
-<li><a href="../lectures/17-diffusion-models.html">Part 6</a>: deep generative models, training with gradient descent</li>
-<li><a href="../lectures/02-math-background.html">Part 2</a>: linear algebra, matrix operations</li>
-</ul>
+<p>Companion notebooks for this chapter are coming soon.</p>
 </div>
 </div>
-<p>The transformer architecture has fundamentally reshaped artificial intelligence. Since the publication of “Attention Is All You Need” in 2017, transformers have become the universal backbone for language models (GPT, Claude, LLaMA), vision models (ViT), protein structure prediction (AlphaFold), and much more. Understanding how transformers work is now essential for anyone working at the intersection of optimization and machine learning.</p>
-<p>At its core, the transformer is built from a small set of mathematical operations — matrix multiplications, softmax normalization, and elementwise nonlinearities — all of which are trained end-to-end using the gradient-based optimization methods developed earlier in this course. The key innovation is the <strong>attention mechanism</strong>, which allows each token in a sequence to dynamically attend to every other token, computing a weighted average that captures long-range dependencies. Combined with positional encodings, residual connections, and layer normalization, these attention layers are stacked into deep networks with billions of parameters.</p>
-<p>This chapter walks through the transformer architecture from the ground up. We will see how token embeddings map discrete words into continuous vectors, how self-attention computes context-dependent representations, and how the full decoder architecture generates text one token at a time. We also analyze the parameter count of GPT-3 to build concrete intuition for the scale of these models.</p>
-<section id="sec-overview" class="level2" data-number="18.1">
-<h2 data-number="18.1" class="anchored" data-anchor-id="sec-overview"><span class="header-section-number">18.1</span> What Will Be Covered</h2>
+<section id="what-will-be-covered" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="what-will-be-covered">What Will Be Covered</h2>
 <ul>
-<li>Language tasks and three types of transformer models (encoder-only, decoder-only, encoder-decoder)</li>
+<li>Language tasks and three types of transformer models</li>
 <li>Token embedding, positional encoding, and the softmax prediction head</li>
 <li>The attention mechanism: cross attention and self-attention</li>
-<li>Multi-head attention, causal masking, MLP layers, residual connections, and layer normalization</li>
-<li>Full transformer decoder architecture and GPT-3 parameter analysis</li>
+<li>Multi-head attention, causal masking, MLP layers</li>
+<li>Residual connections and layer normalization</li>
+<li>Full transformer decoder architecture</li>
+<li>GPT-3 parameter analysis</li>
 </ul>
 </section>
-<section id="sec-motivation" class="level2" data-number="18.2">
-<h2 data-number="18.2" class="anchored" data-anchor-id="sec-motivation"><span class="header-section-number">18.2</span> 1. Motivation</h2>
-<p>Transformer models are <strong>revolutionary</strong>. The foundational paper “Attention Is All You Need” (Vaswani et al., 2017) introduced the Transformer architecture, which has since become the backbone of virtually all modern AI systems: ChatGPT/GPT-4 (OpenAI), Claude (Anthropic), Gemini (Google), LLaMA (Meta), and many more.</p>
-<p>Today, Transformer-based models dominate the LMSYS Chatbot Arena Leaderboard (Chiang et al., 2024), with models like GPT-4-Turbo, Claude 3 Opus, and Gemini 1.5 Pro at the top.</p>
-<p>Transformers have even shown great promise <strong>outside of NLP</strong>:</p>
-<ul>
-<li><strong>Protein folding:</strong> AlphaFold2 (Jumper et al., 2021) uses attention mechanisms</li>
-<li><strong>Image classification:</strong> Vision Transformer (ViT) outperforms ResNet-based baselines (Dosovitskiy et al., 2020)</li>
-<li><strong>ML for Systems:</strong> Transformer-based compiler models (GO-one) speed up other Transformer models (Zhou et al., 2020)</li>
-</ul>
-<section id="sec-language-tasks" class="level3" data-number="18.2.1">
-<h3 data-number="18.2.1" class="anchored" data-anchor-id="sec-language-tasks"><span class="header-section-number">18.2.1</span> Language Tasks</h3>
-<div id="def-language-tasks" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.1 (Two Main Types of Language Tasks)</strong></span> <strong>1. Generative tasks</strong> (conditional generation): e.g., translation, code generation. <span class="math display">\mathbb{P}(\text{text} \mid \text{text / image}).</span></p>
-<p><strong>2. Discriminative tasks</strong> (classification): e.g., part-of-speech classification, sentiment analysis. <span class="math display">\mathbb{P}(\text{label} \mid \text{text}).</span></p>
+<section id="sec-big-picture" class="level2" data-number="18.1">
+<h2 data-number="18.1" class="anchored" data-anchor-id="sec-big-picture"><span class="header-section-number">18.1</span> From Words to Predictions: The Big Picture</h2>
+<p>Before diving into details, let us sketch the full pipeline of an autoregressive language model like GPT. The model takes a sequence of words (tokens), processes them through many layers, and outputs a probability distribution over what word comes next.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
 </div>
-<p>Understanding this distinction between generative and discriminative tasks is important because it directly determines which type of transformer architecture is appropriate: encoder-only models excel at discriminative tasks, while decoder-only models are designed for generation.</p>
+<div class="callout-body-container">
+<p><strong>The Transformer Pipeline</strong> (using GPT-3 as reference):</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 26%">
+<col style="width: 50%">
+<col style="width: 23%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Stage</th>
+<th style="text-align: left;">Description</th>
+<th style="text-align: left;">Size</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Input</strong></td>
+<td style="text-align: left;">Token sequence <span class="math inline">w_1, \ldots, w_L</span> (one-hot)</td>
+<td style="text-align: left;"><span class="math inline">L \times V</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Embedding</strong></td>
+<td style="text-align: left;">Map tokens to vectors: <span class="math inline">x_i = W_E w_i + \text{pe}_i</span></td>
+<td style="text-align: left;"><span class="math inline">L \times d</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Transformer blocks</strong></td>
+<td style="text-align: left;">96 layers of attention + MLP + normalization</td>
+<td style="text-align: left;"><span class="math inline">L \times d</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Unembedding</strong></td>
+<td style="text-align: left;">Project to vocabulary: <span class="math inline">W_U z_\ell</span></td>
+<td style="text-align: left;"><span class="math inline">L \times V</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Softmax</strong></td>
+<td style="text-align: left;">Probability distribution over next token</td>
+<td style="text-align: left;"><span class="math inline">L \times V</span></td>
+</tr>
+</tbody>
+</table>
+<p>Here <span class="math inline">V = 50{,}257</span> (vocabulary), <span class="math inline">d = 12{,}288</span> (model dimension), <span class="math inline">L = 2{,}048</span> (context window).</p>
+</div>
+</div>
+</div>
+<p>We will now build each component from scratch.</p>
+</section>
+<section id="sec-motivation" class="level2" data-number="18.2">
+<h2 data-number="18.2" class="anchored" data-anchor-id="sec-motivation"><span class="header-section-number">18.2</span> Motivation: Why Transformers?</h2>
+<section id="sec-landscape" class="level3" data-number="18.2.1">
+<h3 data-number="18.2.1" class="anchored" data-anchor-id="sec-landscape"><span class="header-section-number">18.2.1</span> The Landscape of AI Models</h3>
+<p>Transformers have become the universal architecture across AI:</p>
+<ul>
+<li><strong>Language:</strong> GPT-4, Claude, LLaMA, Gemini — all decoder-only transformers</li>
+<li><strong>Vision:</strong> Vision Transformer (ViT) matches or exceeds CNNs on image classification</li>
+<li><strong>Protein science:</strong> AlphaFold2 uses attention to predict 3D protein structures</li>
+<li><strong>Multimodal:</strong> DALL-E 3, Stable Diffusion use transformers for text-conditioned image generation</li>
+</ul>
+<p>Today, transformer-based models dominate the LMSYS Chatbot Arena Leaderboard, with models like GPT-4, Claude, and Gemini at the top.</p>
+</section>
+<section id="sec-language-tasks" class="level3" data-number="18.2.2">
+<h3 data-number="18.2.2" class="anchored" data-anchor-id="sec-language-tasks"><span class="header-section-number">18.2.2</span> Language Tasks</h3>
+<div id="def-language-tasks" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.1 (Two Main Types of Language Tasks)</strong></span> Language tasks broadly fall into two categories:</p>
+<p><strong>1. Generative tasks</strong> (conditional generation): translation, summarization, code generation, dialogue. <span class="math display">\mathbb{P}(\text{output text} \mid \text{input text / image}).</span></p>
+<p><strong>2. Discriminative tasks</strong> (classification): sentiment analysis, part-of-speech tagging, spam detection. <span class="math display">\mathbb{P}(\text{label} \mid \text{input text}).</span></p>
+</div>
+<p>This distinction directly determines which transformer architecture is appropriate.</p>
 </section>
 </section>
 <section id="sec-three-types" class="level2" data-number="18.3">
-<h2 data-number="18.3" class="anchored" data-anchor-id="sec-three-types"><span class="header-section-number">18.3</span> 2. Three Types of Transformer-Based Language Models</h2>
-<p>Depending on the task, transformers come in three flavors that differ in how information flows through the model. The choice between them determines whether the model can “see the whole input at once” (useful for classification) or must generate output one token at a time (necessary for text generation). Understanding these three variants clarifies why modern large language models are almost exclusively decoder-only.</p>
+<h2 data-number="18.3" class="anchored" data-anchor-id="sec-three-types"><span class="header-section-number">18.3</span> Three Types of Transformer Models</h2>
+<p>Depending on the task, transformers come in three variants that differ in how information flows through the model.</p>
 <section id="sec-encoder-only" class="level3" data-number="18.3.1">
-<h3 data-number="18.3.1" class="anchored" data-anchor-id="sec-encoder-only"><span class="header-section-number">18.3.1</span> Task Type 1: Encoder-Only (Feature Extraction + Discriminative Tasks)</h3>
+<h3 data-number="18.3.1" class="anchored" data-anchor-id="sec-encoder-only"><span class="header-section-number">18.3.1</span> Encoder-Only (Feature Extraction)</h3>
 <div id="def-encoder-only" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.2 (Encoder-Only Transformer)</strong></span> An encoder-only transformer creates a <strong>sequence of token-level features</strong> of the input (for discriminative tasks).</p>
+<p><span class="theorem-title"><strong>Definition 18.2 (Encoder-Only Transformer)</strong></span> Creates a <strong>sequence of contextual features</strong> from the input.</p>
 <ul>
-<li><strong>Input:</strong> sequence of tokens <span class="math inline">w_1, \ldots, w_L</span>; <span class="math inline">L</span> = sequence length</li>
-<li><strong>Output:</strong> sequence of features <span class="math inline">z_1, z_2, \ldots, z_L \in \mathbb{R}^d</span></li>
+<li><strong>Input:</strong> tokens <span class="math inline">w_1, \ldots, w_L</span></li>
+<li><strong>Output:</strong> features <span class="math inline">z_1, z_2, \ldots, z_L \in \mathbb{R}^d</span></li>
+<li><strong>Key property:</strong> each <span class="math inline">z_\ell</span> depends on the <strong>entire</strong> input <span class="math inline">\{w_1, \ldots, w_L\}</span> (bidirectional attention)</li>
+<li><strong>Use case:</strong> downstream classification (sentiment, NER, part-of-speech)</li>
+<li><strong>Examples:</strong> BERT, Vision Transformer (ViT)</li>
 </ul>
-<p><strong>Key characteristic:</strong> each <span class="math inline">z_\ell</span> depends on the <em>whole</em> input. That is, <span class="math inline">z_\ell</span> depends on <span class="math inline">\{w_1, \ldots, w_L\}</span> for all <span class="math inline">\ell \in [L]</span>.</p>
-<p>Extract global features for <strong>downstream tasks</strong> (trained separately using these features):</p>
-<ul>
-<li><strong>Token-level:</strong> part-of-speech classification</li>
-<li><strong>Sentence-level:</strong> sentiment analysis</li>
-</ul>
-<p><strong>Key examples:</strong> BERT, Vision Transformer (ViT)</p>
 </div>
 </section>
 <section id="sec-decoder-only" class="level3" data-number="18.3.2">
-<h3 data-number="18.3.2" class="anchored" data-anchor-id="sec-decoder-only"><span class="header-section-number">18.3.2</span> Task Type 2: Decoder-Only (Autoregressive Generation)</h3>
+<h3 data-number="18.3.2" class="anchored" data-anchor-id="sec-decoder-only"><span class="header-section-number">18.3.2</span> Decoder-Only (Autoregressive Generation)</h3>
 <div id="def-decoder-only" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.3 (Decoder-Only Transformer)</strong></span> A decoder-only transformer generates a sequence of features for <strong>generating the next token</strong>.</p>
+<p><span class="theorem-title"><strong>Definition 18.3 (Decoder-Only Transformer)</strong></span> Generates text one token at a time, left to right.</p>
 <ul>
-<li><strong>Input:</strong> sequence of tokens <span class="math inline">w_1, w_2, \ldots, w_L</span></li>
-<li><strong>Output:</strong> sequence of features <span class="math inline">z_1, z_2, \ldots, z_L</span></li>
+<li><strong>Input:</strong> tokens <span class="math inline">w_1, w_2, \ldots, w_L</span></li>
+<li><strong>Output:</strong> features <span class="math inline">z_1, z_2, \ldots, z_L</span></li>
+<li><strong>Key property:</strong> each <span class="math inline">z_\ell</span> depends only on <span class="math inline">w_1, \ldots, w_\ell</span> (<strong>autoregressive</strong> — cannot look into the future)</li>
+<li>Predict <span class="math inline">w_{\ell+1}</span> from <span class="math inline">z_\ell</span> via a <strong>softmax prediction layer</strong></li>
+<li><strong>Examples:</strong> GPT family, LLaMA, Mistral, Claude</li>
 </ul>
-<p><strong>Key characteristics:</strong></p>
-<ul>
-<li>Each <span class="math inline">z_\ell</span> only depends on <span class="math inline">w_1, w_2, \ldots, w_\ell</span> (<strong>autoregressive</strong> / cannot look into the future)</li>
-<li>Predict <span class="math inline">w_{\ell+1}</span> using <span class="math inline">z_\ell</span> only, via a <strong>softmax prediction layer</strong></li>
-</ul>
-<p><strong>Key examples:</strong> GPT family, LLaMA, Mistral</p>
-</div>
-<div id="exm-autoregressive" class="theorem example">
-<p><span class="theorem-title"><strong>Example 18.1 (Autoregressive Generation)</strong></span> We want a model that predicts the next word given context. For “I am a Yale ?”, we want: <span class="math display">\mathbb{P}(w_5 \mid w_{1:4}) = \mathbb{P}(\text{"student"} \mid \text{"I am a Yale"}).</span></p>
-<p>An <strong>autoregressive LLM</strong> = Decoder-only TF + Prediction Head: <span class="math inline">\mathbb{P}_\theta(w_{\ell+1} \mid w_1, \ldots, w_\ell)</span>.</p>
-<p>Autoregressive generation proceeds step by step:</p>
-<ul>
-<li><span class="math inline">\mathbb{P}(\text{"I"} \mid \text{prompt} = \text{"My name is X."})</span></li>
-<li><span class="math inline">\mathbb{P}(\text{"am"} \mid \text{prompt} = \text{"My name is X. I"})</span></li>
-<li><span class="math inline">\mathbb{P}(\text{"a"} \mid \text{prompt} = \text{"My name is X. I am"})</span></li>
-<li><span class="math inline">\mathbb{P}(\text{"Yale"} \mid \text{prompt} = \text{"My name is X. I am a"})</span></li>
-<li><span class="math inline">\mathbb{P}(\text{"student"} \mid \text{prompt} = \text{"My name is X. I am a Yale"})</span></li>
-</ul>
-<p>Each output word is copied back into the input for the next prediction.</p>
 </div>
 </section>
 <section id="sec-encoder-decoder" class="level3" data-number="18.3.3">
-<h3 data-number="18.3.3" class="anchored" data-anchor-id="sec-encoder-decoder"><span class="header-section-number">18.3.3</span> Task Type 3: Encoder-Decoder Transformer</h3>
+<h3 data-number="18.3.3" class="anchored" data-anchor-id="sec-encoder-decoder"><span class="header-section-number">18.3.3</span> Encoder-Decoder</h3>
 <div id="def-encoder-decoder" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.4 (Encoder-Decoder Transformer)</strong></span> The original Transformer model (Vaswani et al., 2017). Used for <strong>machine translation</strong> and conditional generation.</p>
-<p>The encoder processes the input sequence into features; the decoder autoregressively generates the output, attending to the encoder features via <strong>cross attention</strong>.</p>
-<p>Example: (“Hello”, “world”, “!”) <span class="math inline">\to</span> Encoder <span class="math inline">\to</span> features <span class="math inline">\to</span> Decoder <span class="math inline">\to</span> (“Bonjour”, “le”, “monde”, “!”)</p>
+<p><span class="theorem-title"><strong>Definition 18.4 (Encoder-Decoder Transformer)</strong></span> The original architecture from “Attention Is All You Need” (Vaswani et al., 2017). The encoder processes the input into features; the decoder autoregressively generates the output, attending to encoder features via <strong>cross attention</strong>.</p>
+<ul>
+<li><strong>Use case:</strong> machine translation, summarization</li>
+<li><strong>Example:</strong> T5, the original Transformer</li>
+</ul>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -567,138 +626,159 @@ window.Quarto = {
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Encoder-decoder models and encoder-only LLMs are <strong>not popular now</strong>.</p>
-<ul>
-<li><strong>Decoder-only</strong> models are most popular — GPT family, LLaMA, Mistral</li>
-<li>Decoder-only models can also perform discriminative tasks</li>
-<li>Only exception: Vision Transformer (ViT), which is encoder-only</li>
-</ul>
+<p>Decoder-only models dominate modern practice. They can handle both generative and discriminative tasks, making encoder-only and encoder-decoder architectures largely superseded. The main exception is Vision Transformer (ViT), which is encoder-only.</p>
 </div>
 </div>
 </section>
 </section>
-<section id="sec-architecture" class="level2" data-number="18.4">
-<h2 data-number="18.4" class="anchored" data-anchor-id="sec-architecture"><span class="header-section-number">18.4</span> 3. Architectures of Transformers</h2>
-<p><em>Note: This is the most important part of this class, and it is very complicated.</em></p>
-<p>There are many components of these neural networks. To introduce the architecture, we equivalently introduce the “forward” function: <strong>How is the input language token sequence transformed into the output?</strong></p>
-<div class="callout callout-style-simple callout-note">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
-<p><strong>Mental Picture</strong> (using GPT-3 as reference):</p>
-<ul>
-<li><span class="math inline">V</span> = vocabulary size = 50,257</li>
-<li><span class="math inline">d</span> = model dimension = 12,288</li>
-<li><span class="math inline">L</span> = sequence length = 2,048</li>
-</ul>
-<p>Input: <span class="math inline">w_1, \ldots, w_L</span> (tokens, <span class="math inline">w_i \in \mathbb{R}^V</span> one-hot). Transformer (embedding, MLP, attention, layer norm, residual link) produces features <span class="math inline">z_1, \ldots, z_L \in \mathbb{R}^d</span>. Then a prediction layer produces the loss <span class="math inline">\ell_1, \ldots, \ell_L</span>.</p>
-</div>
-</div>
-</div>
-<section id="sec-prediction-head" class="level3" data-number="18.4.1">
-<h3 data-number="18.4.1" class="anchored" data-anchor-id="sec-prediction-head"><span class="header-section-number">18.4.1</span> Prediction Head &amp; Softmax</h3>
-<p>The prediction head is designed according to the task, which determines the loss function. A transformer outputs a real-valued vector <span class="math inline">z_\ell \in \mathbb{R}^d</span> at each position, but for next-token prediction we need a probability distribution over the vocabulary. The softmax function bridges this gap by converting an arbitrary vector of real numbers (“logits”) into a valid probability distribution.</p>
-<div id="def-softmax" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.5 (Softmax Function)</strong></span> For any <span class="math inline">N</span> real numbers <span class="math inline">\{v_i\}_{i \in [N]}</span>, the <strong>softmax function</strong> gives us a probability distribution over <span class="math inline">[N] = \{1, \ldots, N\}</span>: <span class="math display">\text{Denote: } p = \text{Softmax}(\{v_i\}_{i \in [N]}) \in \mathbb{R}^N.</span> <span class="math display">\mathbb{P}(\text{random variable} = i) = p(i) = \frac{\exp(v_i)}{\sum_{j=1}^{N} \exp(v_j)}.</span></p>
-<p>Equivalently, <span class="math inline">p(i) \propto \exp(v_i)</span>. <strong>Key insight:</strong> Softmax gives us a distribution.</p>
-</div>
-<p>The softmax function converts a vector of arbitrary real-valued scores (logits) into a valid probability distribution. The exponential function ensures all outputs are positive, and the normalization ensures they sum to one. Larger logits receive exponentially more probability mass, making softmax a “soft” version of the argmax operation.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Remark: Decoding (Unembedding) + Softmax
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The TF produces a vector <span class="math inline">z_\ell \in \mathbb{R}^d</span>. We can map <span class="math inline">z_\ell</span> to <span class="math inline">\mathbb{R}^N</span>, then apply softmax: <span class="math display">\underbrace{W_U}_{\mathbb{R}^{N \times d}} \cdot z_\ell = \mathbb{R}^N \xrightarrow{\text{Softmax}} \text{distribution over } [N], \quad \text{e.g., over tokens with } N = V.</span></p>
-<p>This is a <strong>softmax linear model</strong>.</p>
-<p><strong>Discriminative task:</strong> e.g., sentiment analysis — aggregate <span class="math inline">z_1, \ldots, z_L</span> (e.g., <span class="math inline">z = \frac{1}{L}\sum_{\ell=1}^{L} z_\ell</span>), then feed into a softmax linear classifier: <span class="math inline">\mathbb{P}(\text{positive} \mid z) \propto \exp(w^\top z)</span>.</p>
-<p><strong>Autoregressive generation:</strong> use <span class="math inline">z_\ell</span> to predict <span class="math inline">w_{\ell+1}</span> via softmax linear classification.</p>
-</div>
-</div>
-</section>
-<section id="sec-loss-function" class="level3" data-number="18.4.2">
-<h3 data-number="18.4.2" class="anchored" data-anchor-id="sec-loss-function"><span class="header-section-number">18.4.2</span> Loss Function for Decoder-Only Model</h3>
-<p>With the softmax prediction head in place, we need a loss function to train the model. The natural choice for next-token prediction is to maximize the probability of the correct next token at each position, which leads to the cross-entropy loss. This is equivalent to maximum likelihood estimation and is the standard training objective for all autoregressive language models.</p>
-<div id="thm-cross-entropy" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 18.1 (Cross-Entropy Loss (Equivalent to MLE))</strong></span> At each token position <span class="math inline">\ell \in [L]</span>, TF outputs <span class="math inline">z_\ell \in \mathbb{R}^d</span>. After unembedding (<span class="math inline">W_U \in \mathbb{R}^{d \times V}</span>) + softmax, we have a distribution <span class="math inline">p_\ell \in \Delta_L</span>.</p>
-<p>The next-token label is <span class="math inline">w_{\ell+1}</span> (one-hot vector). The loss is: <span class="math display">\text{Loss}(\theta) = -\sum_{\ell=1}^{L-1} w_{\ell+1}^\top \log p_\ell = -\sum_{\ell=1}^{L-1} \log \mathbb{P}_\theta(w_{\ell+1} \mid w_1, \ldots, w_\ell).</span></p>
-<p>This is the <strong>cross-entropy loss</strong>, equivalent to <strong>maximum likelihood estimation (MLE)</strong>. Parameters <span class="math inline">\theta</span> are trained via gradient-based optimization using backpropagation (see <a href="../lectures/02-math-background.html">Part 2</a> for backpropagation and automatic differentiation).</p>
-</div>
-<p>The cross-entropy loss penalizes the model for assigning low probability to the correct next token. Minimizing this loss is equivalent to maximizing the likelihood of the training data, which connects transformer training directly to the statistical framework of maximum likelihood estimation studied throughout this course.</p>
-</section>
-<section id="sec-token-embedding" class="level3" data-number="18.4.3">
-<h3 data-number="18.4.3" class="anchored" data-anchor-id="sec-token-embedding"><span class="header-section-number">18.4.3</span> Token Embedding</h3>
+<section id="sec-token-embedding" class="level2" data-number="18.4">
+<h2 data-number="18.4" class="anchored" data-anchor-id="sec-token-embedding"><span class="header-section-number">18.4</span> Token Embedding</h2>
+<p>The first step is to convert discrete words into continuous vectors that a neural network can process.</p>
 <div id="def-token-embedding" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.6 (Word/Token Embedding)</strong></span> Each word <span class="math inline">w</span> (a one-hot vector in <span class="math inline">\mathbb{R}^N</span>) is associated with a vector <span class="math inline">x_w \in \mathbb{R}^d</span> via an <strong>embedding matrix</strong> <span class="math inline">W_E \in \mathbb{R}^{d \times N}</span>: <span class="math display">x_i = W_E \, w_i \in \mathbb{R}^d.</span></p>
-<p>The embedding matrix is <strong>learned from data</strong>. Input size: <span class="math inline">L \times N</span>. Output size: <span class="math inline">L \times d</span>.</p>
-<p>For GPT-3: <span class="math inline">L = 2048</span>, <span class="math inline">N = 50{,}257</span>, <span class="math inline">d = 12{,}288</span>.</p>
+<p><span class="theorem-title"><strong>Definition 18.5 (Word/Token Embedding)</strong></span> Each word <span class="math inline">w</span> (a one-hot vector in <span class="math inline">\mathbb{R}^V</span>) is mapped to a dense vector <span class="math inline">x_w \in \mathbb{R}^d</span> via a learned <strong>embedding matrix</strong> <span class="math inline">W_E \in \mathbb{R}^{d \times V}</span>: <span class="math display">x_i = W_E \, w_i \in \mathbb{R}^d.</span></p>
+<p>For GPT-3: <span class="math inline">V = 50{,}257</span> (vocabulary size), <span class="math inline">d = 12{,}288</span> (embedding dimension), <span class="math inline">L = 2{,}048</span> (context length).</p>
 </div>
-<p>The embedding matrix converts discrete tokens (represented as sparse one-hot vectors in a very high-dimensional space <span class="math inline">\mathbb{R}^N</span>) into dense, continuous vectors in a much lower-dimensional space <span class="math inline">\mathbb{R}^d</span>. This is essential because all subsequent operations in the transformer — attention, MLP layers, optimization — operate on continuous vectors.</p>
+<p>The embedding matrix converts sparse one-hot vectors in a very high-dimensional space (<span class="math inline">\mathbb{R}^V</span>) into dense, continuous vectors in a much lower-dimensional space (<span class="math inline">\mathbb{R}^d</span>). This is essential because all subsequent operations — attention, MLP layers, optimization — operate on continuous vectors.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Remark: Why Word Embedding?
+<span class="screen-reader-only">Tip</span>Remark: Why Embeddings Work
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Word embeddings equip words with “distance” to capture similarity. Using <strong>cosine similarity</strong>: <span class="math display">\cos(u, v) = \frac{u^\top v}{\|u\| \cdot \|v\|}.</span></p>
-<p>Similar words are <strong>close</strong> in the embedded space. Word2Vec and GloVe encode <strong>semantic meaning</strong> — interesting patterns emerge (e.g., king - man + woman <span class="math inline">\approx</span> queen). Now we are in Euclidean space and it is easy to operate using calculus.</p>
+<p>Word embeddings equip words with geometric structure. Similar words end up <strong>close</strong> in the embedding space (measured by cosine similarity <span class="math inline">\cos(u,v) = u^\top v / (\|u\|\|v\|)</span>). Famously, Word2Vec and GloVe embeddings capture semantic analogies as linear relationships:</p>
+<p><span class="math display">\text{king} - \text{man} + \text{woman} \approx \text{queen}.</span></p>
+<p>Once words live in Euclidean space, we can apply calculus, linear algebra, and all the optimization tools from this course.</p>
 </div>
+</div>
+<div class="figure-container">
+  <div id="fig-word-embedding"></div>
+  <div class="figure-caption">Figure 18.1: Word embeddings projected to 2D via PCA. Semantically similar words cluster together, and analogical relationships appear as parallel displacements.</div>
+</div>
+</section>
+<section id="sec-prediction-head" class="level2" data-number="18.5">
+<h2 data-number="18.5" class="anchored" data-anchor-id="sec-prediction-head"><span class="header-section-number">18.5</span> Prediction Head and Softmax</h2>
+<p>At the output end, the transformer produces a vector <span class="math inline">z_\ell \in \mathbb{R}^d</span> at each position. For next-token prediction, we need a probability distribution over the vocabulary. The <strong>softmax function</strong> converts raw scores into probabilities.</p>
+<div id="def-softmax" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.6 (Softmax Function)</strong></span> For any vector of real numbers <span class="math inline">v = (v_1, \ldots, v_N) \in \mathbb{R}^N</span>:</p>
+<p><span class="math display">\text{Softmax}(v)_i = \frac{\exp(v_i)}{\sum_{j=1}^{N} \exp(v_j)}, \qquad i = 1, \ldots, N.</span></p>
+<p>This produces a valid probability distribution: all entries are positive and sum to one. Larger logits receive exponentially more probability mass, making softmax a “soft” version of argmax.</p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Unembedding + Softmax
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The transformer output <span class="math inline">z_\ell \in \mathbb{R}^d</span> is mapped to vocabulary-sized logits via the <strong>unembedding matrix</strong> <span class="math inline">W_U \in \mathbb{R}^{V \times d}</span>, then softmax produces a distribution:</p>
+<p><span class="math display">\underbrace{W_U}_{\mathbb{R}^{V \times d}} \cdot z_\ell \in \mathbb{R}^V \xrightarrow{\text{Softmax}} \mathbb{P}(w_{\ell+1} \mid w_1, \ldots, w_\ell) \in \Delta_V.</span></p>
+</div>
+</div>
+<section id="sec-loss-function" class="level3" data-number="18.5.1">
+<h3 data-number="18.5.1" class="anchored" data-anchor-id="sec-loss-function"><span class="header-section-number">18.5.1</span> Loss Function: Cross-Entropy</h3>
+<p>The natural training objective is to maximize the probability of the correct next token at each position, leading to the cross-entropy loss.</p>
+<div id="def-cross-entropy" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.7 (Cross-Entropy Loss (Maximum Likelihood))</strong></span> At each position <span class="math inline">\ell</span>, the transformer outputs a distribution <span class="math inline">p_\ell \in \Delta_V</span> over the vocabulary. The next-token label is <span class="math inline">w_{\ell+1}</span>. The training loss is:</p>
+<p><span class="math display">\mathcal{L}(\theta) = -\sum_{\ell=1}^{L-1} \log \mathbb{P}_\theta(w_{\ell+1} \mid w_1, \ldots, w_\ell).</span></p>
+<p>This is equivalent to <strong>maximum likelihood estimation (MLE)</strong>, and is minimized via gradient descent with backpropagation.</p>
+</div>
+</section>
+<section id="sec-autoregressive-generation" class="level3" data-number="18.5.2">
+<h3 data-number="18.5.2" class="anchored" data-anchor-id="sec-autoregressive-generation"><span class="header-section-number">18.5.2</span> Autoregressive Generation</h3>
+<div id="exm-autoregressive" class="theorem example">
+<p><span class="theorem-title"><strong>Example 18.1 (Autoregressive Generation)</strong></span> Given the prompt “My name is X.”, generation proceeds step by step:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 22%">
+<col style="width: 33%">
+<col style="width: 44%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Step</th>
+<th style="text-align: left;">Context</th>
+<th style="text-align: left;">Prediction</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1</td>
+<td style="text-align: left;">“My name is X.”</td>
+<td style="text-align: left;"><span class="math inline">\mathbb{P}(\text{"I"} \mid \text{prompt})</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2</td>
+<td style="text-align: left;">“My name is X. I”</td>
+<td style="text-align: left;"><span class="math inline">\mathbb{P}(\text{"am"} \mid \text{context})</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3</td>
+<td style="text-align: left;">“My name is X. I am”</td>
+<td style="text-align: left;"><span class="math inline">\mathbb{P}(\text{"a"} \mid \text{context})</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4</td>
+<td style="text-align: left;">“My name is X. I am a”</td>
+<td style="text-align: left;"><span class="math inline">\mathbb{P}(\text{"Yale"} \mid \text{context})</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">5</td>
+<td style="text-align: left;">“My name is X. I am a Yale”</td>
+<td style="text-align: left;"><span class="math inline">\mathbb{P}(\text{"student"} \mid \text{context})</span></td>
+</tr>
+</tbody>
+</table>
+<p>Each generated word is appended to the input for the next prediction. This is why decoder-only models are called <strong>autoregressive</strong>: the output at each step feeds back as input.</p>
 </div>
 </section>
 </section>
-<section id="sec-attention" class="level2" data-number="18.5">
-<h2 data-number="18.5" class="anchored" data-anchor-id="sec-attention"><span class="header-section-number">18.5</span> 4. Attention Mechanism</h2>
-<p><strong>Attention</strong> treats each word’s representation as a <strong>query</strong> to access and incorporate information from <strong>a set of values</strong>.</p>
+<section id="sec-attention" class="level2" data-number="18.6">
+<h2 data-number="18.6" class="anchored" data-anchor-id="sec-attention"><span class="header-section-number">18.6</span> The Attention Mechanism</h2>
+<p>The central innovation of the transformer is <strong>attention</strong>: a mechanism that computes a weighted average of values, where the weights are determined by learned similarity between a query and a set of keys.</p>
 <div id="def-attention" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.7 (Attention)</strong></span> Given a set of vector <em>values</em> and a vector <em>query</em>, <strong>attention</strong> is a technique to compute a <strong>weighted sum of the values</strong>, dependent on the query. We say the query <em>attends to</em> the values.</p>
-<p>Attention is just a <strong>weighted average</strong> — this is very powerful if the weights are learned!</p>
-<p>In <strong>attention</strong>, the query matches all keys <em>softly</em> (weights between 0 and 1). In a <strong>lookup table</strong>, the query matches one key exactly.</p>
+<p><span class="theorem-title"><strong>Definition 18.8 (Attention)</strong></span> Given a set of vector <em>values</em> and a vector <em>query</em>, <strong>attention</strong> computes a <strong>weighted sum of the values</strong>, dependent on the query. The query <em>attends to</em> the values.</p>
+<ul>
+<li>In <strong>attention</strong>, the query matches all keys <em>softly</em> (weights between 0 and 1).</li>
+<li>In a <strong>lookup table</strong>, the query matches one key exactly.</li>
+</ul>
+<p>Attention is just a <strong>weighted average</strong> — but it becomes very powerful when the weights are learned!</p>
 </div>
-<p>The power of attention lies in its ability to dynamically route information: each token can selectively focus on the most relevant parts of the input, with the relevance weights learned from data. This is what allows transformers to capture long-range dependencies in sequences.</p>
-<section id="sec-cross-attention" class="level3" data-number="18.5.1">
-<h3 data-number="18.5.1" class="anchored" data-anchor-id="sec-cross-attention"><span class="header-section-number">18.5.1</span> Cross Attention: The Equations</h3>
-<p>We now formalize the attention computation. The key idea is to use dot products between the query and each key to compute similarity scores, apply softmax to obtain weights, and then return the weighted sum of values. The <span class="math inline">1/\sqrt{d_1}</span> scaling factor prevents the dot products from growing too large in high dimensions, which would push softmax into regions of near-zero gradient.</p>
+<section id="sec-cross-attention" class="level3" data-number="18.6.1">
+<h3 data-number="18.6.1" class="anchored" data-anchor-id="sec-cross-attention"><span class="header-section-number">18.6.1</span> Cross Attention</h3>
+<p>We first formalize attention where the query comes from one source and the key-value pairs from another (this generalizes to self-attention later).</p>
 <div id="thm-cross-attention" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 18.2 (Cross Attention Formula)</strong></span> Suppose we have (key, value) pairs <span class="math inline">\{(k_i, v_i)\}_{i \in [L]}</span> with <span class="math inline">k_i \in \mathbb{R}^{d_1}</span>, <span class="math inline">v_i \in \mathbb{R}^{d'}</span>, and a query <span class="math inline">q \in \mathbb{R}^{d_1}</span>.</p>
+<p><span class="theorem-title"><strong>Theorem 18.1 (Cross Attention Formula)</strong></span> Given (key, value) pairs <span class="math inline">\{(k_i, v_i)\}_{i \in [L]}</span> with <span class="math inline">k_i \in \mathbb{R}^{d_k}</span>, <span class="math inline">v_i \in \mathbb{R}^{d_v}</span>, and a query <span class="math inline">q \in \mathbb{R}^{d_k}</span>:</p>
 <ol type="1">
-<li><strong>Compute</strong> similarity scores: <span class="math inline">e = (q^\top k_1, \ldots, q^\top k_L) \in \mathbb{R}^L</span></li>
-<li><strong>Similarity</strong> (attention weights): <span class="math inline">\alpha = \text{Softmax}(e) \in \Delta_L</span>, where <span class="math display">\alpha_i = \frac{\exp(k_i^\top q / \sqrt{d_1})}{\sum_{j=1}^{L} \exp(k_j^\top q / \sqrt{d_1})}.</span> So <span class="math inline">\alpha_i = \mathbb{P}(k_i \text{ is closest to } q)</span>.</li>
-<li><strong>Aggregation:</strong> <span class="math inline">h = \sum_{i=1}^{L} \alpha_i \cdot v_i \in \mathbb{R}^{d'}</span></li>
+<li><p><strong>Similarity scores:</strong> <span class="math inline">e_i = q^\top k_i</span> for each <span class="math inline">i \in [L]</span></p></li>
+<li><p><strong>Attention weights</strong> (via softmax with scaling): <span class="math display">\alpha_i = \frac{\exp(q^\top k_i / \sqrt{d_k})}{\sum_{j=1}^{L} \exp(q^\top k_j / \sqrt{d_k})}</span></p></li>
+<li><p><strong>Output</strong> (weighted sum of values): <span class="math display">h = \sum_{i=1}^{L} \alpha_i \cdot v_i \in \mathbb{R}^{d_v}</span></p></li>
 </ol>
-<p><strong>Output:</strong> <span class="math inline">(q, h)</span> where <span class="math inline">q \in \mathbb{R}^{d_1}</span>, <span class="math inline">h \in \mathbb{R}^{d'}</span>.</p>
 </div>
+<p>The <span class="math inline">1/\sqrt{d_k}</span> scaling factor prevents the dot products from growing too large in high dimensions, which would push softmax into near-zero gradient regions.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Remark
+<span class="screen-reader-only">Tip</span>Remark: Why Scale by <span class="math inline">1/\sqrt{d_k}</span>?
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Similarity is captured by <span class="math inline">k_i^\top q</span>. The vector <span class="math inline">(k_1^\top q, \ldots, k_L^\top q)</span> is called the <strong>attention score</strong>. We can use other functions in addition to softmax (e.g., ReLU).</p>
+<p>If the entries of <span class="math inline">q</span> and <span class="math inline">k_i</span> are independent with zero mean and unit variance, then <span class="math inline">q^\top k_i</span> has variance <span class="math inline">d_k</span>. The scaling ensures the variance of the logits is approximately 1, keeping softmax in a well-behaved regime.</p>
 </div>
 </div>
-<p>An important structural property of the attention mechanism has a direct consequence for how we must handle sequential data.</p>
-<div id="cor-permutation-invariance" class="theorem corollary">
-<p><span class="theorem-title"><strong>Corollary 18.1 (Permutation Invariance)</strong></span> The attention output <span class="math inline">\sum_{i=1}^{L} \alpha_i \cdot v_i</span> remains the same if we permute key-value pairs <span class="math inline">\{(k_i, v_i)\}_{i \in [L]}</span>, because of the “<span class="math inline">\sum</span>”.</p>
-<p><strong>Note:</strong> Ordering in a sequence matters. Natural language has order: “united states” <span class="math inline">\neq</span> “states united”. We will address this with positional embeddings.</p>
-</div>
-<p>Permutation invariance is both a strength and a limitation. It means attention treats the input as a set rather than a sequence, which is why positional embeddings are essential for tasks where order matters, such as language modeling.</p>
 </section>
-<section id="sec-self-attention" class="level3" data-number="18.5.2">
-<h3 data-number="18.5.2" class="anchored" data-anchor-id="sec-self-attention"><span class="header-section-number">18.5.2</span> Self-Attention</h3>
+<section id="sec-self-attention" class="level3" data-number="18.6.2">
+<h3 data-number="18.6.2" class="anchored" data-anchor-id="sec-self-attention"><span class="header-section-number">18.6.2</span> Self-Attention</h3>
+<p>The breakthrough insight of the transformer is to apply attention <em>within a single sequence</em> — the queries, keys, and values are all computed from the same input. This is <strong>self-attention</strong>.</p>
 <div id="fig-self-attention" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-self-attention-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -709,14 +789,12 @@ Figure&nbsp;18.1: Self-attention mechanism. The input sequence <span class="math
 </figcaption>
 </figure>
 </div>
-<p><a href="#fig-self-attention" class="quarto-xref">Figure&nbsp;<span>18.1</span></a> illustrates the computation flow. The input matrix <span class="math inline">X \in \mathbb{R}^{L \times d}</span> is projected through three learned weight matrices to produce queries <span class="math inline">Q</span>, keys <span class="math inline">K</span>, and values <span class="math inline">V</span>. Queries and keys are combined via the scaled dot product <span class="math inline">QK^\top / \sqrt{d_k}</span> to form a raw attention-score matrix (one row per query token, one column per key token). The softmax normalizes each row into a probability distribution over positions, and the resulting attention weights are multiplied by <span class="math inline">V</span> to produce the final output — a context-enriched representation where each token’s output is a weighted mixture of all value vectors.</p>
-<p>In cross attention, the queries and key-value pairs come from different sources (e.g., the decoder queries the encoder). In a transformer’s main computation, however, each token in the sequence attends to all other tokens in the same sequence. This is called self-attention, and it is the mechanism that allows each token’s representation to incorporate contextual information from the entire input.</p>
 <div id="def-self-attention" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.8 (Self-Attention)</strong></span> Self-attention is an attention module where <strong>query, key, value</strong> are all computed from the <strong>same</strong> input vectors. Given post-embedding sequence <span class="math inline">X = (x_1, \ldots, x_L) \in \mathbb{R}^{L \times d}</span>: <span class="math display">Q = X W_Q, \quad K = X W_K, \quad V = X W_V \quad \in \mathbb{R}^{L \times d_1},</span></p>
-<p>where <span class="math inline">W_Q, W_K, W_V \in \mathbb{R}^{d \times d_1}</span> are learnable weight matrices.</p>
-<p>For position <span class="math inline">\ell</span>: <span class="math display">\alpha_\ell = \text{Softmax}\!\left(\left\{q_\ell^\top k_j / \sqrt{d_1}\right\}_{j \in [L]}\right) \in \Delta_L.</span></p>
-<p>The output at position <span class="math inline">\ell</span> is: <span class="math display">h_\ell = \sum_{j=1}^{L} \alpha_{\ell j} \cdot v_j = \sum_{j=1}^{L} \alpha_{\ell j} \cdot (W_V x_j).</span></p>
-<p>Here <span class="math inline">\alpha_{\ell,j}</span> measures the similarity between <span class="math inline">\{x_\ell, x_j\}</span>: <span class="math display">\alpha_{\ell j} = \frac{\exp(q_\ell^\top k_j / \sqrt{d_1})}{\sum_{s=1}^{L} \exp(q_\ell^\top k_s / \sqrt{d_1})} = \frac{\exp(x_\ell^\top W_Q^\top W_K x_j / \sqrt{d_1})}{\sum_{s=1}^{L} \exp(x_\ell^\top W_Q^\top W_K x_s / \sqrt{d_1})}.</span></p>
+<p><span class="theorem-title"><strong>Definition 18.9 (Self-Attention)</strong></span> Given post-embedding sequence <span class="math inline">X = (x_1, \ldots, x_L) \in \mathbb{R}^{L \times d}</span>, we compute:</p>
+<p><span class="math display">Q = X W_Q, \quad K = X W_K, \quad V = X W_V \quad \in \mathbb{R}^{L \times d_k},</span></p>
+<p>where <span class="math inline">W_Q, W_K, W_V \in \mathbb{R}^{d \times d_k}</span> are learnable weight matrices. At position <span class="math inline">\ell</span>:</p>
+<p><span class="math display">\alpha_{\ell j} = \frac{\exp(q_\ell^\top k_j / \sqrt{d_k})}{\sum_{s=1}^{L} \exp(q_\ell^\top k_s / \sqrt{d_k})} = \frac{\exp(x_\ell^\top W_Q^\top W_K x_j / \sqrt{d_k})}{\sum_{s=1}^{L} \exp(x_\ell^\top W_Q^\top W_K x_s / \sqrt{d_k})},</span></p>
+<p>and the output is: <span class="math inline">h_\ell = \sum_{j=1}^{L} \alpha_{\ell j} \cdot v_j = \sum_{j=1}^{L} \alpha_{\ell j} \cdot (W_V x_j)</span>.</p>
 </div>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -728,72 +806,93 @@ Figure&nbsp;18.1: Self-attention mechanism. The input sequence <span class="math
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Input: <span class="math inline">X \in \mathbb{R}^{L \times d}</span>, <span class="math inline">X = (x_1, x_2, \ldots, x_L)</span>.</p>
+<p>Given input <span class="math inline">X \in \mathbb{R}^{L \times d}</span>:</p>
 <ol type="1">
-<li>Map into queries, keys, values: <span class="math inline">Q = X W_Q</span>, <span class="math inline">K = X W_K</span>, <span class="math inline">V = X W_V \in \mathbb{R}^{L \times d_1}</span></li>
-<li>Calculate attention score: <span class="math inline">E = Q K^\top \in \mathbb{R}^{L \times L}</span></li>
-<li>Apply softmax to each row: <span class="math inline">P = \text{Softmax}(E / \sqrt{d_1}) \in \mathbb{R}^{L \times L}</span></li>
-<li>Output = <span class="math inline">PV = \text{Softmax}(Q K^\top / \sqrt{d_1}) \cdot V</span></li>
+<li>Compute projections: <span class="math inline">Q = XW_Q</span>, <span class="math inline">K = XW_K</span>, <span class="math inline">V = XW_V</span></li>
+<li>Compute attention scores: <span class="math inline">E = QK^\top \in \mathbb{R}^{L \times L}</span></li>
+<li>Scale and normalize: <span class="math inline">A = \text{Softmax}(E / \sqrt{d_k}) \in \mathbb{R}^{L \times L}</span></li>
+<li>Output: <span class="math inline">H = AV = \text{Softmax}(QK^\top / \sqrt{d_k}) \cdot V \in \mathbb{R}^{L \times d_k}</span></li>
 </ol>
 </div>
 </div>
-<p><em>Figure 12.1: Attention weight matrix visualization. Each row shows how much each token attends to every other token. Brighter cells indicate stronger attention.</em></p>
+<div class="figure-container">
+  <div id="fig-attention-heatmap"></div>
+  <div class="figure-caption">Figure 18.2: Attention weight matrix for a short sentence. Each row shows how much a token attends to every other token. The pattern reveals that tokens attend most strongly to semantically related words.</div>
+</div>
+</section>
+<section id="sec-permutation-invariance" class="level3" data-number="18.6.3">
+<h3 data-number="18.6.3" class="anchored" data-anchor-id="sec-permutation-invariance"><span class="header-section-number">18.6.3</span> Permutation Invariance</h3>
+<div id="cor-permutation-invariance" class="theorem corollary">
+<p><span class="theorem-title"><strong>Corollary 18.1 (Permutation Invariance)</strong></span> The attention output <span class="math inline">h = \sum_{i=1}^{L} \alpha_i \cdot v_i</span> is unchanged if we permute the key-value pairs <span class="math inline">\{(k_i, v_i)\}_{i \in [L]}</span>.</p>
+</div>
+<p>This means self-attention treats its input as a <strong>set</strong>, not a sequence. Since word order clearly matters in language (“the cat chased the dog” <span class="math inline">\neq</span> “the dog chased the cat”), we must explicitly inject positional information. This leads to the next section.</p>
 </section>
 </section>
-<section id="sec-position-embedding" class="level2" data-number="18.6">
-<h2 data-number="18.6" class="anchored" data-anchor-id="sec-position-embedding"><span class="header-section-number">18.6</span> 5. Position Embedding</h2>
-<p>We want to include token position in the input. Since self-attention is permutation invariant, we need to explicitly encode order.</p>
+<section id="sec-challenges" class="level2" data-number="18.7">
+<h2 data-number="18.7" class="anchored" data-anchor-id="sec-challenges"><span class="header-section-number">18.7</span> Three Challenges and Their Solutions</h2>
+<p>Self-attention is a powerful building block, but it has three limitations that must be addressed before it can serve as the basis for a language model:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 48%">
+<col style="width: 51%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"><strong>Challenge</strong></th>
+<th style="text-align: left;"><strong>Solution</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">No notion of token order (permutation invariant)</td>
+<td style="text-align: left;"><strong>Positional embedding</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Can see future tokens during training</td>
+<td style="text-align: left;"><strong>Causal masking</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Output is a linear weighted average (no nonlinearity)</td>
+<td style="text-align: left;"><strong>MLP / feed-forward layers</strong></td>
+</tr>
+</tbody>
+</table>
+<p>We address each in turn.</p>
+<section id="sec-position-embedding" class="level3" data-number="18.7.1">
+<h3 data-number="18.7.1" class="anchored" data-anchor-id="sec-position-embedding"><span class="header-section-number">18.7.1</span> Positional Embedding</h3>
+<p>Since self-attention is permutation invariant, we explicitly encode position by adding a <strong>positional embedding</strong> to each token embedding:</p>
 <div id="def-positional-embedding" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.9 (Positional Embedding)</strong></span> A special trick of transformers: the embedding of (token, position) is <strong>additive</strong>: <span class="math display">\text{emb}(\text{token}, \text{position}) = \text{emb}(\text{token}) + \text{emb}(\text{position}).</span></p>
-<p>So <span class="math inline">x_i = \text{emb}(w_i) + \text{pe}_i \in \mathbb{R}^d</span>, where <span class="math inline">d</span> = dimension of word embedding.</p>
+<p><span class="theorem-title"><strong>Definition 18.10 (Positional Embedding)</strong></span> The embedding of (token, position) is additive: <span class="math display">x_i = W_E \, w_i + \text{pe}_i \in \mathbb{R}^d,</span></p>
+<p>where <span class="math inline">\text{pe}_i \in \mathbb{R}^d</span> encodes position <span class="math inline">i</span> in the sequence.</p>
 </div>
-<p>The additive structure of positional embedding is a design choice that keeps the architecture simple: the model receives a single vector per token that encodes both what the token is and where it appears in the sequence. This allows the attention mechanism to use position information when computing relevance scores.</p>
-<p><strong>Three major practices of position embedding:</strong></p>
-<ol type="1">
-<li><strong>Absolute embedding:</strong> each <span class="math inline">\ell \mapsto \text{pe}_\ell</span>, trained directly. Parameters: <span class="math inline">\{\text{pe}_1, \ldots, \text{pe}_L\} \in \mathbb{R}^{L \times d}</span>.</li>
-<li><strong>Sinusoidal positional encoding</strong> (a special case of 3): use a fixed vector <span class="math display">\vec{p}_t = \begin{pmatrix} \sin(\omega_1 \cdot t) \\ \cos(\omega_1 \cdot t) \\ \sin(\omega_2 \cdot t) \\ \cos(\omega_2 \cdot t) \\ \vdots \\ \sin(\omega_{d/2} \cdot t) \\ \cos(\omega_{d/2} \cdot t) \end{pmatrix}_{d \times 1}.</span> This encodes <strong>relative</strong> positional information via rotation matrices.</li>
-<li><strong>Relative positional embedding:</strong> embed relative positions <span class="math inline">i - j</span>. Map <span class="math inline">(i,j) \mapsto \vec{P}_{i-j}</span> with learnable vectors. Used in RoPE (Rotary Position Embedding, used in LLaMA). The attention score formula becomes: <span class="math inline">\alpha_i = \text{Softmax}\!\left(\{q_i^\top(k_j + \vec{P}_{i-j})\}_{j \in [L]}\right)</span>.</li>
-</ol>
-<p><em>Figure 12.2: Sinusoidal positional encoding heatmap. Each row is a position, each column a dimension of the encoding vector. Low-frequency sinusoids vary slowly across positions while high-frequency ones oscillate rapidly.</em></p>
+<p>There are three major approaches:</p>
+<p><strong>1. Absolute (learned) embedding.</strong> Each position <span class="math inline">\ell</span> gets a learnable vector <span class="math inline">\text{pe}_\ell \in \mathbb{R}^d</span>. Simple but cannot generalize beyond the training context length.</p>
+<p><strong>2. Sinusoidal encoding</strong> (Vaswani et al., 2017). Use fixed sinusoidal functions at different frequencies:</p>
+<p><span class="math display">\vec{p}_t = \begin{pmatrix} \sin(\omega_1 \cdot t) \\ \cos(\omega_1 \cdot t) \\ \sin(\omega_2 \cdot t) \\ \cos(\omega_2 \cdot t) \\ \vdots \\ \sin(\omega_{d/2} \cdot t) \\ \cos(\omega_{d/2} \cdot t) \end{pmatrix}, \qquad \omega_k = \frac{1}{10000^{2k/d}}.</span></p>
+<p>Low-frequency sinusoids vary slowly across positions (capturing coarse position), while high-frequency ones oscillate rapidly (capturing fine position). The key insight is that relative position information is encoded via rotation matrices: <span class="math inline">\vec{p}_{t+\Delta}</span> can be expressed as a linear function of <span class="math inline">\vec{p}_t</span>.</p>
+<p><strong>3. Rotary Position Embedding (RoPE).</strong> Used in LLaMA and most modern models. Encodes relative positions <span class="math inline">i - j</span> directly into the attention score: <span class="math display">\alpha_i = \text{Softmax}\!\left(\{q_i^\top(k_j + \vec{P}_{i-j})\}_{j \in [L]}\right).</span></p>
+<div class="figure-container">
+  <div id="fig-positional-encoding"></div>
+  <div class="figure-caption">Figure 18.3: Sinusoidal positional encoding. Each row is a position (0 to 127), each column a dimension of the encoding vector. Low-frequency dimensions (left) vary slowly, while high-frequency dimensions (right) oscillate rapidly.</div>
+</div>
 </section>
-<section id="sec-causal-masking" class="level2" data-number="18.7">
-<h2 data-number="18.7" class="anchored" data-anchor-id="sec-causal-masking"><span class="header-section-number">18.7</span> 6. Causal Masking: Don’t See the Future</h2>
-<p>For autoregressive generation, the model must predict token <span class="math inline">w_{\ell+1}</span> using only <span class="math inline">w_1, \ldots, w_\ell</span>. But standard self-attention lets every token attend to every other token, including future ones. Causal masking enforces the autoregressive constraint by preventing information from flowing backward in time.</p>
+<section id="sec-causal-masking" class="level3" data-number="18.7.2">
+<h3 data-number="18.7.2" class="anchored" data-anchor-id="sec-causal-masking"><span class="header-section-number">18.7.2</span> Causal Masking</h3>
+<p>For autoregressive generation, token <span class="math inline">\ell</span> must not attend to future tokens <span class="math inline">j &gt; \ell</span>. We enforce this by masking.</p>
 <div id="def-causal-masking" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.10 (Causal Masking)</strong></span> In decoder-only models, we need to ensure that token <span class="math inline">\ell</span> cannot attend to future tokens. We manually set <span class="math inline">\alpha_{\ell j} = 0</span> for all <span class="math inline">j &gt; \ell</span>.</p>
-<p>To achieve this:</p>
-<ul>
-<li>If <span class="math inline">j &gt; \ell</span>: set <span class="math inline">\text{Mask}_{\ell j} = -\infty</span></li>
-<li>If <span class="math inline">j \leq \ell</span>: set <span class="math inline">\text{Mask}_{\ell j} = 0</span></li>
-</ul>
-<p><span class="math display">\text{Attention score} = \text{Softmax}(Q K^\top + \text{Mask}).</span></p>
-<p>After softmax, the <span class="math inline">-\infty</span> elements become <strong>zero</strong>.</p>
-<p><strong>Note:</strong> Only use causal masking for decoder TF. Encoder-only models (like BERT) use full (global) attention.</p>
+<p><span class="theorem-title"><strong>Definition 18.11 (Causal Masking)</strong></span> Set the attention score to <span class="math inline">-\infty</span> for all future positions:</p>
+<p><span class="math display">\text{Masked Attention} = \text{Softmax}\!\left(\frac{QK^\top}{\sqrt{d_k}} + M\right) V, \qquad M_{\ell j} = \begin{cases} 0 &amp; \text{if } j \leq \ell, \\ -\infty &amp; \text{if } j &gt; \ell. \end{cases}</span></p>
+<p>After softmax, the <span class="math inline">-\infty</span> entries become zero, so each token can only attend to itself and previous tokens.</p>
 </div>
-<p>Causal masking enforces the autoregressive property at the architectural level: by preventing each token from attending to future positions, we ensure that the prediction of <span class="math inline">w_{\ell+1}</span> depends only on <span class="math inline">w_1, \ldots, w_\ell</span>. This is what makes left-to-right text generation possible during inference.</p>
-<p><em>Figure 12.3: Left — Global (encoder) attention mask: all tokens attend to all tokens. Right — Causal (decoder) attention mask: each token only attends to itself and previous tokens.</em></p>
-</section>
-<section id="sec-mlp-layer" class="level2" data-number="18.8">
-<h2 data-number="18.8" class="anchored" data-anchor-id="sec-mlp-layer"><span class="header-section-number">18.8</span> 7. Add MLP Layers After Each Attention Layer</h2>
-<p>Self-attention output <span class="math inline">\sum_{j=1}^{L} \alpha_{\ell j} \cdot W_V x_j</span> is a weighted average of linear functions of embeddings. We <strong>need to add nonlinearities</strong>.</p>
-<div id="def-mlp-layer" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.11 (MLP / Feed-Forward Layer)</strong></span> The MLP is a 2-layer neural network applied <strong>independently</strong> for each position <span class="math inline">\ell \in [L]</span>: <span class="math display">m_\ell = \text{MLP}(\text{output}_\ell) : \mathbb{R}^{d_1} \to \mathbb{R}^{d_1}</span> <span class="math display">= W_2 \cdot \sigma(W_1 x + b_1) + b_2,</span></p>
-<p>where <span class="math inline">\sigma</span> is a nonlinearity (ReLU or GELU), <span class="math inline">W_1 \in \mathbb{R}^{d_1 \times d_f}</span>, <span class="math inline">b_1 \in \mathbb{R}^{d_f}</span>, <span class="math inline">W_2 \in \mathbb{R}^{d_f \times d_1}</span>, <span class="math inline">b_2 \in \mathbb{R}^{d_1}</span>.</p>
-<p>Typically <span class="math inline">d_f \gg d_1</span>. In GPT-3: <span class="math inline">d_f = 4d</span>.</p>
-<p>The same MLP is applied independently for each <span class="math inline">\ell \in [L]</span>.</p>
+<div id="fig-causal-masking" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-causal-masking-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch18-causal-masking.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;18.2: Causal masking in self-attention. Left: global (encoder) attention where all tokens attend to all tokens. Right: causal (decoder) attention where each token only attends to itself and previous tokens."><img src="figures/ch18-causal-masking.svg" class="img-fluid figure-img" style="width:100.0%"></a>
 </div>
-</section>
-<section id="sec-multi-head" class="level2" data-number="18.9">
-<h2 data-number="18.9" class="anchored" data-anchor-id="sec-multi-head"><span class="header-section-number">18.9</span> 8. Multi-Head Attention</h2>
-<p>Instead of having a single attention module, we use <strong>multi-head self attention</strong>: multiple (<span class="math inline">H</span>) attention heads in parallel.</p>
-<div id="def-multi-head-attention" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.12 (Multi-Head Attention)</strong></span> <span class="math inline">H</span> = number of attention heads. Each head has three matrices <span class="math inline">\{W_K^h, W_Q^h, W_V^h\}_{h \in [H]}</span>, each <span class="math inline">\in \mathbb{R}^{d \times d_1}</span>, where <span class="math inline">d_1 = d / H</span>.</p>
-<p>At each position <span class="math inline">\ell</span>, input <span class="math inline">x_\ell \in \mathbb{R}^d</span>, <span class="math inline">d = H \cdot d_1</span>:</p>
-<ul>
-<li>Head <span class="math inline">h</span> looks at <span class="math inline">x_\ell^{(h)} \in \mathbb{R}^{d_1}</span> (the <span class="math inline">h</span>-th chunk of the vector)</li>
-<li><span class="math inline">\text{Output}^h = \sum_{j=1}^{L} \alpha_{\ell j}^h \cdot v_j^h</span> for each head <span class="math inline">h</span></li>
-<li>Final output = <span class="math inline">W_O \begin{pmatrix} \text{output}^1 \\ \text{output}^2 \\ \vdots \\ \text{output}^H \end{pmatrix} \in \mathbb{R}^d</span>, where <span class="math inline">W_O \in \mathbb{R}^{d \times d}</span> is the output matrix that mixes across heads.</li>
-</ul>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-causal-masking-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;18.2: Causal masking in self-attention. Left: global (encoder) attention where all tokens attend to all tokens. Right: causal (decoder) attention where each token only attends to itself and previous tokens.
+</figcaption>
+</figure>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -801,52 +900,121 @@ Figure&nbsp;18.1: Self-attention mechanism. The input sequence <span class="math
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Remark: Each Head Captures Different Semantics
+<span class="screen-reader-only">Tip</span>Remark: Encoder vs.&nbsp;Decoder Masking
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Different attention heads learn to attend to different patterns: some heads focus on adjacent tokens, some on syntactic relationships, some on semantic similarity. This is visible when visualizing attention matrices from different heads.</p>
+<ul>
+<li><strong>Encoder-only</strong> (BERT): uses <strong>global</strong> attention — every token sees every other token.</li>
+<li><strong>Decoder-only</strong> (GPT): uses <strong>causal</strong> masking — tokens can only look backward.</li>
+</ul>
 </div>
 </div>
 </section>
-<section id="sec-residual-layernorm" class="level2" data-number="18.10">
-<h2 data-number="18.10" class="anchored" data-anchor-id="sec-residual-layernorm"><span class="header-section-number">18.10</span> 9. Residual Connections &amp; Layer Normalization</h2>
-<p>A transformer decoder stacks dozens (or even nearly a hundred) layers of attention and MLP blocks. Training such deep networks without any architectural tricks would be nearly impossible due to vanishing or exploding gradients. Two key ingredients make deep transformers trainable: residual connections and layer normalization.</p>
-<div id="def-residual-connection" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.13 (Residual Connection)</strong></span> Instead of <span class="math inline">X^{(i)} = \text{Layer}(X^{(i-1)})</span>, we let: <span class="math display">X^{(i)} = X^{(i-1)} + \text{Layer}(X^{(i-1)}).</span></p>
-<p>That is: <span class="math inline">X \mapsto X + \text{MHA}(X)</span>. Add the input to the output of multi-head attention. This biases the mapping to identity, so we only have to learn “the residual.”</p>
+<section id="sec-mlp-layer" class="level3" data-number="18.7.3">
+<h3 data-number="18.7.3" class="anchored" data-anchor-id="sec-mlp-layer"><span class="header-section-number">18.7.3</span> MLP / Feed-Forward Layer</h3>
+<p>The self-attention output <span class="math inline">\sum_j \alpha_{\ell j} \cdot W_V x_j</span> is a weighted average of linear functions — stacking more attention layers without nonlinearities would just produce another weighted average. To give the model nonlinear expressivity, we add a pointwise MLP after each attention layer.</p>
+<div id="def-mlp-layer" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.12 (Feed-Forward (MLP) Layer)</strong></span> A 2-layer neural network applied independently at each position <span class="math inline">\ell \in [L]</span>:</p>
+<p><span class="math display">\text{MLP}(x) = W_2 \cdot \sigma(W_1 x + b_1) + b_2,</span></p>
+<p>where <span class="math inline">\sigma</span> is a nonlinearity (ReLU or GELU), <span class="math inline">W_1 \in \mathbb{R}^{d_f \times d}</span>, <span class="math inline">W_2 \in \mathbb{R}^{d \times d_f}</span>.</p>
+<p>Typically <span class="math inline">d_f = 4d</span> (the MLP expands the dimension by 4x, applies the nonlinearity, then projects back).</p>
 </div>
-<p>Residual connections are critical for training deep networks: they provide a direct gradient pathway from the output back to earlier layers, preventing the vanishing gradient problem. From an optimization perspective, they make the loss landscape smoother and easier to navigate.</p>
-<p>Layer normalization complements residual connections by stabilizing the distribution of activations across layers. Without normalization, the scale of hidden representations can drift unpredictably as data passes through many layers, making optimization difficult.</p>
+</section>
+</section>
+<section id="sec-multi-head" class="level2" data-number="18.8">
+<h2 data-number="18.8" class="anchored" data-anchor-id="sec-multi-head"><span class="header-section-number">18.8</span> Multi-Head Attention</h2>
+<p>A single attention head can only capture one type of relationship between tokens. In practice, language has many simultaneous structures — syntactic dependencies, semantic similarity, coreference — that require different attention patterns. <strong>Multi-head attention</strong> runs multiple attention operations in parallel, each with its own learned projections.</p>
+<div id="def-multi-head-attention" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.13 (Multi-Head Attention)</strong></span> Let <span class="math inline">H</span> be the number of attention heads. Each head <span class="math inline">h</span> has its own projection matrices <span class="math inline">W_Q^h, W_K^h, W_V^h \in \mathbb{R}^{d \times d_k}</span>, where <span class="math inline">d_k = d / H</span>.</p>
+<p>For each head <span class="math inline">h</span>: <span class="math display">\text{head}^h = \text{Attention}(XW_Q^h, XW_K^h, XW_V^h) \in \mathbb{R}^{L \times d_k}.</span></p>
+<p>The outputs from all heads are concatenated and mixed via an output matrix <span class="math inline">W_O \in \mathbb{R}^{d \times d}</span>:</p>
+<p><span class="math display">\text{MultiHead}(X) = W_O \begin{pmatrix} \text{head}^1 \\ \vdots \\ \text{head}^H \end{pmatrix} \in \mathbb{R}^{L \times d}.</span></p>
+</div>
+<div id="fig-multi-head-attention" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-multi-head-attention-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch18-multi-head-attention.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;18.3: Multi-head attention: H parallel attention heads with independent projections, concatenated and mixed via W_O."><img src="figures/ch18-multi-head-attention.svg" class="img-fluid figure-img" style="width:100.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-multi-head-attention-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;18.3: Multi-head attention: <span class="math inline">H</span> parallel attention heads with independent projections, concatenated and mixed via <span class="math inline">W_O</span>.
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: What Different Heads Learn
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Empirically, different heads specialize in different patterns:</p>
+<ul>
+<li>Some heads attend to the <strong>previous token</strong> (bigram patterns)</li>
+<li>Some heads attend to <strong>syntactic heads</strong> (subject-verb agreement)</li>
+<li>Some heads attend to <strong>semantically similar</strong> words</li>
+<li>Some heads form <strong>induction heads</strong> that copy patterns from earlier in the context</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="sec-residual-layernorm" class="level2" data-number="18.9">
+<h2 data-number="18.9" class="anchored" data-anchor-id="sec-residual-layernorm"><span class="header-section-number">18.9</span> Residual Connections and Layer Normalization</h2>
+<p>A transformer stacks dozens (or nearly a hundred) layers of attention and MLP blocks. Training such deep networks requires two critical ingredients.</p>
+<section id="sec-residual" class="level3" data-number="18.9.1">
+<h3 data-number="18.9.1" class="anchored" data-anchor-id="sec-residual"><span class="header-section-number">18.9.1</span> Residual Connections</h3>
+<div id="def-residual-connection" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 18.14 (Residual Connection)</strong></span> Instead of <span class="math inline">X^{(i)} = \text{Layer}(X^{(i-1)})</span>, we use: <span class="math display">X^{(i)} = X^{(i-1)} + \text{Layer}(X^{(i-1)}).</span></p>
+<p>This biases the mapping toward the identity, so each layer only needs to learn “the residual” — a small correction to its input.</p>
+</div>
+<p>Residual connections provide a direct gradient pathway from the output back to early layers, preventing the vanishing gradient problem. From an optimization perspective, they smooth the loss landscape.</p>
+</section>
+<section id="sec-layer-norm" class="level3" data-number="18.9.2">
+<h3 data-number="18.9.2" class="anchored" data-anchor-id="sec-layer-norm"><span class="header-section-number">18.9.2</span> Layer Normalization</h3>
 <div id="def-layer-normalization" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 18.14 (Layer Normalization)</strong></span> Normalization applied to each feature vector <strong>individually</strong>. For a vector <span class="math inline">x \in \mathbb{R}^d</span>:</p>
+<p><span class="theorem-title"><strong>Definition 18.15 (Layer Normalization)</strong></span> For a vector <span class="math inline">x \in \mathbb{R}^d</span>, compute:</p>
 <ul>
 <li>Mean: <span class="math inline">\mu = \frac{1}{d} \sum_{j=1}^{d} x_j</span></li>
 <li>Standard deviation: <span class="math inline">\sigma = \sqrt{\frac{1}{d} \sum_{j=1}^{d} (x_j - \mu)^2}</span></li>
-<li>Normalization: <span class="math inline">v = \frac{x - \mu}{\sigma + \varepsilon}</span>, where <span class="math inline">\varepsilon</span> is a small number to avoid numerical instability</li>
+<li>Normalization: <span class="math inline">\text{LayerNorm}(x) = \frac{x - \mu}{\sigma + \varepsilon}</span></li>
 </ul>
-<p>Do this operation LayerNorm: <span class="math inline">x \mapsto v</span> for all <span class="math inline">x</span> in the sequence: <span class="math inline">x_1, x_2, \ldots, x_L \in \mathbb{R}^d</span>.</p>
+<p>Applied independently to each token’s feature vector <span class="math inline">x_1, x_2, \ldots, x_L</span>.</p>
 </div>
-<p>Layer normalization stabilizes training by ensuring that the inputs to each sub-layer have consistent scale, regardless of the activations from previous layers. This is particularly important in deep transformers with many stacked blocks, where without normalization the magnitude of activations can grow or shrink uncontrollably.</p>
+<p>Layer normalization ensures that the inputs to each sub-layer have consistent scale, preventing the magnitude of activations from growing or shrinking uncontrollably across layers.</p>
 </section>
-<section id="sec-full-architecture" class="level2" data-number="18.11">
-<h2 data-number="18.11" class="anchored" data-anchor-id="sec-full-architecture"><span class="header-section-number">18.11</span> 10. Full Transformer Architecture</h2>
+</section>
+<section id="sec-full-architecture" class="level2" data-number="18.10">
+<h2 data-number="18.10" class="anchored" data-anchor-id="sec-full-architecture"><span class="header-section-number">18.10</span> The Full Transformer Decoder</h2>
+<p>We now assemble all components into the complete architecture.</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p><strong>The Transformer Decoder</strong> is a stack of Transformer Decoder <strong>Blocks</strong>. Each Block consists of:</p>
+<p><strong>The Transformer Decoder</strong> is a stack of identical <strong>blocks</strong>. Each block consists of:</p>
 <ol type="1">
-<li>(Masked) Multi-Head Self-Attention</li>
-<li>Add &amp; Norm (residual connection + layer norm)</li>
-<li>Feed-Forward Network (MLP)</li>
-<li>Add &amp; Norm</li>
+<li><strong>(Masked) Multi-Head Self-Attention</strong></li>
+<li><strong>Add &amp; Norm</strong> (residual connection + layer normalization)</li>
+<li><strong>Feed-Forward Network</strong> (MLP)</li>
+<li><strong>Add &amp; Norm</strong></li>
 </ol>
-<p>Two design choices: <strong>Post-norm</strong> (original): LN after each sub-layer. <strong>Pre-norm</strong> (more popular now): LN before each sub-layer, for better training stability.</p>
+<p>Two design variants: <strong>Post-norm</strong> (original) applies LayerNorm after each sub-layer. <strong>Pre-norm</strong> (more common now) applies LayerNorm before each sub-layer, yielding better training stability.</p>
 </div>
 </div>
+</div>
+<div id="fig-transformer-decoder" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-transformer-decoder-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch18-transformer-decoder.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;18.4: Transformer decoder block: masked multi-head attention followed by feed-forward network, with residual connections and layer normalization around each sub-layer."><img src="figures/ch18-transformer-decoder.svg" class="img-fluid figure-img" style="width:100.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-transformer-decoder-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;18.4: Transformer decoder block: masked multi-head attention followed by feed-forward network, with residual connections and layer normalization around each sub-layer.
+</figcaption>
+</figure>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -854,185 +1022,348 @@ Figure&nbsp;18.1: Self-attention mechanism. The input sequence <span class="math
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Remark: Revisiting Model Types
+<span class="screen-reader-only">Tip</span>Remark: Revisiting the Three Model Types
 </div>
 </div>
 <div class="callout-body-container callout-body">
 <ul>
-<li><strong>Encoder-only:</strong> Do not use causal masking. In training, hide (mask) some random tokens and predict them. Example: BERT.</li>
-<li><strong>Decoder-only:</strong> Use causal masking to mask the future. Trained to predict next token. Example: GPT.</li>
-<li><strong>Encoder-Decoder:</strong> Output of encoder is fed into decoder blocks, attended by features of decoder using <strong>cross attention</strong> (at each layer). Example: T5.</li>
+<li><strong>Encoder-only</strong> (BERT): no causal masking; trained by masking random tokens and predicting them.</li>
+<li><strong>Decoder-only</strong> (GPT): causal masking; trained to predict the next token.</li>
+<li><strong>Encoder-decoder</strong> (T5): encoder uses global attention; decoder uses causal masking and attends to encoder features via cross attention at each layer.</li>
 </ul>
 </div>
 </div>
 </section>
-<section id="sec-gpt3-exercise" class="level2" data-number="18.12">
-<h2 data-number="18.12" class="anchored" data-anchor-id="sec-gpt3-exercise"><span class="header-section-number">18.12</span> Exercise: Understanding GPT-3 Parameters</h2>
-<p>GPT-3 175B: <span class="math inline">n_\text{layers} = 96</span>, <span class="math inline">d_\text{model} = 12288</span>, <span class="math inline">n_\text{heads} = 96</span>, <span class="math inline">d_\text{head} = 128</span>. Context window <span class="math inline">L = 2048</span>, vocabulary size <span class="math inline">N = 50257</span>. Note: <span class="math inline">d = H \times d_1</span>.</p>
+<section id="sec-gpt3-exercise" class="level2" data-number="18.11">
+<h2 data-number="18.11" class="anchored" data-anchor-id="sec-gpt3-exercise"><span class="header-section-number">18.11</span> Understanding GPT-3: Parameter Analysis</h2>
+<p>To build concrete intuition for the scale of modern language models, let us count the parameters of GPT-3.</p>
+<section id="sec-gpt3-variants" class="level3" data-number="18.11.1">
+<h3 data-number="18.11.1" class="anchored" data-anchor-id="sec-gpt3-variants"><span class="header-section-number">18.11.1</span> GPT-3 Model Variants</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 9%">
+<col style="width: 16%">
+<col style="width: 11%">
+<col style="width: 26%">
+<col style="width: 9%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Model</th>
+<th style="text-align: left;">Parameters</th>
+<th style="text-align: left;">Layers</th>
+<th style="text-align: left;"><span class="math inline">d_\text{model}</span></th>
+<th style="text-align: left;">Heads</th>
+<th style="text-align: left;"><span class="math inline">d_\text{head}</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">GPT-3 Small</td>
+<td style="text-align: left;">125M</td>
+<td style="text-align: left;">12</td>
+<td style="text-align: left;">768</td>
+<td style="text-align: left;">12</td>
+<td style="text-align: left;">64</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GPT-3 Medium</td>
+<td style="text-align: left;">350M</td>
+<td style="text-align: left;">24</td>
+<td style="text-align: left;">1,024</td>
+<td style="text-align: left;">16</td>
+<td style="text-align: left;">64</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">GPT-3 Large</td>
+<td style="text-align: left;">760M</td>
+<td style="text-align: left;">24</td>
+<td style="text-align: left;">1,536</td>
+<td style="text-align: left;">16</td>
+<td style="text-align: left;">96</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GPT-3 XL</td>
+<td style="text-align: left;">1.3B</td>
+<td style="text-align: left;">24</td>
+<td style="text-align: left;">2,048</td>
+<td style="text-align: left;">24</td>
+<td style="text-align: left;">128</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">GPT-3 6.7B</td>
+<td style="text-align: left;">6.7B</td>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;">4,096</td>
+<td style="text-align: left;">32</td>
+<td style="text-align: left;">128</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">GPT-3 13B</td>
+<td style="text-align: left;">13.0B</td>
+<td style="text-align: left;">40</td>
+<td style="text-align: left;">5,140</td>
+<td style="text-align: left;">40</td>
+<td style="text-align: left;">128</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>GPT-3 175B</strong></td>
+<td style="text-align: left;"><strong>175.0B</strong></td>
+<td style="text-align: left;"><strong>96</strong></td>
+<td style="text-align: left;"><strong>12,288</strong></td>
+<td style="text-align: left;"><strong>96</strong></td>
+<td style="text-align: left;"><strong>128</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Note: <span class="math inline">d_\text{model} = n_\text{heads} \times d_\text{head}</span> in all cases.</p>
+</section>
+<section id="sec-counting-params" class="level3" data-number="18.11.2">
+<h3 data-number="18.11.2" class="anchored" data-anchor-id="sec-counting-params"><span class="header-section-number">18.11.2</span> Counting Parameters</h3>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Important</span>Algorithm: Computing the Number of Parameters
+<span class="screen-reader-only">Important</span>Algorithm: GPT-3 175B Parameter Count
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<ol type="1">
-<li><strong>Word embedding:</strong> <span class="math inline">W_E \in \mathbb{R}^{N \times d}</span> <span class="math inline">\Rightarrow</span> <span class="math inline">\#\text{param} = N \cdot d</span></li>
-<li><strong>Position embedding:</strong> <span class="math inline">W_{PE} \in \mathbb{R}^{L \times d}</span> <span class="math inline">\Rightarrow</span> <span class="math inline">\#\text{param} = L \cdot d</span></li>
-<li><strong>Each self-attention layer:</strong> Each <span class="math inline">W_Q^h, W_K^h, W_V^h \in \mathbb{R}^{d \times d_1}</span> <span class="math inline">\Rightarrow</span> <span class="math inline">\#\text{param} = 3 \times d \times d_1 \times H = 3d^2</span>. Output matrix <span class="math inline">W_O \in \mathbb{R}^{d \times d}</span> <span class="math inline">\Rightarrow</span> <span class="math inline">d^2</span>. Total MHA: <span class="math inline">4d^2</span> per layer <span class="math inline">\times n_\text{layer}</span>.</li>
-<li><strong>MLP layer:</strong> <span class="math inline">(W_1, W_2, b_1, b_2)</span> <span class="math inline">\Rightarrow</span> <span class="math inline">\approx 4d \times d \times 2 = 8d^2</span> per layer <span class="math inline">\times n_\text{layer}</span>.</li>
-</ol>
-<p>Neglecting biases and layer norms: <span class="math display">\#\text{param} = N \cdot d + L \cdot d + 12 \cdot d^2 \times n_\text{layer} \approx 174{,}074{,}267{,}648 \approx 174 \times 10^9 \quad (99.5\% \text{ accurate}).</span></p>
+<p>Let <span class="math inline">d = 12{,}288</span>, <span class="math inline">V = 50{,}257</span>, <span class="math inline">L = 2{,}048</span>, <span class="math inline">n_\text{layers} = 96</span>.</p>
+<p><strong>1. Word embedding:</strong> <span class="math inline">W_E \in \mathbb{R}^{V \times d}</span> <span class="math inline">\Rightarrow</span> <span class="math inline">V \cdot d \approx 617\text{M}</span></p>
+<p><strong>2. Position embedding:</strong> <span class="math inline">W_{PE} \in \mathbb{R}^{L \times d}</span> <span class="math inline">\Rightarrow</span> <span class="math inline">L \cdot d \approx 25\text{M}</span></p>
+<p><strong>3. Self-attention per layer:</strong> <span class="math inline">W_Q, W_K, W_V \in \mathbb{R}^{d \times d}</span> (each is <span class="math inline">H</span> heads of <span class="math inline">d \times d_k</span>, totaling <span class="math inline">d \times d</span>), plus <span class="math inline">W_O \in \mathbb{R}^{d \times d}</span> <span class="math inline">\Rightarrow</span> <span class="math inline">4d^2</span> per layer</p>
+<p><strong>4. MLP per layer:</strong> <span class="math inline">W_1 \in \mathbb{R}^{4d \times d}</span>, <span class="math inline">W_2 \in \mathbb{R}^{d \times 4d}</span> <span class="math inline">\Rightarrow</span> <span class="math inline">8d^2</span> per layer</p>
+<p><strong>Total</strong> (neglecting biases and layer norms):</p>
+<p><span class="math display">\text{Parameters} = V \cdot d + L \cdot d + 12d^2 \times n_\text{layers} \approx 174{,}074{,}267{,}648 \approx 174 \times 10^9.</span></p>
+<p>This is 99.5% of the reported 175B parameter count!</p>
 </div>
+</div>
+<div class="figure-container">
+  <div id="fig-param-breakdown"></div>
+  <div class="figure-caption">Figure 18.4: Parameter distribution in GPT-3 175B. The vast majority of parameters (over 99%) reside in the 96 transformer blocks, with attention and MLP layers each contributing roughly equally.</div>
 </div>
 </section>
-<section id="sec-transformer-circuits" class="level2" data-number="18.13">
-<h2 data-number="18.13" class="anchored" data-anchor-id="sec-transformer-circuits"><span class="header-section-number">18.13</span> Transformer Circuits &amp; Residual Stream</h2>
-<p>We can view a Transformer as a model that processes a sequence of tokens in multiple layers. In each layer, the vector at the same position is processed by attention, normalization, and MLP. The vector itself is added directly to the next layer by <strong>residual connection</strong>.</p>
+</section>
+<section id="sec-transformer-circuits" class="level2" data-number="18.12">
+<h2 data-number="18.12" class="anchored" data-anchor-id="sec-transformer-circuits"><span class="header-section-number">18.12</span> Transformer Circuits and the Residual Stream</h2>
+<p>A useful perspective on transformers comes from viewing the residual connections as a <strong>residual stream</strong> — a persistent information highway that each attention and MLP layer reads from and writes to.</p>
 <div id="thm-single-layer-attention" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 18.3 (Single-Layer Attention-Only Transformer)</strong></span> For a single-layer attention-only transformer:</p>
-<ul>
-<li>Token embedding: <span class="math inline">x_0 = W_E \, t</span>, where <span class="math inline">t = \binom{w}{i} \in \mathbb{R}^{L+V}</span> (token + position)</li>
-<li>Attention: <span class="math inline">x_1 = x_0 + \sum_{h \in H} h(x_0)</span></li>
-<li>Logits: <span class="math inline">T(t) = W_U x_{-1}</span> (unembedding)</li>
-</ul>
-<p>Define the <strong>QK-matrix</strong>: <span class="math inline">W_{QK}^h = (W_Q^h)^\top W_K^h / \sqrt{d} \in \mathbb{R}^{d \times d}</span></p>
-<p>and the <strong>OV-matrix</strong>: <span class="math inline">W_{OV}^h = W_O^h W_V^h \in \mathbb{R}^{d \times d}</span>.</p>
-<p>Then: <span class="math inline">A^h = \text{Softmax}(X_0 \, W_{QK}^h \, X_0^\top) \in \mathbb{R}^{L \times L}</span>, and we can write the full model as: <span class="math display">T(x) = X \underbrace{(W_U W_E)^\top}_{\text{residual}} + \sum_{h=1}^{H} A^h \cdot X \cdot \underbrace{(W_U W_{OV}^h W_E)}_{\text{a single matrix}}.</span></p>
-<p>where <span class="math inline">X</span> is the input sequence, <span class="math inline">A^h = \text{Softmax}(X \, W_{QK}^h \, X^\top)</span>.</p>
+<p><span class="theorem-title"><strong>Theorem 18.2 (Single-Layer Attention-Only Transformer)</strong></span> For a single-layer, attention-only transformer, the output logits can be written as:</p>
+<p><span class="math display">T(X) = X \underbrace{W_E^\top W_U^\top}_{\text{direct path (residual)}} + \sum_{h=1}^{H} A^h \cdot X \cdot \underbrace{W_E^\top (W_{OV}^h)^\top W_U^\top}_{\text{attention path}},</span></p>
+<p>where <span class="math inline">A^h = \text{Softmax}(X W_{QK}^h X^\top)</span> is the attention pattern for head <span class="math inline">h</span>, <span class="math inline">W_{QK}^h = W_Q^{h\top} W_K^h / \sqrt{d_k}</span> is the <strong>QK-circuit</strong> (which tokens to attend to), and <span class="math inline">W_{OV}^h = W_O^h W_V^h</span> is the <strong>OV-circuit</strong> (what information to move).</p>
 </div>
-</section>
-<section id="sec-interactive-demo" class="level2" data-number="18.14">
-<h2 data-number="18.14" class="anchored" data-anchor-id="sec-interactive-demo"><span class="header-section-number">18.14</span> Interactive Demos</h2>
-<p>The following code computes attention weights for a simple self-attention example. Edit and run to explore.</p>
-<section id="self-attention-computation" class="level3" data-number="18.14.1">
-<h3 data-number="18.14.1" class="anchored" data-anchor-id="self-attention-computation"><span class="header-section-number">18.14.1</span> Self-Attention Computation</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Simple self-attention example</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">42</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>L <span class="op">=</span> <span class="dv">4</span>  <span class="co"># sequence length</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> <span class="dv">8</span>  <span class="co"># embedding dimension</span></span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>d1 <span class="op">=</span> <span class="dv">4</span>  <span class="co"># attention head dimension</span></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Simulated token embeddings (e.g., "I", "love", "deep", "learning")</span></span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>tokens <span class="op">=</span> [<span class="st">"I"</span>, <span class="st">"love"</span>, <span class="st">"deep"</span>, <span class="st">"learning"</span>]</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> np.random.randn(L, d)</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Weight matrices</span></span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>W_Q <span class="op">=</span> np.random.randn(d, d1) <span class="op">*</span> <span class="fl">0.3</span></span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>W_K <span class="op">=</span> np.random.randn(d, d1) <span class="op">*</span> <span class="fl">0.3</span></span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>W_V <span class="op">=</span> np.random.randn(d, d1) <span class="op">*</span> <span class="fl">0.3</span></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute Q, K, V</span></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>Q <span class="op">=</span> X <span class="op">@</span> W_Q  <span class="co"># (L, d1)</span></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>K <span class="op">=</span> X <span class="op">@</span> W_K</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>V <span class="op">=</span> X <span class="op">@</span> W_V</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Attention scores</span></span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>E <span class="op">=</span> Q <span class="op">@</span> K.T <span class="op">/</span> np.sqrt(d1)  <span class="co"># (L, L)</span></span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Raw attention scores (Q K^T / sqrt(d1)):"</span>)</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.<span class="bu">round</span>(E, <span class="dv">3</span>))</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Softmax (row-wise)</span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> softmax(x):</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    e <span class="op">=</span> np.exp(x <span class="op">-</span> x.<span class="bu">max</span>(axis<span class="op">=-</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>))</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> e <span class="op">/</span> e.<span class="bu">sum</span>(axis<span class="op">=-</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>alpha <span class="op">=</span> softmax(E)</span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Attention weights (after softmax):"</span>)</span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, tok <span class="kw">in</span> <span class="bu">enumerate</span>(tokens):</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    weights <span class="op">=</span> <span class="st">", "</span>.join(<span class="ss">f"</span><span class="sc">{</span>tokens[j]<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>alpha[i,j]<span class="sc">:.3f}</span><span class="ss">"</span> <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(L))</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>tok<span class="sc">}</span><span class="ss"> attends to -&gt; </span><span class="sc">{</span>weights<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Output</span></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>output <span class="op">=</span> alpha <span class="op">@</span> V</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="ch">\n</span><span class="ss">Output shape: </span><span class="sc">{</span>output<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Output (first 3 dims):</span><span class="ch">\n</span><span class="sc">{</span>np<span class="sc">.</span><span class="bu">round</span>(output[:, :<span class="dv">3</span>], <span class="dv">3</span>)<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Causal mask for decoder</span></span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">--- With Causal Masking ---"</span>)</span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>mask <span class="op">=</span> np.triu(np.ones((L, L)) <span class="op">*</span> (<span class="op">-</span><span class="fl">1e9</span>), k<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>E_masked <span class="op">=</span> E <span class="op">+</span> mask</span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>alpha_causal <span class="op">=</span> softmax(E_masked)</span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Causal attention weights:"</span>)</span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, tok <span class="kw">in</span> <span class="bu">enumerate</span>(tokens):</span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>    weights <span class="op">=</span> <span class="st">", "</span>.join(<span class="ss">f"</span><span class="sc">{</span>tokens[j]<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>alpha_causal[i,j]<span class="sc">:.3f}</span><span class="ss">"</span> <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(L))</span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"  </span><span class="sc">{</span>tok<span class="sc">}</span><span class="ss"> attends to -&gt; </span><span class="sc">{</span>weights<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="gpt-3-parameter-count" class="level3" data-number="18.14.2">
-<h3 data-number="18.14.2" class="anchored" data-anchor-id="gpt-3-parameter-count"><span class="header-section-number">18.14.2</span> GPT-3 Parameter Count</h3>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># GPT-3 175B configuration</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>configs <span class="op">=</span> {</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GPT-3 Small"</span>:  {<span class="st">"n_params_official"</span>: <span class="st">"125M"</span>,  <span class="st">"n_layers"</span>: <span class="dv">12</span>, <span class="st">"d_model"</span>: <span class="dv">768</span>,   <span class="st">"n_heads"</span>: <span class="dv">12</span>, <span class="st">"d_head"</span>: <span class="dv">64</span>},</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GPT-3 Medium"</span>: {<span class="st">"n_params_official"</span>: <span class="st">"350M"</span>,  <span class="st">"n_layers"</span>: <span class="dv">24</span>, <span class="st">"d_model"</span>: <span class="dv">1024</span>,  <span class="st">"n_heads"</span>: <span class="dv">16</span>, <span class="st">"d_head"</span>: <span class="dv">64</span>},</span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GPT-3 Large"</span>:  {<span class="st">"n_params_official"</span>: <span class="st">"760M"</span>,  <span class="st">"n_layers"</span>: <span class="dv">24</span>, <span class="st">"d_model"</span>: <span class="dv">1536</span>,  <span class="st">"n_heads"</span>: <span class="dv">16</span>, <span class="st">"d_head"</span>: <span class="dv">96</span>},</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GPT-3 XL"</span>:     {<span class="st">"n_params_official"</span>: <span class="st">"1.3B"</span>,  <span class="st">"n_layers"</span>: <span class="dv">24</span>, <span class="st">"d_model"</span>: <span class="dv">2048</span>,  <span class="st">"n_heads"</span>: <span class="dv">24</span>, <span class="st">"d_head"</span>: <span class="dv">128</span>},</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"GPT-3 175B"</span>:   {<span class="st">"n_params_official"</span>: <span class="st">"175.0B"</span>,<span class="st">"n_layers"</span>: <span class="dv">96</span>, <span class="st">"d_model"</span>: <span class="dv">12288</span>, <span class="st">"n_heads"</span>: <span class="dv">96</span>, <span class="st">"d_head"</span>: <span class="dv">128</span>},</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="dv">50257</span>  <span class="co"># vocabulary size</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>L <span class="op">=</span> <span class="dv">2048</span>   <span class="co"># context window</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Vocabulary size N = </span><span class="sc">{</span>N<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Context window  L = </span><span class="sc">{</span>L<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span><span class="st">'Model'</span><span class="sc">:&lt;16}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Official'</span><span class="sc">:&gt;10}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Computed'</span><span class="sc">:&gt;16}</span><span class="ss"> </span><span class="sc">{</span><span class="st">'Accuracy'</span><span class="sc">:&gt;10}</span><span class="ss">"</span>)</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"-"</span> <span class="op">*</span> <span class="dv">56</span>)</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, cfg <span class="kw">in</span> configs.items():</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>    d <span class="op">=</span> cfg[<span class="st">"d_model"</span>]</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    n_layer <span class="op">=</span> cfg[<span class="st">"n_layers"</span>]</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 1. Word embedding: N * d</span></span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    word_emb <span class="op">=</span> N <span class="op">*</span> d</span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 2. Position embedding: L * d</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    pos_emb <span class="op">=</span> L <span class="op">*</span> d</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 3. Self-attention: 4*d^2 per layer</span></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>    attn <span class="op">=</span> <span class="dv">4</span> <span class="op">*</span> d<span class="op">**</span><span class="dv">2</span> <span class="op">*</span> n_layer</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>    <span class="co"># 4. MLP: 8*d^2 per layer</span></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    mlp <span class="op">=</span> <span class="dv">8</span> <span class="op">*</span> d<span class="op">**</span><span class="dv">2</span> <span class="op">*</span> n_layer</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    total <span class="op">=</span> word_emb <span class="op">+</span> pos_emb <span class="op">+</span> attn <span class="op">+</span> mlp</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Parse official</span></span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    official_str <span class="op">=</span> cfg[<span class="st">"n_params_official"</span>]</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="st">"B"</span> <span class="kw">in</span> official_str:</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>        official <span class="op">=</span> <span class="bu">float</span>(official_str.replace(<span class="st">"B"</span>,<span class="st">""</span>)) <span class="op">*</span> <span class="fl">1e9</span></span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>        official <span class="op">=</span> <span class="bu">float</span>(official_str.replace(<span class="st">"M"</span>,<span class="st">""</span>)) <span class="op">*</span> <span class="fl">1e6</span></span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>    accuracy <span class="op">=</span> total <span class="op">/</span> official <span class="op">*</span> <span class="dv">100</span></span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>name<span class="sc">:&lt;16}</span><span class="ss"> </span><span class="sc">{</span>official_str<span class="sc">:&gt;10}</span><span class="ss"> </span><span class="sc">{</span>total<span class="sc">:&gt;16,}</span><span class="ss"> </span><span class="sc">{</span>accuracy<span class="sc">:&gt;9.1f}</span><span class="ss">%"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><em>Figure 12.4: Dot product of sinusoidal positional encodings across positions. The diagonal structure shows that nearby positions have similar encodings, encoding relative position information.</em></p>
+<p>This decomposition reveals that each attention head performs two distinct functions: the QK-circuit determines <strong>where</strong> to look, while the OV-circuit determines <strong>what</strong> to copy. The residual stream provides a direct path from input to output, so each layer only needs to make incremental contributions.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Remark: Looking Ahead
+<span class="screen-reader-only">Tip</span>Remark: Mechanistic Interpretability
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>This concludes the course. The optimization foundations developed throughout—from convexity and duality to first-order methods and stochastic optimization—provide the mathematical toolkit for understanding and advancing modern machine learning.</p>
+<p>This “circuits” perspective has led to a growing field of <strong>mechanistic interpretability</strong>, which aims to reverse-engineer the algorithms learned by transformers by studying the QK and OV circuits of individual attention heads. Researchers have identified specific heads that perform induction (pattern completion), heads that handle syntax, and heads that track entities across long contexts.</p>
 </div>
 </div>
-</section>
+<!-- Plotly.js for interactive figures -->
+<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const plotlyConfig = {responsive: true, displayModeBar: false};
+  const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+  function legendStyle() {
+    return {
+      font: {family: figFont, size: 13, color: css('--fig-text') || '#3d3530'},
+      bgcolor: (css('--fig-bg') || '#f0ebe5') + 'dd',
+      bordercolor: css('--fig-grid') || '#e0d9d1',
+      borderwidth: 1,
+    };
+  }
+
+  function themeLayout(extra = {}) {
+    return Object.assign({
+      paper_bgcolor: css('--fig-bg') || '#f0ebe5',
+      plot_bgcolor: css('--fig-plot-bg') || '#faf7f3',
+      font: { family: figFont, color: css('--fig-text') || '#3d3530', size: 14 },
+    }, extra);
+  }
+
+  function themeAxis(title, extra = {}) {
+    return Object.assign({
+      title: {text: title, font: {family: figFont, size: 14}},
+      gridcolor: css('--fig-grid') || '#e0d9d1',
+      zerolinecolor: css('--fig-grid') || '#e0d9d1',
+      linecolor: css('--fig-axis') || '#968a80',
+      tickfont: {family: figFont, size: 12, color: css('--fig-axis') || '#968a80'},
+    }, extra);
+  }
+
+  // ──────────── Word Embedding Visualization ────────────
+  function renderWordEmbedding() {
+    const el = document.getElementById('fig-word-embedding');
+    if (!el) return;
+    // Simulated 2D PCA projection of word embeddings
+    const words = {
+      // Royalty cluster
+      'king': [2.1, 1.8], 'queen': [1.5, 2.4], 'prince': [2.5, 2.2], 'princess': [1.9, 2.8],
+      // Animals
+      'cat': [-1.8, -0.5], 'dog': [-1.2, -0.8], 'fish': [-2.2, -1.2], 'bird': [-1.5, -1.5],
+      // Actions
+      'run': [0.5, -2.0], 'walk': [0.8, -1.5], 'swim': [-0.2, -2.3], 'fly': [0.1, -1.8],
+      // People
+      'man': [1.0, 0.5], 'woman': [0.4, 1.1], 'boy': [1.4, 0.2], 'girl': [0.8, 0.8],
+    };
+    const groups = {
+      'Royalty': ['king', 'queen', 'prince', 'princess'],
+      'Animals': ['cat', 'dog', 'fish', 'bird'],
+      'Actions': ['run', 'walk', 'swim', 'fly'],
+      'People': ['man', 'woman', 'boy', 'girl'],
+    };
+    const colors = {'Royalty': '#b8995e', 'Animals': '#7a9a7e', 'Actions': '#7b97ad', 'People': '#c47a6a'};
+    const traces = [];
+    for (const [group, wordList] of Object.entries(groups)) {
+      traces.push({
+        x: wordList.map(w => words[w][0]),
+        y: wordList.map(w => words[w][1]),
+        text: wordList,
+        mode: 'markers+text',
+        textposition: 'top center',
+        textfont: {family: figFont, size: 13, color: colors[group]},
+        marker: {size: 10, color: colors[group], symbol: 'circle'},
+        name: group,
+        type: 'scatter',
+      });
+    }
+    // Analogy arrow: king - man + woman ≈ queen
+    traces.push({
+      x: [2.1, 0.4+2.1-1.0], y: [1.8, 1.1+1.8-0.5],
+      mode: 'lines', line: {color: '#3d3530', width: 1.5, dash: 'dot'},
+      showlegend: false,
+    });
+    traces.push({
+      x: [1.0, 0.4], y: [0.5, 1.1],
+      mode: 'lines', line: {color: '#907ea0', width: 1.5, dash: 'dot'},
+      showlegend: false,
+    });
+    Plotly.newPlot(el, traces, themeLayout({
+      height: 420, margin: {t: 30, r: 30, b: 50, l: 60},
+      xaxis: themeAxis('PCA Dimension 1', {zeroline: false}),
+      yaxis: themeAxis('PCA Dimension 2', {zeroline: false}),
+      showlegend: true,
+      legend: Object.assign(legendStyle(), {x: 0.01, y: 0.99}),
+    }), plotlyConfig);
+  }
+
+  // ──────────── Attention Heatmap ────────────
+  function renderAttentionHeatmap() {
+    const el = document.getElementById('fig-attention-heatmap');
+    if (!el) return;
+    const tokens = ['The', 'cat', 'sat', 'on', 'the', 'mat'];
+    const n = tokens.length;
+    // Simulated attention weights (row = query, col = key)
+    const attn = [
+      [0.40, 0.15, 0.10, 0.10, 0.15, 0.10],  // The
+      [0.10, 0.35, 0.10, 0.05, 0.05, 0.35],  // cat → mat
+      [0.05, 0.40, 0.30, 0.10, 0.05, 0.10],  // sat → cat
+      [0.05, 0.05, 0.15, 0.30, 0.05, 0.40],  // on → mat
+      [0.35, 0.05, 0.05, 0.10, 0.35, 0.10],  // the → The
+      [0.05, 0.30, 0.10, 0.15, 0.05, 0.35],  // mat → cat
+    ];
+    Plotly.newPlot(el, [{
+      z: attn, x: tokens, y: tokens,
+      type: 'heatmap',
+      colorscale: [[0, '#faf7f3'], [0.25, '#d4c9b8'], [0.5, '#b8995e'], [0.75, '#ad8480'], [1, '#7b4b3a']],
+      showscale: true,
+      colorbar: {title: {text: 'Weight', font: {family: figFont, size: 12}}, tickfont: {family: figFont, size: 11}},
+      hovertemplate: 'Query: %{y}<br>Key: %{x}<br>Weight: %{z:.2f}<extra></extra>',
+    }], themeLayout({
+      height: 420, margin: {t: 30, r: 80, b: 60, l: 80},
+      xaxis: {title: {text: 'Key', font: {family: figFont, size: 14}}, tickfont: {family: figFont, size: 13}, side: 'bottom'},
+      yaxis: {title: {text: 'Query', font: {family: figFont, size: 14}}, tickfont: {family: figFont, size: 13}, autorange: 'reversed'},
+    }), plotlyConfig);
+  }
+
+  // ──────────── Positional Encoding Heatmap ────────────
+  function renderPositionalEncoding() {
+    const el = document.getElementById('fig-positional-encoding');
+    if (!el) return;
+    const nPos = 128, dModel = 64;
+    const pe = [];
+    for (let pos = 0; pos < nPos; pos++) {
+      const row = [];
+      for (let i = 0; i < dModel; i++) {
+        const dimIdx = Math.floor(i / 2);
+        const omega = 1 / Math.pow(10000, 2 * dimIdx / dModel);
+        row.push(i % 2 === 0 ? Math.sin(omega * pos) : Math.cos(omega * pos));
+      }
+      pe.push(row);
+    }
+    Plotly.newPlot(el, [{
+      z: pe, type: 'heatmap',
+      colorscale: [[0, '#7b97ad'], [0.5, '#faf7f3'], [1, '#c47a6a']],
+      showscale: true,
+      colorbar: {title: {text: 'Value', font: {family: figFont, size: 12}}, tickfont: {family: figFont, size: 11}},
+      hovertemplate: 'Position: %{y}<br>Dimension: %{x}<br>Value: %{z:.3f}<extra></extra>',
+    }], themeLayout({
+      height: 420, margin: {t: 30, r: 80, b: 60, l: 70},
+      xaxis: themeAxis('Encoding Dimension'),
+      yaxis: themeAxis('Position', {autorange: 'reversed'}),
+    }), plotlyConfig);
+  }
+
+  // ──────────── GPT-3 Parameter Breakdown ────────────
+  function renderParamBreakdown() {
+    const el = document.getElementById('fig-param-breakdown');
+    if (!el) return;
+    const d = 12288, nLayers = 96, V = 50257, L = 2048;
+    const embed = V * d;
+    const posEmbed = L * d;
+    const attnPerLayer = 4 * d * d;
+    const mlpPerLayer = 8 * d * d;
+    const totalAttn = attnPerLayer * nLayers;
+    const totalMlp = mlpPerLayer * nLayers;
+    const labels = ['Word Embedding', 'Position Embedding', 'Attention (96 layers)', 'MLP (96 layers)'];
+    const values = [embed, posEmbed, totalAttn, totalMlp];
+    const colors = ['#b8995e', '#907ea0', '#7b97ad', '#7a9a7e'];
+    Plotly.newPlot(el, [{
+      labels: labels, values: values,
+      type: 'pie',
+      marker: {colors: colors, line: {color: '#f0ebe5', width: 2}},
+      textinfo: 'label+percent',
+      textfont: {family: figFont, size: 13},
+      hovertemplate: '%{label}<br>%{value:,.0f} params<br>%{percent}<extra></extra>',
+      hole: 0.35,
+    }], themeLayout({
+      height: 400, margin: {t: 30, r: 30, b: 30, l: 30},
+      showlegend: false,
+    }), plotlyConfig);
+  }
+
+  renderWordEmbedding();
+  renderAttentionHeatmap();
+  renderPositionalEncoding();
+  renderParamBreakdown();
+});
+</script>
 </section>
 <section id="summary" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
 <ul>
-<li><strong>Attention mechanism.</strong> The core operation computes <span class="math inline">\operatorname{Attention}(Q,K,V) = \operatorname{softmax}\!\bigl(\frac{QK^\top}{\sqrt{d_k}}\bigr)V</span>, where queries, keys, and values are linear projections of the input; this allows each token to attend to all other tokens with learned, content-dependent weights.</li>
-<li><strong>Positional encoding.</strong> Since self-attention is permutation-equivariant, sinusoidal positional encodings <span class="math inline">\operatorname{PE}(pos, 2i) = \sin(pos / 10000^{2i/d})</span> inject sequence-order information; causal masking further enforces autoregressive structure by preventing attention to future tokens.</li>
-<li><strong>Transformer block.</strong> Each block applies multi-head self-attention followed by a position-wise MLP, with residual connections and layer normalization (<span class="math inline">x + \operatorname{Sublayer}(x)</span>) around each sub-layer—enabling stable training of very deep models.</li>
-<li><strong>Multi-head attention.</strong> Running <span class="math inline">h</span> attention heads in parallel with independent projections <span class="math inline">W_i^Q, W_i^K, W_i^V</span> lets the model capture diverse relational patterns; outputs are concatenated and linearly projected back to the model dimension.</li>
+<li><strong>Token embedding.</strong> Discrete words are mapped to dense vectors <span class="math inline">x_i = W_E w_i \in \mathbb{R}^d</span> via a learned embedding matrix; positional information is added as <span class="math inline">x_i + \text{pe}_i</span>.</li>
+<li><strong>Attention mechanism.</strong> The core operation computes <span class="math inline">\text{Attention}(Q,K,V) = \text{softmax}(QK^\top / \sqrt{d_k}) V</span>, where queries, keys, and values are linear projections of the input; each token attends to all other tokens with learned, content-dependent weights.</li>
+<li><strong>Positional encoding.</strong> Since self-attention is permutation invariant, positional embeddings (sinusoidal or learned) inject sequence-order information; causal masking further enforces autoregressive structure by preventing attention to future tokens.</li>
+<li><strong>Transformer block.</strong> Each block applies multi-head self-attention followed by a position-wise MLP, with residual connections and layer normalization around each sub-layer, enabling stable training of very deep models.</li>
+<li><strong>Multi-head attention.</strong> Running <span class="math inline">H</span> attention heads in parallel with independent projections lets the model capture diverse relational patterns; outputs are concatenated and projected back to the model dimension.</li>
+<li><strong>Scale.</strong> GPT-3 175B has 96 layers, <span class="math inline">d = 12{,}288</span>, and 96 attention heads; over 99% of its $$174B parameters reside in the attention (<span class="math inline">4d^2</span> per layer) and MLP (<span class="math inline">8d^2</span> per layer) weights.</li>
 </ul>
 
 
@@ -1452,50 +1783,6 @@ Figure&nbsp;18.1: Self-attention mechanism. The input sequence <span class="math
   </div>
 </nav>
 </div> <!-- /content -->
-<script>
-// Plotly Warmtone theming helpers — shared across all lectures
-// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
-const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
-
-function css(v) {
-  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-}
-
-function legendStyle() {
-  return {
-    font: {family: figFont, size: 13, color: css('--fig-text')},
-    bgcolor: css('--fig-bg') + 'dd',
-    bordercolor: css('--fig-grid'),
-    borderwidth: 1,
-  };
-}
-
-function themeLayout(extra) {
-  return Object.assign({
-    paper_bgcolor: css('--fig-bg'),
-    plot_bgcolor: css('--fig-plot-bg'),
-    font: {family: figFont, color: css('--fig-text'), size: 14},
-  }, extra || {});
-}
-
-function themeAxis(title, extra) {
-  return Object.assign({
-    title: {text: title, font: {family: figFont, size: 14}},
-    gridcolor: css('--fig-grid'),
-    zerolinecolor: css('--fig-grid'),
-    linecolor: css('--fig-axis'),
-    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
-  }, extra || {});
-}
-
-// Plotly color sequences matching the Warmtone palette
-const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
-];
-</script>
 <script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
 (function() {
   let previousOnload = window.onload;

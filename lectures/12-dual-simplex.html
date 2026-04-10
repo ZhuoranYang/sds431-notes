@@ -23,41 +23,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -110,6 +75,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -265,19 +274,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  <a href="../lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  <a href="../lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
   </div>
 </li>
       </ul>
@@ -335,7 +344,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -391,7 +400,8 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-primal-recap" id="toc-sec-primal-recap" class="nav-link active" data-scroll-target="#sec-primal-recap"><span class="header-section-number">12.1</span> Recap of the Primal Simplex Method</a></li>
+  <li><a href="#what-will-be-covered" id="toc-what-will-be-covered" class="nav-link active" data-scroll-target="#what-will-be-covered">What Will Be Covered</a></li>
+  <li><a href="#sec-primal-recap" id="toc-sec-primal-recap" class="nav-link" data-scroll-target="#sec-primal-recap"><span class="header-section-number">12.1</span> Recap of the Primal Simplex Method</a></li>
   <li><a href="#sec-primal-dual-dictionary" id="toc-sec-primal-dual-dictionary" class="nav-link" data-scroll-target="#sec-primal-dual-dictionary"><span class="header-section-number">12.2</span> The Primal-Dual Dictionary Relationship</a>
   <ul class="collapse">
   <li><a href="#sec-dictionary-example" id="toc-sec-dictionary-example" class="nav-link" data-scroll-target="#sec-dictionary-example"><span class="header-section-number">12.2.1</span> A Detailed Example</a></li>
@@ -416,7 +426,6 @@ window.Quarto = {
   <li><a href="#sec-iteration-1" id="toc-sec-iteration-1" class="nav-link" data-scroll-target="#sec-iteration-1"><span class="header-section-number">12.6.3</span> Iteration 1</a></li>
   <li><a href="#sec-iteration-2" id="toc-sec-iteration-2" class="nav-link" data-scroll-target="#sec-iteration-2"><span class="header-section-number">12.6.4</span> Iteration 2</a></li>
   <li><a href="#sec-verify-optimality" id="toc-sec-verify-optimality" class="nav-link" data-scroll-target="#sec-verify-optimality"><span class="header-section-number">12.6.5</span> Verifying Optimality</a></li>
-  <li><a href="#sec-tracking-iterations" id="toc-sec-tracking-iterations" class="nav-link" data-scroll-target="#sec-tracking-iterations"><span class="header-section-number">12.6.6</span> Tracking the Iterations</a></li>
   </ul></li>
   <li><a href="#sec-when-to-use" id="toc-sec-when-to-use" class="nav-link" data-scroll-target="#sec-when-to-use"><span class="header-section-number">12.7</span> When to Use the Dual Simplex Method</a>
   <ul class="collapse">
@@ -434,6 +443,7 @@ window.Quarto = {
 <header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/09-lp-formulation-geometry.html">Linear Programming</a></li><li class="breadcrumb-item"><a href="../lectures/12-dual-simplex.html"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The Dual Simplex Method</span></a></li></ol></nav>
 <div class="quarto-title">
 <h1 class="title"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The Dual Simplex Method</span></h1>
+<p class="subtitle lead">(Optional)</p>
 </div>
 
 
@@ -450,9 +460,29 @@ window.Quarto = {
 </header>
 
 
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>This chapter is optional.</strong> The dual simplex method is a powerful algorithmic tool used in modern LP solvers, but it is not required for the remainder of the course. It is included for students who want a deeper understanding of the primal-dual interplay and how solvers re-optimize after adding constraints.</p>
+</div>
+</div>
+</div>
 <p>The <a href="../lectures/10-simplex-method.html">simplex method</a> solves a linear program by walking along the vertices of the primal feasible region, improving the objective at each step. At every iteration it maintains <strong>primal feasibility</strong> (<span class="math inline">\widetilde{b} \geq 0</span>) and works toward <strong>dual feasibility</strong> (<span class="math inline">\widetilde{c} \leq 0</span> for maximization, equivalently all reduced costs non-positive). But what if we turned things around? What if we instead maintained dual feasibility and worked toward primal feasibility?</p>
 <p>This reversal leads to the <strong>dual simplex method</strong> – an algorithm that implicitly runs the simplex method on the <a href="../lectures/11-lp-duality.html">dual LP</a>, but does so entirely through the primal dictionary. The key insight is the <strong>negative transpose property</strong>: the dual dictionary is always the negative transpose of the primal dictionary. This elegant algebraic relationship means that every primal pivot corresponds to a dual pivot, and we never need to explicitly form the dual problem.</p>
 <p>The dual simplex method is not merely a theoretical curiosity. It is the workhorse algorithm behind modern LP solvers when constraints are added to an already-optimal tableau, when sensitivity analysis modifies the right-hand side, or when branch-and-bound algorithms need to re-optimize after adding cutting planes. Understanding the primal-dual interplay through the dictionary is essential for mastering computational optimization.</p>
+<section id="what-will-be-covered" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="what-will-be-covered">What Will Be Covered</h2>
+<ul>
+<li>Recap of the primal simplex method and optimality conditions</li>
+<li>The negative transpose property: the dual dictionary is the negative transpose of the primal</li>
+<li>The dual simplex algorithm: maintaining dual feasibility while restoring primal feasibility</li>
+<li>Pivoting rules for the dual simplex method</li>
+<li>Applications: sensitivity analysis, adding constraints, and warm-starting after cuts</li>
+</ul>
+</section>
 <section id="sec-primal-recap" class="level2" data-number="12.1">
 <h2 data-number="12.1" class="anchored" data-anchor-id="sec-primal-recap"><span class="header-section-number">12.1</span> Recap of the Primal Simplex Method</h2>
 <p>Consider the standard-form LP and its dual:</p>
@@ -533,63 +563,127 @@ z_1 = -4 + y_1 + 3y_2, \qquad z_2 = -1 + 4y_1 - y_2, \qquad z_3 = -3 + y_2.
 </div>
 </div>
 <p>This is not a coincidence for this particular example – it holds in general and is preserved under pivoting.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-negative-transpose</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "The negative transpose property: the dual tableau is the negative transpose of the primal tableau. Corresponding entries are highlighted."</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotly.subplots <span class="im">import</span> make_subplots</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> make_subplots(rows<span class="op">=</span><span class="dv">1</span>, cols<span class="op">=</span><span class="dv">2</span>, subplot_titles<span class="op">=</span>(</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Primal Tableau T'</span>, <span class="st">'Dual Tableau = -T&lt;sup&gt;T&lt;/sup&gt;'</span>),</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    horizontal_spacing<span class="op">=</span><span class="fl">0.15</span>)</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>primal <span class="op">=</span> np.array([</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">3</span>],</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">4</span>, <span class="dv">0</span>],</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">3</span>, <span class="op">-</span><span class="dv">3</span>, <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>]</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>])</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>dual <span class="op">=</span> <span class="op">-</span>primal.T</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>primal_text <span class="op">=</span> [[<span class="bu">str</span>(<span class="bu">int</span>(v)) <span class="cf">for</span> v <span class="kw">in</span> row] <span class="cf">for</span> row <span class="kw">in</span> primal]</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>dual_text <span class="op">=</span> [[<span class="bu">str</span>(<span class="bu">int</span>(v)) <span class="cf">for</span> v <span class="kw">in</span> row] <span class="cf">for</span> row <span class="kw">in</span> dual]</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>primal_colors <span class="op">=</span> [</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    [<span class="st">'#f5f0e8'</span>, <span class="st">'#e8d5b5'</span>, <span class="st">'#e8d5b5'</span>, <span class="st">'#e8d5b5'</span>],</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    [<span class="st">'#d5dce5'</span>, <span class="st">'#f5f0e8'</span>, <span class="st">'#f5f0e8'</span>, <span class="st">'#f5f0e8'</span>],</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    [<span class="st">'#d5dce5'</span>, <span class="st">'#f5f0e8'</span>, <span class="st">'#f5f0e8'</span>, <span class="st">'#f5f0e8'</span>]</span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>dual_colors <span class="op">=</span> [</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    [<span class="st">'#f5f0e8'</span>, <span class="st">'#d5dce5'</span>, <span class="st">'#d5dce5'</span>],</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    [<span class="st">'#e8d5b5'</span>, <span class="st">'#f5f0e8'</span>, <span class="st">'#f5f0e8'</span>],</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    [<span class="st">'#e8d5b5'</span>, <span class="st">'#f5f0e8'</span>, <span class="st">'#f5f0e8'</span>],</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    [<span class="st">'#e8d5b5'</span>, <span class="st">'#f5f0e8'</span>, <span class="st">'#f5f0e8'</span>]</span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Table(</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    header<span class="op">=</span><span class="bu">dict</span>(values<span class="op">=</span>[<span class="st">''</span>, <span class="st">'x&lt;sub&gt;1&lt;/sub&gt;'</span>, <span class="st">'x&lt;sub&gt;2&lt;/sub&gt;'</span>, <span class="st">'x&lt;sub&gt;3&lt;/sub&gt;'</span>],</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>                fill_color<span class="op">=</span><span class="st">'#7b97ad'</span>, font<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'white'</span>, size<span class="op">=</span><span class="dv">14</span>),</span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>                align<span class="op">=</span><span class="st">'center'</span>, height<span class="op">=</span><span class="dv">32</span>),</span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    cells<span class="op">=</span><span class="bu">dict</span>(values<span class="op">=</span><span class="bu">list</span>(<span class="bu">zip</span>(<span class="op">*</span>primal_text)),</span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>               fill_color<span class="op">=</span><span class="bu">list</span>(<span class="bu">zip</span>(<span class="op">*</span>primal_colors)),</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>               font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">14</span>), align<span class="op">=</span><span class="st">'center'</span>, height<span class="op">=</span><span class="dv">30</span>),</span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>    columnwidth<span class="op">=</span>[<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>]), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Table(</span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    header<span class="op">=</span><span class="bu">dict</span>(values<span class="op">=</span>[<span class="st">''</span>, <span class="st">'y&lt;sub&gt;1&lt;/sub&gt;'</span>, <span class="st">'y&lt;sub&gt;2&lt;/sub&gt;'</span>],</span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>                fill_color<span class="op">=</span><span class="st">'#8a6e5e'</span>, font<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'white'</span>, size<span class="op">=</span><span class="dv">14</span>),</span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>                align<span class="op">=</span><span class="st">'center'</span>, height<span class="op">=</span><span class="dv">32</span>),</span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>    cells<span class="op">=</span><span class="bu">dict</span>(values<span class="op">=</span><span class="bu">list</span>(<span class="bu">zip</span>(<span class="op">*</span>dual_text)),</span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>               fill_color<span class="op">=</span><span class="bu">list</span>(<span class="bu">zip</span>(<span class="op">*</span>dual_colors)),</span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a>               font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">14</span>), align<span class="op">=</span><span class="st">'center'</span>, height<span class="op">=</span><span class="dv">30</span>),</span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>    columnwidth<span class="op">=</span>[<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>]), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a>    margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">40</span>, b<span class="op">=</span><span class="dv">20</span>, l<span class="op">=</span><span class="dv">20</span>, r<span class="op">=</span><span class="dv">20</span>),</span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>    height<span class="op">=</span><span class="dv">250</span>)</span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<style>
+  #ntp-box{font-family:'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif;background:#f0ebe5;border-radius:8px;padding:24px 20px 16px;margin:28px auto;max-width:960px;box-shadow:0 2px 12px rgba(61,53,48,0.08)}
+  #ntp-box h3{color:#3d3530;font-size:1.15em;font-weight:600;margin:0 0 4px;font-family:inherit}
+  #ntp-box .sub{color:#968a80;font-size:0.92em;margin:0 0 14px}
+  #ntp-box .nav{display:flex;align-items:center;justify-content:center;gap:16px;margin:0 0 14px}
+  #ntp-box .nav button{font-family:inherit;font-size:0.9em;padding:6px 14px;background:#faf7f3;border:1px solid #d4c9b8;border-radius:4px;color:#3d3530;cursor:pointer}
+  #ntp-box .nav button:disabled{opacity:0.35;cursor:default}
+  #ntp-box .nav button:not(:disabled):hover{background:#e8e1d8}
+  #ntp-box .slbl{font-weight:600;color:#3d3530;text-align:center}
+  #ntp-box .sdet{color:#968a80;font-size:0.85em;text-align:center}
+  #ntp-box .panels{display:flex;justify-content:center;align-items:flex-start;gap:20px;flex-wrap:wrap;margin:0 0 10px}
+  #ntp-box .ptitle{color:#7b97ad;font-size:0.9em;font-weight:600;margin:0 0 6px;text-align:center;font-family:inherit}
+  #ntp-box .eq{font-size:1.5em;color:#968a80;padding-top:28px}
+  #ntp-box table{border-collapse:collapse;margin:0 auto}
+  #ntp-box table th{padding:5px 10px;font-size:0.82em;color:#968a80;font-weight:600;border-bottom:2px solid #d4c9b8}
+  #ntp-box table th.rh{text-align:right;border-bottom:none;border-right:2px solid #d4c9b8;color:#3d3530}
+  #ntp-box table td{padding:7px 12px;text-align:center;font-size:0.92em;border:1px solid #e0d9d1;transition:all 0.12s;cursor:crosshair}
+  #ntp-box table td.hl{outline:3px solid #7b97ad;outline-offset:-1px;font-weight:700}
+  #ntp-box table td.hlp{outline:3px solid #b8995e;outline-offset:-1px;font-weight:700}
+  #ntp-box .ver{text-align:center;font-size:0.88em;color:#7b97ad;min-height:1.5em;margin:8px 0 4px}
+  #ntp-box .desc{background:#faf7f3;border-left:3px solid #7b97ad;border-radius:0 4px 4px 0;padding:10px 14px;margin:8px 0 0;font-size:0.85em;color:#3d3530;line-height:1.55}
+</style>
+<div id="ntp-box">
+  <h3 class="anchored">Primal–Dual Dictionary Explorer</h3>
+  <p class="sub">Step through the pivots and hover any cell to verify: T[i,j] + (−T<sup>⊤</sup>)[j,i] = 0</p>
+  <div class="nav">
+    <button id="ntp-prev">◀ Previous</button>
+    <span><div class="slbl" id="ntp-lbl"></div><div class="sdet" id="ntp-det"></div></span>
+    <button id="ntp-next">Next ▶</button>
+  </div>
+  <div class="panels">
+    <div><div class="ptitle">Primal Dictionary <b>T</b></div><div id="ntp-pt"></div></div>
+    <div class="eq">= −<b>T</b><sup>⊤</sup></div>
+    <div><div class="ptitle">Dual Dictionary <b>−T<sup>⊤</sup></b></div><div id="ntp-dt"></div></div>
+  </div>
+  <div class="ver" id="ntp-ver">Hover a cell to verify</div>
+  <div class="desc" id="ntp-desc"></div>
+</div>
+<script>
+(function(){
+  var S=[
+    {l:'Initial Dictionary',d:'B = {w₁, w₂}, N = {x₁, x₂, x₃}',
+     pr:['ζ','w₁','w₂'],pc:['','x₁','x₂','x₃'],
+     P:[[0,4,1,3],[1,-1,-4,0],[3,-3,1,-1]],
+     dr:['−ξ','z₁','z₂','z₃'],dc:['','y₁','y₂'],
+     D:[[0,-1,-3],[-4,1,3],[-1,4,-1],[-3,0,1]],
+     t:'Basic ↔ nonbasic swap: primal basis {w₁, w₂} corresponds to dual nonbasic {y₁, y₂}. Primal nonbasic {x₁, x₂, x₃} correspond to dual basic {z₁, z₂, z₃}. Hover any matching cells to verify the negative transpose!'},
+    {l:'After Pivot 1',d:'x₃ enters B, w₂ leaves → B = {w₁, x₃}',
+     pr:['ζ','w₁','x₃'],pc:['','x₁','x₂','w₂'],
+     P:[[9,-5,4,-3],[1,-1,-4,0],[3,-3,1,-1]],
+     dr:['−ξ','z₁','z₂','y₂'],dc:['','y₁','z₃'],
+     D:[[-9,-1,-3],[5,1,3],[-4,4,-1],[3,0,1]],
+     t:'Pivot (w₂ ↔ x₃) in primal corresponds to (y₂ ↔ z₃) in dual. The negative transpose property is preserved after pivoting — verify by hovering! Complementary slackness: w₂ left the primal basis, so y₂ entered the dual basis.'},
+    {l:'Optimal Dictionary',d:'x₂ enters B, w₁ leaves → B = {x₂, x₃}',
+     pr:['ζ','x₂','x₃'],pc:['','x₁','w₁','w₂'],
+     P:[[10,-6,-1,-3],[0.25,-0.25,-0.25,0],[3.25,-3.25,-0.25,-1]],
+     dr:['−ξ','z₁','y₁','y₂'],dc:['','z₂','z₃'],
+     D:[[-10,-0.25,-3.25],[6,0.25,3.25],[1,0.25,0.25],[3,0,1]],
+     t:'Both optimal! Primal has c̃ ≤ 0 and b̃ ≥ 0. Dual satisfies the same via the negative transpose. Optimal value: ζ* = ξ* = 10, confirming strong duality.'}
+  ];
+  var k=0;
+  function fmt(v){
+    if(v===0)return '0';
+    var a=Math.abs(v),s;
+    if(Number.isInteger(v))s=String(a);
+    else s=a.toFixed(2).replace(/0+$/,'').replace(/\.$/,'');
+    return v<0?'−'+s:s;
+  }
+  function bg(v){return v>0?'rgba(122,154,126,0.18)':v<0?'rgba(196,122,106,0.18)':'rgba(212,201,184,0.2)';}
+  function tbl(el,rh,ch,M,pfx){
+    var h='<table><tr><th></th>';
+    for(var j=0;j<ch.length;j++)h+='<th>'+ch[j]+'</th>';
+    h+='</tr>';
+    for(var i=0;i<M.length;i++){
+      h+='<tr><th class="rh">'+rh[i]+'</th>';
+      for(var j=0;j<M[i].length;j++)
+        h+='<td id="'+pfx+i+'_'+j+'" data-i="'+i+'" data-j="'+j+'" data-p="'+pfx+'" style="background:'+bg(M[i][j])+'">'+fmt(M[i][j])+'</td>';
+      h+='</tr>';
+    }
+    h+='</table>';
+    document.getElementById(el).innerHTML=h;
+  }
+  function render(){
+    var s=S[k];
+    document.getElementById('ntp-lbl').textContent='Step '+k+': '+s.l;
+    document.getElementById('ntp-det').textContent=s.d;
+    document.getElementById('ntp-desc').textContent=s.t;
+    document.getElementById('ntp-ver').textContent='Hover a cell to verify';
+    document.getElementById('ntp-prev').disabled=k===0;
+    document.getElementById('ntp-next').disabled=k===S.length-1;
+    tbl('ntp-pt',s.pr,s.pc,s.P,'p');
+    tbl('ntp-dt',s.dr,s.dc,s.D,'d');
+    document.querySelectorAll('#ntp-box td').forEach(function(c){
+      c.onmouseenter=function(){
+        var i=+c.dataset.i,j=+c.dataset.j,p=c.dataset.p;
+        c.classList.add('hl');
+        var o=document.getElementById((p==='p'?'d':'p')+j+'_'+i);
+        if(o)o.classList.add('hlp');
+        var pv,dv;
+        if(p==='p'){pv=s.P[i][j];dv=(s.D[j]&&s.D[j][i]!==undefined)?s.D[j][i]:null;}
+        else{dv=s.D[i][j];pv=(s.P[j]&&s.P[j][i]!==undefined)?s.P[j][i]:null;}
+        if(pv!==null&&dv!==null){
+          var sum=Math.abs(pv+dv)<1e-9;
+          document.getElementById('ntp-ver').innerHTML=
+            '<span style="color:#7b97ad"><b>T</b>['+( p==='p'?i:j)+','+( p==='p'?j:i)+'] = '+fmt(pv)+'</span>'+
+            ' &ensp;+&ensp; '+
+            '<span style="color:#b8995e"><b>(−T<sup>⊤</sup>)</b>['+( p==='p'?j:i)+','+( p==='p'?i:j)+'] = '+fmt(dv)+'</span>'+
+            ' &ensp;=&ensp; <b>0</b> '+(sum?'✓':'✗');
+        }
+      };
+      c.onmouseleave=function(){
+        document.querySelectorAll('#ntp-box .hl,#ntp-box .hlp').forEach(function(e){e.classList.remove('hl');e.classList.remove('hlp');});
+        document.getElementById('ntp-ver').textContent='Hover a cell to verify';
+      };
+    });
+  }
+  document.getElementById('ntp-prev').onclick=function(){if(k>0){k--;render();}};
+  document.getElementById('ntp-next').onclick=function(){if(k<S.length-1){k++;render();}};
+  render();
+})();
+</script>
 </section>
 <section id="sec-variable-correspondence" class="level3" data-number="12.2.2">
 <h3 data-number="12.2.2" class="anchored" data-anchor-id="sec-variable-correspondence"><span class="header-section-number">12.2.2</span> Variable Correspondence</h3>
@@ -670,7 +764,7 @@ z_1 = 6 + 0.25z_2 + 3.25z_3, \qquad y_1 = 1 + 0.25z_2 + 0.25z_3, \qquad y_2 = 3 
 <h2 data-number="12.3" class="anchored" data-anchor-id="sec-five-observations"><span class="header-section-number">12.3</span> Five Key Observations</h2>
 <p>The example above illustrates several fundamental facts about the primal-dual relationship through dictionaries. These observations hold in general and provide the foundation for the dual simplex method. Understanding them is essential before we derive the dual simplex pivot rules in the next section.</p>
 <div id="prp-five-observations" class="theorem proposition">
-<p><span class="theorem-title"><strong>Proposition 12.1 (Key Observations about Primal-Dual Pivoting)</strong></span> Let (P) and (D) be a primal-dual LP pair, and consider the simplex method applied to (P).</p>
+<p><span class="theorem-title"><strong>Proposition 12.1 (Key Observations about Primal-Dual Pivoting)</strong></span> Let (P) and (D) be a primal-dual LP pair, and consider the simplex method applied to (P). The following five properties describe how the primal and dual dictionaries evolve in lockstep:</p>
 <ol type="1">
 <li><p><strong>Negative transpose is preserved.</strong> The dual dictionary is always the negative transpose of the primal dictionary, at every iteration.</p></li>
 <li><p><strong>Basic/nonbasic sets swap.</strong> If <span class="math inline">x_j</span> is in the primal basis <span class="math inline">B</span> (resp. nonbasic set <span class="math inline">N</span>), then the corresponding dual variable <span class="math inline">z_j</span> is in the dual nonbasic set <span class="math inline">N_D</span> (resp. basis <span class="math inline">B_D</span>). Similarly, if <span class="math inline">w_i</span> is in <span class="math inline">B</span> (resp. <span class="math inline">N</span>), then <span class="math inline">y_i</span> is in <span class="math inline">N_D</span> (resp. <span class="math inline">B_D</span>).</p></li>
@@ -689,7 +783,7 @@ z_1 = 6 + 0.25z_2 + 3.25z_3, \qquad y_1 = 1 + 0.25z_2 + 0.25z_3, \qquad y_2 = 3 
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Observation 4 reveals a striking symmetry:</p>
+<p>Observation 4 reveals a striking symmetry between the primal and dual dictionaries:</p>
 <ul>
 <li><strong>Primal feasible</strong> (<span class="math inline">\widetilde{b} \geq 0</span>) <span class="math inline">\longleftrightarrow</span> <strong>Dual optimal</strong> (all dual reduced costs <span class="math inline">\leq 0</span>)</li>
 <li><strong>Primal optimal</strong> (<span class="math inline">\widetilde{c} \leq 0</span>) <span class="math inline">\longleftrightarrow</span> <strong>Dual feasible</strong> (<span class="math inline">\widetilde{b}_{\text{dual}} \geq 0</span>)</li>
@@ -815,96 +909,13 @@ q = \operatorname*{argmin}_{j \in N} \left\{ \frac{-\widetilde{c}_j}{\widetilde{
 <p><strong>Step 4 (Pivot).</strong> Pivot on <span class="math inline">(p, q)</span>: <span class="math inline">p</span> leaves <span class="math inline">B</span>, <span class="math inline">q</span> enters <span class="math inline">B</span>. Go to Step 1.</p>
 </div>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-primal-vs-dual-simplex</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Comparison of primal and dual simplex: the primal moves through primal feasible bases toward dual feasibility, while the dual moves through dual feasible bases toward primal feasibility."</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> plotly.subplots <span class="im">import</span> make_subplots</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> make_subplots(rows<span class="op">=</span><span class="dv">1</span>, cols<span class="op">=</span><span class="dv">2</span>, subplot_titles<span class="op">=</span>(</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Primal Simplex: Walk on Primal Feasible Region'</span>,</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">'Dual Simplex: Walk on Dual Feasible Region'</span>),</span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    horizontal_spacing<span class="op">=</span><span class="fl">0.08</span>)</span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Primal feasible region (2D example) ---</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>px <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>]</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>py <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>, <span class="dv">4</span>, <span class="dv">3</span>, <span class="dv">0</span>]</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>px, y<span class="op">=</span>py, fill<span class="op">=</span><span class="st">'toself'</span>,</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>    fillcolor<span class="op">=</span><span class="st">'rgba(123,143,163,0.18)'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7b97ad'</span>, width<span class="op">=</span><span class="fl">2.5</span>),</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Primal feasible region'</span>, mode<span class="op">=</span><span class="st">'lines'</span>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>path_px <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">3</span>, <span class="dv">1</span>]</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>path_py <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>, <span class="dv">4</span>]</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>path_px, y<span class="op">=</span>path_py, mode<span class="op">=</span><span class="st">'lines+markers'</span>,</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, width<span class="op">=</span><span class="fl">2.5</span>, dash<span class="op">=</span><span class="st">'dot'</span>),</span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">10</span>, symbol<span class="op">=</span><span class="st">'circle'</span>,</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Primal simplex path'</span>,</span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a>    text<span class="op">=</span>[<span class="st">'Start (feasible)'</span>, <span class="st">'Pivot 1'</span>, <span class="st">'Pivot 2'</span>, <span class="st">'Optimal!'</span>],</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    hoverinfo<span class="op">=</span><span class="st">'text'</span>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">1</span>], y<span class="op">=</span>[<span class="dv">4</span>], mode<span class="op">=</span><span class="st">'markers'</span>,</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">15</span>, symbol<span class="op">=</span><span class="st">'star'</span>,</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Optimal vertex'</span>, showlegend<span class="op">=</span><span class="va">False</span>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(path_px)<span class="op">-</span><span class="dv">1</span>):</span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>    fig.add_annotation(</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span>path_px[i<span class="op">+</span><span class="dv">1</span>], y<span class="op">=</span>path_py[i<span class="op">+</span><span class="dv">1</span>],</span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a>        ax<span class="op">=</span>path_px[i], ay<span class="op">=</span>path_py[i],</span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a>        xref<span class="op">=</span><span class="st">'x'</span>, yref<span class="op">=</span><span class="st">'y'</span>, axref<span class="op">=</span><span class="st">'x'</span>, ayref<span class="op">=</span><span class="st">'y'</span>,</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>        showarrow<span class="op">=</span><span class="va">True</span>, arrowhead<span class="op">=</span><span class="dv">3</span>, arrowsize<span class="op">=</span><span class="fl">1.5</span>,</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>        arrowcolor<span class="op">=</span><span class="st">'#b56b6b'</span>, arrowwidth<span class="op">=</span><span class="dv">2</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a><span class="co"># --- Dual feasible region ---</span></span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a>dx <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">5</span>, <span class="dv">4</span>, <span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">0</span>]</span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a>dy <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">4</span>, <span class="dv">0</span>]</span>
-<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>dx, y<span class="op">=</span>dy, fill<span class="op">=</span><span class="st">'toself'</span>,</span>
-<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>    fillcolor<span class="op">=</span><span class="st">'rgba(144,126,160,0.18)'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#907ea0'</span>, width<span class="op">=</span><span class="fl">2.5</span>),</span>
-<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Dual feasible region'</span>, mode<span class="op">=</span><span class="st">'lines'</span>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a>path_dx <span class="op">=</span> [<span class="dv">5</span>, <span class="dv">4</span>, <span class="dv">2</span>]</span>
-<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>path_dy <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">3</span>, <span class="dv">5</span>]</span>
-<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>path_dx, y<span class="op">=</span>path_dy, mode<span class="op">=</span><span class="st">'lines+markers'</span>,</span>
-<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#8a6e5e'</span>, width<span class="op">=</span><span class="fl">2.5</span>, dash<span class="op">=</span><span class="st">'dot'</span>),</span>
-<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#8a6e5e'</span>, size<span class="op">=</span><span class="dv">10</span>, symbol<span class="op">=</span><span class="st">'diamond'</span>,</span>
-<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Dual simplex path'</span>,</span>
-<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>    text<span class="op">=</span>[<span class="st">'Start (dual feasible,&lt;br&gt;primal infeasible)'</span>, <span class="st">'Pivot 1'</span>, <span class="st">'Optimal!'</span>],</span>
-<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    hoverinfo<span class="op">=</span><span class="st">'text'</span>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">2</span>], y<span class="op">=</span>[<span class="dv">5</span>], mode<span class="op">=</span><span class="st">'markers'</span>,</span>
-<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#8a6e5e'</span>, size<span class="op">=</span><span class="dv">15</span>, symbol<span class="op">=</span><span class="st">'star'</span>,</span>
-<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Optimal vertex'</span>, showlegend<span class="op">=</span><span class="va">False</span>), row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-67"><a href="#cb2-67" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(path_dx)<span class="op">-</span><span class="dv">1</span>):</span>
-<span id="cb2-68"><a href="#cb2-68" aria-hidden="true" tabindex="-1"></a>    fig.add_annotation(</span>
-<span id="cb2-69"><a href="#cb2-69" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span>path_dx[i<span class="op">+</span><span class="dv">1</span>], y<span class="op">=</span>path_dy[i<span class="op">+</span><span class="dv">1</span>],</span>
-<span id="cb2-70"><a href="#cb2-70" aria-hidden="true" tabindex="-1"></a>        ax<span class="op">=</span>path_dx[i], ay<span class="op">=</span>path_dy[i],</span>
-<span id="cb2-71"><a href="#cb2-71" aria-hidden="true" tabindex="-1"></a>        xref<span class="op">=</span><span class="st">'x2'</span>, yref<span class="op">=</span><span class="st">'y2'</span>, axref<span class="op">=</span><span class="st">'x2'</span>, ayref<span class="op">=</span><span class="st">'y2'</span>,</span>
-<span id="cb2-72"><a href="#cb2-72" aria-hidden="true" tabindex="-1"></a>        showarrow<span class="op">=</span><span class="va">True</span>, arrowhead<span class="op">=</span><span class="dv">3</span>, arrowsize<span class="op">=</span><span class="fl">1.5</span>,</span>
-<span id="cb2-73"><a href="#cb2-73" aria-hidden="true" tabindex="-1"></a>        arrowcolor<span class="op">=</span><span class="st">'#8a6e5e'</span>, arrowwidth<span class="op">=</span><span class="dv">2</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb2-74"><a href="#cb2-74" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-75"><a href="#cb2-75" aria-hidden="true" tabindex="-1"></a>fig.update_xaxes(title<span class="op">=</span><span class="st">'x&lt;sub&gt;1&lt;/sub&gt;'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">5.5</span>], zeroline<span class="op">=</span><span class="va">True</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb2-76"><a href="#cb2-76" aria-hidden="true" tabindex="-1"></a>fig.update_yaxes(title<span class="op">=</span><span class="st">'x&lt;sub&gt;2&lt;/sub&gt;'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">5.5</span>], zeroline<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb2-77"><a href="#cb2-77" aria-hidden="true" tabindex="-1"></a>    scaleanchor<span class="op">=</span><span class="st">'x'</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb2-78"><a href="#cb2-78" aria-hidden="true" tabindex="-1"></a>fig.update_xaxes(title<span class="op">=</span><span class="st">'y&lt;sub&gt;1&lt;/sub&gt;'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="dv">6</span>], zeroline<span class="op">=</span><span class="va">True</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb2-79"><a href="#cb2-79" aria-hidden="true" tabindex="-1"></a>fig.update_yaxes(title<span class="op">=</span><span class="st">'y&lt;sub&gt;2&lt;/sub&gt;'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="dv">6</span>], zeroline<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb2-80"><a href="#cb2-80" aria-hidden="true" tabindex="-1"></a>    scaleanchor<span class="op">=</span><span class="st">'x2'</span>, row<span class="op">=</span><span class="dv">1</span>, col<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb2-81"><a href="#cb2-81" aria-hidden="true" tabindex="-1"></a>fig.update_layout(showlegend<span class="op">=</span><span class="va">True</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">40</span>, b<span class="op">=</span><span class="dv">50</span>, l<span class="op">=</span><span class="dv">55</span>, r<span class="op">=</span><span class="dv">20</span>),</span>
-<span id="cb2-82"><a href="#cb2-82" aria-hidden="true" tabindex="-1"></a>    legend<span class="op">=</span><span class="bu">dict</span>(font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">11</span>)))</span>
-<span id="cb2-83"><a href="#cb2-83" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div id="fig-primal-dual-simplex" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-primal-dual-simplex-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="figures/ch17-primal-dual-simplex.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;12.1: Side-by-side comparison of primal and dual simplex. The primal simplex (left) starts at a primal feasible vertex and pivots along edges toward optimality. The dual simplex (right) starts at a dual feasible basis and pivots toward primal feasibility. Both converge to the same optimal solution."><img src="figures/ch17-primal-dual-simplex.svg" class="img-fluid figure-img"></a>
+<a href="figures/primal-vs-dual-simplex.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;12.1: Comparison of primal and dual simplex: the primal simplex (left) moves through primal feasible bases toward dual feasibility, while the dual simplex (right) moves through dual feasible bases toward primal feasibility. Both converge to the same optimal solution."><img src="figures/primal-vs-dual-simplex.svg" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-primal-dual-simplex-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;12.1: Side-by-side comparison of primal and dual simplex. The primal simplex (left) starts at a primal feasible vertex and pivots along edges toward optimality. The dual simplex (right) starts at a dual feasible basis and pivots toward primal feasibility. Both converge to the same optimal solution.
+Figure&nbsp;12.1: Comparison of primal and dual simplex: the primal simplex (left) moves through primal feasible bases toward dual feasibility, while the dual simplex (right) moves through dual feasible bases toward primal feasibility. Both converge to the same optimal solution.
 </figcaption>
 </figure>
 </div>
@@ -1160,248 +1171,137 @@ x_3 = 6 + 0.25 x_4 + 3.25 x_5, \qquad x_1 = 1 + 0.25 x_4 + 0.25 x_5, \qquad x_2 
 x_1^* = 1, \quad x_2^* = 3, \quad \zeta^* = -10.
 </span></p>
 <p>Since the original problem was <span class="math inline">\min \, x_1 + 3x_2</span>, the minimum value is <span class="math inline">\boxed{10}</span>, achieved at <span class="math inline">(x_1, x_2) = (1, 3)</span>. The dual simplex method reached optimality in just two pivots, maintaining dual feasibility throughout and restoring primal feasibility at termination.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-dual-simplex-example</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Dual simplex iterations on the worked example. The feasible region (blue) is defined by the three constraints. The dual simplex path (red dashed) starts outside the feasible region and enters it at the optimal vertex."</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Feasible region: x1 + 3*x2 &gt;= 4, 4*x1 - x2 &gt;= 1, x2 &gt;= 3</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Vertices of the feasible region:</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co"># x2 = 3, x1 + 9 &gt;= 4 -&gt; x1 &gt;= -5 (not binding with 4x1-x2&gt;=1 -&gt; 4x1&gt;=4 -&gt; x1&gt;=1)</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Intersection of x1+3x2=4 and 4x1-x2=1: x1+3x2=4, 4x1-x2=1 =&gt; x2=1, x1=1/2... check</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Actually: 4*(4-3x2) - x2 = 1 =&gt; 16-12x2-x2=1 =&gt; 13x2=15 =&gt; x2=15/13, x1=4-45/13=7/13</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Intersection of 4x1-x2=1 and x2=3: 4x1=4, x1=1 -&gt; (1,3)</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Intersection of x1+3x2=4 and x2=3: x1=4-9=-5 -&gt; (-5,3) -- far left</span></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Region extends to the right and upward</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co"># For plotting, clip to a reasonable window</span></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a><span class="co"># The key vertices near the optimum:</span></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a><span class="co"># (1, 3): intersection of 4x1-x2=1 and x2=3</span></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="co"># (7/13, 15/13): intersection of x1+3x2=4 and 4x1-x2=1</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Fill a large feasible region (clipped)</span></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="co"># x2 &gt;= 3 line, x1+3x2 &gt;= 4, 4x1-x2 &gt;= 1</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="co"># For the plot, we'll show a region from x1=-1 to x1=6, x2=0 to x2=6</span></span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>x_fill <span class="op">=</span> []</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>y_fill <span class="op">=</span> []</span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="co"># Boundary segments of feasible region (within plot window)</span></span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Bottom-left is bounded by x1+3x2=4 and 4x1-x2=1</span></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a><span class="co"># The feasible region is above x2=3, above x1+3x2=4, above 4x1-x2=1</span></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Let's trace the boundary:</span></span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a><span class="co"># Start at (1, 3) - intersection of 4x1-x2=1 and x2=3</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Go right along x2=3 to (6, 3)</span></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Go up to (6, 6)</span></span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Go left along top to (-1, 6)</span></span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Go down along x1+3x2=4 from (-1, 5/3)... but x2&gt;=3 dominates here</span></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="co"># Actually the binding constraints change</span></span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="co"># Simpler: just plot the three constraint boundaries and shade</span></span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a><span class="co"># For a clean figure, let's compute carefully</span></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a><span class="co"># Constraint boundaries as lines</span></span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>x_range <span class="op">=</span> np.linspace(<span class="op">-</span><span class="dv">1</span>, <span class="dv">7</span>, <span class="dv">300</span>)</span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a><span class="co"># x1 + 3*x2 = 4 =&gt; x2 = (4-x1)/3</span></span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>line1_y <span class="op">=</span> (<span class="dv">4</span> <span class="op">-</span> x_range) <span class="op">/</span> <span class="dv">3</span></span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a><span class="co"># 4*x1 - x2 = 1 =&gt; x2 = 4*x1 - 1</span></span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>line2_y <span class="op">=</span> <span class="dv">4</span> <span class="op">*</span> x_range <span class="op">-</span> <span class="dv">1</span></span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="co"># x2 = 3</span></span>
-<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>line3_y <span class="op">=</span> <span class="dv">3</span> <span class="op">*</span> np.ones_like(x_range)</span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a><span class="co"># Feasible region vertices (computed):</span></span>
-<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>v1 <span class="op">=</span> (<span class="dv">7</span><span class="op">/</span><span class="dv">13</span>, <span class="dv">15</span><span class="op">/</span><span class="dv">13</span>)  <span class="co"># x1+3x2=4 and 4x1-x2=1</span></span>
-<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>v2 <span class="op">=</span> (<span class="dv">1</span>, <span class="dv">3</span>)          <span class="co"># 4x1-x2=1 and x2=3</span></span>
-<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a><span class="co"># The region is unbounded upward and to the right</span></span>
-<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a><span class="co"># For plotting, clip at x1=7, x2=7</span></span>
-<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="co"># Additional boundary points at the clip:</span></span>
-<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>v3 <span class="op">=</span> (<span class="dv">7</span>, <span class="dv">3</span>)           <span class="co"># x2=3, x1=7</span></span>
-<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>v4 <span class="op">=</span> (<span class="dv">7</span>, <span class="dv">7</span>)           <span class="co"># corner of clip</span></span>
-<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>v5 <span class="op">=</span> (<span class="op">-</span><span class="dv">1</span>, <span class="dv">7</span>)          <span class="co"># left side of clip, x2=7</span></span>
-<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="co"># x1+3*7=4 -&gt; x1=-17, so at x2=7, constraint x1+3x2&gt;=4 is satisfied for x1&gt;=-17</span></span>
-<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a><span class="co"># At x1=-1: x2&gt;=(4-(-1))/3 = 5/3, but x2&gt;=3 dominates</span></span>
-<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>v6 <span class="op">=</span> (<span class="op">-</span><span class="dv">1</span>, <span class="dv">3</span>)          <span class="co"># but need to check 4*(-1)-3=-7 &gt;= 1? No! So (-1,3) not feasible</span></span>
-<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a><span class="co"># 4x1-x2&gt;=1 at x1=-1: -4-x2&gt;=1 -&gt; x2&lt;=-5. Not feasible.</span></span>
-<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a><span class="co"># At x2=7: 4x1-7&gt;=1 -&gt; x1&gt;=2. So (2,7) is on the boundary.</span></span>
-<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a><span class="co"># At x1=7, x2=3: 4*7-3=25&gt;=1, 7+9=16&gt;=4. Feasible.</span></span>
-<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a><span class="co"># Let's trace the feasible boundary more carefully:</span></span>
-<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a><span class="co"># The active constraints form a "cone" shape</span></span>
-<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a><span class="co"># From v1=(7/13, 15/13), go along x1+3x2=4 upward? No, x1+3x2=4 goes down as x1 increases</span></span>
-<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a><span class="co"># From v1, along 4x1-x2=1 upward to v2=(1,3), then along x2=3 to the right</span></span>
-<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a><span class="co"># For the filled polygon (clipped at [−1,7]x[0,7]):</span></span>
-<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>poly_x <span class="op">=</span> [<span class="dv">7</span><span class="op">/</span><span class="dv">13</span>, <span class="dv">1</span>, <span class="dv">7</span>, <span class="dv">7</span>, <span class="dv">2</span>, <span class="dv">7</span><span class="op">/</span><span class="dv">13</span>]</span>
-<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>poly_y <span class="op">=</span> [<span class="dv">15</span><span class="op">/</span><span class="dv">13</span>, <span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">7</span>, <span class="dv">7</span>, <span class="dv">15</span><span class="op">/</span><span class="dv">13</span>]</span>
-<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a><span class="co"># Check (2,7): 2+21=23&gt;=4, 8-7=1&gt;=1, 7&gt;=3. Yes.</span></span>
-<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a><span class="co"># But we need the boundary from (7/13,15/13) up to (2,7) along 4x1-x2=1</span></span>
-<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a><span class="co"># 4x1-x2=1: at x2=7, x1=2. Points along this line from v1 to (2,7).</span></span>
-<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a><span class="co"># Actually the feasible region boundary goes: v1 along constraint1 to... hmm</span></span>
-<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a><span class="co"># Let me just trace it properly:</span></span>
-<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a><span class="co"># Bottom vertex: v1 = (7/13, 15/13) -- intersection of constraints 1 and 2</span></span>
-<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a><span class="co"># From v1, going along constraint 2 (4x1-x2=1) upward: reaches x2=3 at v2=(1,3)</span></span>
-<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a><span class="co"># From v2, going along constraint 3 (x2=3) to the right: to (7,3)</span></span>
-<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a><span class="co"># From (7,3) up to (7,7)</span></span>
-<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a><span class="co"># From (7,7) left to (2,7) -- along constraint 2 boundary? 4*2-7=1, yes</span></span>
-<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a><span class="co"># From (2,7) down to v1 along constraint 2: 4x1-x2=1</span></span>
-<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a><span class="co"># So polygon: v1 -&gt; v2 along 4x1-x2=1, v2 -&gt; (7,3) along x2=3, (7,3)-&gt;(7,7)-&gt;(2,7) along clip, (2,7)-&gt;v1 along... wait</span></span>
-<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a><span class="co"># (2,7) to v1: both on 4x1-x2=1? 4*(7/13)-(15/13)=28/13-15/13=13/13=1. Yes!</span></span>
-<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a><span class="co"># So the boundary from v1 to (2,7) is all along 4x1-x2=1, and from v1 to v2 is also along 4x1-x2=1</span></span>
-<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a><span class="co"># Actually v1 to (2,7) is along 4x1-x2=1. And the other boundary of the region from v1 goes along x1+3x2=4</span></span>
-<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a><span class="co"># downward. But x2&gt;=3 is also a constraint, so the feasible region is ABOVE all three constraints.</span></span>
-<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a><span class="co"># The feasible region is the intersection of three half-planes:</span></span>
-<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a><span class="co"># x1+3x2 &gt;= 4  (above the line)</span></span>
-<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a><span class="co"># 4x1-x2 &gt;= 1  (above the line, since it's 4x1-x2&gt;=1)</span></span>
-<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a><span class="co"># x2 &gt;= 3       (above the line)</span></span>
-<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a><span class="co"># The vertices of the feasible region are:</span></span>
-<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a><span class="co"># v2 = (1,3): 4x1-x2=1 and x2=3</span></span>
-<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a><span class="co"># Is x1+3x2=4 ever binding together with x2=3? x1=-5, then 4(-5)-3=-23&lt;1. Not feasible.</span></span>
-<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a><span class="co"># Is x1+3x2=4 ever binding with 4x1-x2=1? Yes at v1=(7/13,15/13). But x2=15/13&lt;3. So v1 is NOT feasible (violates x2&gt;=3)!</span></span>
-<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a><span class="co"># So the feasible region has only ONE vertex: v2=(1,3)!</span></span>
-<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a><span class="co"># It extends to the right along x2=3 and upward along 4x1-x2=1.</span></span>
-<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a><span class="co"># Feasible polygon for plotting (clipped):</span></span>
-<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a>poly_x <span class="op">=</span> [<span class="dv">1</span>, <span class="dv">7</span>, <span class="dv">7</span>, <span class="dv">2</span>, <span class="dv">1</span>]</span>
-<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a>poly_y <span class="op">=</span> [<span class="dv">3</span>, <span class="dv">3</span>, <span class="dv">7</span>, <span class="dv">7</span>, <span class="dv">3</span>]</span>
-<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>poly_x, y<span class="op">=</span>poly_y, fill<span class="op">=</span><span class="st">'toself'</span>,</span>
-<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a>    fillcolor<span class="op">=</span><span class="st">'rgba(123,143,163,0.18)'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7b97ad'</span>, width<span class="op">=</span><span class="dv">2</span>),</span>
-<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Feasible region'</span>, mode<span class="op">=</span><span class="st">'lines'</span>))</span>
-<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a><span class="co"># Constraint lines</span></span>
-<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
-<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span><span class="bu">list</span>(x_range[line1_y <span class="op">&gt;=</span> <span class="dv">0</span>]),</span>
-<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>    y<span class="op">=</span><span class="bu">list</span>(line1_y[line1_y <span class="op">&gt;=</span> <span class="dv">0</span>]),</span>
-<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a>    mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#968a80'</span>, width<span class="op">=</span><span class="fl">1.5</span>, dash<span class="op">=</span><span class="st">'dash'</span>),</span>
-<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'x&lt;sub&gt;1&lt;/sub&gt; + 3x&lt;sub&gt;2&lt;/sub&gt; = 4'</span>))</span>
-<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a>x2_line2 <span class="op">=</span> np.linspace(<span class="dv">0</span>, <span class="fl">2.5</span>, <span class="dv">100</span>)</span>
-<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a>x1_line2 <span class="op">=</span> (<span class="dv">1</span> <span class="op">+</span> x2_line2) <span class="op">/</span> <span class="dv">4</span></span>
-<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
-<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span><span class="bu">list</span>(x1_line2), y<span class="op">=</span><span class="bu">list</span>(x2_line2),</span>
-<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a>    mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#907ea0'</span>, width<span class="op">=</span><span class="fl">1.5</span>, dash<span class="op">=</span><span class="st">'dash'</span>),</span>
-<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'4x&lt;sub&gt;1&lt;/sub&gt; - x&lt;sub&gt;2&lt;/sub&gt; = 1'</span>))</span>
-<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(</span>
-<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>    x<span class="op">=</span>[<span class="op">-</span><span class="dv">1</span>, <span class="dv">7</span>], y<span class="op">=</span>[<span class="dv">3</span>, <span class="dv">3</span>],</span>
-<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a>    mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7a9a7e'</span>, width<span class="op">=</span><span class="fl">1.5</span>, dash<span class="op">=</span><span class="st">'dash'</span>),</span>
-<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'x&lt;sub&gt;2&lt;/sub&gt; = 3'</span>))</span>
-<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a><span class="co"># Objective contours: x1 + 3x2 = k</span></span>
-<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> k <span class="kw">in</span> [<span class="dv">6</span>, <span class="dv">10</span>, <span class="dv">14</span>, <span class="dv">18</span>]:</span>
-<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a>    x_obj <span class="op">=</span> np.linspace(<span class="op">-</span><span class="dv">1</span>, <span class="dv">7</span>, <span class="dv">50</span>)</span>
-<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a>    y_obj <span class="op">=</span> (k <span class="op">-</span> x_obj) <span class="op">/</span> <span class="dv">3</span></span>
-<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a>    fig.add_trace(go.Scatter(x<span class="op">=</span><span class="bu">list</span>(x_obj), y<span class="op">=</span><span class="bu">list</span>(y_obj),</span>
-<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a>        mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b8995e'</span>, width<span class="op">=</span><span class="dv">1</span>, dash<span class="op">=</span><span class="st">'dot'</span>),</span>
-<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a>        showlegend<span class="op">=</span>(k<span class="op">==</span><span class="dv">6</span>),</span>
-<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a>        name<span class="op">=</span><span class="st">'Objective contours'</span> <span class="cf">if</span> k<span class="op">==</span><span class="dv">6</span> <span class="cf">else</span> <span class="st">''</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a><span class="co"># Dual simplex path: the algorithm visits bases that may be primal infeasible</span></span>
-<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a><span class="co"># Iteration 0: x1=0, x2=0 (infeasible, obj=0)</span></span>
-<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a><span class="co"># Iteration 1 after pivot (x5,x2): x1=0, x2=3, but x4=-4&lt;0, so x1=0 is the "point"</span></span>
-<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a><span class="co"># but really (x1,x2)=(0,3) with x4&lt;0</span></span>
-<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a><span class="co"># Iteration 2 after pivot (x4,x1): x1=1, x2=3 (feasible, optimal)</span></span>
-<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a>path_x <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>]</span>
-<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a>path_y <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">3</span>, <span class="dv">3</span>]</span>
-<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> [<span class="st">'Iter 0: (0,0)&lt;br&gt;obj=0, infeasible'</span>,</span>
-<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a>          <span class="st">'Iter 1: (0,3)&lt;br&gt;obj=-9, infeasible'</span>,</span>
-<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a>          <span class="st">'Iter 2: (1,3)&lt;br&gt;obj=-10, OPTIMAL'</span>]</span>
-<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>path_x, y<span class="op">=</span>path_y, mode<span class="op">=</span><span class="st">'lines+markers'</span>,</span>
-<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, width<span class="op">=</span><span class="dv">3</span>, dash<span class="op">=</span><span class="st">'dot'</span>),</span>
-<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">11</span>, symbol<span class="op">=</span><span class="st">'circle'</span>,</span>
-<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Dual simplex path'</span>,</span>
-<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a>    text<span class="op">=</span>labels, hoverinfo<span class="op">=</span><span class="st">'text'</span>))</span>
-<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a><span class="co"># Arrows</span></span>
-<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(path_x)<span class="op">-</span><span class="dv">1</span>):</span>
-<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a>    fig.add_annotation(</span>
-<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a>        x<span class="op">=</span>path_x[i<span class="op">+</span><span class="dv">1</span>], y<span class="op">=</span>path_y[i<span class="op">+</span><span class="dv">1</span>],</span>
-<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a>        ax<span class="op">=</span>path_x[i], ay<span class="op">=</span>path_y[i],</span>
-<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a>        showarrow<span class="op">=</span><span class="va">True</span>, arrowhead<span class="op">=</span><span class="dv">3</span>, arrowsize<span class="op">=</span><span class="fl">1.5</span>,</span>
-<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a>        arrowcolor<span class="op">=</span><span class="st">'#b56b6b'</span>, arrowwidth<span class="op">=</span><span class="dv">2</span>)</span>
-<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimal point</span></span>
-<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">1</span>], y<span class="op">=</span>[<span class="dv">3</span>], mode<span class="op">=</span><span class="st">'markers'</span>,</span>
-<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">16</span>, symbol<span class="op">=</span><span class="st">'star'</span>,</span>
-<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Optimal: (1, 3), min = 10'</span>))</span>
-<span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
-<span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a>    xaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'x&lt;sub&gt;1&lt;/sub&gt;'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="dv">1</span>, <span class="dv">7</span>], zeroline<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a>    yaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'x&lt;sub&gt;2&lt;/sub&gt;'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="dv">7</span>], zeroline<span class="op">=</span><span class="va">True</span>, scaleanchor<span class="op">=</span><span class="st">'x'</span>),</span>
-<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a>    showlegend<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a>    legend<span class="op">=</span><span class="bu">dict</span>(font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">11</span>), x<span class="op">=</span><span class="fl">0.55</span>, y<span class="op">=</span><span class="fl">0.98</span>),</span>
-<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a>    margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">20</span>, b<span class="op">=</span><span class="dv">50</span>, l<span class="op">=</span><span class="dv">55</span>, r<span class="op">=</span><span class="dv">20</span>))</span>
-<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</section>
-<section id="sec-tracking-iterations" class="level3" data-number="12.6.6">
-<h3 data-number="12.6.6" class="anchored" data-anchor-id="sec-tracking-iterations"><span class="header-section-number">12.6.6</span> Tracking the Iterations</h3>
-<p>The following interactive table tracks the state of the dual simplex method at each iteration.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-iteration-tracker</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Dual simplex iteration tracker for the worked example. Each row shows the tableau state, the pivot choice, and the feasibility status."</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure(data<span class="op">=</span>[go.Table(</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    columnwidth<span class="op">=</span>[<span class="dv">80</span>, <span class="dv">100</span>, <span class="dv">120</span>, <span class="dv">100</span>, <span class="dv">100</span>, <span class="dv">100</span>, <span class="dv">100</span>],</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    header<span class="op">=</span><span class="bu">dict</span>(</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        values<span class="op">=</span>[<span class="st">'&lt;b&gt;Iteration&lt;/b&gt;'</span>, <span class="st">'&lt;b&gt;Basis&lt;/b&gt;'</span>, <span class="st">'&lt;b&gt;RHS (b&amp;#771;)&lt;/b&gt;'</span>,</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>                <span class="st">'&lt;b&gt;Red. costs (c&amp;#771;)&lt;/b&gt;'</span>, <span class="st">'&lt;b&gt;Dual feas?&lt;/b&gt;'</span>,</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>                <span class="st">'&lt;b&gt;Primal feas?&lt;/b&gt;'</span>, <span class="st">'&lt;b&gt;Pivot&lt;/b&gt;'</span>],</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        fill_color<span class="op">=</span><span class="st">'#7b97ad'</span>,</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>        font<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'white'</span>, size<span class="op">=</span><span class="dv">13</span>),</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>        align<span class="op">=</span><span class="st">'center'</span>, height<span class="op">=</span><span class="dv">35</span>),</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    cells<span class="op">=</span><span class="bu">dict</span>(</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>        values<span class="op">=</span>[</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'0'</span>, <span class="st">'1'</span>, <span class="st">'2'</span>],</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'{x&lt;sub&gt;3&lt;/sub&gt;, x&lt;sub&gt;4&lt;/sub&gt;, x&lt;sub&gt;5&lt;/sub&gt;}'</span>,</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>             <span class="st">'{x&lt;sub&gt;3&lt;/sub&gt;, x&lt;sub&gt;4&lt;/sub&gt;, x&lt;sub&gt;2&lt;/sub&gt;}'</span>,</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>             <span class="st">'{x&lt;sub&gt;3&lt;/sub&gt;, x&lt;sub&gt;1&lt;/sub&gt;, x&lt;sub&gt;2&lt;/sub&gt;}'</span>],</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'(-4, -1, -3)'</span>, <span class="st">'(5, -4, 3)'</span>, <span class="st">'(6, 1, 3)'</span>],</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'(-1, -3)'</span>, <span class="st">'(-1, -3)'</span>, <span class="st">'(-0.25, -3.25)'</span>],</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'Yes'</span>, <span class="st">'Yes'</span>, <span class="st">'Yes'</span>],</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'&lt;b style="color:#b56b6b"&gt;No&lt;/b&gt;'</span>,</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>             <span class="st">'&lt;b style="color:#b56b6b"&gt;No&lt;/b&gt;'</span>,</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>             <span class="st">'&lt;b style="color:#7a9a7e"&gt;Yes -- OPTIMAL&lt;/b&gt;'</span>],</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'(x&lt;sub&gt;5&lt;/sub&gt;, x&lt;sub&gt;2&lt;/sub&gt;)'</span>, <span class="st">'(x&lt;sub&gt;4&lt;/sub&gt;, x&lt;sub&gt;1&lt;/sub&gt;)'</span>, <span class="st">'--'</span>]</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>        ],</span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>        fill_color<span class="op">=</span>[</span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'#f5f0e8'</span>, <span class="st">'#f5f0e8'</span>, <span class="st">'#e8f0e8'</span>],</span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'#f5f0e8'</span>, <span class="st">'#f5f0e8'</span>, <span class="st">'#e8f0e8'</span>],</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'#f5f0e8'</span>, <span class="st">'#f5f0e8'</span>, <span class="st">'#e8f0e8'</span>],</span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'#f5f0e8'</span>, <span class="st">'#f5f0e8'</span>, <span class="st">'#e8f0e8'</span>],</span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'#e8f0e8'</span>, <span class="st">'#e8f0e8'</span>, <span class="st">'#e8f0e8'</span>],</span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'#f5e8e8'</span>, <span class="st">'#f5e8e8'</span>, <span class="st">'#e8f0e8'</span>],</span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>            [<span class="st">'#f5f0e8'</span>, <span class="st">'#f5f0e8'</span>, <span class="st">'#e8f0e8'</span>]</span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>        ],</span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>        font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">12</span>),</span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>        align<span class="op">=</span><span class="st">'center'</span>, height<span class="op">=</span><span class="dv">30</span>))</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>])</span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>    margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">10</span>, b<span class="op">=</span><span class="dv">10</span>, l<span class="op">=</span><span class="dv">10</span>, r<span class="op">=</span><span class="dv">10</span>),</span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>    height<span class="op">=</span><span class="dv">200</span>)</span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<style>
+  #dsv-box{font-family:'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif;background:#f0ebe5;border-radius:8px;padding:24px 20px 16px;margin:28px auto;max-width:900px;box-shadow:0 2px 12px rgba(61,53,48,0.08)}
+  #dsv-box h3{color:#3d3530;font-size:1.15em;font-weight:600;margin:0 0 4px;font-family:inherit}
+  #dsv-box .sub{color:#968a80;font-size:0.92em;margin:0 0 14px}
+  #dsv-box .nav{display:flex;align-items:center;justify-content:center;gap:16px;margin:0 0 12px}
+  #dsv-box .nav button{font-family:inherit;font-size:0.9em;padding:6px 14px;background:#faf7f3;border:1px solid #d4c9b8;border-radius:4px;color:#3d3530;cursor:pointer}
+  #dsv-box .nav button:disabled{opacity:0.35;cursor:default}
+  #dsv-box .nav button:not(:disabled):hover{background:#e8e1d8}
+  #dsv-box .slbl{font-weight:600;color:#3d3530}
+  #dsv-box .info{background:#faf7f3;border-radius:6px;padding:14px 16px;margin:12px 0 0;font-size:0.88em;color:#3d3530;line-height:1.6}
+  #dsv-box .info .row{margin:3px 0}
+  #dsv-box .info .status-ok{color:#27ae60;font-weight:600}
+  #dsv-box .info .status-bad{color:#d45d5d;font-weight:600}
+  #dsv-box .info .action{background:#f0ebe5;border-left:3px solid #b8995e;border-radius:0 4px 4px 0;padding:8px 12px;margin:8px 0 0;font-size:0.95em}
+  #dsv-box .legend-hint{text-align:center;font-size:0.82em;color:#968a80;margin:6px 0 0}
+</style>
+<div id="dsv-box">
+  <h3 class="anchored">Dual Simplex Iteration Visualizer</h3>
+  <p class="sub">The dual simplex starts at a super-optimal (infeasible) point and pivots toward the feasible region</p>
+  <div class="nav">
+    <button id="dsv-prev">◀ Previous</button>
+    <span class="slbl" id="dsv-lbl">Iteration 0</span>
+    <button id="dsv-next">Next ▶</button>
+  </div>
+  <div id="dsv-plot" style="width:100%"></div>
+  <div class="legend-hint">Terracotta = infeasible  |  Green = feasible  |  Dashed gold = optimal contour x₁+3x₂ = 10</div>
+  <div class="info" id="dsv-info"></div>
+</div>
+<script>
+(function(){
+  var C={bg:'#f0ebe5',pbg:'#faf7f3',text:'#3d3530',grid:'#e0d9d1',axis:'#968a80',
+    blue:'#2e86c1',sage:'#27ae60',terra:'#d45d5d',gold:'#b8995e'};
+  var font="'Palatino Linotype','Book Antiqua',Palatino,Georgia,serif";
+  var steps=[
+    {pt:[0,0],obj:0,feas:false,label:'Start (infeasible)',
+     basis:'B = {x₃, x₄, x₅}',
+     rhs:'b̃ = [−4, −1, −3] — all negative',
+     rc:'c̃ = [−1, −3] ≤ 0 ✓ (dual feasible)',
+     status:'Primal infeasible — all b̃ᵢ < 0',ok:false,
+     action:'Choose leaving: p = x₅ (b̃₅ = −3 < 0). Row of x₅: coefficients [0, 1]. Only x₂ has positive coefficient → q = x₂ enters.'},
+    {pt:[0,3],obj:9,feas:false,label:'After Iteration 1',
+     basis:'B = {x₃, x₄, x₂}',
+     rhs:'b̃ = [5, −4, 3] — x₄ still negative',
+     rc:'c̃ = [−1, −3] ≤ 0 ✓ (dual feasible maintained)',
+     status:'Primal infeasible — b̃₄ = −4 < 0',ok:false,
+     action:'Choose leaving: p = x₄ (b̃₄ = −4 < 0). Row of x₄: coefficients [4, −1]. Only x₁ has positive coefficient → q = x₁ enters.'},
+    {pt:[1,3],obj:10,feas:true,label:'Optimal!',
+     basis:'B = {x₃, x₁, x₂}',
+     rhs:'b̃ = [6, 1, 3] ≥ 0 ✓',
+     rc:'c̃ = [−0.25, −3.25] ≤ 0 ✓ (dual feasible)',
+     status:'Both primal and dual feasible → OPTIMAL',ok:true,
+     action:'Solution: (x₁, x₂) = (1, 3), min x₁ + 3x₂ = 10. Reached optimality in just 2 pivots!'}
+  ];
+  var cur=0,cfg={responsive:true,displayModeBar:false};
+
+  function buildTraces(){
+    var tr=[];
+    /* 0: Feasible region */
+    tr.push({x:[1,5,5,2,1],y:[3,3,7,7,3],fill:'toself',fillcolor:'rgba(39,174,96,0.1)',
+      line:{color:'rgba(39,174,96,0.3)',width:1},showlegend:false,hoverinfo:'skip'});
+    /* 1: C1 x1+3x2=4 */
+    tr.push({x:[-0.5,5],y:[1.5,-1/3],mode:'lines',line:{color:C.axis,width:1.2,dash:'dot'},
+      showlegend:false,hoverinfo:'skip'});
+    /* 2: C2 4x1-x2=1 */
+    tr.push({x:[0.25,2],y:[0,7],mode:'lines',line:{color:C.axis,width:1.2,dash:'dot'},
+      showlegend:false,hoverinfo:'skip'});
+    /* 3: C3 x2=3 */
+    tr.push({x:[-0.5,5],y:[3,3],mode:'lines',line:{color:C.axis,width:1.2,dash:'dot'},
+      showlegend:false,hoverinfo:'skip'});
+    /* 4: Optimal contour x1+3x2=10 */
+    tr.push({x:[-0.5,5],y:[3.5,5/3],mode:'lines',line:{color:C.gold,width:1.8,dash:'dash'},
+      showlegend:false,hoverinfo:'skip'});
+    /* 5: Sub-optimal contours */
+    [3,6,14].forEach(function(c){
+      tr.push({x:[-0.5,5],y:[(c+0.5)/3,(c-5)/3],mode:'lines',
+        line:{color:C.grid,width:0.8,dash:'dash'},showlegend:false,hoverinfo:'skip'});
+    });
+    /* 8: Path line */
+    tr.push({x:[0,0,1],y:[0,3,3],mode:'lines',line:{color:C.blue,width:2.5,dash:'dash'},
+      showlegend:false,hoverinfo:'skip'});
+    /* 9-11: Path markers */
+    for(var i=0;i<3;i++){
+      var s=steps[i],isCur=i===cur;
+      tr.push({x:[s.pt[0]],y:[s.pt[1]],mode:'markers+text',
+        marker:{size:isCur?18:10,color:s.feas?C.sage:C.terra,opacity:isCur?1:0.35,
+          symbol:isCur?'diamond':'circle',line:{width:isCur?2.5:1,color:'white'}},
+        text:isCur?['  '+s.label]:[''],textposition:'top right',
+        textfont:{family:font,size:12,color:C.text},showlegend:false,hoverinfo:'skip'});
+    }
+    /* 12-14: Constraint labels */
+    tr.push({x:[3.5],y:[0.17],mode:'text',text:['x₁+3x₂ = 4'],
+      textfont:{family:font,size:11,color:C.axis},showlegend:false,hoverinfo:'skip'});
+    tr.push({x:[1.65],y:[5.8],mode:'text',text:['4x₁−x₂ = 1'],
+      textfont:{family:font,size:11,color:C.axis},showlegend:false,hoverinfo:'skip'});
+    tr.push({x:[4.2],y:[3.25],mode:'text',text:['x₂ = 3'],
+      textfont:{family:font,size:11,color:C.axis},showlegend:false,hoverinfo:'skip'});
+    return tr;
+  }
+
+  var layout={
+    paper_bgcolor:C.bg,plot_bgcolor:C.pbg,
+    font:{family:font,color:C.text,size:13},
+    xaxis:{title:{text:'x₁',font:{size:14}},range:[-0.8,5],gridcolor:C.grid,
+      zerolinecolor:C.axis,linecolor:C.axis,tickfont:{size:12,color:C.axis}},
+    yaxis:{title:{text:'x₂',font:{size:14}},range:[-0.8,7],gridcolor:C.grid,
+      zerolinecolor:C.axis,linecolor:C.axis,tickfont:{size:12,color:C.axis}},
+    margin:{l:50,r:20,t:10,b:50},height:420,
+    annotations:[{x:3.8,y:2,text:'x₁+3x₂ = 10',showarrow:false,
+      font:{family:font,size:11,color:C.gold}}]
+  };
+
+  function draw(){
+    Plotly.react('dsv-plot',buildTraces(),layout,cfg);
+    var s=steps[cur];
+    document.getElementById('dsv-lbl').textContent='Iteration '+cur+(cur===2?' — Optimal':'');
+    document.getElementById('dsv-prev').disabled=cur===0;
+    document.getElementById('dsv-next').disabled=cur===steps.length-1;
+    document.getElementById('dsv-info').innerHTML=
+      '<div class="row"><b>Point:</b> (x₁, x₂) = ('+s.pt[0]+', '+s.pt[1]+') &ensp;→&ensp; <b>Objective:</b> x₁ + 3x₂ = '+s.obj+(s.feas?' (optimal)':' (super-optimal)')+'</div>'+
+      '<div class="row"><b>Basis:</b> '+s.basis+'</div>'+
+      '<div class="row"><b>RHS values:</b> '+s.rhs+'</div>'+
+      '<div class="row"><b>Reduced costs:</b> '+s.rc+'</div>'+
+      '<div class="row '+(s.ok?'status-ok':'status-bad')+'">'+(s.ok?'✓ ':'✗ ')+s.status+'</div>'+
+      '<div class="action"><b>Action:</b> '+s.action+'</div>';
+  }
+
+  document.getElementById('dsv-prev').onclick=function(){if(cur>0){cur--;draw();}};
+  document.getElementById('dsv-next').onclick=function(){if(cur<steps.length-1){cur++;draw();}};
+  draw();
+})();
+</script>
 </section>
 </section>
 <section id="sec-when-to-use" class="level2" data-number="12.7">
@@ -1491,15 +1391,16 @@ x_1^* = 1, \quad x_2^* = 3, \quad \zeta^* = -10.
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p><strong>Primal simplex:</strong> Maintain a sequence of basic/nonbasic partitions <span class="math inline">B / N</span> such that:</p>
+<p>The two simplex variants are mirror images of each other, differing only in which feasibility condition is maintained as an invariant and which is achieved through pivoting:</p>
+<p><strong>Primal simplex</strong> maintains primal feasibility and drives toward dual feasibility:</p>
 <ul>
-<li><span class="math inline">x_B^*</span> is primal feasible (<span class="math inline">\widetilde{b} \geq 0</span>)</li>
+<li><span class="math inline">x_B^*</span> is primal feasible (<span class="math inline">\widetilde{b} \geq 0</span>) at every iteration</li>
 <li><span class="math inline">z_N^*</span> eventually becomes dual feasible (<span class="math inline">\widetilde{c} \leq 0</span>) through pivots</li>
 <li>Complementary slackness is preserved at every step</li>
 </ul>
-<p><strong>Dual simplex:</strong> Maintain a sequence of basic/nonbasic partitions <span class="math inline">B / N</span> such that:</p>
+<p><strong>Dual simplex</strong> maintains dual feasibility and drives toward primal feasibility:</p>
 <ul>
-<li><span class="math inline">z_N^*</span> is dual feasible (<span class="math inline">\widetilde{c} \leq 0</span>)</li>
+<li><span class="math inline">z_N^*</span> is dual feasible (<span class="math inline">\widetilde{c} \leq 0</span>) at every iteration</li>
 <li><span class="math inline">x_B^*</span> eventually becomes primal feasible (<span class="math inline">\widetilde{b} \geq 0</span>) through pivots</li>
 <li>Complementary slackness is preserved at every step</li>
 </ul>
@@ -1937,50 +1838,6 @@ x_1^* = 1, \quad x_2^* = 3, \quad \zeta^* = -10.
   </div>
 </nav>
 </div> <!-- /content -->
-<script>
-// Plotly Warmtone theming helpers — shared across all lectures
-// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
-const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
-
-function css(v) {
-  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-}
-
-function legendStyle() {
-  return {
-    font: {family: figFont, size: 13, color: css('--fig-text')},
-    bgcolor: css('--fig-bg') + 'dd',
-    bordercolor: css('--fig-grid'),
-    borderwidth: 1,
-  };
-}
-
-function themeLayout(extra) {
-  return Object.assign({
-    paper_bgcolor: css('--fig-bg'),
-    plot_bgcolor: css('--fig-plot-bg'),
-    font: {family: figFont, color: css('--fig-text'), size: 14},
-  }, extra || {});
-}
-
-function themeAxis(title, extra) {
-  return Object.assign({
-    title: {text: title, font: {family: figFont, size: 14}},
-    gridcolor: css('--fig-grid'),
-    zerolinecolor: css('--fig-grid'),
-    linecolor: css('--fig-axis'),
-    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
-  }, extra || {});
-}
-
-// Plotly color sequences matching the Warmtone palette
-const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
-];
-</script>
 <script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
 (function() {
   let previousOnload = window.onload;

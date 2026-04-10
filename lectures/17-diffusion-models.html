@@ -23,41 +23,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -110,6 +75,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -265,19 +274,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  <a href="../lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  <a href="../lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
   </div>
 </li>
       </ul>
@@ -335,7 +344,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -391,30 +400,45 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-overview" id="toc-sec-overview" class="nav-link active" data-scroll-target="#sec-overview"><span class="header-section-number">17.1</span> What Will Be Covered</a></li>
-  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction"><span class="header-section-number">17.2</span> Introduction to Diffusion Models</a></li>
-  <li><a href="#forward-process" id="toc-forward-process" class="nav-link" data-scroll-target="#forward-process"><span class="header-section-number">17.3</span> Forward Diffusion Process</a>
+  <li><a href="#what-will-be-covered" id="toc-what-will-be-covered" class="nav-link active" data-scroll-target="#what-will-be-covered">What Will Be Covered</a></li>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link" data-scroll-target="#introduction"><span class="header-section-number">17.1</span> Introduction to Diffusion Models</a></li>
+  <li><a href="#forward-process" id="toc-forward-process" class="nav-link" data-scroll-target="#forward-process"><span class="header-section-number">17.2</span> Forward Diffusion Process</a>
   <ul class="collapse">
-  <li><a href="#noise-schedule" id="toc-noise-schedule" class="nav-link" data-scroll-target="#noise-schedule"><span class="header-section-number">17.3.1</span> Noise Schedule</a></li>
-  <li><a href="#variance-preservation" id="toc-variance-preservation" class="nav-link" data-scroll-target="#variance-preservation"><span class="header-section-number">17.3.2</span> Why <span class="math inline">\sqrt{1-\beta_t}</span> and <span class="math inline">\sqrt{\beta_t}</span>?</a></li>
-  <li><a href="#closed-form" id="toc-closed-form" class="nav-link" data-scroll-target="#closed-form"><span class="header-section-number">17.3.3</span> Closed-Form Distribution: <span class="math inline">q(x_t \mid x_0)</span></a></li>
+  <li><a href="#noise-schedule" id="toc-noise-schedule" class="nav-link" data-scroll-target="#noise-schedule"><span class="header-section-number">17.2.1</span> Noise Schedule</a></li>
+  <li><a href="#variance-preservation" id="toc-variance-preservation" class="nav-link" data-scroll-target="#variance-preservation"><span class="header-section-number">17.2.2</span> Why <span class="math inline">\sqrt{1-\beta_t}</span> and <span class="math inline">\sqrt{\beta_t}</span>?</a></li>
+  <li><a href="#closed-form" id="toc-closed-form" class="nav-link" data-scroll-target="#closed-form"><span class="header-section-number">17.2.3</span> Closed-Form Distribution: <span class="math inline">q(x_t \mid x_0)</span></a></li>
   </ul></li>
-  <li><a href="#reverse-process" id="toc-reverse-process" class="nav-link" data-scroll-target="#reverse-process"><span class="header-section-number">17.4</span> Reverse Denoising Process</a>
+  <li><a href="#reverse-process" id="toc-reverse-process" class="nav-link" data-scroll-target="#reverse-process"><span class="header-section-number">17.3</span> Reverse Denoising Process</a>
   <ul class="collapse">
-  <li><a href="#generation" id="toc-generation" class="nav-link" data-scroll-target="#generation"><span class="header-section-number">17.4.1</span> Generating an Image</a></li>
+  <li><a href="#generation" id="toc-generation" class="nav-link" data-scroll-target="#generation"><span class="header-section-number">17.3.1</span> Generating an Image</a></li>
   </ul></li>
-  <li><a href="#elbo" id="toc-elbo" class="nav-link" data-scroll-target="#elbo"><span class="header-section-number">17.5</span> Evidence Lower Bound (ELBO)</a>
+  <li><a href="#elbo" id="toc-elbo" class="nav-link" data-scroll-target="#elbo"><span class="header-section-number">17.4</span> Evidence Lower Bound (ELBO)</a>
   <ul class="collapse">
-  <li><a href="#elbo-simplified" id="toc-elbo-simplified" class="nav-link" data-scroll-target="#elbo-simplified"><span class="header-section-number">17.5.1</span> ELBO for a Simplified Model</a></li>
-  <li><a href="#elbo-proof" id="toc-elbo-proof" class="nav-link" data-scroll-target="#elbo-proof"><span class="header-section-number">17.5.2</span> Proof of the ELBO</a></li>
-  <li><a href="#elbo-diffusion" id="toc-elbo-diffusion" class="nav-link" data-scroll-target="#elbo-diffusion"><span class="header-section-number">17.5.3</span> ELBO for Diffusion Models</a></li>
+  <li><a href="#elbo-simplified" id="toc-elbo-simplified" class="nav-link" data-scroll-target="#elbo-simplified"><span class="header-section-number">17.4.1</span> ELBO for a Simplified Model</a></li>
+  <li><a href="#elbo-proof" id="toc-elbo-proof" class="nav-link" data-scroll-target="#elbo-proof"><span class="header-section-number">17.4.2</span> Proof of the ELBO</a></li>
+  <li><a href="#elbo-diffusion" id="toc-elbo-diffusion" class="nav-link" data-scroll-target="#elbo-diffusion"><span class="header-section-number">17.4.3</span> ELBO for Diffusion Models</a></li>
+  <li><a href="#elbo-t2" id="toc-elbo-t2" class="nav-link" data-scroll-target="#elbo-t2"><span class="header-section-number">17.4.4</span> Building Intuition: ELBO for <span class="math inline">T=2</span></a></li>
+  <li><a href="#elbo-general" id="toc-elbo-general" class="nav-link" data-scroll-target="#elbo-general"><span class="header-section-number">17.4.5</span> General ELBO Decomposition</a></li>
   </ul></li>
+  <li><a href="#posterior" id="toc-posterior" class="nav-link" data-scroll-target="#posterior"><span class="header-section-number">17.5</span> Posterior Distribution <span class="math inline">q(x_{t-1} \mid x_t, x_0)</span></a></li>
   <li><a href="#training-objective" id="toc-training-objective" class="nav-link" data-scroll-target="#training-objective"><span class="header-section-number">17.6</span> Training Objective and Noise Prediction</a>
   <ul class="collapse">
-  <li><a href="#ddpm-algorithm" id="toc-ddpm-algorithm" class="nav-link" data-scroll-target="#ddpm-algorithm"><span class="header-section-number">17.6.1</span> DDPM Training Algorithm</a></li>
-  <li><a href="#ddpm-sampling" id="toc-ddpm-sampling" class="nav-link" data-scroll-target="#ddpm-sampling"><span class="header-section-number">17.6.2</span> DDPM Sampling Algorithm</a></li>
+  <li><a href="#kl-mean-matching" id="toc-kl-mean-matching" class="nav-link" data-scroll-target="#kl-mean-matching"><span class="header-section-number">17.6.1</span> From KL Divergence to Mean Matching</a></li>
+  <li><a href="#noise-prediction" id="toc-noise-prediction" class="nav-link" data-scroll-target="#noise-prediction"><span class="header-section-number">17.6.2</span> Noise Prediction Reparameterization</a></li>
+  <li><a href="#full-loss" id="toc-full-loss" class="nav-link" data-scroll-target="#full-loss"><span class="header-section-number">17.6.3</span> Full Weighted Loss</a></li>
+  <li><a href="#ddpm-algorithm" id="toc-ddpm-algorithm" class="nav-link" data-scroll-target="#ddpm-algorithm"><span class="header-section-number">17.6.4</span> DDPM Training Algorithm</a></li>
+  <li><a href="#ddpm-sampling" id="toc-ddpm-sampling" class="nav-link" data-scroll-target="#ddpm-sampling"><span class="header-section-number">17.6.5</span> DDPM Sampling Algorithm</a></li>
   </ul></li>
-  <li><a href="#interactive-demo" id="toc-interactive-demo" class="nav-link" data-scroll-target="#interactive-demo"><span class="header-section-number">17.7</span> Interactive Demo</a></li>
+  <li><a href="#ddim" id="toc-ddim" class="nav-link" data-scroll-target="#ddim"><span class="header-section-number">17.7</span> DDIM: Denoising Diffusion Implicit Models</a>
+  <ul class="collapse">
+  <li><a href="#ddim-motivation" id="toc-ddim-motivation" class="nav-link" data-scroll-target="#ddim-motivation"><span class="header-section-number">17.7.1</span> Challenge: Slow DDPM Sampling</a></li>
+  <li><a href="#ddim-derivation" id="toc-ddim-derivation" class="nav-link" data-scroll-target="#ddim-derivation"><span class="header-section-number">17.7.2</span> Idea: Deterministic Sampling</a></li>
+  </ul></li>
+  <li><a href="#latent-diffusion" id="toc-latent-diffusion" class="nav-link" data-scroll-target="#latent-diffusion"><span class="header-section-number">17.8</span> Latent Diffusion and Conditional Generation</a>
+  <ul class="collapse">
+  <li><a href="#conditional" id="toc-conditional" class="nav-link" data-scroll-target="#conditional"><span class="header-section-number">17.8.1</span> From Unconditional to Conditional Generation</a></li>
+  <li><a href="#latent-diffusion-models" id="toc-latent-diffusion-models" class="nav-link" data-scroll-target="#latent-diffusion-models"><span class="header-section-number">17.8.2</span> Latent Diffusion Models</a></li>
+  </ul></li>
   <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   </ul>
 </nav>
@@ -441,22 +465,6 @@ window.Quarto = {
 </header>
 
 
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Remark: Prerequisites
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<ul>
-<li><a href="../lectures/06-gradient-descent.html">Part 5.1</a>: gradient-based optimization</li>
-<li><a href="../lectures/02-math-background.html">Part 2</a>: probability, chain rule, backpropagation</li>
-</ul>
-</div>
-</div>
 <p>How can we generate photorealistic images from scratch? How do systems like Stable Diffusion and DALL-E 3 produce stunning artwork from a text prompt? The answer lies in a surprisingly simple and elegant idea: learn to reverse the process of adding noise. If we gradually corrupt an image by adding Gaussian noise until it becomes indistinguishable from pure static, and then train a neural network to undo each tiny noise step, we obtain a generative model that can conjure realistic images out of random noise.</p>
 <p>Diffusion models represent one of the most successful applications of the optimization techniques we have developed throughout this course. Training a diffusion model reduces to a regression problem — predicting the noise that was added at each step — solved via the very stochastic gradient descent and backpropagation methods from earlier lectures. The mathematical framework connecting the forward noising process to the reverse denoising process draws on probability, variational inference, and the theory of stochastic processes. Yet the final algorithm is remarkably simple: sample noise, predict it with a neural network, and take a gradient step.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
@@ -471,27 +479,30 @@ window.Quarto = {
 <div class="callout-body-container callout-body">
 <p>Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.</p>
 <ul>
-<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/19-tiny-ddpm.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Tiny DDPM</strong> — training a minimal denoising diffusion model from scratch</li>
-<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/20-stable-diffusion.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Stable Diffusion Pipeline</strong> — end-to-end walkthrough of text-to-image generation with Stable Diffusion</li>
-<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/21-stable-diffusion-encoder-decoder.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Stable Diffusion Encoder/Decoder</strong> — exploring the VAE encoder and decoder components</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/17a-tiny-ddpm.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Tiny DDPM</strong> — training a minimal denoising diffusion model from scratch</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/17b-stable-diffusion.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Stable Diffusion Pipeline</strong> — end-to-end walkthrough of text-to-image generation with Stable Diffusion</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/17c-stable-diffusion-encoder-decoder.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Stable Diffusion Encoder/Decoder</strong> — exploring the VAE encoder and decoder components</li>
 </ul>
 </div>
 </div>
 <p>This chapter develops the full mathematical pipeline behind DDPM (Denoising Diffusion Probabilistic Models), from the variance-preserving forward process and its closed-form marginals, through the Evidence Lower Bound (ELBO) that motivates the training objective, to the noise-prediction reparameterization that makes training work in practice.</p>
-<section id="sec-overview" class="level2" data-number="17.1">
-<h2 data-number="17.1" class="anchored" data-anchor-id="sec-overview"><span class="header-section-number">17.1</span> What Will Be Covered</h2>
+<section id="what-will-be-covered" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="what-will-be-covered">What Will Be Covered</h2>
 <ul>
 <li>The forward diffusion process: noise schedules and variance preservation</li>
 <li>Closed-form marginal distributions <span class="math inline">q(x_t \mid x_0)</span></li>
 <li>The reverse denoising process and image generation</li>
 <li>The Evidence Lower Bound (ELBO) and its decomposition</li>
-<li>Noise prediction and the simplified DDPM training objective</li>
+<li>The posterior distribution <span class="math inline">q(x_{t-1} \mid x_t, x_0)</span> and KL divergence reduction</li>
+<li>Noise prediction reparameterization and the full weighted loss</li>
 <li>DDPM training and sampling algorithms</li>
+<li>DDIM: deterministic fast sampling</li>
+<li>Latent diffusion and conditional generation</li>
 </ul>
 </section>
-<section id="introduction" class="level2" data-number="17.2">
-<h2 data-number="17.2" class="anchored" data-anchor-id="introduction"><span class="header-section-number">17.2</span> Introduction to Diffusion Models</h2>
-<p>Denoising diffusion models consist of two processes:</p>
+<section id="introduction" class="level2" data-number="17.1">
+<h2 data-number="17.1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">17.1</span> Introduction to Diffusion Models</h2>
+<p>Denoising diffusion models consist of two complementary processes that together define a generative pipeline:</p>
 <ul>
 <li><strong>Forward diffusion process (fixed):</strong> gradually adds Gaussian noise to input data, transforming an image into pure noise.</li>
 <li><strong>Reverse denoising process (learned):</strong> learns to generate data from noise by iteratively denoising, using a neural network.</li>
@@ -529,40 +540,47 @@ Figure&nbsp;17.1: The diffusion model framework: the forward process gradually a
 <li><strong>How to design the reverse process?</strong> What is the optimization objective for training the neural network <span class="math inline">\mu_\theta</span>, and what architecture to use?</li>
 </ol>
 </section>
-<section id="forward-process" class="level2" data-number="17.3">
-<h2 data-number="17.3" class="anchored" data-anchor-id="forward-process"><span class="header-section-number">17.3</span> Forward Diffusion Process</h2>
+<section id="forward-process" class="level2" data-number="17.2">
+<h2 data-number="17.2" class="anchored" data-anchor-id="forward-process"><span class="header-section-number">17.2</span> Forward Diffusion Process</h2>
 <p>Starting from a data point <span class="math inline">x_0 \sim P_{\text{data}}</span>, we construct a sequence <span class="math inline">x_0, x_1, \ldots, x_T</span> by adding i.i.d. Gaussian noise at each step:</p>
 <p><span class="math display">x_t = \sqrt{1 - \beta_t}\, x_{t-1} + \sqrt{\beta_t}\, \varepsilon_{t-1}, \qquad \varepsilon_t \overset{\text{iid}}{\sim} \mathcal{N}(0, I_d).</span></p>
 <p>Equivalently, the conditional density of <span class="math inline">x_t</span> given <span class="math inline">x_{t-1}</span> is:</p>
 <p><span class="math display">q(x_t \mid x_{t-1}) = \mathcal{N}\!\left(x_t;\; \sqrt{1-\beta_t}\, x_{t-1},\; \beta_t\, I\right).</span></p>
 <p>The joint distribution over the entire forward chain factorizes as a Markov chain:</p>
 <p><span class="math display">q(x_{1:T} \mid x_0) = \prod_{t=1}^{T} q(x_t \mid x_{t-1}).</span></p>
-<section id="noise-schedule" class="level3" data-number="17.3.1">
-<h3 data-number="17.3.1" class="anchored" data-anchor-id="noise-schedule"><span class="header-section-number">17.3.1</span> Noise Schedule</h3>
+<section id="noise-schedule" class="level3" data-number="17.2.1">
+<h3 data-number="17.2.1" class="anchored" data-anchor-id="noise-schedule"><span class="header-section-number">17.2.1</span> Noise Schedule</h3>
 <p>The noise schedule <span class="math inline">\{\beta_t\}_{t=1}^{T}</span> controls how quickly information is destroyed:</p>
 <ul>
 <li><span class="math inline">\beta_t</span> is close to 0 when <span class="math inline">t</span> is small (gentle noise at the start).</li>
 <li><span class="math inline">\beta_t</span> grows over time so that <span class="math inline">x_T \approx \mathcal{N}(0, I_d)</span> by the end.</li>
 <li>In practice (DDPM): <span class="math inline">\beta_1 = \beta_{\min} \approx 10^{-3}</span>, <span class="math inline">\beta_T = \beta_{\max} \approx 0.02</span>, with linear interpolation between them. The number of steps <span class="math inline">T</span> is typically 1000.</li>
 </ul>
-<div class="figure-container">
-  <div id="fig-noise-schedule"></div>
-  <div class="figure-caption">Figure 11.1: Linear noise schedule β_t and cumulative signal retention ᾱ_t = ∏(1−β_i). As t grows, ᾱ_t → 0 and the signal vanishes.</div>
+<div id="fig-noise-schedule" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-noise-schedule-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch17-noise-schedule.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;17.2: Linear noise schedule \beta_t and cumulative signal retention \bar\alpha_t = \prod(1-\beta_i). As t grows, \bar\alpha_t \to 0 and the signal vanishes."><img src="figures/ch17-noise-schedule.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-noise-schedule-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17.2: Linear noise schedule <span class="math inline">\beta_t</span> and cumulative signal retention <span class="math inline">\bar\alpha_t = \prod(1-\beta_i)</span>. As <span class="math inline">t</span> grows, <span class="math inline">\bar\alpha_t \to 0</span> and the signal vanishes.
+</figcaption>
+</figure>
 </div>
 </section>
-<section id="variance-preservation" class="level3" data-number="17.3.2">
-<h3 data-number="17.3.2" class="anchored" data-anchor-id="variance-preservation"><span class="header-section-number">17.3.2</span> Why <span class="math inline">\sqrt{1-\beta_t}</span> and <span class="math inline">\sqrt{\beta_t}</span>?</h3>
+<section id="variance-preservation" class="level3" data-number="17.2.2">
+<h3 data-number="17.2.2" class="anchored" data-anchor-id="variance-preservation"><span class="header-section-number">17.2.2</span> Why <span class="math inline">\sqrt{1-\beta_t}</span> and <span class="math inline">\sqrt{\beta_t}</span>?</h3>
 <div id="thm-variance-preservation" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 17.1 (Theorem 11.1 (Variance Preservation))</strong></span> For any <span class="math inline">a, b \in \mathbb{R}</span>, define the recursion <span class="math inline">X_t = a\, X_{t-1} + b\, \varepsilon_{t-1}</span>. If we want <span class="math inline">X_T \to \mathcal{N}(0, I_d)</span> in distribution as <span class="math inline">T \to \infty</span>, then we need</p>
+<p><span class="theorem-title"><strong>Theorem 17.1 (Variance Preservation)</strong></span> For any <span class="math inline">a, b \in \mathbb{R}</span>, define the recursion <span class="math inline">X_t = a\, X_{t-1} + b\, \varepsilon_{t-1}</span>. If we want <span class="math inline">X_T \to \mathcal{N}(0, I_d)</span> in distribution as <span class="math inline">T \to \infty</span>, then we need</p>
 <p><span class="math display">a = \sqrt{1-\beta}, \qquad b = \sqrt{\beta} \qquad \text{for some } \beta \in (0, 1].</span></p>
 </div>
 <p>This result explains why the diffusion coefficients take the specific form <span class="math inline">\sqrt{1-\beta_t}</span> and <span class="math inline">\sqrt{\beta_t}</span>: they are the unique choice (up to parameterization) that preserves unit variance across the recursion, ensuring the process converges to standard Gaussian noise regardless of the starting distribution.</p>
+<p>The proof proceeds by unrolling the recursion to express <span class="math inline">X_t</span> directly in terms of <span class="math inline">X_0</span> and the noise terms, then imposing two convergence conditions.</p>
 <div class="proof">
-<p><span class="proof-title"><em>Proof</em>. </span>By unrolling the recursion:</p>
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Step 1 (Unroll the recursion).</strong> By substituting repeatedly:</p>
 <p><span class="math display">X_t = a^t X_0 + b\left(\varepsilon_{t-1} + a\,\varepsilon_{t-2} + \cdots + a^{t-1}\varepsilon_0\right).</span></p>
-<p>The variance of the noise term is:</p>
+<p><strong>Step 2 (Compute the noise variance).</strong> Since the <span class="math inline">\varepsilon_i</span> are independent standard Gaussians, the variance of the accumulated noise is:</p>
 <p><span class="math display">\operatorname{Var}(\text{noise}) = b^2 (1 + a^2 + a^4 + \cdots + a^{2(t-1)}) I = b^2 \cdot \frac{1 - a^{2t}}{1 - a^2}\, I.</span></p>
-<p>For convergence to <span class="math inline">\mathcal{N}(0, I)</span>, we need two conditions: (1) the signal component <span class="math inline">a^t X_0</span> must vanish, which requires <span class="math inline">|a| &lt; 1</span>; and (2) as <span class="math inline">t \to \infty</span>, the noise variance must tend to <span class="math inline">I</span>, giving <span class="math inline">\frac{b^2}{1 - a^2} = 1</span>, hence <span class="math inline">a^2 + b^2 = 1</span>. Setting <span class="math inline">a = \sqrt{1-\beta}</span> and <span class="math inline">b = \sqrt{\beta}</span> satisfies both conditions. This completes the proof. <span class="math inline">\blacksquare</span></p>
+<p><strong>Step 3 (Impose convergence conditions).</strong> For <span class="math inline">X_t \to \mathcal{N}(0, I)</span>, we need: (1) the signal component <span class="math inline">a^t X_0</span> must vanish, which requires <span class="math inline">|a| &lt; 1</span>; and (2) as <span class="math inline">t \to \infty</span>, the noise variance must tend to <span class="math inline">I</span>, giving <span class="math inline">\frac{b^2}{1 - a^2} = 1</span>, hence <span class="math inline">a^2 + b^2 = 1</span>. Setting <span class="math inline">a = \sqrt{1-\beta}</span> and <span class="math inline">b = \sqrt{\beta}</span> satisfies both conditions. <span class="math inline">\blacksquare</span></p>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -578,16 +596,16 @@ Figure&nbsp;17.1: The diffusion model framework: the forward process gradually a
 </div>
 </div>
 </section>
-<section id="closed-form" class="level3" data-number="17.3.3">
-<h3 data-number="17.3.3" class="anchored" data-anchor-id="closed-form"><span class="header-section-number">17.3.3</span> Closed-Form Distribution: <span class="math inline">q(x_t \mid x_0)</span></h3>
+<section id="closed-form" class="level3" data-number="17.2.3">
+<h3 data-number="17.2.3" class="anchored" data-anchor-id="closed-form"><span class="header-section-number">17.2.3</span> Closed-Form Distribution: <span class="math inline">q(x_t \mid x_0)</span></h3>
 <p>A key advantage of the Gaussian forward process is that we can compute the marginal distribution of <span class="math inline">x_t</span> given <span class="math inline">x_0</span> in closed form, without iterating through all intermediate steps.</p>
 <div id="def-cumulative-noise" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 17.1 (Definition 11.1 (Cumulative Noise Parameters))</strong></span> Let <span class="math inline">\alpha_t = 1 - \beta_t</span> and define the cumulative product:</p>
+<p><span class="theorem-title"><strong>Definition 17.1 (Cumulative Noise Parameters)</strong></span> Let <span class="math inline">\alpha_t = 1 - \beta_t</span> and define the cumulative product:</p>
 <p><span class="math display">\bar{\alpha}_t = \prod_{i=1}^{t} \alpha_i = \prod_{i=1}^{t} (1 - \beta_i).</span></p>
 </div>
 <p>The parameter <span class="math inline">\bar{\alpha}_t</span> measures how much of the original signal survives after <span class="math inline">t</span> steps of noise addition. When <span class="math inline">\bar{\alpha}_t \approx 1</span>, the data point <span class="math inline">x_0</span> is mostly preserved; when <span class="math inline">\bar{\alpha}_t \approx 0</span>, the signal has been almost entirely replaced by noise.</p>
 <div id="thm-marginal-forward" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 17.2 (Theorem 11.2 (Marginal Distribution of Forward Process))</strong></span> The conditional distribution of <span class="math inline">x_t</span> given <span class="math inline">x_0</span> is:</p>
+<p><span class="theorem-title"><strong>Theorem 17.2 (Marginal Distribution of Forward Process)</strong></span> The conditional distribution of <span class="math inline">x_t</span> given <span class="math inline">x_0</span> is:</p>
 <p><span class="math display">q(x_t \mid x_0) = \mathcal{N}\!\left(x_t;\; \sqrt{\bar{\alpha}_t}\, x_0,\; (1 - \bar{\alpha}_t)\, I_d\right).</span></p>
 <p>Equivalently, we can sample <span class="math inline">x_t</span> directly as:</p>
 <p><span class="math display">x_t = \sqrt{\bar{\alpha}_t}\, x_0 + \sqrt{1 - \bar{\alpha}_t}\, \varepsilon, \qquad \varepsilon \sim \mathcal{N}(0, I_d).</span></p>
@@ -612,14 +630,20 @@ Figure&nbsp;17.1: The diffusion model framework: the forward process gradually a
 </div>
 </div>
 </div>
-<div class="figure-container">
-  <div id="fig-forward-process"></div>
-  <div class="figure-caption">Figure 11.2: The forward diffusion process in 1D. A data point x_0 is gradually corrupted: the signal coefficient √ᾱ_t shrinks while the noise variance 1−ᾱ_t grows.</div>
+<div id="fig-forward-process" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-forward-process-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch17-forward-process.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;17.3: The forward diffusion process in 1D. A data point x_0 is gradually corrupted: the signal coefficient \sqrt{\bar\alpha_t} shrinks while the noise variance 1-\bar\alpha_t grows."><img src="figures/ch17-forward-process.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-forward-process-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17.3: The forward diffusion process in 1D. A data point <span class="math inline">x_0</span> is gradually corrupted: the signal coefficient <span class="math inline">\sqrt{\bar\alpha_t}</span> shrinks while the noise variance <span class="math inline">1-\bar\alpha_t</span> grows.
+</figcaption>
+</figure>
 </div>
 </section>
 </section>
-<section id="reverse-process" class="level2" data-number="17.4">
-<h2 data-number="17.4" class="anchored" data-anchor-id="reverse-process"><span class="header-section-number">17.4</span> Reverse Denoising Process</h2>
+<section id="reverse-process" class="level2" data-number="17.3">
+<h2 data-number="17.3" class="anchored" data-anchor-id="reverse-process"><span class="header-section-number">17.3</span> Reverse Denoising Process</h2>
 <p>The <strong>reverse process</strong> starts from pure noise <span class="math inline">\widetilde{x}_T \sim \mathcal{N}(0, I_d)</span> and iteratively denoises using a learned neural network. The joint distribution of the reverse chain is:</p>
 <p><span class="math display">p_\theta(\widetilde{x}_{0:T}) = p(\widetilde{x}_T) \prod_{t=1}^{T} p_\theta(\widetilde{x}_{t-1} \mid \widetilde{x}_t),</span></p>
 <p>where:</p>
@@ -629,8 +653,8 @@ Figure&nbsp;17.1: The diffusion model framework: the forward process gradually a
 </ul>
 <p><span class="math display">p_\theta(\widetilde{x}_{t-1} \mid \widetilde{x}_t) = \mathcal{N}\!\left(\widetilde{x}_{t-1};\; \mu_\theta(\widetilde{x}_t, t),\; \sigma_t^2\, I\right).</span></p>
 <p>Here <span class="math inline">\mu_\theta(\cdot, \cdot)</span> is a <strong>trainable neural network</strong> (typically a U-Net / denoising autoencoder) that takes the current noisy image <span class="math inline">\widetilde{x}_t</span> and timestep <span class="math inline">t</span> as input, and predicts the denoised mean.</p>
-<section id="generation" class="level3" data-number="17.4.1">
-<h3 data-number="17.4.1" class="anchored" data-anchor-id="generation"><span class="header-section-number">17.4.1</span> Generating an Image</h3>
+<section id="generation" class="level3" data-number="17.3.1">
+<h3 data-number="17.3.1" class="anchored" data-anchor-id="generation"><span class="header-section-number">17.3.1</span> Generating an Image</h3>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -663,18 +687,19 @@ Figure&nbsp;17.1: The diffusion model framework: the forward process gradually a
 <p>The forward process maps data <span class="math inline">x_0 \sim P_{\text{data}}</span> through a chain <span class="math inline">x_0 \to x_1 \to \cdots \to x_T \approx \mathcal{N}(0, I)</span>. The reverse process runs backwards: <span class="math inline">\widetilde{x}_T \sim \mathcal{N}(0, I) \to \widetilde{x}_{T-1} \to \cdots \to \widetilde{x}_0</span>. When <span class="math inline">T</span> is sufficiently large, the forward endpoint <span class="math inline">x_T</span> and the reverse starting point <span class="math inline">\widetilde{x}_T</span> have nearly the same distribution <span class="math inline">\mathcal{N}(0, I)</span>. If the reverse transitions closely match the true posterior <span class="math inline">q(x_{t-1} \mid x_t)</span>, then <span class="math inline">\widetilde{x}_0</span> will be distributed like real data.</p>
 </div>
 </div>
+<p>The reverse process gives us a parametric generative model, but we have not yet specified how to train it. The remaining challenge is to define a loss function that can be computed efficiently and that encourages the learned reverse transitions to match the true posteriors of the forward process. This leads us to the Evidence Lower Bound.</p>
 </section>
 </section>
-<section id="elbo" class="level2" data-number="17.5">
-<h2 data-number="17.5" class="anchored" data-anchor-id="elbo"><span class="header-section-number">17.5</span> Evidence Lower Bound (ELBO)</h2>
+<section id="elbo" class="level2" data-number="17.4">
+<h2 data-number="17.4" class="anchored" data-anchor-id="elbo"><span class="header-section-number">17.4</span> Evidence Lower Bound (ELBO)</h2>
 <p>The key question is: <em>how do we train <span class="math inline">\mu_\theta</span>?</em> There are two major approaches:</p>
 <ol type="1">
 <li>Derive the continuous-time limit (stochastic differential equation) and then the Reverse SDE.</li>
 <li>View the forward and reverse processes as two joint distributions over <span class="math inline">(x_0, x_1, \ldots, x_T)</span> and minimize their divergence. This leads to the <strong>Evidence Lower Bound (ELBO)</strong>.</li>
 </ol>
 <p>We focus on the ELBO approach.</p>
-<section id="elbo-simplified" class="level3" data-number="17.5.1">
-<h3 data-number="17.5.1" class="anchored" data-anchor-id="elbo-simplified"><span class="header-section-number">17.5.1</span> ELBO for a Simplified Model</h3>
+<section id="elbo-simplified" class="level3" data-number="17.4.1">
+<h3 data-number="17.4.1" class="anchored" data-anchor-id="elbo-simplified"><span class="header-section-number">17.4.1</span> ELBO for a Simplified Model</h3>
 <p>Consider a simplified setting with just one latent variable <span class="math inline">z</span> (i.e., <span class="math inline">T=1</span>):</p>
 <ul>
 <li><span class="math inline">x \sim f_0(\cdot)</span>: signal with unknown parameters.</li>
@@ -686,13 +711,14 @@ Figure&nbsp;17.1: The diffusion model framework: the forward process gradually a
 <p><span class="math display">p_\theta(x) = \int p(z)\, p_\theta(x \mid z)\, dz.</span></p>
 <p>We want to maximize <span class="math inline">\sum_{i=1}^n \log p_\theta(x_i)</span> (MLE). But the integral makes direct optimization hard.</p>
 <div id="thm-elbo" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 17.3 (Theorem 11.3 (Evidence Lower Bound))</strong></span> For any conditional distribution <span class="math inline">q(z \mid x)</span> (called the <em>variational distribution</em>) and for all <span class="math inline">x</span>:</p>
+<p><span class="theorem-title"><strong>Theorem 17.3 (Evidence Lower Bound)</strong></span> For any conditional distribution <span class="math inline">q(z \mid x)</span> (called the <em>variational distribution</em>) and for all <span class="math inline">x</span>:</p>
 <p><span class="math display">\log p_\theta(x) \geq \mathbb{E}_{z \sim q(\cdot \mid x)}\!\left[\log p_\theta(x, z) - \log q(z \mid x)\right] = \text{ELBO}(\theta).</span></p>
 </div>
 <p>The ELBO provides a tractable lower bound on the log-likelihood, which is typically intractable to compute directly due to the integral over latent variables. By maximizing this lower bound instead of the true log-likelihood, we obtain a principled training objective. The tighter the bound (i.e., the smaller the KL gap), the closer the ELBO is to the true objective.</p>
 </section>
-<section id="elbo-proof" class="level3" data-number="17.5.2">
-<h3 data-number="17.5.2" class="anchored" data-anchor-id="elbo-proof"><span class="header-section-number">17.5.2</span> Proof of the ELBO</h3>
+<section id="elbo-proof" class="level3" data-number="17.4.2">
+<h3 data-number="17.4.2" class="anchored" data-anchor-id="elbo-proof"><span class="header-section-number">17.4.2</span> Proof of the ELBO</h3>
+<p>The proof strategy is to rewrite <span class="math inline">\log p_\theta(x)</span> by introducing the variational distribution <span class="math inline">q(z \mid x)</span> via a multiplication-by-one trick, then decompose the result into the ELBO plus a non-negative KL divergence term.</p>
 <div class="proof">
 <p><span class="proof-title"><em>Proof</em>. </span>Note that <span class="math inline">p_\theta(x) = \int p_\theta(x, z)\, dz</span> and <span class="math inline">p_\theta(x, z) = p(z) \cdot p_\theta(x \mid z)</span>. Also, for any distribution <span class="math inline">q(z \mid x)</span>, we have <span class="math inline">\int q(z \mid x)\, dz = 1</span>. Thus:</p>
 <p><span class="math display">\log p_\theta(x) = \log p_\theta(x) \cdot \int q(z \mid x)\, dz = \int q(z \mid x) \cdot \log p_\theta(x)\, dz. \quad \text{(1)}</span></p>
@@ -718,43 +744,136 @@ Figure&nbsp;17.1: The diffusion model framework: the forward process gradually a
 </div>
 </div>
 </section>
-<section id="elbo-diffusion" class="level3" data-number="17.5.3">
-<h3 data-number="17.5.3" class="anchored" data-anchor-id="elbo-diffusion"><span class="header-section-number">17.5.3</span> ELBO for Diffusion Models</h3>
+<section id="elbo-diffusion" class="level3" data-number="17.4.3">
+<h3 data-number="17.4.3" class="anchored" data-anchor-id="elbo-diffusion"><span class="header-section-number">17.4.3</span> ELBO for Diffusion Models</h3>
 <p>Now we apply the ELBO framework to the full diffusion model with <span class="math inline">T</span> steps. We have two processes:</p>
 <div id="def-forward-reverse" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 17.2 (Definition 11.2 (Forward and Reverse Joint Distributions))</strong></span> <strong>Forward process</strong> (fixed, acts as variational distribution):</p>
+<p><span class="theorem-title"><strong>Definition 17.2 (Forward and Reverse Joint Distributions)</strong></span> <strong>Forward process</strong> (fixed, acts as variational distribution):</p>
 <p><span class="math display">q(\{x_t\}_{t=0}^T) = P_{\text{data}}(x_0) \prod_{t=1}^{T} q_t(x_t \mid x_{t-1}), \quad q_t(x' \mid x) = \mathcal{N}(x';\, \sqrt{1-\beta_t}\, x,\, \beta_t I).</span></p>
 <p><strong>Reverse process</strong> (learned, parameterized by <span class="math inline">\theta</span>):</p>
 <p><span class="math display">p_\theta(\{\widetilde{x}_t\}_{t=1}^T) = p(\widetilde{x}_T) \prod_{t=1}^{T} p_\theta(\widetilde{x}_{t-1} \mid \widetilde{x}_t), \quad p(\widetilde{x}_T) = \mathcal{N}(\widetilde{x}_T; 0, I_d).</span></p>
 <p>Each <span class="math inline">p_\theta(\widetilde{x}_{t-1} \mid \widetilde{x}_t)</span> is a neural-network-based conditional Gaussian distribution.</p>
 </div>
 <p>The forward process serves as the “variational distribution” in the ELBO framework: it defines how latent variables <span class="math inline">(x_1, \ldots, x_T)</span> are generated from data <span class="math inline">x_0</span>. The reverse process is the generative model we wish to train. The goal is to make the learned reverse transitions match the true posterior of the forward process as closely as possible.</p>
-<p>The training objective is to maximize the ELBO, which decomposes into:</p>
+</section>
+<section id="elbo-t2" class="level3" data-number="17.4.4">
+<h3 data-number="17.4.4" class="anchored" data-anchor-id="elbo-t2"><span class="header-section-number">17.4.4</span> Building Intuition: ELBO for <span class="math inline">T=2</span></h3>
+<p>Before tackling the general case, let us derive the ELBO for <span class="math inline">T = 2</span> with variables <span class="math inline">x_0, x_1, x_2</span>. This special case reveals the key algebraic trick that makes the general derivation work.</p>
+<p>The log-likelihood is:</p>
+<p><span class="math display">\log p_\theta(x_0) = \log \int p_\theta(x_0, x_1, x_2)\, dx_1\, dx_2.</span></p>
+<p>Introducing the forward distribution <span class="math inline">q(x_1, x_2 \mid x_0)</span> and applying Jensen’s inequality:</p>
+<p><span class="math display">\log p_\theta(x_0) = \log \int \frac{p_\theta(x_0, x_1, x_2)}{q(x_1, x_2 \mid x_0)} \cdot q(x_1, x_2 \mid x_0)\, dx_1\, dx_2 \geq \mathbb{E}_{x_1, x_2 \sim q(\cdot \mid x_0)}\!\left[\log \frac{p_\theta(x_0, x_1, x_2)}{q(x_1, x_2 \mid x_0)}\right].</span></p>
+<p>Now we decompose the joint distributions. For the reverse process:</p>
+<p><span class="math display">p_\theta(x_0, x_1, x_2) = p(x_2) \cdot p_\theta(x_1 \mid x_2) \cdot p_\theta(x_0 \mid x_1).</span></p>
+<p>For the forward process, the natural factorization is <span class="math inline">q(x_1, x_2 \mid x_0) = q(x_1 \mid x_0) \cdot q(x_2 \mid x_1)</span>. However, this is <strong>not</strong> the right decomposition.</p>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>Key Observation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>We should <strong>not</strong> decompose the forward joint as <span class="math inline">q(x_1 \mid x_0) \cdot q(x_2 \mid x_1)</span>. The problem is that we want terms like <span class="math inline">q(x_1 \mid x_2)</span> and <span class="math inline">q(x_0 \mid x_1)</span> to match against the reverse transitions <span class="math inline">p_\theta(x_1 \mid x_2)</span> and <span class="math inline">p_\theta(x_0 \mid x_1)</span>. But the marginal conditional <span class="math inline">q(x_1 \mid x_2)</span> is <strong>not Gaussian</strong> — it involves integrating over all possible <span class="math inline">x_0</span> values.</p>
+<p>Instead, two observations guide us:</p>
+<ol type="1">
+<li>The conditional <span class="math inline">q(x_1 \mid x_2, x_0)</span> <strong>is Gaussian</strong>, because <span class="math inline">(x_1, x_2) \mid x_0</span> is jointly Gaussian and conditionals of Gaussians are Gaussian.</li>
+<li>When <span class="math inline">T</span> is large, <span class="math inline">q(x_T \mid x_0) \approx \mathcal{N}(0, I) = p(x_T)</span>.</li>
+</ol>
+</div>
+</div>
+<p>These observations suggest the alternative factorization:</p>
+<p><span class="math display">q(x_1, x_2 \mid x_0) = q(x_2 \mid x_0) \cdot q(x_1 \mid x_2, x_0).</span></p>
+<p>Substituting both decompositions into the ELBO and separating terms:</p>
+<p><span class="math display">\text{ELBO}(\theta) = \underbrace{\mathbb{E}_{x_1 \sim q(\cdot \mid x_0)}\!\left[\log p_\theta(x_0 \mid x_1)\right]}_{\text{reconstruction}} + \underbrace{\mathbb{E}_{x_2 \sim q(\cdot \mid x_0)}\!\left[\log \frac{p(x_2)}{q(x_2 \mid x_0)}\right]}_{\text{prior matching}} + \underbrace{\mathbb{E}_{x_2 \sim q(\cdot \mid x_0)}\!\left[-D_{\text{KL}}\!\left(q(x_1 \mid x_2, x_0) \,\|\, p_\theta(x_1 \mid x_2)\right)\right]}_{\text{denoising matching}}.</span></p>
+<p>The prior matching term equals <span class="math inline">-D_{\text{KL}}(q(x_2 \mid x_0) \,\|\, p(x_2))</span> and does not involve <span class="math inline">\theta</span>, so it can be ignored during optimization. The denoising matching term is a KL divergence between two distributions: the tractable Gaussian posterior <span class="math inline">q(x_1 \mid x_2, x_0)</span> and the learned reverse transition <span class="math inline">p_\theta(x_1 \mid x_2)</span>. This is the term we optimize.</p>
+</section>
+<section id="elbo-general" class="level3" data-number="17.4.5">
+<h3 data-number="17.4.5" class="anchored" data-anchor-id="elbo-general"><span class="header-section-number">17.4.5</span> General ELBO Decomposition</h3>
+<p>The <span class="math inline">T=2</span> result generalizes directly to arbitrary <span class="math inline">T</span>. The training objective is to maximize:</p>
 <p><span class="math display">\text{ELBO}(\theta) = \mathbb{E}_{q}\!\left[\log \frac{p_\theta(x_{0:T})}{q(x_{1:T} \mid x_0)}\right].</span></p>
-<p>After careful algebraic manipulation, the diffusion ELBO breaks into three types of terms:</p>
+<p>Using the same factorization trick at each step, the diffusion ELBO breaks into three types of terms:</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p><strong>Decomposition of the Diffusion ELBO:</strong></p>
+<p><strong>Decomposition of the Diffusion ELBO.</strong> The ELBO separates into three types of terms, each with a distinct role in the training objective:</p>
 <ol type="1">
 <li><strong>Reconstruction term:</strong> <span class="math inline">\mathbb{E}_q[\log p_\theta(x_0 \mid x_1)]</span> — how well the model reconstructs data from the first latent.</li>
-<li><strong>Prior matching term:</strong> <span class="math inline">-D_{\text{KL}}(q(x_T \mid x_0) \,\|\, p(x_T))</span> — forward endpoint should match <span class="math inline">\mathcal{N}(0, I)</span>.</li>
-<li><strong>Denoising matching terms:</strong> <span class="math inline">-\sum_{t=2}^{T} \mathbb{E}_q\!\left[D_{\text{KL}}(q(x_{t-1} \mid x_t, x_0) \,\|\, p_\theta(x_{t-1} \mid x_t))\right]</span> — the learned reverse step should match the true posterior at each timestep.</li>
+<li><strong>Prior matching term:</strong> <span class="math inline">-D_{\text{KL}}(q(x_T \mid x_0) \,\|\, p(x_T))</span> — forward endpoint should match <span class="math inline">\mathcal{N}(0, I)</span>. Does not depend on <span class="math inline">\theta</span>.</li>
+<li><strong>Denoising matching terms:</strong> <span class="math inline">-\sum_{t=2}^{T} \mathbb{E}_{q(x_t \mid x_0)}\!\left[D_{\text{KL}}(q(x_{t-1} \mid x_t, x_0) \,\|\, p_\theta(x_{t-1} \mid x_t))\right]</span> — the learned reverse step should match the true posterior at each timestep.</li>
 </ol>
 </div>
 </div>
 </div>
+<p>The dominant terms are the denoising matching KL divergences. To compute them, we need two ingredients: (1) the closed-form posterior <span class="math inline">q(x_{t-1} \mid x_t, x_0)</span>, and (2) a way to reduce the KL divergence to a simple loss on the neural network parameters.</p>
 </section>
+</section>
+<section id="posterior" class="level2" data-number="17.5">
+<h2 data-number="17.5" class="anchored" data-anchor-id="posterior"><span class="header-section-number">17.5</span> Posterior Distribution <span class="math inline">q(x_{t-1} \mid x_t, x_0)</span></h2>
+<p>The denoising matching terms in the ELBO require computing <span class="math inline">D_{\text{KL}}(q(x_{t-1} \mid x_t, x_0) \,\|\, p_\theta(x_{t-1} \mid x_t))</span>. A key observation is that under the forward process, <span class="math inline">x_{t-1} \mid x_t, x_0</span> is Gaussian, so this posterior has a closed-form expression.</p>
+<div id="thm-posterior" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 17.4 (Forward Process Posterior)</strong></span> The distribution <span class="math inline">q(x_{t-1} \mid x_t, x_0)</span> is Gaussian:</p>
+<p><span class="math display">q(x_{t-1} \mid x_t, x_0) = \mathcal{N}\!\left(x_{t-1};\; \mu_q(x_t, x_0),\; \sigma_q^2(t)\, I\right),</span></p>
+<p>where the posterior mean and variance are:</p>
+<p><span class="math display">\mu_q(x_t, x_0) = \frac{(1-\bar\alpha_{t-1})\sqrt{\alpha_t}}{1-\bar\alpha_t}\, x_t + \frac{(1-\alpha_t)\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_t}\, x_0, \qquad \sigma_q^2(t) = \frac{(1-\alpha_t)(1-\bar\alpha_{t-1})}{1-\bar\alpha_t}.</span></p>
+</div>
+<p>The posterior mean <span class="math inline">\mu_q(x_t, x_0)</span> is a <strong>linear combination</strong> of <span class="math inline">x_t</span> and <span class="math inline">x_0</span>, weighted by coefficients that depend on the noise schedule. Geometrically, <span class="math inline">\mu_q</span> lies on the line segment connecting <span class="math inline">x_t</span> and <span class="math inline">x_0</span>.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>Since both <span class="math inline">q(x_t \mid x_{t-1})</span> and <span class="math inline">q(x_{t-1} \mid x_0)</span> are Gaussian, we apply Bayes’ rule:</p>
+<p><span class="math display">q(x_{t-1} \mid x_t, x_0) \propto q(x_t \mid x_{t-1}) \cdot q(x_{t-1} \mid x_0).</span></p>
+<p>Both factors are Gaussian in <span class="math inline">x_{t-1}</span>:</p>
+<p><span class="math display">q(x_t \mid x_{t-1}) = \mathcal{N}(x_t;\, \sqrt{\alpha_t}\, x_{t-1},\, (1-\alpha_t)I), \qquad q(x_{t-1} \mid x_0) = \mathcal{N}(x_{t-1};\, \sqrt{\bar\alpha_{t-1}}\, x_0,\, (1-\bar\alpha_{t-1})I).</span></p>
+<p>Completing the square in <span class="math inline">x_{t-1}</span>, the precision (inverse variance) of the posterior is:</p>
+<p><span class="math display">\frac{1}{\sigma_q^2} = \frac{\alpha_t}{1-\alpha_t} + \frac{1}{1-\bar\alpha_{t-1}} = \frac{\alpha_t(1-\bar\alpha_{t-1}) + (1-\alpha_t)}{(1-\alpha_t)(1-\bar\alpha_{t-1})} = \frac{1 - \bar\alpha_t}{(1-\alpha_t)(1-\bar\alpha_{t-1})},</span></p>
+<p>where we used <span class="math inline">\bar\alpha_t = \alpha_t \bar\alpha_{t-1}</span>. The precision-weighted mean gives:</p>
+<p><span class="math display">\mu_q = \sigma_q^2 \!\left(\frac{\sqrt{\alpha_t}}{1-\alpha_t}\, x_t + \frac{\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_{t-1}}\, x_0\right) = \frac{(1-\bar\alpha_{t-1})\sqrt{\alpha_t}}{1-\bar\alpha_t}\, x_t + \frac{(1-\alpha_t)\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_t}\, x_0. \quad \blacksquare</span></p>
+</div>
 </section>
 <section id="training-objective" class="level2" data-number="17.6">
 <h2 data-number="17.6" class="anchored" data-anchor-id="training-objective"><span class="header-section-number">17.6</span> Training Objective and Noise Prediction</h2>
-<p>The dominant terms in the ELBO are the denoising matching KL divergences. Since both <span class="math inline">q(x_{t-1} \mid x_t, x_0)</span> and <span class="math inline">p_\theta(x_{t-1} \mid x_t)</span> are Gaussian, the KL divergence reduces to comparing their means (the variances can be set to match).</p>
-<p>Ho et al.&nbsp;(2020) showed that instead of predicting the mean <span class="math inline">\mu_\theta(x_t, t)</span> directly, it is more effective to <strong>predict the noise</strong>. The reparameterization is:</p>
-<p><span class="math display">\mu_\theta(x_t, t) = \frac{1}{\sqrt{\alpha_t}}\!\left(x_t - \frac{\beta_t}{\sqrt{1-\bar\alpha_t}}\, \epsilon_\theta(x_t, t)\right),</span></p>
-<p>where <span class="math inline">\epsilon_\theta(x_t, t)</span> is a neural network that predicts the noise <span class="math inline">\varepsilon</span> that was added. The simplified training loss becomes:</p>
+<section id="kl-mean-matching" class="level3" data-number="17.6.1">
+<h3 data-number="17.6.1" class="anchored" data-anchor-id="kl-mean-matching"><span class="header-section-number">17.6.1</span> From KL Divergence to Mean Matching</h3>
+<p>We now derive the training loss from the ELBO. The denoising matching terms require computing <span class="math inline">D_{\text{KL}}(q(x_{t-1} \mid x_t, x_0) \,\|\, p_\theta(x_{t-1} \mid x_t))</span>. We parameterize the reverse transition as a Gaussian with the <strong>same variance</strong> as the posterior:</p>
+<p><span class="math display">p_\theta(x_{t-1} \mid x_t) = \mathcal{N}\!\left(x_{t-1};\; \mu_\theta(x_t, t),\; \sigma_q^2(t)\, I\right).</span></p>
+<p>Since both distributions are Gaussian with equal variance <span class="math inline">\sigma_q^2(t)\, I</span>, the KL divergence reduces to a squared difference of means:</p>
+<p><span class="math display">D_{\text{KL}}\!\left(q(x_{t-1} \mid x_t, x_0) \,\|\, p_\theta(x_{t-1} \mid x_t)\right) = \frac{1}{2\sigma_q^2(t)}\left\|\mu_q(x_t, x_0) - \mu_\theta(x_t, t)\right\|^2.</span></p>
+<p>This is the <strong>mean-matching</strong> objective: the neural network <span class="math inline">\mu_\theta</span> must learn to predict the posterior mean <span class="math inline">\mu_q</span>.</p>
+</section>
+<section id="noise-prediction" class="level3" data-number="17.6.2">
+<h3 data-number="17.6.2" class="anchored" data-anchor-id="noise-prediction"><span class="header-section-number">17.6.2</span> Noise Prediction Reparameterization</h3>
+<p>Rather than training <span class="math inline">\mu_\theta</span> to predict <span class="math inline">\mu_q</span> directly, Ho et al.&nbsp;(2020) introduced a reparameterization that leads to better empirical performance. The key insight is that the posterior mean <span class="math inline">\mu_q(x_t, x_0)</span> depends on the unknown <span class="math inline">x_0</span>, which can be expressed in terms of the noise <span class="math inline">\varepsilon</span>.</p>
+<p><strong>Step 1.</strong> Write the posterior mean as a linear function of <span class="math inline">x_t</span> and <span class="math inline">x_0</span>:</p>
+<p><span class="math display">\mu_q(x_t, x_0) = \frac{(1-\bar\alpha_{t-1})\sqrt{\alpha_t}}{1-\bar\alpha_t}\, x_t + \frac{(1-\alpha_t)\sqrt{\bar\alpha_{t-1}}}{1-\bar\alpha_t}\, x_0.</span></p>
+<p><strong>Step 2.</strong> Recall that <span class="math inline">x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \varepsilon</span> for some <span class="math inline">\varepsilon \sim \mathcal{N}(0, I)</span>. Solving for <span class="math inline">x_0</span>:</p>
+<p><span class="math display">x_0 = \frac{1}{\sqrt{\bar\alpha_t}}\!\left(x_t - \sqrt{1-\bar\alpha_t}\, \varepsilon\right).</span></p>
+<p><strong>Step 3.</strong> Substituting into the expression for <span class="math inline">\mu_q</span> and simplifying (using <span class="math inline">\bar\alpha_t = \alpha_t \bar\alpha_{t-1}</span>):</p>
+<p><span class="math display">\mu_q(x_t, \varepsilon) = \frac{1}{\sqrt{\alpha_t}}\!\left(x_t - \frac{1-\alpha_t}{\sqrt{1-\bar\alpha_t}}\, \varepsilon\right).</span></p>
+<p>This motivates the <strong>noise prediction</strong> parameterization of the neural network:</p>
+<p><span class="math display">\mu_\theta(x_t, t) = \frac{1}{\sqrt{\alpha_t}}\!\left(x_t - \frac{1-\alpha_t}{\sqrt{1-\bar\alpha_t}}\, \epsilon_\theta(x_t, t)\right),</span></p>
+<p>where <span class="math inline">\epsilon_\theta(x_t, t)</span> is a neural network that predicts the noise <span class="math inline">\varepsilon</span> that was added. The known linear function of <span class="math inline">x_t</span> is shared between <span class="math inline">\mu_q</span> and <span class="math inline">\mu_\theta</span>; the only learnable part is the noise estimator <span class="math inline">\epsilon_\theta</span>.</p>
+</section>
+<section id="full-loss" class="level3" data-number="17.6.3">
+<h3 data-number="17.6.3" class="anchored" data-anchor-id="full-loss"><span class="header-section-number">17.6.3</span> Full Weighted Loss</h3>
+<p>Substituting the noise prediction parameterization into the mean-matching objective, the squared difference <span class="math inline">\|\mu_q - \mu_\theta\|^2</span> becomes:</p>
+<p><span class="math display">\left\|\mu_q - \mu_\theta\right\|^2 = \frac{(1-\alpha_t)^2}{(1-\bar\alpha_t)\, \alpha_t}\left\|\varepsilon - \epsilon_\theta(x_t, t)\right\|^2.</span></p>
+<p>Combining with the <span class="math inline">1/(2\sigma_q^2)</span> factor from the KL divergence, the full training loss is:</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Full Weighted DDPM Loss:</strong></p>
+<p><span class="math display">\mathcal{L}(\theta) = \sum_{t=1}^{T} \mathbb{E}_{q(x_t \mid x_0)}\!\left[\frac{1}{2\sigma_q^2(t)} \cdot \frac{(1-\alpha_t)^2}{(1-\bar\alpha_t)\, \alpha_t}\left\|\epsilon_\theta(x_t, t) - \varepsilon\right\|^2\right].</span></p>
+</div>
+</div>
+</div>
+<p>Ho et al.&nbsp;(2020) found that dropping the time-dependent weighting and using a <strong>simplified loss</strong> with uniform weights leads to better sample quality:</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
@@ -777,11 +896,23 @@ Figure&nbsp;17.1: The diffusion model framework: the forward process gradually a
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Since <span class="math inline">x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \varepsilon</span>, predicting the noise <span class="math inline">\varepsilon</span> is equivalent to predicting <span class="math inline">x_0</span>. Empirically, training the network to predict <span class="math inline">\varepsilon</span> leads to better sample quality than directly predicting <span class="math inline">x_0</span> or <span class="math inline">\mu</span>. This is because the noise prediction objective gives equal weight to all noise levels.</p>
+<p>Since <span class="math inline">x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \varepsilon</span>, predicting the noise <span class="math inline">\varepsilon</span> is equivalent to predicting <span class="math inline">x_0</span>. Empirically, training the network to predict <span class="math inline">\varepsilon</span> leads to better sample quality than directly predicting <span class="math inline">x_0</span> or <span class="math inline">\mu</span>. The simplified loss drops the time-dependent weighting, giving equal importance to all noise levels.</p>
 </div>
 </div>
-<section id="ddpm-algorithm" class="level3" data-number="17.6.1">
-<h3 data-number="17.6.1" class="anchored" data-anchor-id="ddpm-algorithm"><span class="header-section-number">17.6.1</span> DDPM Training Algorithm</h3>
+<p><a href="#fig-training-loss-derivation" class="quarto-xref">Figure&nbsp;<span>17.4</span></a> summarizes the chain of reasoning that leads from the log-likelihood objective to the simplified DDPM training loss.</p>
+<div id="fig-training-loss-derivation" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-training-loss-derivation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch17-training-loss-derivation.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;17.4: Derivation of the DDPM training loss. Starting from the log-likelihood, we apply the ELBO decomposition, identify the tractable Gaussian posterior, reduce each KL divergence to mean matching, reparameterize via noise prediction, and arrive at the simplified loss."><img src="figures/ch17-training-loss-derivation.svg" class="img-fluid figure-img" style="width:100.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-training-loss-derivation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17.4: Derivation of the DDPM training loss. Starting from the log-likelihood, we apply the ELBO decomposition, identify the tractable Gaussian posterior, reduce each KL divergence to mean matching, reparameterize via noise prediction, and arrive at the simplified loss.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="ddpm-algorithm" class="level3" data-number="17.6.4">
+<h3 data-number="17.6.4" class="anchored" data-anchor-id="ddpm-algorithm"><span class="header-section-number">17.6.4</span> DDPM Training Algorithm</h3>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -792,20 +923,47 @@ Figure&nbsp;17.1: The diffusion model framework: the forward process gradually a
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>repeat
-    // Sample a data point and random timestep
-    x_0 ~ P_data
-    t ~ Uniform({1, ..., T})
-    epsilon ~ N(0, I)
-    // Compute noisy sample and take gradient step
-    x_t &lt;- sqrt(alpha_bar_t) * x_0 + sqrt(1 - alpha_bar_t) * epsilon
-    Take gradient step on grad_theta ||epsilon - epsilon_theta(x_t, t)||^2
-until converged</code></pre>
+<table class="plain table-sm small caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 92%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;"></td>
+<td style="text-align: left;"><strong>repeat</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">1:</td>
+<td style="text-align: left;"><span class="math inline">\quad x_0 \sim P_{\text{data}}</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">2:</td>
+<td style="text-align: left;"><span class="math inline">\quad t \sim \text{Uniform}(\{1, \ldots, T\})</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">3:</td>
+<td style="text-align: left;"><span class="math inline">\quad \varepsilon \sim \mathcal{N}(0, I)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">4:</td>
+<td style="text-align: left;"><span class="math inline">\quad x_t \leftarrow \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \varepsilon</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">5:</td>
+<td style="text-align: left;"><span class="math inline">\quad</span> Take gradient step on <span class="math inline">\nabla_\theta \|\varepsilon - \epsilon_\theta(x_t, t)\|^2</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;"></td>
+<td style="text-align: left;"><strong>until</strong> converged</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </section>
-<section id="ddpm-sampling" class="level3" data-number="17.6.2">
-<h3 data-number="17.6.2" class="anchored" data-anchor-id="ddpm-sampling"><span class="header-section-number">17.6.2</span> DDPM Sampling Algorithm</h3>
+<section id="ddpm-sampling" class="level3" data-number="17.6.5">
+<h3 data-number="17.6.5" class="anchored" data-anchor-id="ddpm-sampling"><span class="header-section-number">17.6.5</span> DDPM Sampling Algorithm</h3>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -816,65 +974,197 @@ until converged</code></pre>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>// Start from pure noise
-x_T ~ N(0, I)
-for t = T, T-1, ..., 1 do
-    z ~ N(0, I) if t &gt; 1, else z = 0
-    x_{t-1} = (1/sqrt(alpha_t)) * (x_t - (beta_t/sqrt(1 - alpha_bar_t)) * epsilon_theta(x_t, t)) + sigma_t * z
-end for
-return x_0</code></pre>
+<table class="plain table-sm small caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 92%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1:</td>
+<td style="text-align: left;"><span class="math inline">x_T \sim \mathcal{N}(0, I)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2:</td>
+<td style="text-align: left;"><strong>for</strong> <span class="math inline">t = T, T{-}1, \ldots, 1</span> <strong>do</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3:</td>
+<td style="text-align: left;"><span class="math inline">\quad z \sim \mathcal{N}(0, I)</span> if <span class="math inline">t &gt; 1</span>, else <span class="math inline">z = 0</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4:</td>
+<td style="text-align: left;"><span class="math inline">\quad x_{t-1} = \frac{1}{\sqrt{\alpha_t}}\!\left(x_t - \frac{\beta_t}{\sqrt{1-\bar\alpha_t}}\, \epsilon_\theta(x_t, t)\right) + \sigma_t z</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5:</td>
+<td style="text-align: left;"><strong>end for</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6:</td>
+<td style="text-align: left;"><strong>return</strong> <span class="math inline">x_0</span></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
-<div class="figure-container">
-  <div id="fig-score-function"></div>
-  <div class="figure-caption">Figure 11.3: Score function ∇_x log q(x_t) for a Gaussian mixture at different noise levels. At high noise (large t), the score field is smooth and points toward the global center. At low noise (small t), it resolves individual modes.</div>
+<div id="fig-score-function" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-score-function-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch17-score-function.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;17.5: Score function \nabla_x \log q(x_t) for a Gaussian mixture at different noise levels. At high noise (large t), the score field is smooth and points toward the global center. At low noise (small t), it resolves individual modes."><img src="figures/ch17-score-function.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-score-function-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17.5: Score function <span class="math inline">\nabla_x \log q(x_t)</span> for a Gaussian mixture at different noise levels. At high noise (large <span class="math inline">t</span>), the score field is smooth and points toward the global center. At low noise (small <span class="math inline">t</span>), it resolves individual modes.
+</figcaption>
+</figure>
 </div>
 </section>
 </section>
-<section id="interactive-demo" class="level2" data-number="17.7">
-<h2 data-number="17.7" class="anchored" data-anchor-id="interactive-demo"><span class="header-section-number">17.7</span> Interactive Demo</h2>
-<p>The following code demonstrates the forward diffusion process on a 1D Gaussian mixture. You can modify the noise schedule and number of steps to see how the data distribution transforms into pure noise.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| eval: false</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Parameters</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>T <span class="op">=</span> <span class="dv">50</span>            <span class="co"># number of diffusion steps</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>n_samples <span class="op">=</span> <span class="dv">5000</span>  <span class="co"># number of data points</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>beta_min, beta_max <span class="op">=</span> <span class="fl">1e-3</span>, <span class="fl">0.02</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Linear noise schedule</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>betas <span class="op">=</span> np.linspace(beta_min, beta_max, T)</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>alphas <span class="op">=</span> <span class="fl">1.0</span> <span class="op">-</span> betas</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>alpha_bar <span class="op">=</span> np.cumprod(alphas)</span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Sample from a Gaussian mixture (3 modes)</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>np.random.seed(<span class="dv">42</span>)</span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>modes <span class="op">=</span> [<span class="op">-</span><span class="fl">3.0</span>, <span class="fl">0.0</span>, <span class="fl">4.0</span>]</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> [<span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">0.3</span>]</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>x0 <span class="op">=</span> np.zeros(n_samples)</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(n_samples):</span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    k <span class="op">=</span> np.random.choice(<span class="bu">len</span>(modes), p<span class="op">=</span>weights)</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    x0[i] <span class="op">=</span> modes[k] <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> np.random.randn()</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Forward diffusion at selected timesteps</span></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>steps_to_show <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">5</span>, <span class="dv">15</span>, <span class="dv">30</span>, <span class="dv">49</span>]</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Forward Diffusion Process (1D Gaussian Mixture)"</span>)</span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"="</span> <span class="op">*</span> <span class="dv">50</span>)</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> t_idx <span class="kw">in</span> steps_to_show:</span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> t_idx <span class="op">==</span> <span class="dv">0</span>:</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        xt <span class="op">=</span> x0.copy()</span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        eps <span class="op">=</span> np.random.randn(n_samples)</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>        xt <span class="op">=</span> np.sqrt(alpha_bar[t_idx]) <span class="op">*</span> x0 <span class="op">+</span> np.sqrt(<span class="dv">1</span> <span class="op">-</span> alpha_bar[t_idx]) <span class="op">*</span> eps</span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    mean_val <span class="op">=</span> np.mean(xt)</span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    std_val <span class="op">=</span> np.std(xt)</span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"t=</span><span class="sc">{</span>t_idx<span class="sc">:3d}</span><span class="ss">  alpha_bar=</span><span class="sc">{</span>alpha_bar[<span class="bu">min</span>(t_idx, T<span class="op">-</span><span class="dv">1</span>)]<span class="sc">:.4f}</span><span class="ss">"</span></span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>          <span class="ss">f"  mean=</span><span class="sc">{</span>mean_val<span class="sc">:+.3f}</span><span class="ss">  std=</span><span class="sc">{</span>std_val<span class="sc">:.3f}</span><span class="ss">"</span>)</span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>()</span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"At t=</span><span class="sc">{</span>T<span class="op">-</span><span class="dv">1</span><span class="sc">}</span><span class="ss">: alpha_bar = </span><span class="sc">{</span>alpha_bar[<span class="op">-</span><span class="dv">1</span>]<span class="sc">:.6f}</span><span class="ss">"</span>)</span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Signal nearly destroyed: sqrt(alpha_bar) = </span><span class="sc">{</span>np<span class="sc">.</span>sqrt(alpha_bar[<span class="op">-</span><span class="dv">1</span>])<span class="sc">:.4f}</span><span class="ss">"</span>)</span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Noise dominates: sqrt(1-alpha_bar) = </span><span class="sc">{</span>np<span class="sc">.</span>sqrt(<span class="dv">1</span><span class="op">-</span>alpha_bar[<span class="op">-</span><span class="dv">1</span>])<span class="sc">:.4f}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="ddim" class="level2" data-number="17.7">
+<h2 data-number="17.7" class="anchored" data-anchor-id="ddim"><span class="header-section-number">17.7</span> DDIM: Denoising Diffusion Implicit Models</h2>
+<section id="ddim-motivation" class="level3" data-number="17.7.1">
+<h3 data-number="17.7.1" class="anchored" data-anchor-id="ddim-motivation"><span class="header-section-number">17.7.1</span> Challenge: Slow DDPM Sampling</h3>
+<p>A major limitation of DDPM is that the reverse process requires <span class="math inline">T</span> sequential denoising steps (typically <span class="math inline">T = 1000</span>), each involving a forward pass through the neural network <strong>and</strong> sampling fresh random noise. This makes generation slow.</p>
+<p>Recall the DDPM reverse step:</p>
+<p><span class="math display">x_{t-1} = \frac{1}{\sqrt{\alpha_t}}\!\left(x_t - \frac{1-\alpha_t}{\sqrt{1-\bar\alpha_t}}\, \widehat{\epsilon}_\theta(x_t)\right) + \sigma_q(t) \cdot z, \qquad z \sim \mathcal{N}(0, I).</span></p>
+<p>The stochastic noise <span class="math inline">z</span> is added at every step, which means: (1) we cannot skip steps, and (2) the same starting noise <span class="math inline">x_T</span> can produce different outputs.</p>
+</section>
+<section id="ddim-derivation" class="level3" data-number="17.7.2">
+<h3 data-number="17.7.2" class="anchored" data-anchor-id="ddim-derivation"><span class="header-section-number">17.7.2</span> Idea: Deterministic Sampling</h3>
+<p>DDIM (Song et al., 2021) proposes a <strong>deterministic</strong> sampler that reuses the same trained noise estimator <span class="math inline">\widehat{\epsilon}_\theta</span> but removes the stochastic component. The only source of randomness is the initial noise <span class="math inline">x_T \sim \mathcal{N}(0, I)</span>.</p>
+<p>The construction proceeds in two steps. First, given the noise estimator <span class="math inline">\widehat{\epsilon}_\theta(x_t) \approx \varepsilon</span>, we can approximate <span class="math inline">x_0</span> from any <span class="math inline">x_t</span>:</p>
+<p><span class="math display">\widehat{x}_0 = \frac{1}{\sqrt{\bar\alpha_t}}\!\left(x_t - \sqrt{1-\bar\alpha_t}\, \widehat{\epsilon}_\theta(x_t)\right).</span></p>
+<p>Second, recall the forward process formula <span class="math inline">x_{t-1} = \sqrt{\bar\alpha_{t-1}}\, x_0 + \sqrt{1-\bar\alpha_{t-1}}\, \varepsilon</span>. Substituting <span class="math inline">x_0 \leftarrow \widehat{x}_0</span> and <span class="math inline">\varepsilon \leftarrow \widehat{\epsilon}_\theta(x_t)</span>:</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>DDIM Update Rule.</strong> Let <span class="math inline">\gamma_t = \bar\alpha_t</span>. The deterministic reverse step is:</p>
+<p><span class="math display">x_{t-1} = \sqrt{\gamma_{t-1}} \cdot \frac{x_t - \sqrt{1-\gamma_t}\, \widehat{\epsilon}_\theta(x_t)}{\sqrt{\gamma_t}} + \sqrt{1-\gamma_{t-1}}\, \widehat{\epsilon}_\theta(x_t).</span></p>
+</div>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Properties of DDIM
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><strong>Deterministic:</strong> Given <span class="math inline">\widehat{\epsilon}_\theta(\cdot)</span>, the mapping from <span class="math inline">x_T</span> to <span class="math inline">x_0</span> is a fixed function <span class="math inline">x_0 = F(x_T)</span>. The same initial noise always produces the same image.</li>
+<li><strong>Faster inference:</strong> Since DDIM does not rely on a Markov chain with injected noise, we can subsample timesteps (e.g., use only 50 steps out of 1000) and still obtain high-quality samples. As <span class="math inline">T \to \infty</span>, <span class="math inline">\gamma_T \to 0</span> and the discretization error vanishes.</li>
+<li><strong>Same training:</strong> DDIM uses the exact same trained model <span class="math inline">\widehat{\epsilon}_\theta</span> as DDPM — no retraining is needed.</li>
+</ul>
+</div>
+</div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Algorithm: DDIM Sampling
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Choose a subsequence of timesteps <span class="math inline">\tau_1, \tau_2, \ldots, \tau_S</span> with <span class="math inline">S \ll T</span>.</p>
+<table class="plain table-sm small caption-top table">
+<colgroup>
+<col style="width: 8%">
+<col style="width: 92%">
+</colgroup>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">1:</td>
+<td style="text-align: left;"><span class="math inline">x_T \sim \mathcal{N}(0, I)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">2:</td>
+<td style="text-align: left;"><strong>for</strong> <span class="math inline">i = S, S{-}1, \ldots, 1</span> <strong>do</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">3:</td>
+<td style="text-align: left;"><span class="math inline">\quad t \leftarrow \tau_i,\quad s \leftarrow \tau_{i-1}</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">4:</td>
+<td style="text-align: left;"><span class="math inline">\quad \widehat{x}_0 = \frac{1}{\sqrt{\bar\alpha_t}}\!\left(x_t - \sqrt{1-\bar\alpha_t}\, \epsilon_\theta(x_t, t)\right)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">5:</td>
+<td style="text-align: left;"><span class="math inline">\quad x_s = \sqrt{\bar\alpha_s}\, \widehat{x}_0 + \sqrt{1-\bar\alpha_s}\, \epsilon_\theta(x_t, t)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">6:</td>
+<td style="text-align: left;"><strong>end for</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">7:</td>
+<td style="text-align: left;"><strong>return</strong> <span class="math inline">x_0</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</section>
+<section id="latent-diffusion" class="level2" data-number="17.8">
+<h2 data-number="17.8" class="anchored" data-anchor-id="latent-diffusion"><span class="header-section-number">17.8</span> Latent Diffusion and Conditional Generation</h2>
+<section id="conditional" class="level3" data-number="17.8.1">
+<h3 data-number="17.8.1" class="anchored" data-anchor-id="conditional"><span class="header-section-number">17.8.1</span> From Unconditional to Conditional Generation</h3>
+<p>The DDPM framework generates images from the unconditional data distribution <span class="math inline">P_{\text{data}}</span>. In practice, we often want <strong>conditional generation</strong>: producing an image that matches a given text description. That is, we want to sample from:</p>
+<p><span class="math display">P(\text{image} \mid \text{text}).</span></p>
+<p>This is the problem solved by systems like Stable Diffusion and DALL-E.</p>
+</section>
+<section id="latent-diffusion-models" class="level3" data-number="17.8.2">
+<h3 data-number="17.8.2" class="anchored" data-anchor-id="latent-diffusion-models"><span class="header-section-number">17.8.2</span> Latent Diffusion Models</h3>
+<div id="fig-latent-diffusion-architecture" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-latent-diffusion-architecture-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch17-latent-diffusion-architecture.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-6" title="Figure&nbsp;17.6: Latent diffusion model architecture (Rombach et al., 2022). An image is encoded into a low-dimensional latent space by a pretrained autoencoder. The diffusion process (forward noising and learned reverse denoising) operates entirely in this latent space, conditioned on auxiliary inputs such as text embeddings. The decoder maps the denoised latent back to pixel space."><img src="figures/ch17-latent-diffusion-architecture.svg" class="img-fluid figure-img" style="width:100.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-latent-diffusion-architecture-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;17.6: Latent diffusion model architecture (Rombach et al., 2022). An image is encoded into a low-dimensional latent space by a pretrained autoencoder. The diffusion process (forward noising and learned reverse denoising) operates entirely in this latent space, conditioned on auxiliary inputs such as text embeddings. The decoder maps the denoised latent back to pixel space.
+</figcaption>
+</figure>
+</div>
+<p>Latent diffusion models (Rombach et al., 2022) combine three key ideas:</p>
+<ol type="1">
+<li><p><strong>Latent space:</strong> Instead of running the diffusion process in pixel space (high-dimensional), first encode the image into a lower-dimensional latent representation using a pretrained VAE encoder, run diffusion in latent space, then decode back to pixels. This dramatically reduces computational cost.</p></li>
+<li><p><strong>Conditional denoising:</strong> The noise estimator is conditioned on additional information:</p></li>
+</ol>
+<p><span class="math display">\widehat{\epsilon}_\theta(x_t, t, c),</span></p>
+<p>where <span class="math inline">c</span> is a conditioning signal (e.g., a text embedding from a language model like CLIP). The network learns to denoise differently depending on the text prompt.</p>
+<ol start="3" type="1">
+<li><strong>Classifier-free guidance:</strong> At inference time, the model interpolates between conditional and unconditional predictions to strengthen the influence of the text prompt:</li>
+</ol>
+<p><span class="math display">\widehat{\epsilon} = \widehat{\epsilon}_\theta(x_t, t, \varnothing) + w \cdot \left(\widehat{\epsilon}_\theta(x_t, t, c) - \widehat{\epsilon}_\theta(x_t, t, \varnothing)\right),</span></p>
+<p>where <span class="math inline">w &gt; 1</span> is the guidance scale and <span class="math inline">\varnothing</span> denotes the null (unconditional) prompt.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: The Text-to-Image Pipeline
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The full Stable Diffusion pipeline consists of:</p>
+<ol type="1">
+<li><strong>Text encoder</strong> (e.g., CLIP): converts the text prompt into an embedding <span class="math inline">c</span>.</li>
+<li><strong>U-Net denoiser</strong> <span class="math inline">\widehat{\epsilon}_\theta(x_t, t, c)</span>: iteratively denoises a latent representation, conditioned on <span class="math inline">c</span> and timestep <span class="math inline">t</span>.</li>
+<li><strong>VAE decoder</strong>: converts the final latent <span class="math inline">x_0</span> back into a high-resolution image.</li>
+</ol>
+<p>All components are trained separately or jointly, and the entire system can generate photorealistic images from arbitrary text descriptions.</p>
+</div>
+</div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -885,185 +1175,20 @@ return x_0</code></pre>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>In the final lecture, we study the transformer architecture—attention mechanisms, positional encoding, and how optimization principles underpin training modern large language models.</p>
+<p>In the final lecture, we study the transformer architecture — attention mechanisms, positional encoding, and how optimization principles underpin training modern large language models.</p>
 </div>
 </div>
-<!-- Plotly.js for interactive figures -->
-<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-
-  const plotlyConfig = {responsive: true, displayModeBar: false};
-  const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-
-  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
-
-  function legendStyle() {
-    return {
-      font: {family: figFont, size: 13, color: css('--fig-text') || '#3d3530'},
-      bgcolor: (css('--fig-bg') || '#f0ebe5') + 'dd',
-      bordercolor: css('--fig-grid') || '#e0d9d1',
-      borderwidth: 1,
-    };
-  }
-
-  function themeLayout(extra = {}) {
-    return Object.assign({
-      paper_bgcolor: css('--fig-bg') || '#f0ebe5',
-      plot_bgcolor: css('--fig-plot-bg') || '#faf7f3',
-      font: { family: figFont, color: css('--fig-text') || '#3d3530', size: 14 },
-    }, extra);
-  }
-
-  function themeAxis(title, extra = {}) {
-    return Object.assign({
-      title: {text: title, font: {family: figFont, size: 14}},
-      gridcolor: css('--fig-grid') || '#e0d9d1',
-      zerolinecolor: css('--fig-grid') || '#e0d9d1',
-      linecolor: css('--fig-axis') || '#968a80',
-      tickfont: {family: figFont, size: 12, color: css('--fig-axis') || '#968a80'},
-    }, extra);
-  }
-
-  function renderNoiseSchedule() {
-    const el = document.getElementById('fig-noise-schedule');
-    if (!el) return;
-    const T = 1000;
-    const betaMin = 1e-4, betaMax = 0.02;
-    const ts = [], betas = [], alphaBars = [];
-    let ab = 1.0;
-    for (let t = 1; t <= T; t++) {
-      const beta = betaMin + (betaMax - betaMin) * (t - 1) / (T - 1);
-      ts.push(t);
-      betas.push(beta);
-      ab *= (1 - beta);
-      alphaBars.push(ab);
-    }
-    const layout = themeLayout({
-      margin: { t: 30, r: 30, b: 50, l: 60 },
-      height: 360,
-      xaxis: themeAxis('Timestep t'),
-      yaxis: themeAxis('Value'),
-      showlegend: true,
-      legend: Object.assign(legendStyle(), {x: 0.55, y: 0.95}),
-    });
-    Plotly.newPlot('fig-noise-schedule', [
-      { x: ts, y: betas, name: '\u03B2\u209C', line: { color: '#ad8480', width: 2 } },
-      { x: ts, y: alphaBars, name: '\u0101\u209C', line: { color: '#8fa3b8', width: 2.5 } },
-    ], layout, plotlyConfig);
-  }
-
-  function renderForwardProcess() {
-    const el = document.getElementById('fig-forward-process');
-    if (!el) return;
-    const T = 200, betaMin = 1e-3, betaMax = 0.03;
-    const alphaBar = [];
-    let ab = 1.0;
-    for (let t = 0; t < T; t++) {
-      const beta = betaMin + (betaMax - betaMin) * t / (T - 1);
-      ab *= (1 - beta);
-      alphaBar.push(ab);
-    }
-    const xRange = [];
-    for (let x = -8; x <= 8; x += 0.05) xRange.push(x);
-
-    function gaussPdf(x, mu, sigma) {
-      return Math.exp(-0.5 * ((x - mu) / sigma) ** 2) / (sigma * Math.sqrt(2 * Math.PI));
-    }
-    function mixturePdf(x, abT) {
-      const modes = [-3, 0, 4], wts = [0.3, 0.4, 0.3], sigmaData = 0.5;
-      let p = 0;
-      for (let k = 0; k < 3; k++) {
-        const mu = Math.sqrt(abT) * modes[k];
-        const sigma = Math.sqrt(abT * sigmaData * sigmaData + (1 - abT));
-        p += wts[k] * gaussPdf(x, mu, sigma);
-      }
-      return p;
-    }
-
-    const steps = [0, 10, 50, 100, 199];
-    const colors = ['#8fa3b8', '#7a9a7e', '#b8995e', '#ad8480', '#b56b6b'];
-    const traces = steps.map((t, i) => {
-      const abVal = t === 0 ? 1.0 : alphaBar[t];
-      const y = xRange.map(x => mixturePdf(x, abVal));
-      return {
-        x: xRange, y: y,
-        name: t === 0 ? 't = 0 (data)' : `t = ${t}`,
-        line: { color: colors[i], width: 2, dash: t === 199 ? 'dash' : 'solid' },
-        fill: t === 0 ? 'tozeroy' : undefined,
-        fillcolor: t === 0 ? 'rgba(143,163,184,0.15)' : undefined,
-      };
-    });
-
-    const layout = themeLayout({
-      margin: { t: 30, r: 30, b: 50, l: 60 },
-      height: 380,
-      xaxis: themeAxis('x'),
-      yaxis: themeAxis('Density'),
-      showlegend: true,
-      legend: Object.assign(legendStyle(), {x: 0.7, y: 0.95}),
-    });
-    Plotly.newPlot('fig-forward-process', traces, layout, plotlyConfig);
-  }
-
-  function renderScoreFunction() {
-    const el = document.getElementById('fig-score-function');
-    if (!el) return;
-    const modes = [-3, 0, 4], wts = [0.3, 0.4, 0.3], sigmaData = 0.5;
-    const xRange = [];
-    for (let x = -8; x <= 8; x += 0.1) xRange.push(x);
-
-    function gaussPdf(x, mu, sigma) {
-      return Math.exp(-0.5 * ((x - mu) / sigma) ** 2) / (sigma * Math.sqrt(2 * Math.PI));
-    }
-
-    function scoreAt(x, noiseVar) {
-      let p = 0, dp = 0;
-      for (let k = 0; k < 3; k++) {
-        const sigma2 = sigmaData * sigmaData + noiseVar;
-        const sigma = Math.sqrt(sigma2);
-        const g = gaussPdf(x, modes[k], sigma);
-        p += wts[k] * g;
-        dp += wts[k] * g * (-(x - modes[k]) / sigma2);
-      }
-      return p > 1e-10 ? dp / p : 0;
-    }
-
-    const noises = [0.01, 0.5, 2.0, 8.0];
-    const labels = ['Low noise (t small)', 'Medium-low', 'Medium-high', 'High noise (t large)'];
-    const colors = ['#8fa3b8', '#7a9a7e', '#b8995e', '#b56b6b'];
-
-    const traces = noises.map((nv, i) => ({
-      x: xRange,
-      y: xRange.map(x => scoreAt(x, nv)),
-      name: labels[i],
-      line: { color: colors[i], width: 2 },
-    }));
-
-    const layout = themeLayout({
-      margin: { t: 30, r: 30, b: 50, l: 60 },
-      height: 380,
-      xaxis: themeAxis('x'),
-      yaxis: themeAxis('Score: d/dx log q(x)'),
-      showlegend: true,
-      legend: Object.assign(legendStyle(), {x: 0.02, y: 0.98}),
-    });
-    Plotly.newPlot('fig-score-function', traces, layout, plotlyConfig);
-  }
-
-  renderNoiseSchedule();
-  renderForwardProcess();
-  renderScoreFunction();
-});
-</script>
+</section>
 </section>
 <section id="summary" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
 <ul>
 <li><strong>Forward diffusion process.</strong> Starting from data <span class="math inline">x_0 \sim q(x_0)</span>, the forward process adds Gaussian noise over <span class="math inline">T</span> steps via <span class="math inline">q(x_t | x_{t-1}) = \mathcal{N}(x_t;\, \sqrt{1-\beta_t}\, x_{t-1},\, \beta_t I)</span>; the closed-form marginal is <span class="math inline">q(x_t | x_0) = \mathcal{N}(x_t;\, \sqrt{\bar\alpha_t}\, x_0,\, (1-\bar\alpha_t)I)</span> where <span class="math inline">\bar\alpha_t = \prod_{s=1}^{t}(1-\beta_s)</span>.</li>
 <li><strong>Reverse process and denoising.</strong> The generative model learns a reverse Markov chain <span class="math inline">p_\theta(x_{t-1}|x_t)</span> that removes noise step-by-step; the neural network <span class="math inline">\epsilon_\theta(x_t, t)</span> predicts the noise added at each step.</li>
-<li><strong>ELBO and training objective.</strong> The variational lower bound decomposes into per-step KL divergences; the simplified DDPM loss reduces to <span class="math inline">\mathbb{E}_{t, x_0, \epsilon}\bigl[\|\epsilon - \epsilon_\theta(\sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \epsilon,\, t)\|^2\bigr]</span>—a denoising score-matching objective.</li>
+<li><strong>ELBO and training objective.</strong> The variational lower bound decomposes into per-step KL divergences between the tractable posterior <span class="math inline">q(x_{t-1} \mid x_t, x_0)</span> and the learned reverse transition <span class="math inline">p_\theta(x_{t-1} \mid x_t)</span>. Setting equal variances reduces each KL to a mean-matching objective.</li>
+<li><strong>Posterior and noise prediction.</strong> The posterior <span class="math inline">q(x_{t-1} \mid x_t, x_0)</span> is Gaussian with mean <span class="math inline">\mu_q(x_t, x_0)</span>. Substituting <span class="math inline">x_0 = (x_t - \sqrt{1-\bar\alpha_t}\,\varepsilon)/\sqrt{\bar\alpha_t}</span> yields the noise prediction parameterization; the simplified DDPM loss is <span class="math inline">\mathbb{E}_{t, x_0, \varepsilon}\bigl[\|\varepsilon - \epsilon_\theta(\sqrt{\bar\alpha_t}\, x_0 + \sqrt{1-\bar\alpha_t}\, \varepsilon,\, t)\|^2\bigr]</span>.</li>
+<li><strong>DDIM.</strong> Denoising Diffusion Implicit Models replace the stochastic DDPM reverse step with a deterministic update, enabling faster sampling by subsampling timesteps while reusing the same trained <span class="math inline">\epsilon_\theta</span>.</li>
+<li><strong>Latent diffusion.</strong> Running diffusion in a learned latent space (rather than pixel space) and conditioning the denoiser on text embeddings enables text-to-image generation, as in Stable Diffusion.</li>
 <li><strong>Score matching connection.</strong> The score function <span class="math inline">\nabla_{x_t} \log q(x_t)</span> points toward higher-density regions; the denoising network implicitly estimates this score, linking diffusion models to score-based generative modeling.</li>
 </ul>
 
@@ -1484,50 +1609,6 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>
-// Plotly Warmtone theming helpers — shared across all lectures
-// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
-const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
-
-function css(v) {
-  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-}
-
-function legendStyle() {
-  return {
-    font: {family: figFont, size: 13, color: css('--fig-text')},
-    bgcolor: css('--fig-bg') + 'dd',
-    bordercolor: css('--fig-grid'),
-    borderwidth: 1,
-  };
-}
-
-function themeLayout(extra) {
-  return Object.assign({
-    paper_bgcolor: css('--fig-bg'),
-    plot_bgcolor: css('--fig-plot-bg'),
-    font: {family: figFont, color: css('--fig-text'), size: 14},
-  }, extra || {});
-}
-
-function themeAxis(title, extra) {
-  return Object.assign({
-    title: {text: title, font: {family: figFont, size: 14}},
-    gridcolor: css('--fig-grid'),
-    zerolinecolor: css('--fig-grid'),
-    linecolor: css('--fig-axis'),
-    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
-  }, extra || {});
-}
-
-// Plotly color sequences matching the Warmtone palette
-const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
-];
-</script>
 <script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
 (function() {
   let previousOnload = window.onload;

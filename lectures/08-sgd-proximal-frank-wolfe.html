@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.36">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>8&nbsp; SGD, Proximal Gradient, and Frank-Wolfe – S&amp;DS 431/631 — Optimization and Computation</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../lectures/09-lp-formulation-geometry.html" rel="next">
+<link href="../lectures/07-momentum-adaptive.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-1db14e1c4cc35bfe1d9badc9e4551eed.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-434abab37f7d394f280d9c89d7fbc13f.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="../site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="../site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="../site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
+<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script><script src="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () {
+ var mathElements = document.getElementsByClassName("math");
+ var macros = [];
+ for (var i = 0; i < mathElements.length; i++) {
+  var texText = mathElements[i].firstChild;
+  if (mathElements[i].tagName == "SPAN") {
+   katex.render(texText.data, mathElements[i], {
+    displayMode: mathElements[i].classList.contains('display'),
+    throwOnError: false,
+    macros: macros,
+    fleqn: false
+   });
+}}});
+  </script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@latest/dist/katex.min.css">
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar floating quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html">First-Order Methods</a></li><li class="breadcrumb-item"><a href="../lectures/08-sgd-proximal-frank-wolfe.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">S&amp;DS 431/631 — Optimization and Computation</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Welcome</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Preparation</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/01-introduction.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Introduction and Motivation</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/02-math-background.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Mathematical Background</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true">
+ <span class="menu-text">Convex Optimization Basics</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/03-convex-sets.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Convex Sets</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/04-convex-functions.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Convex Functions</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/05-convex-optimization.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Convex Optimization</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true">
+ <span class="menu-text">First-Order Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true">
+ <span class="menu-text">Linear Programming</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/09-lp-formulation-geometry.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">LP Formulation and Geometry</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/10-simplex-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">The Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/11-lp-duality.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">LP Duality</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/12-dual-simplex.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">The Dual Simplex Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/13-lp-applications.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">LP Applications and Game Theory</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true">
+ <span class="menu-text">Second-Order and Interior Point Methods</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/15-ellipsoid-method.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">15</span>&nbsp; <span class="chapter-title">The Ellipsoid Method</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/16-interior-point-methods.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">16</span>&nbsp; <span class="chapter-title">Interior Point Methods</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true">
+ <span class="menu-text">Modern Computation Models</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-6" role="navigation" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-6" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/17-diffusion-models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">17</span>&nbsp; <span class="chapter-title">Diffusion Models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/18-transformers.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">18</span>&nbsp; <span class="chapter-title">Transformers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../lectures/summary.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Course Summary</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#what-will-be-covered" id="toc-what-will-be-covered" class="nav-link active" data-scroll-target="#what-will-be-covered">What Will Be Covered</a></li>
+  <li><a href="#sgd" id="toc-sgd" class="nav-link" data-scroll-target="#sgd"><span class="header-section-number">8.1</span> Stochastic Gradient Descent</a>
+  <ul class="collapse">
+  <li><a href="#finite-sum" id="toc-finite-sum" class="nav-link" data-scroll-target="#finite-sum"><span class="header-section-number">8.1.1</span> Finite-Sum Objectives</a></li>
+  <li><a href="#sgd-algorithm" id="toc-sgd-algorithm" class="nav-link" data-scroll-target="#sgd-algorithm"><span class="header-section-number">8.1.2</span> The SGD Algorithm</a></li>
+  <li><a href="#sgd-convergence" id="toc-sgd-convergence" class="nav-link" data-scroll-target="#sgd-convergence"><span class="header-section-number">8.1.3</span> Convergence of SGD</a></li>
+  <li><a href="#minibatch" id="toc-minibatch" class="nav-link" data-scroll-target="#minibatch"><span class="header-section-number">8.1.4</span> Minibatch SGD</a></li>
+  </ul></li>
+  <li><a href="#proximal" id="toc-proximal" class="nav-link" data-scroll-target="#proximal"><span class="header-section-number">8.2</span> Proximal Gradient Methods</a>
+  <ul class="collapse">
+  <li><a href="#composite" id="toc-composite" class="nav-link" data-scroll-target="#composite"><span class="header-section-number">8.2.1</span> Composite Objective Functions</a></li>
+  <li><a href="#proximal-idea" id="toc-proximal-idea" class="nav-link" data-scroll-target="#proximal-idea"><span class="header-section-number">8.2.2</span> From GD to Proximal Gradient: The Key Idea</a></li>
+  <li><a href="#proximal-mapping" id="toc-proximal-mapping" class="nav-link" data-scroll-target="#proximal-mapping"><span class="header-section-number">8.2.3</span> Proximal Mapping</a></li>
+  <li><a href="#proximal-gd" id="toc-proximal-gd" class="nav-link" data-scroll-target="#proximal-gd"><span class="header-section-number">8.2.4</span> Proximal Gradient Descent</a></li>
+  <li><a href="#proximal-convergence" id="toc-proximal-convergence" class="nav-link" data-scroll-target="#proximal-convergence"><span class="header-section-number">8.2.5</span> Convergence</a></li>
+  <li><a href="#simple-h" id="toc-simple-h" class="nav-link" data-scroll-target="#simple-h"><span class="header-section-number">8.2.6</span> Examples of Simple <span class="math inline">h</span></a></li>
+  </ul></li>
+  <li><a href="#frank-wolfe" id="toc-frank-wolfe" class="nav-link" data-scroll-target="#frank-wolfe"><span class="header-section-number">8.3</span> Frank-Wolfe (Conditional Gradient)</a>
+  <ul class="collapse">
+  <li><a href="#fw-algorithm" id="toc-fw-algorithm" class="nav-link" data-scroll-target="#fw-algorithm"><span class="header-section-number">8.3.1</span> Algorithm</a></li>
+  <li><a href="#fw-fixed-point" id="toc-fw-fixed-point" class="nav-link" data-scroll-target="#fw-fixed-point"><span class="header-section-number">8.3.2</span> Fixed Point Interpretation</a></li>
+  <li><a href="#fw-convergence" id="toc-fw-convergence" class="nav-link" data-scroll-target="#fw-convergence"><span class="header-section-number">8.3.3</span> Convergence</a></li>
+  <li><a href="#fw-nonconvex" id="toc-fw-nonconvex" class="nav-link" data-scroll-target="#fw-nonconvex"><span class="header-section-number">8.3.4</span> Nonconvex Example: Leading Eigenvector</a></li>
+  </ul></li>
+  <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a>
+  <ul class="collapse">
+  <li><a href="#first-order-methods-comparison" id="toc-first-order-methods-comparison" class="nav-link" data-scroll-target="#first-order-methods-comparison">First-Order Methods Comparison</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html">First-Order Methods</a></li><li class="breadcrumb-item"><a href="../lectures/08-sgd-proximal-frank-wolfe.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>The momentum and adaptive methods from the previous chapter dramatically accelerate gradient descent, but they assume two favorable conditions: that computing the full gradient is feasible, and that the objective is smooth. In practice, these assumptions often fail. This chapter addresses three fundamental challenges that arise in real-world optimization:</p>
+<ul>
+<li><strong>What if the data is too large?</strong> When the objective is a sum over millions of data points, computing the full gradient at each iteration is prohibitively expensive. Stochastic gradient descent (SGD) replaces the exact gradient with a cheap, noisy estimate from a single data point or small batch, making optimization on massive datasets tractable.</li>
+<li><strong>What if the objective is nonsmooth?</strong> Many important objectives in statistics and machine learning involve nonsmooth terms such as the <span class="math inline">\ell_1</span> penalty (for sparsity) or indicator functions (for constraints). Proximal gradient methods elegantly handle these by splitting the objective into a smooth part and a “simple” nonsmooth part, achieving the same convergence rate as gradient descent on purely smooth problems.</li>
+<li><strong>What if there are constraints?</strong> For constrained optimization, projected gradient descent is a natural approach, but projection can be expensive for structured constraint sets (polytopes, nuclear norm balls). The Frank-Wolfe (conditional gradient) method avoids projection entirely by solving a linear minimization at each step — a much cheaper operation for many important constraint sets.</li>
+</ul>
+<p>Together with the momentum and adaptive methods of the previous chapter, these three techniques complete the first-order optimization toolkit.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Companion Notebooks
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.</p>
+<ul>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/08a-subgradient-proximal-gradient.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Proximal Gradient</strong> — solving the Lasso with proximal operators</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/08b-projected-gradient-frank-wolfe.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Projected Gradient and Frank-Wolfe</strong> — constrained optimization on <span class="math inline">\ell_1</span>-balls with signal recovery</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/08c-tv-denoising.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>TV Denoising</strong> — total variation image denoising via proximal gradient in PyTorch</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/08d-coordinate-descent.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Coordinate Descent</strong> — coordinate descent methods and comparisons</li>
+</ul>
+</div>
+</div>
+<section id="what-will-be-covered" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="what-will-be-covered">What Will Be Covered</h2>
+<p>This chapter develops the following topics:</p>
+<ul>
+<li>Stochastic gradient descent for finite-sum objectives and minibatch variants</li>
+<li>Proximal gradient methods for composite (smooth + nonsmooth) objectives</li>
+<li>Frank-Wolfe (conditional gradient) method for constrained optimization</li>
+</ul>
+</section>
+<section id="sgd" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="sgd"><span class="header-section-number">8.1</span> Stochastic Gradient Descent</h2>
+<p>The momentum and adaptive methods developed in the previous chapter still assume that computing the full gradient <span class="math inline">\nabla f(x)</span> is feasible at every iteration. In modern machine learning, however, the objective is typically a sum over millions of data points, <span class="math inline">f(x) = \frac{1}{m}\sum_{i=1}^{m} f_i(x)</span>, and evaluating the full gradient is prohibitively expensive. Stochastic gradient descent (SGD) addresses this by replacing the exact gradient with a cheap, noisy estimate obtained from a single randomly sampled data point. This simple idea — trading accuracy per step for computational savings — is what makes it possible to train models on massive datasets. In practice, stochastic gradients are combined with the momentum and adaptive scaling techniques from the previous chapter (e.g., SGD with momentum, Adam) to achieve both computational efficiency and fast convergence.</p>
+<section id="finite-sum" class="level3" data-number="8.1.1">
+<h3 data-number="8.1.1" class="anchored" data-anchor-id="finite-sum"><span class="header-section-number">8.1.1</span> Finite-Sum Objectives</h3>
+<p>In machine learning problems, the objective functions often have a <strong>“finite-sum” form</strong>. That is,</p>
+<p><span id="eq-finite-sum"><span class="math display">f(x) = \frac{1}{m} \sum_{i=1}^{m} f_i(x), \quad \text{where } f_1, \ldots, f_m : \mathbb{R}^n \to \mathbb{R}. \tag{8.1}</span></span></p>
+<section id="erm" class="level4" data-number="8.1.1.1">
+<h4 data-number="8.1.1.1" class="anchored" data-anchor-id="erm"><span class="header-section-number">8.1.1.1</span> Empirical Risk Minimization</h4>
+<div id="exm-erm" class="theorem example">
+<p><span class="theorem-title"><strong>Example 8.1 (Empirical Risk Minimization)</strong></span> <span class="math inline">(X, Y)</span>: some random variables satisfying some statistical relationship (“statistical model”).</p>
+<ul>
+<li><span class="math inline">X</span>: input</li>
+<li><span class="math inline">Y</span>: output / label</li>
+</ul>
+<p>To estimate the model, we collect data <span class="math inline">\mathcal{D} = \{(x_i, y_i),\, i \in [m]\}</span> and estimate the underlying model within some model class.</p>
+<p><strong>Model class:</strong> <span class="math inline">f_\theta : \mathcal{X} \mapsto \mathcal{Y}</span>. The function <span class="math inline">f_\theta(x)</span> predicts the output associated with <span class="math inline">x</span>.</p>
+<p><strong>Loss function:</strong> <span class="math inline">\ell : \mathcal{Y} \times \mathcal{Y} \to \mathbb{R}</span> measures how good the prediction is.</p>
+<ul>
+<li>Least-squares loss: <span class="math inline">\ell(y, y') = (y - y')^2</span></li>
+<li>Log-loss (cross entropy): <span class="math inline">\ell(y, y') = -y \cdot \log(y') - (1-y) \log(1-y')</span></li>
+</ul>
+<p>Then ERM wants to find the model that best fits the data:</p>
+<p><span class="math display">\mathcal{L}_n(\theta) = \frac{1}{m} \sum_{i=1}^{m} \ell\bigl(y_i,\, f_\theta(x_i)\bigr), \quad \widehat{\theta}_{\text{ERM}} = \min_{\theta} \mathcal{L}_n(\theta).</span></p>
+<p>This is a finite-sum objective with <span class="math inline">f_i(\theta) = \ell\bigl(y_i,\, f_\theta(x_i)\bigr)</span>. Each term <span class="math inline">f_i</span> depends on only one data point <span class="math inline">(x_i, y_i)</span>, which makes it possible to estimate the gradient cheaply by sampling a single data point rather than evaluating the entire sum.</p>
+</div>
+</section>
+<section id="erm-examples" class="level4" data-number="8.1.1.2">
+<h4 data-number="8.1.1.2" class="anchored" data-anchor-id="erm-examples"><span class="header-section-number">8.1.1.2</span> Examples of ERM</h4>
+<div id="exm-regression-classification" class="theorem example">
+<p><span class="theorem-title"><strong>Example 8.2 (Regression and Classification)</strong></span> <strong>1. Linear regression:</strong></p>
+<p><span class="math display">\ell(y, y') = (y - y')^2, \quad f_\theta(x) = x^\top \theta.</span></p>
+<p><strong>2. Neural network regression:</strong></p>
+<p><span class="math display">\ell(y, y') = (y - y')^2, \quad f_\theta(x) = W_2 \sigma(W_1 x).</span></p>
+<p><strong>3. Logistic regression (classification):</strong></p>
+<p><span class="math display">\ell(y, y') = -\bigl(y \log(y') + (1-y) \log(1-y')\bigr), \quad f_\theta(x) = \frac{1}{1 - \exp(\theta^\top x)}.</span></p>
+</div>
+</section>
+</section>
+<section id="sgd-algorithm" class="level3" data-number="8.1.2">
+<h3 data-number="8.1.2" class="anchored" data-anchor-id="sgd-algorithm"><span class="header-section-number">8.1.2</span> The SGD Algorithm</h3>
+<p>Consider the finite-sum objective <span class="math inline">f(x) = \frac{1}{m}\sum_{i=1}^m f_i(x)</span>.</p>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Algorithm: Stochastic Gradient Descent (SGD)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>Update:</strong> At each iteration <span class="math inline">k</span>, sample <span class="math inline">i^k \sim \text{Unif}([m])</span> and update: <span class="math display">x^{k+1} = x^k - \alpha^k \cdot g(x^k, i^k),</span> where <span class="math inline">g(x, i) = \nabla f_i(x)</span> is the <strong>stochastic gradient</strong> (the gradient of a single randomly chosen component).</p>
+</div>
+</div>
+<section id="sgd-unbiased" class="level4" data-number="8.1.2.1">
+<h4 data-number="8.1.2.1" class="anchored" data-anchor-id="sgd-unbiased"><span class="header-section-number">8.1.2.1</span> Unbiased Gradient Estimate</h4>
+<p>Why is this correct? Because the stochastic gradient is an <strong>unbiased</strong> estimator of the full gradient:</p>
+<p><span class="math display">\mathbb{E}\bigl[g(x, i^k)\bigr] = \frac{1}{m} \sum_{i=1}^{m} \nabla f_i(x) = \nabla f(x), \quad i^k \sim \text{Unif}([m]).</span></p>
+</section>
+<section id="sgd-noise" class="level4" data-number="8.1.2.2">
+<h4 data-number="8.1.2.2" class="anchored" data-anchor-id="sgd-noise"><span class="header-section-number">8.1.2.2</span> Noise and Cumulative Error</h4>
+<p>Intuitively, the descent direction of SGD is</p>
+<p><span class="math display">\nabla f_i(x^k) = \nabla f(x^k) + \varepsilon^k,</span></p>
+<p>where <span class="math inline">\varepsilon^k</span> is a noise term with <span class="math inline">\mathbb{E}[\varepsilon^k] = 0</span> and <span class="math inline">\text{Var}(\varepsilon^k) \leq \sigma^2</span> for some <span class="math inline">\sigma &gt; 0</span>.</p>
+<p>After <span class="math inline">K</span> iterations, the update becomes approximately</p>
+<p><span class="math display">x^{k+1} \approx x^k - \alpha^k \cdot \nabla f(x^k) - \alpha^k \cdot \varepsilon^k.</span></p>
+<p>The <strong>cumulative noise</strong> after <span class="math inline">K</span> steps is approximately <span class="math inline">\sum_{k=1}^{K} \alpha^k \cdot \varepsilon^k</span>.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Controlling Cumulative Noise
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If <span class="math inline">\varepsilon^k \sim N(0, \sigma^2)</span>, then <span class="math inline">\sum_{k=1}^{K} \alpha^k \varepsilon^k \sim N\!\left(0, \sigma^2 \sum_{k=1}^{K} (\alpha^k)^2\right)</span>.</p>
+<p>Two competing requirements on the step sizes:</p>
+<ul>
+<li>We want the cumulative noise to be finite: <span class="math inline">\sum_{k=1}^{\infty} (\alpha^k)^2 &lt; \infty</span>.</li>
+<li>We want SGD to move sufficiently far: <span class="math inline">\sum_{k=1}^{\infty} \alpha^k = +\infty</span>.</li>
+</ul>
+</div>
+</div>
+<div id="fig-sgd-noise" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sgd-noise-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch08-sgd-noise.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;8.1: SGD noise and convergence. Full gradient descent (green) converges smoothly to x^*. SGD with batch size b = 1 (terracotta) oscillates in a noise ball proportional to \sigma^2/b. Mini-batch SGD (blue) reduces noise and interpolates between the two."><img src="figures/ch08-sgd-noise.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sgd-noise-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.1: SGD noise and convergence. Full gradient descent (green) converges smoothly to <span class="math inline">x^*</span>. SGD with batch size <span class="math inline">b = 1</span> (terracotta) oscillates in a noise ball proportional to <span class="math inline">\sigma^2/b</span>. Mini-batch SGD (blue) reduces noise and interpolates between the two.
+</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="sgd-convergence" class="level3" data-number="8.1.3">
+<h3 data-number="8.1.3" class="anchored" data-anchor-id="sgd-convergence"><span class="header-section-number">8.1.3</span> Convergence of SGD</h3>
+<p>The key question for SGD is: how fast does it converge despite the noise in each gradient estimate? Since each stochastic gradient <span class="math inline">\nabla f_i(x^k)</span> deviates from the true gradient <span class="math inline">\nabla f(x^k)</span>, we need a decaying step size to ensure that the cumulative noise remains controlled. The following theorem quantifies the resulting convergence rate.</p>
+<div id="thm-sgd-convergence" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 8.1 (Convergence of SGD)</strong></span> When <span class="math inline">f</span> is an <span class="math inline">L</span>-Lipschitz continuous convex function, with step size <span class="math inline">\alpha^k = O\!\left(\frac{1}{\sqrt{k}}\right)</span>, we have</p>
+<p><span id="eq-sgd-convergence"><span class="math display">\mathbb{E}\bigl[f(\bar{x}^K)\bigr] \leq f(x^*) + C \sqrt{\frac{\sigma^2 \cdot \|x^1 - x^*\|^2}{K}} \tag{8.2}</span></span></p>
+<p>for some constant <span class="math inline">C</span>, where <span class="math inline">\bar{x}^K = \frac{1}{K}\sum_{k=1}^{K} x^k</span> and the expectation is with respect to the randomness of stochastic gradients.</p>
+</div>
+<p>This theorem establishes that SGD converges at a rate of <span class="math inline">O(1/\sqrt{K})</span> in expectation (<a href="#eq-sgd-convergence" class="quarto-xref">Equation&nbsp;<span>8.2</span></a>), which is slower than the <span class="math inline">O(1/K)</span> rate of full gradient descent. The slower rate is the price we pay for the cheaper per-iteration cost of sampling a single gradient. Notice that the bound depends on the gradient noise variance <span class="math inline">\sigma^2</span>: when <span class="math inline">\sigma^2 = 0</span> (no noise, i.e., full GD), the bound recovers the standard GD rate.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>Setting <span class="math inline">\alpha^k = O\!\left(\frac{1}{\sqrt{k}}\right)</span> (decaying stepsizes):</p>
+<ul>
+<li>SGD converges at a rate <span class="math inline">\frac{1}{\sqrt{K}}</span> in expectation.</li>
+<li>To get an <span class="math inline">\varepsilon</span>-approximate solution, we need <span class="math inline">O\!\left(\frac{1}{\varepsilon^2}\right)</span> iterations.</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<section id="minibatch" class="level3" data-number="8.1.4">
+<h3 data-number="8.1.4" class="anchored" data-anchor-id="minibatch"><span class="header-section-number">8.1.4</span> Minibatch SGD</h3>
+<section id="gd-vs-sgd" class="level4" data-number="8.1.4.1">
+<h4 data-number="8.1.4.1" class="anchored" data-anchor-id="gd-vs-sgd"><span class="header-section-number">8.1.4.1</span> GD vs.&nbsp;SGD Trade-off</h4>
+<p>The SGD convergence rate (<a href="#eq-sgd-convergence" class="quarto-xref">Equation&nbsp;<span>8.2</span></a>) raises a natural question: can we interpolate between the low per-iteration cost of SGD and the fast convergence of full GD? Consider the finite-sum objective (<a href="#eq-finite-sum" class="quarto-xref">Equation&nbsp;<span>8.1</span></a>) <span class="math inline">f = \frac{1}{m}\sum_{i=1}^m f_i</span>.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: SGD vs.&nbsp;GD
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><strong>SGD:</strong> Sample 1 random function (<span class="math inline">\nabla f_i</span>, <span class="math inline">i \sim \text{Unif}([m])</span>) — large randomness.</p>
+<ul>
+<li>Use decaying stepsize <span class="math inline">\alpha_k = O(1/\sqrt{k})</span> to control the noise.</li>
+<li>Low computational cost per iteration.</li>
+<li>High iteration complexity (slow convergence).</li>
+</ul>
+<p><strong>GD:</strong> Use all functions to compute gradient. No randomness. (See <a href="../lectures/06-gradient-descent.html">Part 5.1</a> for gradient descent fundamentals.)</p>
+<ul>
+<li>Constant stepsize <span class="math inline">\alpha^k = 1/M</span> where <span class="math inline">\nabla^2 f \preceq M \cdot I_n</span>.</li>
+<li>High computational cost per iteration.</li>
+<li>Low iteration complexity (fast convergence).</li>
+</ul>
+</div>
+</div>
+<p>Is there anything in between? Yes — <strong>Minibatch SGD</strong> provides exactly this interpolation. Instead of using a single random sample (<span class="math inline">B=1</span>, pure SGD) or all <span class="math inline">m</span> samples (<span class="math inline">B=m</span>, full GD), we average the gradients of a small random subset of size <span class="math inline">B</span>. Averaging over <span class="math inline">B</span> samples reduces the variance of the stochastic gradient by a factor of <span class="math inline">B</span>, which allows a larger step size and faster convergence, while keeping the per-iteration cost at <span class="math inline">O(B)</span> gradient evaluations instead of <span class="math inline">O(m)</span>.</p>
+</section>
+<section id="minibatch-algo" class="level4" data-number="8.1.4.2">
+<h4 data-number="8.1.4.2" class="anchored" data-anchor-id="minibatch-algo"><span class="header-section-number">8.1.4.2</span> Minibatch SGD Algorithm</h4>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Algorithm: Minibatch SGD
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Let <span class="math inline">B \in [m]</span> be the <strong>batch size</strong>. At each iteration <span class="math inline">k</span>:</p>
+<ol type="1">
+<li>Sample <span class="math inline">B</span> indices <span class="math inline">\{i_1, \ldots, i_B\}</span> uniformly at random from <span class="math inline">[m]</span>.</li>
+<li>Compute the minibatch gradient and update:</li>
+</ol>
+<p><span class="math display">x^{k+1} = x^k - \alpha^k \cdot \frac{1}{B}\sum_{l=1}^{B} \nabla f_{i_l}(x^k).</span></p>
+<p>The two extremes recover familiar algorithms: <span class="math inline">B = m</span> gives full-batch GD, and <span class="math inline">B = 1</span> gives standard SGD.</p>
+</div>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Several practical points are worth noting:</p>
+<ol type="1">
+<li>Minibatch SGD is very popular in deep learning (it balances the noise reduction of full-batch GD with the speed of single-sample SGD).</li>
+<li><span class="math inline">\alpha^k</span> is often chosen to be a small constant (or decayed according to a schedule such as cosine annealing).</li>
+<li>Minibatch stochastic gradient can be combined with momentum, Adagrad, RMSprop, Adam, etc., yielding the optimizers most commonly used in practice.</li>
+</ol>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="proximal" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="proximal"><span class="header-section-number">8.2</span> Proximal Gradient Methods</h2>
+<p>The SGD and minibatch methods of the previous section address the challenge of <em>scale</em> — what to do when computing the full gradient is too expensive. We now turn to a fundamentally different challenge: what happens when the objective function is <strong>not smooth</strong>, or when the optimization problem has <strong>constraints</strong>?</p>
+<p>These situations arise constantly in practice. Many of the most important formulations in statistics and machine learning involve nonsmooth terms — <span class="math inline">\ell_1</span>-penalties for sparsity, nuclear norm penalties for low-rank structure, or hard constraints on the feasible region. Standard gradient descent requires a differentiable objective, so it cannot be applied directly.</p>
+<div id="exm-lasso" class="theorem example">
+<p><span class="theorem-title"><strong>Example 8.3 (Non-smooth Optimization — Lasso)</strong></span> The Lasso is the prototypical example of a nonsmooth optimization problem in statistics:</p>
+<p><span class="math display">\min_{\theta \in \mathbb{R}^d} \; L(\theta) = \underbrace{\|y - X\theta\|_2^2}_{\text{smooth (least squares)}} + \underbrace{\lambda \|\theta\|_1}_{\text{nonsmooth (sparsity penalty)}}.</span></p>
+<p>The <span class="math inline">\ell_1</span>-norm <span class="math inline">\|\theta\|_1</span> is <strong>not differentiable</strong> at any point where some coordinate <span class="math inline">\theta_j = 0</span>. Since the entire purpose of the <span class="math inline">\ell_1</span>-penalty is to drive coordinates to zero, the nonsmoothness occurs precisely where the action is.</p>
+</div>
+<div id="exm-constrained-ls" class="theorem example">
+<p><span class="theorem-title"><strong>Example 8.4 (Constrained Optimization — Least Squares under an <span class="math inline">\ell_p</span>-Ball)</strong></span> <span class="math display">\min_{\theta} \; \|y - X\theta\|_2^2 \quad \text{s.t.} \quad \theta \in \mathcal{C} = \bigl\{w \in \mathbb{R}^d : \|w\| \leq R\bigr\}.</span></p>
+<p>Here the objective itself is smooth, but the constraint <span class="math inline">\theta \in \mathcal{C}</span> prevents us from simply following the gradient — a gradient step may leave the feasible region.</p>
+</div>
+<p>The key observation is that both problems share a common structure: the objective can be decomposed into a <strong>smooth part</strong> that we know how to optimize and a <strong>nonsmooth part</strong> that encodes the difficulty (sparsity, constraints, etc.). Proximal gradient methods exploit this decomposition.</p>
+<section id="composite" class="level3" data-number="8.2.1">
+<h3 data-number="8.2.1" class="anchored" data-anchor-id="composite"><span class="header-section-number">8.2.1</span> Composite Objective Functions</h3>
+<div id="def-composite-objective" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 8.1 (Composite Objective)</strong></span> <strong>Composite objective functions</strong> have the form</p>
+<p><span class="math display">f(x) = g(x) + h(x),</span></p>
+<p>where:</p>
+<ul>
+<li><span class="math inline">g</span> is convex and <strong>differentiable</strong> (often <span class="math inline">M</span>-smooth).</li>
+<li><span class="math inline">h</span> is convex but possibly <strong>nonsmooth</strong> — however, it must be “simple” in the sense that its proximal mapping (defined below) can be evaluated efficiently.</li>
+</ul>
+</div>
+<p>This decomposition is surprisingly versatile. Many problems that appear very different on the surface — sparse regression, constrained optimization, matrix completion — all fit into this composite framework:</p>
+<div id="exm-composite-problems" class="theorem example">
+<p><span class="theorem-title"><strong>Example 8.5 (Lasso and Constrained Least Squares as Composite Problems)</strong></span> <strong>Lasso:</strong> <span class="math inline">g(\theta) = \|y - A\theta\|_2^2</span> (smooth), <span class="math inline">\;h(\theta) = \lambda\|\theta\|_1</span> (nonsmooth but simple).</p>
+<p><strong>Constrained least squares:</strong> <span class="math inline">g(\theta) = \|y - A\theta\|_2^2</span> (smooth), <span class="math inline">\;h(\theta) = \mathcal{I}_\mathcal{C}(\theta) = \begin{cases} \infty &amp; \theta \notin \mathcal{C}, \\ 0 &amp; \theta \in \mathcal{C} \end{cases}</span> (nonsmooth but simple).</p>
+<p>In both cases, <span class="math inline">g</span> is a standard least-squares loss with Lipschitz-continuous gradient, and <span class="math inline">h</span> encodes the structural requirement (sparsity or feasibility).</p>
+</div>
+</section>
+<section id="proximal-idea" class="level3" data-number="8.2.2">
+<h3 data-number="8.2.2" class="anchored" data-anchor-id="proximal-idea"><span class="header-section-number">8.2.2</span> From GD to Proximal Gradient: The Key Idea</h3>
+<p>Since <span class="math inline">f = g + h</span> is not differentiable, we cannot directly run GD on <span class="math inline">f</span>. But <span class="math inline">g</span> alone <em>is</em> smooth, so the idea is to handle <span class="math inline">g</span> and <span class="math inline">h</span> separately.</p>
+<p>Recall that a gradient descent step on the smooth part <span class="math inline">g</span> can be written as a <strong>minimization of a quadratic surrogate</strong>:</p>
+<p><span class="math display">x - \alpha \nabla g(x) = \operatorname*{arg\,min}_{z \in \mathbb{R}^n} \left\{ g(x) + \nabla g(x)^\top (z - x) + \frac{1}{2\alpha}\|z - x\|_2^2 \right\}.</span></p>
+<p>The expression inside the argmin is a quadratic upper bound on <span class="math inline">g(z)</span> (using the first-order Taylor expansion plus a proximity term). Now, to account for <span class="math inline">h</span>, we simply <strong>add <span class="math inline">h(z)</span> to the surrogate</strong>:</p>
+<p><span class="math display">\begin{aligned}
+&amp;\operatorname*{arg\,min}_{z} \left\{ g(x) + \nabla g(x)^\top (z - x) + \frac{1}{2\alpha}\|z - x\|_2^2 + h(z) \right\} \\
+&amp;= \operatorname*{arg\,min}_{z} \left\{ \frac{1}{2\alpha}\|z - \underbrace{[x - \alpha \nabla g(x)]}_{\text{gradient step}}\|_2^2 + h(z) \right\},
+\end{aligned}</span></p>
+<p>where the second line follows by completing the square (dropping terms that do not depend on <span class="math inline">z</span>). This gives us the proximal gradient update: first take a gradient step on <span class="math inline">g</span>, then solve a simple optimization problem involving <span class="math inline">h</span> alone.</p>
+</section>
+<section id="proximal-mapping" class="level3" data-number="8.2.3">
+<h3 data-number="8.2.3" class="anchored" data-anchor-id="proximal-mapping"><span class="header-section-number">8.2.3</span> Proximal Mapping</h3>
+<p>The optimization problem that appears in the second line above motivates a fundamental definition.</p>
+<div id="def-proximal-mapping" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 8.2 (Proximal Mapping)</strong></span> The <strong>proximal mapping</strong> (or <strong>proximal operator</strong>) induced by a function <span class="math inline">h</span> with parameter <span class="math inline">\alpha &gt; 0</span> is:</p>
+<p><span id="eq-proximal-mapping"><span class="math display">\text{prox}_{\alpha, h}(x) = \operatorname*{arg\,min}_{z} \left\{ \frac{1}{2\alpha}\|x - z\|_2^2 + h(z) \right\}. \tag{8.3}</span></span></p>
+</div>
+<p>The proximal mapping balances two competing objectives: staying close to the input <span class="math inline">x</span> (the quadratic penalty <span class="math inline">\frac{1}{2\alpha}\|x-z\|^2</span>) and minimizing <span class="math inline">h(z)</span>. The parameter <span class="math inline">\alpha</span> controls the trade-off — a larger <span class="math inline">\alpha</span> puts more weight on minimizing <span class="math inline">h</span>, allowing the output to move further from <span class="math inline">x</span>; a smaller <span class="math inline">\alpha</span> keeps the output close to <span class="math inline">x</span>, making only a small adjustment toward reducing <span class="math inline">h</span>.</p>
+<p><a href="#fig-proximal-operator" class="quarto-xref">Figure&nbsp;<span>8.2</span></a> illustrates this trade-off geometrically for <span class="math inline">h(z) = |z|</span>: the proximal operator finds the point that minimizes the sum of <span class="math inline">h</span> and the quadratic penalty centered at <span class="math inline">x_k</span>.</p>
+<div id="fig-proximal-operator" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-proximal-operator-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch08-proximal-operator.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;8.2: Geometric picture of the proximal operator for h(z) = |z|. The proximal step minimizes the sum of h(z) and a quadratic penalty centered at the current iterate x_k, yielding the new iterate x_{k+1}."><img src="figures/ch08-proximal-operator.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-proximal-operator-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.2: Geometric picture of the proximal operator for <span class="math inline">h(z) = |z|</span>. The proximal step minimizes the sum of <span class="math inline">h(z)</span> and a quadratic penalty centered at the current iterate <span class="math inline">x_k</span>, yielding the new iterate <span class="math inline">x_{k+1}</span>.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="proximal-gd" class="level3" data-number="8.2.4">
+<h3 data-number="8.2.4" class="anchored" data-anchor-id="proximal-gd"><span class="header-section-number">8.2.4</span> Proximal Gradient Descent</h3>
+<p>With the proximal mapping in hand, the proximal gradient algorithm is simply the two-step procedure we derived above: take a gradient step on the smooth part <span class="math inline">g</span>, then apply the proximal operator for the nonsmooth part <span class="math inline">h</span>.</p>
+<div id="fig-proximal-decomposition" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-proximal-decomposition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch08-proximal-decomposition.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;8.3: Proximal gradient decomposition: the composite objective f = g + h is split into a smooth part g (handled by a gradient step) and a nonsmooth part h (handled by the proximal operator). Each iteration first takes a gradient step on g, then applies the proximal mapping for h. This splitting exploits the structure of both components simultaneously."><img src="figures/ch08-proximal-decomposition.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-proximal-decomposition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.3: Proximal gradient decomposition: the composite objective <span class="math inline">f = g + h</span> is split into a smooth part <span class="math inline">g</span> (handled by a gradient step) and a nonsmooth part <span class="math inline">h</span> (handled by the proximal operator). Each iteration first takes a gradient step on <span class="math inline">g</span>, then applies the proximal mapping for <span class="math inline">h</span>. This splitting exploits the structure of both components simultaneously.
+</figcaption>
+</figure>
+</div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Algorithm: Proximal Gradient Descent
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For <span class="math inline">k = 0, 1, 2, \ldots</span>:</p>
+<p><strong>Step 1 (Gradient step on <span class="math inline">g</span>):</strong> <span class="math display">z^{k+1} = x^k - \alpha^k \nabla g(x^k).</span></p>
+<p><strong>Step 2 (Proximal step for <span class="math inline">h</span>):</strong> <span class="math display">x^{k+1} = \text{prox}_{\alpha^k h}(z^{k+1}) = \arg\min_{u}\;\Bigl\{h(u) + \frac{1}{2\alpha^k}\|u - z^{k+1}\|_2^2\Bigr\}.</span></p>
+<p><strong>Choice of <span class="math inline">\alpha^k</span>:</strong> if <span class="math inline">g</span> is <span class="math inline">M</span>-smooth, set <span class="math inline">\alpha^k = 1/M</span>.</p>
+</div>
+</div>
+<p>Each iteration costs one gradient evaluation of <span class="math inline">g</span> plus one proximal evaluation of <span class="math inline">h</span>. The algorithm is practical whenever the proximal mapping of <span class="math inline">h</span> can be computed efficiently — and for many important choices of <span class="math inline">h</span>, it has a closed-form solution.</p>
+</section>
+<section id="proximal-convergence" class="level3" data-number="8.2.5">
+<h3 data-number="8.2.5" class="anchored" data-anchor-id="proximal-convergence"><span class="header-section-number">8.2.5</span> Convergence</h3>
+<p>A natural concern is whether introducing the nonsmooth term <span class="math inline">h</span> slows down convergence compared to standard gradient descent on a smooth objective. Remarkably, the answer is <strong>no</strong>: the proximal gradient method achieves exactly the same convergence rates as gradient descent applied to a purely smooth function. The nonsmooth part <span class="math inline">h</span> comes entirely for free — it does not degrade the rate at all, as long as we can evaluate the proximal mapping.</p>
+<p>To state the result precisely, we need a notion of “gradient” for the composite objective <span class="math inline">F = g + h</span>, since <span class="math inline">F</span> may not be differentiable. The <strong>gradient mapping</strong> (or <strong>proximal gradient</strong>) serves this role: <span class="math display">g_h(x) = \frac{1}{\alpha}\bigl(x - \text{prox}_{\alpha, h}(x - \alpha \nabla g(x))\bigr),</span> which reduces to <span class="math inline">\nabla g(x)</span> when <span class="math inline">h = 0</span>. This quantity measures how far the current point <span class="math inline">x</span> is from satisfying the optimality condition for the composite problem: <span class="math inline">g_h(x^*) = 0</span> if and only if <span class="math inline">x^*</span> is a minimizer of <span class="math inline">F</span>.</p>
+<div id="thm-proximal-convergence" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 8.2 (Convergence of Proximal Gradient Descent)</strong></span> Let <span class="math inline">F(x) = g(x) + h(x)</span> where <span class="math inline">g</span> is <span class="math inline">M</span>-smooth and <span class="math inline">h</span> is convex. With step size <span class="math inline">\alpha = 1/M</span>, the proximal gradient method satisfies:</p>
+<p><strong>Case 1 (Convex <span class="math inline">g</span>).</strong> Sublinear rate on function values: <span id="eq-proximal-convergence"><span class="math display">F(x^k) - F(x^*) \leq \frac{M}{2k}\|x^0 - x^*\|_2^2. \tag{8.4}</span></span> This is an <span class="math inline">O(1/k)</span> rate — the same as gradient descent on a smooth convex function.</p>
+<p><strong>Case 2 (<span class="math inline">m</span>-strongly convex <span class="math inline">g</span>).</strong> Linear rate on iterates: <span class="math display">\|x^k - x^*\|_2^2 \leq \Bigl(1 - \frac{m}{M}\Bigr)^k \|x^0 - x^*\|_2^2.</span> This is an <span class="math inline">O\!\bigl((1 - 1/\kappa)^k\bigr)</span> rate, i.e., <span class="math inline">O(\kappa \log(1/\varepsilon))</span> iterations — the same as gradient descent on a smooth strongly convex function.</p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Key Insight: Smoothness for Free
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Comparing with the gradient descent convergence rates (<a href="../lectures/06-gradient-descent.html">Chapter 6</a>):</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Setting</th>
+<th>GD on smooth <span class="math inline">f</span></th>
+<th>Proximal GD on <span class="math inline">g + h</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Convex</td>
+<td><span class="math inline">O(1/k)</span></td>
+<td><span class="math inline">O(1/k)</span></td>
+</tr>
+<tr class="even">
+<td>Strongly convex (<span class="math inline">\kappa = M/m</span>)</td>
+<td><span class="math inline">O\bigl((1 - 1/\kappa)^k\bigr)</span></td>
+<td><span class="math inline">O\bigl((1 - 1/\kappa)^k\bigr)</span></td>
+</tr>
+</tbody>
+</table>
+<p>The rates are <strong>identical</strong>. The nonsmooth term <span class="math inline">h</span> is entirely absorbed by the proximal step. This is the central appeal of the proximal framework: we can handle nonsmoothness (sparsity penalties, constraints) without paying any price in convergence speed, as long as the proximal mapping of <span class="math inline">h</span> is cheap to evaluate.</p>
+</div>
+</div>
+<p>This insight has a powerful practical consequence: to solve a nonsmooth or constrained problem, we do not need specialized algorithms with slower convergence. Instead, we decompose the objective as <span class="math inline">g + h</span>, run proximal gradient descent, and achieve the same convergence rate as if the problem were purely smooth. The two most important instantiations of <span class="math inline">h</span> — the <span class="math inline">\ell_1</span>-norm (for sparsity) and the indicator function (for constraints) — both have closed-form proximal mappings, as we now show.</p>
+</section>
+<section id="simple-h" class="level3" data-number="8.2.6">
+<h3 data-number="8.2.6" class="anchored" data-anchor-id="simple-h"><span class="header-section-number">8.2.6</span> Examples of Simple <span class="math inline">h</span></h3>
+<p>The convergence guarantee above is only useful in practice if the proximal mapping (<a href="#eq-proximal-mapping" class="quarto-xref">Equation&nbsp;<span>8.3</span></a>) can be computed efficiently. After all, the proximal mapping itself is an optimization problem — if it were as hard as the original problem, we would have gained nothing.</p>
+<p>Fortunately, for many important choices of <span class="math inline">h</span> that arise in statistics and machine learning, the proximal mapping has a <strong>closed-form solution</strong>. We call such functions “simple”:</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p>A function <span class="math inline">h</span> is called <strong>“simple”</strong> (or <strong>proximable</strong>) if its proximal mapping <span class="math inline">\text{prox}_{\alpha, h}(x)</span> can be evaluated in closed form or in <span class="math inline">O(n)</span> time.</p>
+</div>
+</div>
+</div>
+<section id="soft-threshold" class="level4" data-number="8.2.6.1">
+<h4 data-number="8.2.6.1" class="anchored" data-anchor-id="soft-threshold"><span class="header-section-number">8.2.6.1</span> 1. Soft Thresholding (<span class="math inline">\ell_1</span>-norm)</h4>
+<p>The most important example of a proximal operator arises from the <span class="math inline">\ell_1</span>-norm penalty <span class="math inline">h(x) = \lambda\|x\|_1</span>, which is central to sparse estimation. The resulting proximal mapping has a beautiful closed-form solution that shrinks each coordinate toward zero, producing exact sparsity.</p>
+<div id="def-soft-thresholding" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 8.3 (Soft Thresholding Operator)</strong></span> For <span class="math inline">h(x) = \lambda \|x\|_1</span>, the proximal mapping is</p>
+<p><span class="math display">\text{prox}_{\alpha, h}(x) = S_{\lambda\alpha}(x),</span></p>
+<p>where <span class="math inline">S_{\lambda\alpha} : \mathbb{R}^n \to \mathbb{R}^n</span> is the <strong>soft thresholding operator</strong>:</p>
+<p><span id="eq-soft-threshold"><span class="math display">[S_{\lambda\alpha}(x)]_j = \begin{cases} x_j - \lambda\alpha &amp; \text{if } x_j &gt; \lambda\alpha, \\ 0 &amp; \text{if } |x_j| \leq \lambda\alpha, \\ x_j + \lambda\alpha &amp; \text{if } x_j &lt; -\lambda\alpha. \end{cases} \tag{8.5}</span></span></p>
+</div>
+<p>The soft thresholding operator (<a href="#eq-soft-threshold" class="quarto-xref">Equation&nbsp;<span>8.5</span></a>) shrinks each coordinate toward zero and sets small coordinates exactly to zero. This is what produces the sparsity-inducing effect of the <span class="math inline">\ell_1</span> penalty: coordinates with magnitude below the threshold <span class="math inline">\lambda\alpha</span> are driven to exactly zero.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Solving Lasso via Proximal Gradient
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The derivation of soft thresholding involves subgradients, which is not covered in this course.</p>
+<p>Then, the Lasso problem can be solved via:</p>
+<p><span class="math display">\theta^{k+1} = S_{\alpha\lambda}\!\left(\theta^k + \alpha \cdot X^\top (y - X \theta^k)\right).</span></p>
+</div>
+</div>
+</section>
+<section id="projection" class="level4" data-number="8.2.6.2">
+<h4 data-number="8.2.6.2" class="anchored" data-anchor-id="projection"><span class="header-section-number">8.2.6.2</span> 2. Projection (Indicator Function)</h4>
+<p>When the nonsmooth term <span class="math inline">h</span> is the indicator function of a constraint set <span class="math inline">\mathcal{C}</span>, the proximal mapping reduces to a familiar geometric operation: Euclidean projection. This connection shows that constrained optimization is a special case of the proximal framework.</p>
+<div id="def-projection-proximal" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 8.4 (Projection as Proximal Mapping)</strong></span> For the indicator function <span class="math inline">h(x) = \mathcal{I}_\mathcal{C}(x) = \begin{cases} \infty &amp; x \notin \mathcal{C}, \\ 0 &amp; x \in \mathcal{C}, \end{cases}</span></p>
+<p>the proximal mapping becomes</p>
+<p><span class="math display">\text{prox}_{\alpha, h}(x) = \operatorname*{arg\,min}_{z} \left\{ \frac{1}{2\alpha}\|x - z\|_2^2 + \mathcal{I}_\mathcal{C}(z) \right\} = \operatorname*{arg\,min}_{z \in \mathcal{C}} \|x - z\|_2^2 =: P_\mathcal{C}(x),</span></p>
+<p>the <strong>projection</strong> of <span class="math inline">x</span> onto <span class="math inline">\mathcal{C}</span>.</p>
+</div>
+<p>This shows that projection onto a convex set is a special case of the proximal mapping. When <span class="math inline">h</span> is the indicator function for a constraint set <span class="math inline">\mathcal{C}</span>, the proximal step simply finds the closest feasible point.</p>
+<p>Combining the projection interpretation of the proximal mapping with the proximal gradient algorithm immediately yields one of the most widely used constrained optimization methods.</p>
+<div id="cor-projected-gd" class="theorem corollary">
+<p><span class="theorem-title"><strong>Corollary 8.1 (Projected Gradient Descent)</strong></span> When <span class="math inline">h = \mathcal{I}_\mathcal{C}</span>, proximal gradient descent becomes:</p>
+<p><span class="math display">x^{k+1} = P_\mathcal{C}\!\left(x^k - \alpha \cdot \nabla g(x^k)\right),</span></p>
+<p>also known as the <strong>projected gradient descent</strong>.</p>
+</div>
+<p>Projected gradient descent has a natural two-step interpretation: first take a gradient step as if the problem were unconstrained, then project back onto the feasible set <span class="math inline">\mathcal{C}</span>. This is one of the most widely used algorithms for constrained convex optimization.</p>
+</section>
+</section>
+</section>
+<section id="frank-wolfe" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="frank-wolfe"><span class="header-section-number">8.3</span> Frank-Wolfe (Conditional Gradient)</h2>
+<p>Projected gradient descent (<a href="#cor-projected-gd" class="quarto-xref">Corollary&nbsp;<span>8.1</span></a>) handles constrained optimization by projecting each iterate back onto the feasible set <span class="math inline">\mathcal{C}</span>. However, for many structured constraint sets (polytopes, nuclear norm balls, spectrahedra), projection is computationally expensive. The Frank-Wolfe method avoids projection entirely by instead solving a linear minimization over <span class="math inline">\mathcal{C}</span>.</p>
+<div id="fig-pgd-vs-fw" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pgd-vs-fw-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch08-frank-wolfe.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;8.4: Comparison of projected gradient descent (left) and Frank-Wolfe (right). PGD takes a gradient step that may leave the feasible set \mathcal{C}, then projects back. Frank-Wolfe linearizes the objective, minimizes the linear surrogate over \mathcal{C} to find a vertex y^k, then takes a convex combination step."><img src="figures/ch08-frank-wolfe.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pgd-vs-fw-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.4: Comparison of projected gradient descent (left) and Frank-Wolfe (right). PGD takes a gradient step that may leave the feasible set <span class="math inline">\mathcal{C}</span>, then projects back. Frank-Wolfe linearizes the objective, minimizes the linear surrogate over <span class="math inline">\mathcal{C}</span> to find a vertex <span class="math inline">y^k</span>, then takes a convex combination step.
+</figcaption>
+</figure>
+</div>
+<p><strong>Setup:</strong> Constrained optimization</p>
+<p><span class="math display">\min_{x \in \mathcal{C}} f(x),</span></p>
+<p>where <span class="math inline">\mathcal{C}</span> is a convex set and <span class="math inline">f</span> is differentiable.</p>
+<section id="fw-algorithm" class="level3" data-number="8.3.1">
+<h3 data-number="8.3.1" class="anchored" data-anchor-id="fw-algorithm"><span class="header-section-number">8.3.1</span> Algorithm</h3>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Algorithm: Frank-Wolfe (Conditional Gradient)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For <span class="math inline">k = 1, 2, \ldots, K</span>:</p>
+<p><strong>Step 1 (Linear minimization oracle).</strong> Find the direction that minimizes the linearization of <span class="math inline">f</span> over <span class="math inline">\mathcal{C}</span>: <span class="math display">y^k = \arg\min_{y \in \mathcal{C}}\; \langle \nabla f(x^k),\, y \rangle.</span></p>
+<p><strong>Step 2 (Convex combination).</strong> Move toward <span class="math inline">y^k</span> with step size <span class="math inline">\alpha^k</span>: <span class="math display">x^{k+1} = (1 - \alpha^k)\,x^k + \alpha^k\, y^k.</span></p>
+</div>
+</div>
+</section>
+<section id="fw-fixed-point" class="level3" data-number="8.3.2">
+<h3 data-number="8.3.2" class="anchored" data-anchor-id="fw-fixed-point"><span class="header-section-number">8.3.2</span> Fixed Point Interpretation</h3>
+<p><strong>Why is this reasonable?</strong> Suppose <span class="math inline">x^k = x^*</span> (optimal). Then <span class="math inline">x^* = y^k \Rightarrow x^{k+1} = x^*</span>. That is, <span class="math inline">x^*</span> is a <strong>fixed point</strong> of Frank-Wolfe.</p>
+<p>To see this: by first-order optimality, <span class="math inline">\langle \nabla f(x^*),\, y - x^* \rangle \geq 0</span> for all <span class="math inline">y \in \mathcal{C}</span>. Thus <span class="math inline">\langle \nabla f(x^*),\, y \rangle \geq \langle \nabla f(x^*),\, x^* \rangle</span> for all <span class="math inline">y \in \mathcal{C}</span>, which implies</p>
+<p><span class="math display">\arg\min_{y \in \mathcal{C}} \langle \nabla f(x^*),\, y \rangle = x^*.</span></p>
+<p><strong>Another interpretation</strong> of the Frank-Wolfe descent direction:</p>
+<p><span class="math display">y^k = \arg\min_{v \in \mathcal{C}} \bigl\{\underbrace{f(x^k) + \langle \nabla f(x^k),\, v - x^k \rangle}_{\text{linear surrogate of } f(v)}\bigr\}.</span></p>
+<div class="figure-container">
+  <div id="fig-fw-illustration"></div>
+  <div class="figure-caption">Frank-Wolfe iteration: linearize f at x^k, minimize the linear surrogate over C to get y^k, then take a convex combination step.</div>
+</div>
+</section>
+<section id="fw-convergence" class="level3" data-number="8.3.3">
+<h3 data-number="8.3.3" class="anchored" data-anchor-id="fw-convergence"><span class="header-section-number">8.3.3</span> Convergence</h3>
+<p>Frank-Wolfe converges at a sublinear rate that depends on the smoothness of <span class="math inline">f</span> (through the Hessian bound <span class="math inline">L</span>) and the “size” of the constraint set (through its diameter <span class="math inline">d_{\mathcal{C}}</span>).</p>
+<div id="thm-frank-wolfe-convergence" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 8.3 (Frank-Wolfe Convergence)</strong></span> Let <span class="math inline">d_{\mathcal{C}} = \sup_{x, y \in \mathcal{C}} \|x - y\|</span> be the diameter of <span class="math inline">\mathcal{C}</span>. Set <span class="math inline">\alpha^k = \frac{2}{k+2}</span> for <span class="math inline">k \geq 0</span>.</p>
+<p>When <span class="math inline">\nabla^2 f</span> is bounded in the sense that <span class="math inline">\lambda_{\max}(\nabla^2 f(x)) \leq L</span>, then</p>
+<p><span id="eq-fw-convergence"><span class="math display">f(x^K) - f(x^*) \;\leq\; \frac{2L\,d_{\mathcal{C}}^2}{K + 2}. \tag{8.6}</span></span></p>
+</div>
+<p>The Frank-Wolfe method converges at a rate of <span class="math inline">O(1/K)</span> (<a href="#eq-fw-convergence" class="quarto-xref">Equation&nbsp;<span>8.6</span></a>). The key advantage over projected gradient descent is that Frank-Wolfe only requires solving a linear optimization problem over <span class="math inline">\mathcal{C}</span> at each step (rather than a projection), which can be much cheaper for structured constraint sets such as polytopes or nuclear norm balls.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remarks on Frank-Wolfe
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>Even when <span class="math inline">f</span> is strongly convex, we <strong>cannot</strong> achieve linear convergence with Frank-Wolfe.</li>
+<li>Frank-Wolfe can be applied <strong>beyond convex functions</strong>.</li>
+</ul>
+</div>
+</div>
+<p>The interactive figure below compares PGD and Frank-Wolfe on the problem <span class="math inline">\min \frac{1}{2}\|x - p\|^2</span> subject to <span class="math inline">\|x\|_1 \leq 1</span> (the <span class="math inline">\ell_1</span>-ball in 2D, a diamond). Both methods start at the origin and try to reach the closest point to <span class="math inline">p</span> inside the diamond. The key difference in behavior:</p>
+<ul>
+<li><strong>PGD</strong> takes a gradient step toward <span class="math inline">p</span> (which may leave the diamond), then projects back. It converges quickly and can land <em>anywhere</em> on the boundary.</li>
+<li><strong>Frank-Wolfe</strong> can only move toward a <strong>vertex</strong> of the diamond at each step, producing iterates that are convex combinations of vertices. It converges more slowly and its iterates “zig-zag” between vertices.</li>
+</ul>
+<p>Drag the slider to move <span class="math inline">p</span> around the ball. At 45°, the optimum is a vertex and both methods find it easily. At other angles, the optimum lies on an <em>edge</em> — Frank-Wolfe must approximate it as a convex combination of the two adjacent vertices, which reveals its <span class="math inline">O(1/k)</span> limitation.</p>
+<style>
+  .interactive-figure-container {
+    font-family: 'Palatino Linotype', 'Palatino', 'Book Antiqua', 'Georgia', serif;
+    background: #f0ebe5; border-radius: 8px; padding: 24px 20px 16px 20px;
+    margin: 28px auto; max-width: 1100px;
+    box-shadow: 0 2px 12px rgba(61,53,48,0.08);
+  }
+  .interactive-figure-container h3 {
+    font-family: 'Palatino Linotype', 'Palatino', 'Book Antiqua', 'Georgia', serif;
+    color: #3d3530; font-size: 1.15em; font-weight: 600; margin: 0 0 6px 0;
+  }
+  .interactive-figure-container .fig-subtitle {
+    color: #968a80; font-size: 0.92em; margin: 0 0 16px 0; line-height: 1.5;
+  }
+  .interactive-figure-container .slider-row {
+    display: flex; align-items: center; gap: 14px; margin: 14px 0 8px 0; flex-wrap: wrap;
+  }
+  .interactive-figure-container .slider-row label {
+    font-size: 0.95em; color: #3d3530; min-width: 110px;
+  }
+  .interactive-figure-container .slider-row input[type="range"] {
+    flex: 1; min-width: 180px; max-width: 420px; accent-color: #7b97ad; height: 6px;
+  }
+  .interactive-figure-container .slider-row .slider-value {
+    font-size: 0.95em; color: #b8995e; font-weight: 600; min-width: 60px;
+  }
+  .interactive-figure-container .panels {
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .interactive-figure-container .panels > div {
+    flex: 1; min-width: 300px;
+  }
+  .interactive-figure-container .info-box {
+    background: #faf7f3; border-left: 3px solid #7b97ad; border-radius: 0 4px 4px 0;
+    padding: 10px 14px; margin: 10px 0 4px 0; font-size: 0.88em; color: #3d3530; line-height: 1.6;
+  }
+</style>
+
+<div class="interactive-figure-container" id="fwpgd-wrapper">
+  <h3 class="anchored">Projected Gradient vs. Frank-Wolfe on the ℓ<sub>1</sub>-Ball</h3>
+  <p class="fig-subtitle">
+    min ½‖x − p‖²   s.t. ‖x‖<sub>1</sub> ≤ 1
+     |  <span style="color:#c47a6a">★</span> = target p (outside the ball)
+     |  30 iterations from origin
+  </p>
+  <div class="slider-row">
+    <label for="fwpgd-angle">Target angle =</label>
+    <input type="range" id="fwpgd-angle" min="5" max="85" step="1" value="55">
+    <span class="slider-value" id="fwpgd-angle-val">55°</span>
+  </div>
+  <div class="panels">
+    <div id="fwpgd-left"></div>
+    <div id="fwpgd-right"></div>
+  </div>
+  <div class="info-box" id="fwpgd-info">
+    Drag the slider to move the target point p around the ball.
+  </div>
+</div>
+
+<script>
+(function() {
+  var C = {
+    bg: '#f0ebe5', plotBg: '#faf7f3', text: '#3d3530', grid: '#e0d9d1',
+    axis: '#968a80', blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
+    terracotta: '#c47a6a', lavender: '#907ea0', rosewood: '#ad8480'
+  };
+  var font = {family: "'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif", color: C.text};
+  var plotCfg = {displayModeBar: false, responsive: true};
+  var nIter = 30;
+
+  var ballX = [1, 0, -1, 0, 1];
+  var ballY = [0, 1, 0, -1, 0];
+
+  function projL1(x) {
+    var s = Math.abs(x[0]) + Math.abs(x[1]);
+    if (s <= 1) return [x[0], x[1]];
+    var a = [Math.abs(x[0]), Math.abs(x[1])];
+    var sorted = a.slice().sort(function(u,v){return v-u;});
+    var theta = (sorted[0] + sorted[1] - 1) / 2;
+    if (theta < 0) theta = 0;
+    if (sorted[1] - theta < 0) theta = sorted[0] - 1;
+    return [Math.sign(x[0])*Math.max(Math.abs(x[0]) - theta, 0),
+            Math.sign(x[1])*Math.max(Math.abs(x[1]) - theta, 0)];
+  }
+
+  function lmoL1(g) {
+    if (Math.abs(g[0]) >= Math.abs(g[1])) {
+      return [g[0] > 0 ? -1 : 1, 0];
+    } else {
+      return [0, g[1] > 0 ? -1 : 1];
+    }
+  }
+
+  function runPGD(p) {
+    var eta = 1.0;
+    var x = [0, 0];
+    var path = [[x[0], x[1]]];
+    for (var k = 0; k < nIter; k++) {
+      var g = [x[0] - p[0], x[1] - p[1]];
+      var xnew = [x[0] - eta*g[0], x[1] - eta*g[1]];
+      x = projL1(xnew);
+      path.push([x[0], x[1]]);
+    }
+    return path;
+  }
+
+  function runFW(p) {
+    var x = [0, 0];
+    var path = [[x[0], x[1]]];
+    for (var k = 0; k < nIter; k++) {
+      var g = [x[0] - p[0], x[1] - p[1]];
+      var v = lmoL1(g);
+      var ak = 2.0 / (k + 2);
+      x = [(1-ak)*x[0] + ak*v[0], (1-ak)*x[1] + ak*v[1]];
+      path.push([x[0], x[1]]);
+    }
+    return path;
+  }
+
+  function fval(x, p) {
+    return 0.5*((x[0]-p[0])*(x[0]-p[0]) + (x[1]-p[1])*(x[1]-p[1]));
+  }
+
+  function makeLayout(title) {
+    var axStyle = {gridcolor: C.grid, zerolinecolor: C.axis, linecolor: C.axis,
+                   tickfont: {size: 12, family: font.family, color: font.color},
+                   titlefont: {size: 14, family: font.family, color: font.color}};
+    return {
+      paper_bgcolor: C.bg, plot_bgcolor: C.plotBg, font: font, height: 430,
+      margin: {t: 38, b: 50, l: 50, r: 16},
+      title: {text: title, font: {size: 14, family: font.family, color: font.color}},
+      xaxis: Object.assign({}, axStyle, {range: [-1.6, 1.8], title: 'x\u2081'}),
+      yaxis: Object.assign({}, axStyle, {range: [-1.6, 1.8], title: 'x\u2082', scaleanchor: 'x'}),
+      showlegend: false, hovermode: 'closest'
+    };
+  }
+
+  function update(angleDeg) {
+    var rad = angleDeg * Math.PI / 180;
+    var p = [1.5*Math.cos(rad), 1.5*Math.sin(rad)];
+    var pstar = projL1(p);
+
+    var pgd = runPGD(p);
+    var fw = runFW(p);
+
+    var pgdX = pgd.map(function(v){return v[0];}), pgdY = pgd.map(function(v){return v[1];});
+    var fwX = fw.map(function(v){return v[0];}), fwY = fw.map(function(v){return v[1];});
+
+    var commonTraces = function(pathX, pathY, col, name) {
+      return [
+        {x: ballX, y: ballY, mode: 'lines', fill: 'toself',
+         fillcolor: 'rgba(122,154,126,0.10)', line: {color: C.sage, width: 2},
+         hoverinfo: 'skip'},
+        {x: pathX, y: pathY, mode: 'lines+markers',
+         line: {color: col, width: 2.5}, marker: {size: 5, color: col}, name: name},
+        {x: [p[0]], y: [p[1]], mode: 'markers+text',
+         marker: {size: 12, color: C.terracotta, symbol: 'star', line: {width: 1.5, color: 'white'}},
+         text: ['p'], textposition: 'top right',
+         textfont: {size: 12, family: font.family, color: C.terracotta}, showlegend: false},
+        {x: [pstar[0]], y: [pstar[1]], mode: 'markers+text',
+         marker: {size: 9, color: C.sage, symbol: 'diamond', line: {width: 1.5, color: 'white'}},
+         text: ['x*'], textposition: 'bottom left',
+         textfont: {size: 12, family: font.family, color: C.sage}, showlegend: false},
+        {x: [0], y: [0], mode: 'markers',
+         marker: {size: 7, color: C.axis, symbol: 'circle'}, showlegend: false}
+      ];
+    };
+
+    var fPGD = fval(pgd[nIter], p);
+    var fFW = fval(fw[nIter], p);
+    var info = 'Target p = (' + p[0].toFixed(2) + ', ' + p[1].toFixed(2) + ')'
+             + ' &ensp;|&ensp; Optimum x* = (' + pstar[0].toFixed(2) + ', ' + pstar[1].toFixed(2) + ')'
+             + ' &ensp;|&ensp; <span style="color:' + C.blue + '"><b>PGD</b>: f = ' + fPGD.toExponential(2) + '</span>'
+             + ' &ensp; <span style="color:' + C.gold + '"><b>FW</b>: f = ' + fFW.toExponential(2) + '</span>';
+    document.getElementById('fwpgd-info').innerHTML = info;
+
+    Plotly.react('fwpgd-left', commonTraces(pgdX, pgdY, C.blue, 'PGD'), makeLayout('Projected Gradient Descent'), plotCfg);
+    Plotly.react('fwpgd-right', commonTraces(fwX, fwY, C.gold, 'Frank-Wolfe'), makeLayout('Frank-Wolfe'), plotCfg);
+  }
+
+  document.getElementById('fwpgd-angle').addEventListener('input', function() {
+    var a = parseInt(this.value);
+    document.getElementById('fwpgd-angle-val').textContent = a + '\u00B0';
+    update(a);
+  });
+
+  update(55);
+})();
+</script>
+</section>
+<section id="fw-nonconvex" class="level3" data-number="8.3.4">
+<h3 data-number="8.3.4" class="anchored" data-anchor-id="fw-nonconvex"><span class="header-section-number">8.3.4</span> Nonconvex Example: Leading Eigenvector</h3>
+<p>Consider the nonconvex problem (with <span class="math inline">\mathbf{Q} \succ 0</span>):</p>
+<p><span class="math display">\min_{x} \;-x^\top \mathbf{Q}\,x \quad \text{s.t.} \quad \|x\|_2 \leq 1.</span></p>
+<p>The solution is <span class="math inline">f^* = -\lambda_{\max}(\mathbf{Q})</span> and <span class="math inline">x^*</span> is the leading eigenvector.</p>
+<p>The Frank-Wolfe linear subproblem becomes:</p>
+<p><span class="math display">y^k = \arg\min_{\|v\|_2 \leq 1} \langle -2\mathbf{Q}x^k,\, v\rangle = \frac{\mathbf{Q}x^k}{\|\mathbf{Q}x^k\|_2}.</span></p>
+<p>The update becomes:</p>
+<p><span class="math display">x^{k+1} = (1 - \alpha^k)\,x^k + \alpha^k \cdot \frac{\mathbf{Q}x^k}{\|\mathbf{Q}x^k\|_2}.</span></p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Connection to Power Iteration
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>If we set <span class="math inline">\alpha^k = 1</span>, then <span class="math inline">x^{k+1} = \frac{\mathbf{Q}x^k}{\|\mathbf{Q}x^k\|_2}</span>, which is exactly <strong>power iteration</strong>.</p>
+<p>Even when <span class="math inline">\alpha^k \neq 1</span>, Frank-Wolfe still finds the leading eigenvector.</p>
+</div>
+</div>
+<p>With projected gradient descent and the Frank-Wolfe method in hand, we have two complementary approaches to constrained optimization. Projected gradient descent (<a href="#cor-projected-gd" class="quarto-xref">Corollary&nbsp;<span>8.1</span></a>) is simple and broadly applicable, but requires computing a projection at each step. Frank-Wolfe avoids projections entirely and converges at <span class="math inline">O(1/K)</span> for smooth objectives, making it the method of choice when linear minimization over the constraint set is cheap but projection is expensive.</p>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const plotlyConfig = {responsive: true, displayModeBar: false};
+  const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+
+  function legendStyle() {
+    return {
+      font: {family: figFont, size: 13},
+      bgcolor: '#f0ebe5dd',
+      bordercolor: '#e0d9d1',
+      borderwidth: 1,
+    };
+  }
+
+  function themeLayout(extra) {
+    return Object.assign({
+      paper_bgcolor: '#f0ebe5',
+      plot_bgcolor: '#faf7f3',
+      font: { family: figFont, color: '#3d3530', size: 14 },
+    }, extra || {});
+  }
+
+  function themeAxis(title, extra) {
+    return Object.assign({
+      title: {text: title, font: {family: figFont, size: 14}},
+      gridcolor: '#e0d9d1',
+      zerolinecolor: '#e0d9d1',
+      linecolor: '#968a80',
+      tickfont: {family: figFont, size: 12, color: '#968a80'},
+    }, extra || {});
+  }
+
+  // Frank-Wolfe illustration
+  (function() {
+    const theta = [];
+    for (let t = 0; t <= 2 * Math.PI; t += 0.02) theta.push(t);
+    const cx = theta.map(t => 2 * Math.cos(t) + 1);
+    const cy = theta.map(t => 1.2 * Math.sin(t) + 1);
+    const xk = [1.8, 1.6]; const grad = [1.5, 0.8]; const yk = [-0.7, 0.5];
+    const traces = [
+      { x: cx, y: cy, fill: 'toself', fillcolor: 'rgba(123,143,163,0.18)', line: {color: '#7b97ad', width: 2.5}, name: 'Constraint set C', mode: 'lines' },
+      { x: [xk[0]], y: [xk[1]], mode: 'markers+text', marker: {color: '#8a6e5e', size: 10},
+        text: ['x<sup>k</sup>'], textposition: 'top right', textfont: {family: figFont, size: 13, color: '#8a6e5e'},
+        showlegend: false },
+      { x: [yk[0]], y: [yk[1]], mode: 'markers+text', marker: {color: '#7a9a7e', size: 10, symbol: 'diamond'},
+        text: ['y<sup>k</sup>'], textposition: 'bottom left', textfont: {family: figFont, size: 13, color: '#7a9a7e'},
+        showlegend: false },
+      { x: [xk[0], yk[0]], y: [xk[1], yk[1]], mode: 'lines', line: {color: '#b8995e', dash: 'dash', width: 2},
+        name: 'FW direction' },
+      { x: [0.4*xk[0]+0.6*yk[0]], y: [0.4*xk[1]+0.6*yk[1]], mode: 'markers+text',
+        marker: {color: '#b56b6b', size: 10, symbol: 'star'},
+        text: ['x<sup>k+1</sup>'], textposition: 'bottom right', textfont: {family: figFont, size: 13, color: '#b56b6b'},
+        showlegend: false },
+    ];
+    Plotly.newPlot('fig-fw-illustration', traces, themeLayout({
+      xaxis: themeAxis('', {range: [-2, 4], zeroline: false}),
+      yaxis: themeAxis('', {range: [-1, 3], zeroline: false, scaleanchor: 'x'}),
+      showlegend: true, legend: Object.assign({x: 0.55, y: 1}, legendStyle()),
+      margin: {t: 20, b: 40, l: 45, r: 20},
+      annotations: [{
+        ax: xk[0], ay: xk[1], x: xk[0] + 0.8*grad[0], y: xk[1] + 0.8*grad[1],
+        xref: 'x', yref: 'y', axref: 'x', ayref: 'y',
+        showarrow: true, arrowhead: 3, arrowsize: 1.5, arrowcolor: '#ad8480',
+        text: '\u2207f', font: {family: figFont, size: 12, color: '#ad8480'}
+      }]
+    }), plotlyConfig);
+  })();
+
+});
+</script>
+</section>
+</section>
+<section id="summary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
+<ul>
+<li><strong>Stochastic gradient descent (SGD).</strong> For finite-sum objectives <span class="math inline">f(\theta) = \frac{1}{n}\sum_{i=1}^{n} f_i(\theta)</span>, SGD replaces the full gradient with a single-sample (or minibatch) estimate, reducing per-iteration cost from <span class="math inline">O(n)</span> to <span class="math inline">O(1)</span> at the expense of variance. Minibatch SGD with batch size <span class="math inline">B</span> reduces gradient variance by a factor of <span class="math inline">B</span> while increasing per-iteration cost by <span class="math inline">B</span>.</li>
+<li><strong>Proximal gradient descent.</strong> For composite objectives <span class="math inline">g(\theta) + h(\theta)</span> where <span class="math inline">g</span> is smooth and <span class="math inline">h</span> is convex but non-smooth (e.g., <span class="math inline">h = \lambda\|\theta\|_1</span>), the proximal operator handles the non-smooth part exactly, recovering the same <span class="math inline">O(1/k)</span> rate as smooth gradient descent.</li>
+<li><strong>Soft thresholding.</strong> The proximal operator of the <span class="math inline">\ell_1</span> penalty is the soft-thresholding operator <span class="math inline">\mathcal{S}_{\alpha\lambda}(x) = \operatorname{sign}(x)\max(|x| - \alpha\lambda, 0)</span>, which drives small coefficients to exactly zero—enabling sparse solutions for Lasso.</li>
+<li><strong>Frank-Wolfe (conditional gradient) method.</strong> Instead of projecting, Frank-Wolfe linearizes the objective and solves <span class="math inline">\min_{s \in C} \nabla f(x^k)^\top s</span> at each step, then moves toward the minimizer. This avoids projections entirely—a major advantage when projection is expensive but linear optimization over <span class="math inline">C</span> is cheap. Convergence is <span class="math inline">O(1/K)</span> for smooth objectives over compact sets.</li>
+</ul>
+<section id="first-order-methods-comparison" class="level3 unnumbered">
+<h3 class="unnumbered anchored" data-anchor-id="first-order-methods-comparison">First-Order Methods Comparison</h3>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Update rule (key idea)</th>
+<th>Iteration complexity</th>
+<th>Strengths</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>SGD</strong></td>
+<td>stochastic gradient estimate</td>
+<td><span class="math inline">O(1/\varepsilon^2)</span></td>
+<td>Scalable to large datasets</td>
+</tr>
+<tr class="even">
+<td><strong>Proximal GD</strong></td>
+<td>gradient step + proximal step</td>
+<td><span class="math inline">O(1/\varepsilon)</span></td>
+<td>Handles nonsmooth <span class="math inline">h</span></td>
+</tr>
+<tr class="odd">
+<td><strong>Frank-Wolfe</strong></td>
+<td>linear minimization over <span class="math inline">\mathcal{C}</span></td>
+<td><span class="math inline">O(1/\varepsilon)</span></td>
+<td>Avoids projections</td>
+</tr>
+</tbody>
+</table>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Looking Ahead
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Having developed first-order methods for both unconstrained and constrained problems, we now shift to <strong>linear programming</strong>. The next chapter introduces the LP formulation, the geometry of polyhedra, and the key equivalence between vertices, extreme points, and basic feasible solutions — the foundation for the simplex method.</p>
+</div>
+</div>
+
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../lectures/07-momentum-adaptive.html" class="pagination-link" aria-label="Momentum and Adaptive Methods">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../lectures/09-lp-formulation-geometry.html" class="pagination-link" aria-label="LP Formulation and Geometry">
+        <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">LP Formulation and Geometry</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

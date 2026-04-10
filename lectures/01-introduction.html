@@ -75,6 +75,50 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -230,19 +274,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  <a href="../lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  <a href="../lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
   </div>
 </li>
       </ul>
@@ -300,7 +344,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -356,7 +400,8 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-motivating-examples" id="toc-sec-motivating-examples" class="nav-link active" data-scroll-target="#sec-motivating-examples"><span class="header-section-number">1.1</span> Motivating Examples</a>
+  <li><a href="#what-will-be-covered" id="toc-what-will-be-covered" class="nav-link active" data-scroll-target="#what-will-be-covered">What Will Be Covered</a></li>
+  <li><a href="#sec-motivating-examples" id="toc-sec-motivating-examples" class="nav-link" data-scroll-target="#sec-motivating-examples"><span class="header-section-number">1.1</span> Motivating Examples</a>
   <ul class="collapse">
   <li><a href="#sec-mle" id="toc-sec-mle" class="nav-link" data-scroll-target="#sec-mle"><span class="header-section-number">1.1.1</span> Maximum Likelihood Estimation</a></li>
   <li><a href="#sec-least-squares" id="toc-sec-least-squares" class="nav-link" data-scroll-target="#sec-least-squares"><span class="header-section-number">1.1.2</span> Least-Squares Regression</a></li>
@@ -416,10 +461,19 @@ window.Quarto = {
 <div class="callout-body-container callout-body">
 <p>Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.</p>
 <ul>
-<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/01a-svm-cvxpy-gradient-descent.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>SVM via CVXPY and Gradient Descent</strong> — comparing constrained and regularized formulations of support vector machines</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/01a-svm-cvxpy-gradient-descent.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>SVM via CVXPY and Gradient Descent</strong> — comparing constrained and regularized formulations of support vector machines</li>
 </ul>
 </div>
 </div>
+<section id="what-will-be-covered" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="what-will-be-covered">What Will Be Covered</h2>
+<ul>
+<li>Motivating examples from statistics, machine learning, and operations research: MLE, regression, SVM, PCA, portfolio optimization, optimal control</li>
+<li>How these problems share common mathematical structure as optimization problems</li>
+<li>The hierarchy of optimization: convex vs.&nbsp;nonconvex, constrained vs.&nbsp;unconstrained</li>
+<li>A roadmap for the course: from convex theory to algorithms to applications</li>
+</ul>
+</section>
 <section id="sec-motivating-examples" class="level2" data-number="1.1">
 <h2 data-number="1.1" class="anchored" data-anchor-id="sec-motivating-examples"><span class="header-section-number">1.1</span> Motivating Examples</h2>
 <p>Why study optimization? Because <strong>every</strong> statistical estimation problem involves optimization. We begin with the most fundamental example.</p>
@@ -648,7 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 <div class="figure-container">
   <div id="fig-portfolio"></div>
-  <div class="figure-caption">Markowitz efficient frontier. Each point represents a portfolio; the frontier (gold curve) shows the minimum variance achievable for each level of expected return. Diversification allows portfolios that are less risky than any individual asset.</div>
+  <div class="figure-caption">Markowitz efficient frontier. Each grey dot represents a feasible portfolio; the frontier curve traces the minimum variance achievable for each level of expected return. Diversification allows portfolios that are less risky than any individual asset.</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -931,7 +985,7 @@ Figure&nbsp;1.3: Optimization problem taxonomy. Convex problems (LP, QP, SOCP, S
 </ul>
 <div class="figure-container">
   <div id="fig-optimization-landscape-plotly"></div>
-  <div class="figure-caption">Figure 0.3: The landscape of optimization problems covered in this course, from linear programs to general convex optimization and beyond.</div>
+  <div class="figure-caption">Figure 1.4: The landscape of optimization problems covered in this course, from linear programs to general convex optimization and beyond.</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -979,6 +1033,19 @@ document.addEventListener('DOMContentLoaded', () => {
 <li><strong>Role of regularization.</strong> Adding a penalty term — <span class="math inline">\|\theta\|_2^2</span> for Ridge or <span class="math inline">\|\theta\|_1</span> for Lasso — controls model complexity and induces desirable structure such as sparsity.</li>
 <li><strong>Course roadmap.</strong> The course progresses from convex analysis and duality theory, through first- and second-order algorithms, to LP-specific methods (simplex, interior point) and modern applications (diffusion models, transformers).</li>
 </ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Looking Ahead
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In the next chapter, we establish the <strong>mathematical foundations</strong> — norms for measuring distance, matrix decompositions for revealing structure, gradients and Hessians for guiding descent, and automatic differentiation for computing gradients efficiently. These tools form the vocabulary that every optimization algorithm in this course builds upon.</p>
+</div>
+</div>
 
 
 </section>
@@ -1397,50 +1464,6 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>
-// Plotly Warmtone theming helpers — shared across all lectures
-// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
-const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
-
-function css(v) {
-  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-}
-
-function legendStyle() {
-  return {
-    font: {family: figFont, size: 13, color: css('--fig-text')},
-    bgcolor: css('--fig-bg') + 'dd',
-    bordercolor: css('--fig-grid'),
-    borderwidth: 1,
-  };
-}
-
-function themeLayout(extra) {
-  return Object.assign({
-    paper_bgcolor: css('--fig-bg'),
-    plot_bgcolor: css('--fig-plot-bg'),
-    font: {family: figFont, color: css('--fig-text'), size: 14},
-  }, extra || {});
-}
-
-function themeAxis(title, extra) {
-  return Object.assign({
-    title: {text: title, font: {family: figFont, size: 14}},
-    gridcolor: css('--fig-grid'),
-    zerolinecolor: css('--fig-grid'),
-    linecolor: css('--fig-axis'),
-    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
-  }, extra || {});
-}
-
-// Plotly color sequences matching the Warmtone palette
-const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
-];
-</script>
 <script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
 (function() {
   let previousOnload = window.onload;

@@ -1,0 +1,876 @@
+---
+title: "Constrained First-Order Methods"
+---
+
+Many of the most useful functions in optimization are not differentiable everywhere. Norms, absolute values, ReLU activations, and pointwise maxima of convex functions all have "kinks" where no classical gradient exists. Yet deep learning frameworks like PyTorch happily compute gradients of these functions, and optimization algorithms converge on problems involving them. The mathematical foundation that makes this possible is the theory of subgradients --- a generalization of the gradient to nonsmooth convex functions.
+
+This chapter develops two fundamental algorithms for nonsmooth and constrained optimization. Projected subgradient descent extends gradient descent to problems where the objective is nonsmooth and the feasible region is a convex set. It is simple to implement but converges at a slower $O(1/\sqrt{K})$ rate, reflecting the inherent difficulty of optimizing without smoothness. The Frank-Wolfe (conditional gradient) method takes a different approach to constrained optimization: instead of projecting onto the constraint set (which can be expensive), it solves a linear minimization over the constraint set at each iteration. This makes Frank-Wolfe especially attractive when the constraint set has special structure --- such as a polytope, a nuclear norm ball, or a spectrahedron --- where linear minimization is cheap even though projection is not.
+
+Together, these methods round out the first-order optimization toolkit, equipping us to handle the nonsmooth, constrained problems that arise throughout statistics, machine learning, and signal processing.
+
+::: {.callout-tip}
+## Companion Notebooks
+
+Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.
+
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/13-subgradient-proximal-gradient.ipynb) **Subgradient and Proximal Gradient** --- solving the Lasso with subgradient descent and proximal operators
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/14-projected-gradient-frank-wolfe.ipynb) **Projected Gradient and Frank-Wolfe** --- constrained optimization on $\ell_1$-balls with signal recovery
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/15-tv-denoising.ipynb) **TV Denoising** --- total variation image denoising via subgradient descent in PyTorch
+- [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/16-coordinate-descent.ipynb) **Coordinate Descent** --- coordinate descent methods and comparisons
+:::
+
+## What Will Be Covered {#sec-overview}
+
+This chapter develops the following topics, progressing from the theoretical foundations of nonsmooth analysis to practical constrained optimization algorithms:
+
+- Subgradients and subdifferentials: generalizing the gradient to nonsmooth convex functions
+- Subgradient calculus: chain rule, composition, and pointwise maximum rules
+- Optimality conditions for unconstrained and constrained nonsmooth problems
+- Projected subgradient descent and its $O(1/\sqrt{K})$ convergence
+- Frank-Wolfe (conditional gradient) method and its $O(1/K)$ convergence
+
+## Subgradients {#subgradients}
+
+We begin by establishing the theoretical foundation: a precise definition of "generalized gradient" for nonsmooth convex functions and the key properties that make subgradients useful in both analysis and computation.
+
+### Definition {#subgradient-def}
+
+Recall: if $f$ is convex and differentiable, then
+
+$$f(y) \geq f(x) + \langle \nabla f(x),\, y - x \rangle.$$
+
+::: {#def-subgradient}
+## Subgradient
+
+Let $f$ be a convex function. Let $D = \text{dom}(f)$. A **subgradient** of $f$ at $x$ is any vector $g \in \mathbb{R}^n$ satisfying
+
+$$f(y) \geq f(x) + \langle g,\, y - x \rangle \quad \forall\, y \in D.$$
+:::
+
+A subgradient generalizes the notion of a gradient to nonsmooth convex functions. While a differentiable function has a unique tangent hyperplane at each point, a nonsmooth convex function may have many supporting hyperplanes at a point of nondifferentiability, and each corresponds to a different subgradient.
+
+![Subgradients as supporting hyperplanes. Left: a smooth convex function has a unique tangent (gradient) at every point. Right: a nonsmooth convex function (e.g., $|x|$) has a "kink" where multiple supporting lines fit below the graph --- each slope in this family is a subgradient. The set of all such slopes forms the subdifferential $\partial f(x)$.](figures/ch06-subgradient-concept.svg){#fig-subgradient-concept}
+
+::: {#def-subdifferential}
+## Subdifferential
+
+We define the set of all subgradients of $f$ at $x$ as the **subdifferential** of $f$ at $x$, denoted by $\partial f$:
+
+$$\partial f(x) = \bigl\{g \in \mathbb{R}^n : f(y) \geq f(x) + \langle g,\, y - x \rangle,\; \forall\, y \in D \bigr\}.$$
+:::
+
+The subdifferential collects all subgradients at a given point into a single set. At points where $f$ is differentiable, this set contains only the gradient. At kinks or corners, the subdifferential is a convex set that "fills in" between the one-sided derivatives.
+
+### Remarks {#subgradient-remarks}
+
+::: {.callout-tip}
+## Remarks on Subgradients
+
+The following properties summarize the basic behavior of subdifferentials:
+
+1. $\partial f$ exists (nonempty) for convex $f$ for all $x \in \text{int}(D)$ (existence is guaranteed in the interior of the domain).
+2. If $f$ is differentiable $\Rightarrow \partial f(x) = \{\nabla f(x)\}$ (the subdifferential reduces to the ordinary gradient).
+3. For any $x \notin \text{dom}(f)$, define $\partial f(x) = \emptyset$ (no subgradient exists outside the domain).
+4. If $\partial f(x)$ is a singleton, $\partial f(x) = \{g\}$, then $f$ is differentiable at $x$ and $g = \nabla f(x)$ (a singleton subdifferential implies smoothness).
+5. $\partial f(x)$ is a **closed and convex set** (this geometric property is inherited from the convexity of $f$).
+:::
+
+::: {#exm-boundary-subdifferentiable}
+## Convex Function Not Subdifferentiable at Boundary
+
+Consider
+
+$$f(x) = \begin{cases} -\sqrt{x} & x \geq 0, \\ \infty & \text{otherwise.} \end{cases}$$
+
+Here $\text{dom}(f) = [0, \infty)$. At $x = 0$, we need $f(y) - f(0) = -\sqrt{y} \geq g \cdot y$ for all $g$. But as $y \to 0^+$,
+
+$$x = \tfrac{1}{4g^2} \;\Rightarrow\; -\sqrt{\tfrac{1}{4g^2}} \geq \tfrac{1}{4g^2} \cdot g \;\Rightarrow\; -\tfrac{1}{2g} \geq \tfrac{1}{4g},$$
+
+which is impossible. Thus $f$ is **not subdifferentiable** at $x = 0$ (a boundary point of $\text{dom}(f)$).
+:::
+
+::: {.proof}
+## Proof that $\partial f(x)$ is Convex
+
+If $g_1, g_2 \in \partial f(x)$, then
+
+$$f(y) \geq f(x) + \langle g_1,\, y - x\rangle \quad \cdots (1)$$
+$$f(y) \geq f(x) + \langle g_2,\, y - x\rangle \quad \cdots (2)$$
+
+Taking the convex combination $\alpha \cdot (1) + (1 - \alpha) \cdot (2)$, and using the linearity of the inner product, we get:
+
+$$f(y) \geq f(x) + \langle \alpha g_1 + (1-\alpha)g_2,\, y - x\rangle.$$
+
+Hence $\alpha g_1 + (1 - \alpha)g_2 \in \partial f(x)$. Since every convex combination of elements in $\partial f(x)$ remains in $\partial f(x)$, the subdifferential is convex. This completes the proof. $\blacksquare$
+:::
+
+## Examples of Subgradients {#subgradient-examples}
+
+### 1. Absolute Value {#ex-abs}
+
+Let $f(x) = |x|$, $x \in \mathbb{R}$.
+
+$$\partial f(x) = \begin{cases} \{\text{sign}(x)\} & x \neq 0, \\ [-1, 1] & x = 0. \end{cases}$$
+
+```{=html}
+<div class="figure-container">
+  <div id="fig-abs-subgradient"></div>
+  <div class="figure-caption">Figure 8.1: The absolute value function |x| and supporting lines at x=0. Every slope in [-1,1] gives a valid tangent line below the graph.</div>
+</div>
+```
+
+### 2. Euclidean Norm {#ex-l2}
+
+Let $f(x) = \|x\|_2$, $x \in \mathbb{R}^n$.
+
+- **For $x \neq 0$**: $f$ is differentiable. We have
+  $$\frac{\partial f}{\partial x_i} = \frac{1}{2}\Bigl(\sum_{j=1}^n x_j^2\Bigr)^{-1/2} \cdot 2x_i = \frac{x_i}{\|x\|_2},$$
+  so the unique subgradient is $\dfrac{x}{\|x\|_2}$.
+- **For $x = 0$**: The subgradient $g$ is any element of
+  $$\bigl\{z : \|z\|_2 \leq 1\bigr\},$$
+  since $z^\top x \leq \|z\|_2 \cdot \|x\|_2$ by Cauchy-Schwarz.
+
+### 3. General Norms and Dual Norms {#ex-norm}
+
+For any norm $\|\cdot\|$, define its **dual norm** as
+
+$$\|y\|_* = \sup_{\|x\| \leq 1} x^\top y.$$
+
+::: {.callout-tip}
+## Remark
+
+Then $(\partial \|\cdot\|)(x) \supseteq \{g : \|g\|_* \leq 1\}$.
+:::
+
+### 4. Pointwise Maximum of Convex Functions {#ex-max}
+
+Let $f(x) = \max\{f_1(x),\, f_2(x)\}$, where $f_1, f_2$ are convex.
+
+$$\partial f(x) = \begin{cases} \{f_1'(x)\} & \text{if } f_1(x) > f_2(x), \\ [f_2'(x),\, f_1'(x)] & \text{if } f_1(x) = f_2(x), \\ \{f_2'(x)\} & \text{if } f_2(x) > f_1(x). \end{cases}$$
+
+```{=html}
+<div class="figure-container">
+  <div id="fig-max-subgradient"></div>
+  <div class="figure-caption">Figure 8.2: The function max{f₁(x), f₂(x)}. At the kink where f₁ = f₂, the subdifferential is the interval [f₂', f₁'].</div>
+</div>
+```
+
+::: {.callout-tip}
+## Remark: PyTorch and Subgradients
+
+In practice, deep learning frameworks adopt specific conventions for subgradients at points of nondifferentiability:
+
+- PyTorch defines gradients using a subgradient. For example, $\partial\,\text{ReLU}(0) = 0$, $\partial\|\cdot\|(0) = 0$ (choosing the zero subgradient at the kink by convention).
+- $(\partial \max\{f, g\})(x) = \frac{1}{2}f'(x) + \frac{1}{2}g'(x)$ when $f(x) = g(x)$. (Not exactly a subgradient, but works in practice because the set of nondifferentiable points typically has measure zero.)
+- For minimization, use the fact that $\min = -\max$ (so the same conventions apply after a sign flip).
+:::
+
+Having established the definition and basic properties of subgradients, we now develop the calculus rules that make subgradients practically useful. Just as the chain rule is the workhorse of smooth calculus, we need analogous composition and combination rules for subdifferentials.
+
+## Subgradient Calculus {#subgradient-calculus}
+
+Most of the familiar calculus rules for gradients carry over to subgradients, including the chain rule and composition rules. These rules allow us to compute subdifferentials of complex functions built from simpler pieces --- exactly what is needed for optimality conditions and algorithm design.
+
+### Chain Rule {#chain-rule}
+
+Just as the chain rule is fundamental to calculus with smooth functions, we need a chain rule for subgradients to handle compositions of nonsmooth functions. The following result shows that the familiar chain-rule structure carries over, provided the outer function is differentiable and nondecreasing.
+
+::: {#thm-chain-rule-subgradients}
+## Chain Rule for Subgradients
+
+Let $f : \mathbb{R}^n \to \mathbb{R}$ be a convex function, and $g : \mathbb{R} \to \mathbb{R}$ be a nondecreasing convex function. Suppose $g$ is differentiable. (Note: $g \circ f$ is convex.)
+
+Let $h = g \circ f$. Then
+
+$$\partial h(x) = g'(f(x)) \cdot \partial f(x).$$
+:::
+
+This chain rule says that composing a convex function $f$ with a nondecreasing differentiable convex function $g$ preserves the subdifferential structure: we simply multiply each subgradient of $f$ by the scalar derivative $g'(f(x))$.
+
+### Composition Rule {#composition}
+
+We often encounter functions that are compositions of multiple convex functions through a differentiable nondecreasing outer function. The following result generalizes the chain rule to this multivariate setting.
+
+::: {#thm-composition}
+## Composition
+
+Suppose $h(x) = g(f_1(x), \ldots, f_m(x))$, where $f_1, \ldots, f_m$ are convex, $g$ is differentiable, nondecreasing, and convex. For any given $x$, let
+
+$$\gamma = \nabla g(y)\Big|_{y = (f_1(x), \ldots, f_m(x))^\top} \in \mathbb{R}^m.$$
+
+Then
+
+$$\partial h(x) = \Bigl\{\sum_{i=1}^{m} \gamma_i g_i \;\Big|\; g_i \in \partial f_i(x)\Bigr\}.$$
+:::
+
+This is the analog of the standard chain rule. The standard chain rule gives
+
+$$\nabla h(x) = \sum_i \frac{\partial g}{\partial y_i}(y)\Big|_{y = (f_1(x), \ldots, f_m(x))^\top} \cdot \nabla f_i(x).$$
+
+::: {#exm-l1-norm-squared}
+## Example: $f(x) = \|x\|_1^2$
+
+Write $f(x) = \|x\|_1^2 = \bigl(\sum_{i=1}^n |x_i|\bigr)^2$. Let $h(t) = t^2$ and $g(x) = \|x\|_1$. Then
+
+$$\partial f(x) = 2\|x\|_1 \cdot \partial g(x) = \bigl\{2\|x\|_1 \cdot z \;\big|\; |z_i| \leq 1 \text{ if } x_i = 0,\; z_i = \text{sign}(x_i) \text{ otherwise}\bigr\}.$$
+:::
+
+### Pointwise Maximum Rule {#pointwise-max}
+
+The pointwise maximum of convex functions arises frequently --- for instance, in robust optimization and piecewise linear modeling. The subdifferential of a pointwise maximum is determined by the subdifferentials of the "active" functions, i.e., those achieving the maximum.
+
+::: {#thm-pointwise-maximum}
+## Pointwise Maximum
+
+Let $f_i(x) = \max_{1 \leq i \leq k} f_i(x)$, where $x \in \bigcap_{i=1}^k \text{int}(\text{dom}(f_i))$. Then
+
+$$\partial f(x) \supseteq \bigcup_{\substack{i:\, f_i(x) = f(x)}} \partial f_i(x) = \bigcup_{i \in I(x)} \partial f_i(x),$$
+
+where $I(x) = \{i : f_i(x) = f(x)\}$ is the set of active indices.
+:::
+
+::: {#exm-piecewise-linear}
+## Piecewise Linear Function
+
+Let $f(x) = \max_{1 \leq i \leq m}\{a_i^\top x + b_i\}$. Then $I(x) = \{j : a_j^\top x + b_j = \max_i \{a_i^\top x + b_i\}\}$.
+
+For any $j \in I(x)$, $a_j \in \partial f(x)$. More generally,
+
+$$\sum_{j \in I(x)} \lambda_j a_j \in \partial f(x) \quad \text{where } \sum_{j \in I(x)} \lambda_j = 1,\; \lambda_j \geq 0.$$
+:::
+
+## Optimality Conditions {#optimality-conditions}
+
+Armed with subgradient calculus rules, we can now characterize when a point is optimal for nonsmooth problems, paralleling the role that $\nabla f(x^*) = 0$ plays in smooth optimization.
+
+### 1. Unconstrained Case {#opt-unconstrained}
+
+For smooth functions, the optimality condition $\nabla f(x^*) = 0$ is the starting point for all optimization algorithms. For nonsmooth convex functions, the analogous condition involves the subdifferential: optimality is equivalent to the zero vector belonging to the subdifferential.
+
+::: {#thm-unconstrained-optimality}
+## Unconstrained Optimality
+
+Let $f : D \to \mathbb{R}$ be a convex function. Then
+
+$$x^* \in \arg\min\{f(x) : x \in \mathbb{R}^n\} \iff 0 \in \partial f(x^*).$$ {#eq-unconstrained-optimality}
+:::
+
+This is the nonsmooth analog of the familiar condition $\nabla f(x^*) = 0$ for smooth optimization. The zero vector must belong to the subdifferential at a minimizer, meaning there is a supporting hyperplane at $x^*$ with zero slope.
+
+### 2. Convex and Constrained Case {#opt-constrained}
+
+Consider the problem $\min_{x} f(x)$ subject to $x \in \mathcal{C}$. When a constraint is present, the condition $0 \in \partial f(x^*)$ is too strong --- the minimizer of $f$ over $\mathcal{C}$ may not be a global minimizer of $f$. Instead, optimality requires that no feasible direction can decrease the objective, which is captured by the following condition involving the normal cone.
+
+::: {#thm-constrained-optimality}
+## Constrained Optimality
+
+$x^*$ is optimal if and only if there exists $g \in \partial f(x^*)$ such that
+
+$$\langle g,\, x - x^* \rangle \geq 0 \quad \forall\, x \in \mathcal{C}.$$ {#eq-constrained-optimality}
+
+Equivalently, $-g \in N_{\mathcal{C}}(x^*)$, the normal cone of $\mathcal{C}$ at $x^*$.
+:::
+
+This condition says that at an optimal point $x^*$, the negative of some subgradient must point into the constraint set (or along its boundary). In other words, there is no feasible direction that can decrease the objective. This generalizes the KKT conditions to nonsmooth functions.
+
+The optimality conditions above tell us *when* a point is optimal, but they do not tell us *how to find* such a point. We now turn to algorithmic methods that use subgradients as the basis for iterative optimization.
+
+## Subgradient Descent {#subgradient-descent}
+
+With the optimality conditions (@eq-unconstrained-optimality and @eq-constrained-optimality) in hand, we now turn to algorithms. The natural approach is to replace the gradient in gradient descent with a subgradient. Consider the unconstrained problem $\min_{x} f(x)$ where $f$ is convex (but possibly nonsmooth).
+
+::: {.callout-important}
+## Algorithm: Subgradient Descent
+
+```
+For k = 0, 1, 2, ...:
+    x^{k+1} = x^k - alpha^k * g^k,  where g^k in partial f(x^k).
+```
+:::
+
+For the **constrained** problem $\min_{x \in \mathcal{C}} f(x)$, where $f$ is convex and $\mathcal{C}$ is a closed convex set:
+
+::: {.callout-important}
+## Algorithm: Projected Subgradient Descent
+
+```
+For k = 0, 1, 2, ...:
+    x^{k+1} = Pi_C(x^k - alpha^k * g^k),  where g^k in partial f(x^k).
+```
+:::
+
+### Do Subgradients Always Give Descent Directions? {#non-descent}
+
+**Question:** Do subgradient steps always decrease the objective?
+
+For gradient descent on smooth functions, when $\alpha$ is sufficiently small:
+
+$$f(x - \alpha \nabla f(x)) = f(x) - \alpha \|\nabla f(x)\|_2^2 + O(\alpha^2).$$
+
+But are **all** vectors in $-\partial f(x)$ legitimate descent directions?
+
+::: {.callout-note appearance="simple"}
+**No.** Not all subgradient directions are descent directions. We cannot expect monotone function decrease!
+:::
+
+::: {#exm-non-descent}
+## Non-Descent Subgradient Direction
+
+Let $f(x) = |x_1| + 2|x_2|$, $x = (x_1, x_2)^\top$.
+
+At the point $z = (1, 0)^\top$:
+
+$$\partial f(z) = \Bigl\{\begin{pmatrix}1\\t\end{pmatrix} \;\Big|\; |t| \leq 2\Bigr\}.$$
+
+**Case 1:** $g_1 = (1, 0)^\top \in \partial f(z)$.
+
+$$f(z - t\,g_1) = f\bigl((1-t, 0)^\top\bigr) = |1-t| \leq f(z) \quad \text{for } t \in [0,1].$$
+
+So $-g_1$ *is* a descent direction.
+
+**Case 2:** $g_2 = (1, 2)^\top \in \partial f(z)$.
+
+$$f(z - t\,g_2) = f\bigl((1-t, -2t)^\top\bigr) = |1-t| + 4|t| = \begin{cases}1 + 2t & t \in [0,1],\\5t - 1 & t \geq 1.\end{cases}$$
+
+So $f(z - t\,g_2) > f(z)$ for all $t > 0$. Thus $-g_2$ is **not** a descent direction.
+:::
+
+```{=html}
+<div class="figure-container">
+  <div id="fig-non-descent"></div>
+  <div class="figure-caption">Figure 8.3: Function values along two subgradient directions from z = (1,0). The direction -g₁ descends, but -g₂ does not.</div>
+</div>
+```
+
+## Convergence Theory {#convergence-theory}
+
+Since we cannot hope for monotonic decrease in $\{f(x^k)\}_{k \geq 0}$, we track the **average error**:
+
+$$\frac{\sum_{k=0}^{K} \alpha^k \bigl(f(x^k) - f(x^*)\bigr)}{\sum_{k=0}^{K} \alpha^k} \;\geq\; \min_{0 \leq k \leq K}\bigl(f(x^k) - f(x^*)\bigr),$$
+
+where $x^*$ is any point in $\arg\min_{x \in \mathcal{C}} f(x)$, and the right-hand side is the **best iterate** error.
+
+**Function class:** We focus on Lipschitz and convex functions. The Lipschitz condition is the natural regularity assumption for nonsmooth optimization --- it bounds how fast the function can change, which in turn bounds the norm of any subgradient.
+
+::: {#def-lipschitz}
+## $L$-Lipschitz
+
+$f$ is $L$-Lipschitz if
+
+$$|f(x) - f(x')| \leq L \|x - x'\|_2 \quad \forall\, x, x' \in \text{dom}(f).$$
+
+**Implication:** $\|g\|_2 \leq L$ for all $g \in \partial f(x)$, for all $x$.
+:::
+
+An $L$-Lipschitz function cannot change too rapidly: its function values are bounded by a linear function of the distance between points. This condition is weaker than smoothness and naturally holds for many nonsmooth functions of interest, such as norms.
+
+With the Lipschitz condition in hand, we can now state the convergence guarantee for projected subgradient descent. Since the method does not guarantee monotone decrease in the objective (as shown in the example above), the convergence is measured in terms of the best iterate seen so far.
+
+::: {#thm-convergence-projected-subgradient}
+## Convergence of Projected Subgradient Descent
+
+Consider (projected) subgradient descent with stepsizes $\{\alpha^k\}_{k \geq 0}$ on an $L$-Lipschitz convex $f$. Then
+
+$$\min_{0 \leq k \leq K}\bigl\{f(x^k) - f^*\bigr\} \;\leq\; \underbrace{\frac{\sum_{k=0}^{K} \alpha^k \bigl(f(x^k) - f^*\bigr)}{\sum_{k=0}^{K} \alpha^k}}_{\text{Err}_{\text{ave}}} \;\leq\; \frac{\|x^0 - x^*\|_2^2 + L^2 \sum_{k=0}^{K}(\alpha^k)^2}{2\sum_{k=0}^{K}\alpha^k}.$$ {#eq-subgradient-convergence}
+:::
+
+This theorem provides a convergence guarantee for projected subgradient descent without requiring monotone decrease in the objective. The bound shows that the best iterate among all $K$ steps achieves an error controlled by the ratio of cumulative squared step sizes to cumulative step sizes, revealing the fundamental tension in choosing step sizes for nonsmooth optimization.
+
+::: {.callout-tip}
+## Remark: Step Size Conditions
+
+This result holds for all step size sequences $\{\alpha^k\}$. We want:
+
+- $\sum \alpha^k \to \infty$ (so the denominator grows).
+- $\sum (\alpha^k)^2 = \widetilde{O}(1)$ (grows at most polylogarithmically in $k$).
+:::
+
+::: {.callout-note appearance="simple"}
+**Optimal choice:** $\alpha^k = \frac{1}{\sqrt{k}}$. Then
+
+$$\text{Err}_{\text{best}} \;\leq\; \text{const} \cdot \frac{\|x^0 - x^*\|_2^2 + L^2 \log K}{\sqrt{K}} \;=\; \widetilde{O}\!\left(\frac{1}{\sqrt{K}}\right).$$
+:::
+
+Projected subgradient descent gives us a general-purpose tool for constrained nonsmooth optimization, but its reliance on projection can be a computational bottleneck. For many structured constraint sets, computing the projection is itself a difficult optimization problem. This motivates an entirely different approach to constrained optimization.
+
+## Frank-Wolfe (Conditional Gradient) {#frank-wolfe}
+
+Projected subgradient descent achieves a convergence rate of $\widetilde{O}(1/\sqrt{K})$ (@eq-subgradient-convergence), but it requires projecting onto the constraint set $\mathcal{C}$ at each iteration. For many structured constraint sets (polytopes, nuclear norm balls, spectrahedra), projection is computationally expensive. The Frank-Wolfe method avoids projection entirely by instead solving a linear minimization over $\mathcal{C}$.
+
+![Comparison of projected gradient descent (left) and Frank-Wolfe (right). PGD takes a gradient step that may leave the feasible set $\mathcal{C}$, then projects back. Frank-Wolfe linearizes the objective, minimizes the linear surrogate over $\mathcal{C}$ to find a vertex $y^k$, then takes a convex combination step.](figures/ch11-frank-wolfe.svg){#fig-pgd-vs-fw}
+
+**Setup:** Constrained optimization
+
+$$\min_{x \in \mathcal{C}} f(x),$$
+
+where $\mathcal{C}$ is a convex set and $f$ is differentiable.
+
+### Algorithm {#fw-algorithm}
+
+::: {.callout-important}
+## Algorithm: Frank-Wolfe (Conditional Gradient)
+
+```
+For k = 1, 2, ..., K:
+    y^k = argmin_{y in C} <grad f(x^k), y>     // Find steepest descent direction in C
+    x^{k+1} = (1 - alpha^k) x^k + alpha^k y^k  // Convex combination (average)
+```
+:::
+
+### Fixed Point Interpretation {#fw-fixed-point}
+
+**Why is this reasonable?** Suppose $x^k = x^*$ (optimal). Then $x^* = y^k \Rightarrow x^{k+1} = x^*$. That is, $x^*$ is a **fixed point** of Frank-Wolfe.
+
+To see this: by first-order optimality, $\langle \nabla f(x^*),\, y - x^* \rangle \geq 0$ for all $y \in \mathcal{C}$. Thus $\langle \nabla f(x^*),\, y \rangle \geq \langle \nabla f(x^*),\, x^* \rangle$ for all $y \in \mathcal{C}$, which implies
+
+$$\arg\min_{y \in \mathcal{C}} \langle \nabla f(x^*),\, y \rangle = x^*.$$
+
+**Another interpretation** of the Frank-Wolfe descent direction:
+
+$$y^k = \arg\min_{v \in \mathcal{C}} \bigl\{\underbrace{f(x^k) + \langle \nabla f(x^k),\, v - x^k \rangle}_{\text{linear surrogate of } f(v)}\bigr\}.$$
+
+```{=html}
+<div class="figure-container">
+  <div id="fig-fw-illustration"></div>
+  <div class="figure-caption">Figure 8.4: Frank-Wolfe iteration: linearize f at x^k, minimize the linear surrogate over C to get y^k, then take a convex combination step.</div>
+</div>
+```
+
+### Convergence {#fw-convergence}
+
+Frank-Wolfe converges at a sublinear rate that depends on the smoothness of $f$ (through the Hessian bound $L$) and the "size" of the constraint set (through its diameter $d_{\mathcal{C}}$). The convergence is $O(1/K)$, which is faster than the $O(1/\sqrt{K})$ rate of projected subgradient descent, but only applies when $f$ is smooth.
+
+::: {#thm-frank-wolfe-convergence}
+## Frank-Wolfe Convergence
+
+Let $d_{\mathcal{C}} = \sup_{x, y \in \mathcal{C}} \|x - y\|$ be the diameter of $\mathcal{C}$. Set $\alpha^k = \frac{2}{k+2}$ for $k \geq 0$.
+
+When $\nabla^2 f$ is bounded in the sense that $\lambda_{\max}(\nabla^2 f(x)) \leq L$, then
+
+$$f(x^K) - f(x^*) \;\leq\; \frac{2L\,d_{\mathcal{C}}^2}{K + 2}.$$ {#eq-fw-convergence}
+:::
+
+The Frank-Wolfe method converges at a rate of $O(1/K)$ (@eq-fw-convergence), which is faster than the $O(1/\sqrt{K})$ rate of subgradient methods (@eq-subgradient-convergence). The key advantage is that Frank-Wolfe only requires solving a linear optimization problem over $\mathcal{C}$ at each step (rather than a projection), which can be much cheaper for structured constraint sets such as polytopes or nuclear norm balls.
+
+::: {.callout-tip}
+## Remarks on Frank-Wolfe
+
+- Even when $f$ is strongly convex, we **cannot** achieve linear convergence with Frank-Wolfe.
+- Frank-Wolfe can be applied **beyond convex functions**.
+:::
+
+The figure below compares the two constrained optimization approaches on the problem $\min \frac{1}{2}\|x - p\|^2$ over the $\ell_1$-ball $\{x : \|x\|_1 \leq 1\}$. Projected gradient descent (left) projects each iterate back onto the constraint set, while Frank-Wolfe (right) moves toward a vertex of the constraint set at each step, producing iterates that stay on the boundary and converge via convex combinations.
+
+```{=html}
+<style>
+  .interactive-figure-container {
+    font-family: 'Palatino Linotype', 'Palatino', 'Book Antiqua', 'Georgia', serif;
+    background: #f0ebe5; border-radius: 8px; padding: 24px 20px 16px 20px;
+    margin: 28px auto; max-width: 1100px;
+    box-shadow: 0 2px 12px rgba(61,53,48,0.08);
+  }
+  .interactive-figure-container h3 {
+    font-family: 'Palatino Linotype', 'Palatino', 'Book Antiqua', 'Georgia', serif;
+    color: #3d3530; font-size: 1.15em; font-weight: 600; margin: 0 0 6px 0;
+  }
+  .interactive-figure-container .fig-subtitle {
+    color: #968a80; font-size: 0.92em; margin: 0 0 16px 0; line-height: 1.5;
+  }
+  .interactive-figure-container .slider-row {
+    display: flex; align-items: center; gap: 14px; margin: 14px 0 8px 0; flex-wrap: wrap;
+  }
+  .interactive-figure-container .slider-row label {
+    font-size: 0.95em; color: #3d3530; min-width: 80px;
+  }
+  .interactive-figure-container .slider-row input[type="range"] {
+    flex: 1; min-width: 180px; max-width: 420px; accent-color: #7b97ad; height: 6px;
+  }
+  .interactive-figure-container .slider-row .slider-value {
+    font-size: 0.95em; color: #b8995e; font-weight: 600; min-width: 60px;
+  }
+  .interactive-figure-container .panels {
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .interactive-figure-container .panels > div {
+    flex: 1; min-width: 300px;
+  }
+  .interactive-figure-container .info-box {
+    background: #faf7f3; border-left: 3px solid #7b97ad; border-radius: 0 4px 4px 0;
+    padding: 10px 14px; margin: 10px 0 4px 0; font-size: 0.88em; color: #3d3530; line-height: 1.6;
+  }
+</style>
+
+<div class="interactive-figure-container" id="fwpgd-wrapper">
+  <h3>Projected Gradient vs. Frank-Wolfe on the &ell;<sub>1</sub>-Ball</h3>
+  <p class="fig-subtitle">
+    min &frac12;||x &minus; p||&sup2; &ensp; s.t. ||x||<sub>1</sub> &le; 1
+    &emsp;|&emsp; Target p outside the ball &emsp;|&emsp; 20 iterations
+  </p>
+  <div class="slider-row">
+    <label for="fwpgd-angle">Target angle =</label>
+    <input type="range" id="fwpgd-angle" min="10" max="80" step="1" value="35">
+    <span class="slider-value" id="fwpgd-angle-val">35&deg;</span>
+  </div>
+  <div class="panels">
+    <div id="fwpgd-left"></div>
+    <div id="fwpgd-right"></div>
+  </div>
+  <div class="info-box" id="fwpgd-info">
+    Drag the slider to move the target point p around the ball.
+  </div>
+</div>
+
+<script>
+(function() {
+  var C = {
+    bg: '#f0ebe5', plotBg: '#faf7f3', text: '#3d3530', grid: '#e0d9d1',
+    axis: '#968a80', blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
+    terracotta: '#c47a6a', lavender: '#907ea0', rosewood: '#ad8480'
+  };
+  var font = {family: "'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif", color: C.text};
+  var plotCfg = {displayModeBar: false, responsive: true};
+  var nIter = 20;
+
+  /* l1 ball vertices and edges */
+  var ballX = [1, 0, -1, 0, 1];
+  var ballY = [0, 1, 0, -1, 0];
+
+  /* Project onto l1 ball (2D) */
+  function projL1(x) {
+    var s = Math.abs(x[0]) + Math.abs(x[1]);
+    if (s <= 1) return [x[0], x[1]];
+    /* Sort absolute values */
+    var a = [Math.abs(x[0]), Math.abs(x[1])];
+    var sorted = a.slice().sort(function(u,v){return v-u;});
+    var theta = (sorted[0] + sorted[1] - 1) / 2;
+    if (theta < 0) theta = 0;
+    if (sorted[1] - theta < 0) theta = sorted[0] - 1;
+    return [Math.sign(x[0])*Math.max(Math.abs(x[0]) - theta, 0),
+            Math.sign(x[1])*Math.max(Math.abs(x[1]) - theta, 0)];
+  }
+
+  /* Linear minimization oracle over l1 ball */
+  function lmoL1(g) {
+    /* argmin <g, x> s.t. ||x||_1 <= 1 */
+    if (Math.abs(g[0]) >= Math.abs(g[1])) {
+      return [g[0] > 0 ? -1 : 1, 0];
+    } else {
+      return [0, g[1] > 0 ? -1 : 1];
+    }
+  }
+
+  function runPGD(p) {
+    var eta = 0.8;
+    var x = [0, 0];
+    var path = [[x[0], x[1]]];
+    for (var k = 0; k < nIter; k++) {
+      var g = [x[0] - p[0], x[1] - p[1]];
+      var xnew = [x[0] - eta*g[0], x[1] - eta*g[1]];
+      x = projL1(xnew);
+      path.push([x[0], x[1]]);
+    }
+    return path;
+  }
+
+  function runFW(p) {
+    var x = [0, 0];
+    var path = [[x[0], x[1]]];
+    for (var k = 0; k < nIter; k++) {
+      var g = [x[0] - p[0], x[1] - p[1]];
+      var v = lmoL1(g);
+      var ak = 2.0 / (k + 2);
+      x = [(1-ak)*x[0] + ak*v[0], (1-ak)*x[1] + ak*v[1]];
+      path.push([x[0], x[1]]);
+    }
+    return path;
+  }
+
+  function fval(x, p) {
+    return 0.5*((x[0]-p[0])*(x[0]-p[0]) + (x[1]-p[1])*(x[1]-p[1]));
+  }
+
+  function makeLayout(title) {
+    return {
+      paper_bgcolor: C.bg, plot_bgcolor: C.plotBg, font: font, height: 420,
+      margin: {t: 38, b: 50, l: 50, r: 16},
+      title: {text: title, font: {size: 14, family: font.family, color: font.color}},
+      xaxis: {gridcolor: C.grid, zerolinecolor: C.axis, linecolor: C.axis,
+              tickfont: {size: 12, family: font.family, color: font.color},
+              range: [-1.6, 1.6], title: 'x\u2081'},
+      yaxis: {gridcolor: C.grid, zerolinecolor: C.axis, linecolor: C.axis,
+              tickfont: {size: 12, family: font.family, color: font.color},
+              range: [-1.6, 1.6], title: 'x\u2082', scaleanchor: 'x'},
+      showlegend: false, hovermode: 'closest'
+    };
+  }
+
+  function update(angleDeg) {
+    var rad = angleDeg * Math.PI / 180;
+    var p = [1.4*Math.cos(rad), 1.4*Math.sin(rad)];
+
+    var pgd = runPGD(p);
+    var fw = runFW(p);
+
+    var pgdX = pgd.map(function(v){return v[0];}), pgdY = pgd.map(function(v){return v[1];});
+    var fwX = fw.map(function(v){return v[0];}), fwY = fw.map(function(v){return v[1];});
+
+    var leftTraces = [
+      {x: ballX, y: ballY, mode: 'lines', fill: 'toself',
+       fillcolor: 'rgba(122,154,126,0.12)', line: {color: C.sage, width: 2},
+       hoverinfo: 'skip'},
+      {x: pgdX, y: pgdY, mode: 'lines+markers',
+       line: {color: C.blue, width: 2.5}, marker: {size: 5, color: C.blue},
+       name: 'PGD'},
+      {x: [p[0]], y: [p[1]], mode: 'markers',
+       marker: {size: 12, color: C.terracotta, symbol: 'star', line: {width: 1.5, color: 'white'}}},
+      {x: [0], y: [0], mode: 'markers',
+       marker: {size: 8, color: C.axis, symbol: 'circle'}}
+    ];
+
+    var rightTraces = [
+      {x: ballX, y: ballY, mode: 'lines', fill: 'toself',
+       fillcolor: 'rgba(122,154,126,0.12)', line: {color: C.sage, width: 2},
+       hoverinfo: 'skip'},
+      {x: fwX, y: fwY, mode: 'lines+markers',
+       line: {color: C.gold, width: 2.5}, marker: {size: 5, color: C.gold},
+       name: 'FW'},
+      {x: [p[0]], y: [p[1]], mode: 'markers',
+       marker: {size: 12, color: C.terracotta, symbol: 'star', line: {width: 1.5, color: 'white'}}},
+      {x: [0], y: [0], mode: 'markers',
+       marker: {size: 8, color: C.axis, symbol: 'circle'}}
+    ];
+
+    var fPGD = fval(pgd[nIter], p);
+    var fFW = fval(fw[nIter], p);
+    var info = 'Target p = (' + p[0].toFixed(2) + ', ' + p[1].toFixed(2) + ')'
+             + ' &ensp;|&ensp; <span style="color:' + C.blue + '"><b>PGD</b>: f = ' + fPGD.toFixed(4) + '</span>'
+             + ' &ensp; <span style="color:' + C.gold + '"><b>FW</b>: f = ' + fFW.toFixed(4) + '</span>';
+    document.getElementById('fwpgd-info').innerHTML = info;
+
+    Plotly.react('fwpgd-left', leftTraces, makeLayout('Projected Gradient Descent'), plotCfg);
+    Plotly.react('fwpgd-right', rightTraces, makeLayout('Frank-Wolfe'), plotCfg);
+  }
+
+  document.getElementById('fwpgd-angle').addEventListener('input', function() {
+    var a = parseInt(this.value);
+    document.getElementById('fwpgd-angle-val').textContent = a + '\u00B0';
+    update(a);
+  });
+
+  update(35);
+})();
+</script>
+```
+
+### Nonconvex Example: Leading Eigenvector {#fw-nonconvex}
+
+Consider the nonconvex problem (with $\mathbf{Q} \succ 0$):
+
+$$\min_{x} \;-x^\top \mathbf{Q}\,x \quad \text{s.t.} \quad \|x\|_2 \leq 1.$$
+
+The solution is $f^* = -\lambda_{\max}(\mathbf{Q})$ and $x^*$ is the leading eigenvector.
+
+The Frank-Wolfe linear subproblem becomes:
+
+$$y^k = \arg\min_{\|v\|_2 \leq 1} \langle -2\mathbf{Q}x^k,\, v\rangle = \frac{\mathbf{Q}x^k}{\|\mathbf{Q}x^k\|_2}.$$
+
+The update becomes:
+
+$$x^{k+1} = (1 - \alpha^k)\,x^k + \alpha^k \cdot \frac{\mathbf{Q}x^k}{\|\mathbf{Q}x^k\|_2}.$$
+
+::: {.callout-tip}
+## Remark: Connection to Power Iteration
+
+If we set $\alpha^k = 1$, then $x^{k+1} = \frac{\mathbf{Q}x^k}{\|\mathbf{Q}x^k\|_2}$, which is exactly **power iteration**.
+
+Even when $\alpha^k \neq 1$, Frank-Wolfe still finds the leading eigenvector.
+:::
+
+```{=html}
+<div class="figure-container">
+  <div id="fig-convergence"></div>
+  <div class="figure-caption">Figure 8.5: Convergence comparison — projected subgradient descent (O(1/√K)) vs. Frank-Wolfe (O(1/K)) on representative problems.</div>
+</div>
+```
+
+With projected subgradient descent and the Frank-Wolfe method in hand, we have completed the first-order optimization toolkit for nonsmooth and constrained problems. The choice between these methods depends on the problem structure: projected subgradient descent is simple and broadly applicable but converges slowly at $O(1/\sqrt{K})$; Frank-Wolfe avoids projections entirely and converges at $O(1/K)$ for smooth objectives, making it the method of choice when linear minimization over the constraint set is cheap.
+
+```{=html}
+<script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+  const plotlyConfig = {responsive: true, displayModeBar: false};
+  const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
+
+  function css(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+  function legendStyle() {
+    return {
+      font: {family: figFont, size: 13},
+      bgcolor: '#f0ebe5dd',
+      bordercolor: '#e0d9d1',
+      borderwidth: 1,
+    };
+  }
+
+  function themeLayout(extra) {
+    return Object.assign({
+      paper_bgcolor: '#f0ebe5',
+      plot_bgcolor: '#faf7f3',
+      font: { family: figFont, color: '#3d3530', size: 14 },
+    }, extra || {});
+  }
+
+  function themeAxis(title, extra) {
+    return Object.assign({
+      title: {text: title, font: {family: figFont, size: 14}},
+      gridcolor: '#e0d9d1',
+      zerolinecolor: '#e0d9d1',
+      linecolor: '#968a80',
+      tickfont: {family: figFont, size: 12, color: '#968a80'},
+    }, extra || {});
+  }
+
+  // Figure 1: Absolute value subgradient
+  (function() {
+    const xVals = [];
+    for (let x = -3; x <= 3; x += 0.05) xVals.push(x);
+    const yAbs = xVals.map(x => Math.abs(x));
+    const slopes = [-1, -0.5, 0, 0.5, 1];
+    const lineTraces = slopes.map(s => ({
+      x: [-2.5, 2.5], y: [s * (-2.5), s * 2.5],
+      mode: 'lines', line: {color: '#b8995e', dash: 'dot', width: 1.2},
+      showlegend: false, hoverinfo: 'skip',
+    }));
+    const traces = [
+      { x: xVals, y: yAbs, mode: 'lines', line: {color: '#7b97ad', width: 3}, name: '|x|' },
+      ...lineTraces,
+      { x: [0], y: [0], mode: 'markers', marker: {color: '#b56b6b', size: 10, symbol: 'circle'},
+        name: 'x = 0: subdifferential = [-1, 1]' },
+    ];
+    Plotly.newPlot('fig-abs-subgradient', traces, themeLayout({
+      xaxis: themeAxis('x', {range: [-3, 3]}),
+      yaxis: themeAxis('f(x) = |x|', {range: [-0.5, 3]}),
+      showlegend: true, legend: Object.assign({x: 0.02, y: 1}, legendStyle()),
+      margin: {t: 20, b: 50, l: 55, r: 20},
+      annotations: [{x: 1.8, y: 1.2, text: 'slopes in [-1, 1]', showarrow: false,
+        font: {family: figFont, size: 11, color: '#b8995e'}}]
+    }), plotlyConfig);
+  })();
+
+  // Figure 2: max{f1, f2} subgradient
+  (function() {
+    const xVals = [];
+    for (let x = -2; x <= 3; x += 0.02) xVals.push(x);
+    const f1 = xVals.map(x => 0.5 * x * x - 0.5);
+    const f2 = xVals.map(x => -0.3 * x * x + x + 0.2);
+    const fMax = xVals.map((x, i) => Math.max(f1[i], f2[i]));
+    const traces = [
+      { x: xVals, y: f1, mode: 'lines', line: {color: '#ad8480', width: 2, dash: 'dash'}, name: 'f\u2081(x)' },
+      { x: xVals, y: f2, mode: 'lines', line: {color: '#b8995e', width: 2, dash: 'dash'}, name: 'f\u2082(x)' },
+      { x: xVals, y: fMax, mode: 'lines', line: {color: '#7b97ad', width: 3}, name: 'max{f\u2081, f\u2082}' },
+    ];
+    Plotly.newPlot('fig-max-subgradient', traces, themeLayout({
+      xaxis: themeAxis('x', {range: [-2, 3]}),
+      yaxis: themeAxis('', {range: [-1.5, 4]}),
+      showlegend: true, legend: Object.assign({x: 0.02, y: 1}, legendStyle()),
+      margin: {t: 20, b: 50, l: 55, r: 20},
+      annotations: [{x: 0.65, y: 0.51, text: 'kink: \u2202f = [f\u2082\', f\u2081\']', showarrow: true, arrowhead: 2,
+        ax: 60, ay: -40, font: {family: figFont, size: 11, color: '#b56b6b'}}]
+    }), plotlyConfig);
+  })();
+
+  // Figure 3: Non-descent subgradient direction
+  (function() {
+    const tVals = [];
+    for (let t = 0; t <= 2; t += 0.01) tVals.push(t);
+    const fG1 = tVals.map(t => Math.abs(1 - t));
+    const fG2 = tVals.map(t => Math.abs(1 - t) + 4 * Math.abs(t));
+    const traces = [
+      { x: tVals, y: fG1, mode: 'lines', line: {color: '#7a9a7e', width: 2.5}, name: 'Along -g\u2081 = -(1,0): descent' },
+      { x: tVals, y: fG2, mode: 'lines', line: {color: '#b56b6b', width: 2.5}, name: 'Along -g\u2082 = -(1,2): NO descent' },
+      { x: [0], y: [1], mode: 'markers', marker: {color: '#8a6e5e', size: 10}, name: 'f(z) = 1', showlegend: true },
+    ];
+    Plotly.newPlot('fig-non-descent', traces, themeLayout({
+      xaxis: themeAxis('Step size t', {range: [-0.05, 2]}),
+      yaxis: themeAxis('f(z - t g)', {range: [-0.2, 6]}),
+      showlegend: true, legend: Object.assign({x: 0.02, y: 1}, legendStyle()),
+      margin: {t: 20, b: 50, l: 55, r: 20},
+      shapes: [{type: 'line', x0: 0, x1: 2, y0: 1, y1: 1,
+        line: {color: '#e0d9d1', dash: 'dash', width: 1}}]
+    }), plotlyConfig);
+  })();
+
+  // Figure 4: Frank-Wolfe illustration
+  (function() {
+    const theta = [];
+    for (let t = 0; t <= 2 * Math.PI; t += 0.02) theta.push(t);
+    const cx = theta.map(t => 2 * Math.cos(t) + 1);
+    const cy = theta.map(t => 1.2 * Math.sin(t) + 1);
+    const xk = [1.8, 1.6]; const grad = [1.5, 0.8]; const yk = [-0.7, 0.5];
+    const traces = [
+      { x: cx, y: cy, fill: 'toself', fillcolor: 'rgba(123,143,163,0.18)', line: {color: '#7b97ad', width: 2.5}, name: 'Constraint set C', mode: 'lines' },
+      { x: [xk[0]], y: [xk[1]], mode: 'markers+text', marker: {color: '#8a6e5e', size: 10},
+        text: ['x<sup>k</sup>'], textposition: 'top right', textfont: {family: figFont, size: 13, color: '#8a6e5e'},
+        showlegend: false },
+      { x: [yk[0]], y: [yk[1]], mode: 'markers+text', marker: {color: '#7a9a7e', size: 10, symbol: 'diamond'},
+        text: ['y<sup>k</sup>'], textposition: 'bottom left', textfont: {family: figFont, size: 13, color: '#7a9a7e'},
+        showlegend: false },
+      { x: [xk[0], yk[0]], y: [xk[1], yk[1]], mode: 'lines', line: {color: '#b8995e', dash: 'dash', width: 2},
+        name: 'FW direction' },
+      { x: [0.4*xk[0]+0.6*yk[0]], y: [0.4*xk[1]+0.6*yk[1]], mode: 'markers+text',
+        marker: {color: '#b56b6b', size: 10, symbol: 'star'},
+        text: ['x<sup>k+1</sup>'], textposition: 'bottom right', textfont: {family: figFont, size: 13, color: '#b56b6b'},
+        showlegend: false },
+    ];
+    Plotly.newPlot('fig-fw-illustration', traces, themeLayout({
+      xaxis: themeAxis('', {range: [-2, 4], zeroline: false}),
+      yaxis: themeAxis('', {range: [-1, 3], zeroline: false, scaleanchor: 'x'}),
+      showlegend: true, legend: Object.assign({x: 0.55, y: 1}, legendStyle()),
+      margin: {t: 20, b: 40, l: 45, r: 20},
+      annotations: [{
+        ax: xk[0], ay: xk[1], x: xk[0] + 0.8*grad[0], y: xk[1] + 0.8*grad[1],
+        xref: 'x', yref: 'y', axref: 'x', ayref: 'y',
+        showarrow: true, arrowhead: 3, arrowsize: 1.5, arrowcolor: '#ad8480',
+        text: '\u2207f', font: {family: figFont, size: 12, color: '#ad8480'}
+      }]
+    }), plotlyConfig);
+  })();
+
+  // Figure 5: Convergence comparison
+  (function() {
+    const K = 200;
+    const kVals = [], subgradErr = [], fwErr = [];
+    for (let k = 1; k <= K; k++) {
+      kVals.push(k);
+      subgradErr.push(2.0 / Math.sqrt(k));
+      fwErr.push(4.0 / (k + 2));
+    }
+    const traces = [
+      { x: kVals, y: subgradErr, mode: 'lines', line: {color: '#ad8480', width: 2.5}, name: 'Subgradient: O(1/\u221AK)' },
+      { x: kVals, y: fwErr, mode: 'lines', line: {color: '#7a9a7e', width: 2.5}, name: 'Frank-Wolfe: O(1/K)' },
+    ];
+    Plotly.newPlot('fig-convergence', traces, themeLayout({
+      xaxis: themeAxis('Iteration k', {range: [0, K]}),
+      yaxis: themeAxis('Error bound', {type: 'log', range: [-2, 0.5]}),
+      showlegend: true, legend: Object.assign({x: 0.5, y: 1}, legendStyle()),
+      margin: {t: 20, b: 50, l: 60, r: 20},
+    }), plotlyConfig);
+  })();
+
+});
+</script>
+```
+
+## Summary {.unnumbered}
+
+- **Subgradients generalize gradients.** For a convex (possibly non-smooth) function $f$, a vector $g$ is a subgradient at $x$ if $f(y) \geq f(x) + g^\top(y - x)$ for all $y$; the set of all subgradients is the subdifferential $\partial f(x)$. Optimality holds if and only if $0 \in \partial f(x)$.
+- **Projected subgradient descent.** For constrained non-smooth problems $\min_{x \in C} f(x)$, the update $x^{k+1} = \Pi_C(x^k - \alpha^k g^k)$ projects back onto the feasible set after each subgradient step; with diminishing step sizes, convergence is $O(1/\sqrt{K})$.
+- **Frank-Wolfe (conditional gradient) method.** Instead of projecting, Frank-Wolfe linearizes the objective and solves $\min_{s \in C} \nabla f(x^k)^\top s$ at each step, then moves toward the minimizer. This avoids projections entirely---a major advantage when projection is expensive but linear optimization over $C$ is cheap.
+- **Convergence comparison.** Projected subgradient descent achieves $O(1/\sqrt{K})$ for non-smooth problems; Frank-Wolfe achieves $O(1/K)$ for smooth problems over compact sets, with iterates that are sparse convex combinations of vertices of $C$.
+
+::: {.callout-tip}
+## Looking Ahead
+Having developed first-order methods for both unconstrained and constrained problems, we now shift to **linear programming**. The next chapter introduces the LP formulation, the geometry of polyhedra, and the key equivalence between vertices, extreme points, and basic feasible solutions --- the foundation for the simplex method.
+:::

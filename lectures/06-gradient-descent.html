@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>6&nbsp; Gradient Descent – S&amp;DS 431/631 — Optimization and Computation</title>
+<title>6&nbsp; A Primer of Unconstrained Optimization: Gradient Descent – S&amp;DS 431/631 — Optimization and Computation</title>
 <style>
 /* Default styles provided by pandoc.
 ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
@@ -33,7 +33,7 @@ ul.task-list li input[type="checkbox"] {
 <script src="../site_libs/quarto-search/fuse.min.js"></script>
 <script src="../site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="../">
-<link href="../lectures/07-momentum-adaptive-sgd.html" rel="next">
+<link href="../lectures/07-momentum-adaptive.html" rel="next">
 <link href="../lectures/05-convex-optimization.html" rel="prev">
 <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
 <script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
@@ -75,6 +75,50 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -135,7 +179,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html">First-Order Methods</a></li><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html">First-Order Methods</a></li><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></a></li></ol></nav>
         <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="Search" onclick="window.quartoOpenSearch();">
@@ -230,19 +274,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  <a href="../lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  <a href="../lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
   </div>
 </li>
       </ul>
@@ -300,7 +344,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -356,7 +400,8 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup"><span class="header-section-number">6.1</span> Unconstrained Optimization Setup</a>
+  <li><a href="#what-will-be-covered" id="toc-what-will-be-covered" class="nav-link active" data-scroll-target="#what-will-be-covered">What Will Be Covered</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link" data-scroll-target="#setup"><span class="header-section-number">6.1</span> Unconstrained Optimization Setup</a>
   <ul class="collapse">
   <li><a href="#stationary-points" id="toc-stationary-points" class="nav-link" data-scroll-target="#stationary-points"><span class="header-section-number">6.1.1</span> Stationary Points</a></li>
   <li><a href="#motivation" id="toc-motivation" class="nav-link" data-scroll-target="#motivation"><span class="header-section-number">6.1.2</span> Motivation for Iterative Methods</a></li>
@@ -373,10 +418,12 @@ window.Quarto = {
   <ul class="collapse">
   <li><a href="#steepest-l2" id="toc-steepest-l2" class="nav-link" data-scroll-target="#steepest-l2"><span class="header-section-number">6.3.1</span> Steepest Descent with <span class="math inline">\ell_2</span>-norm (Gradient Descent)</a></li>
   <li><a href="#gd-oscillation" id="toc-gd-oscillation" class="nav-link" data-scroll-target="#gd-oscillation"><span class="header-section-number">6.3.2</span> Oscillation Analysis</a></li>
-  <li><a href="#steepest-l1" id="toc-steepest-l1" class="nav-link" data-scroll-target="#steepest-l1"><span class="header-section-number">6.3.3</span> Steepest Descent with <span class="math inline">\ell_1</span>-norm (Coordinate Descent)</a></li>
-  <li><a href="#sign-gd" id="toc-sign-gd" class="nav-link" data-scroll-target="#sign-gd"><span class="header-section-number">6.3.4</span> Steepest Descent with <span class="math inline">\ell_\infty</span>-norm (Sign Gradient Descent)</a></li>
-  <li><a href="#newton-direction" id="toc-newton-direction" class="nav-link" data-scroll-target="#newton-direction"><span class="header-section-number">6.3.5</span> Newton’s Method</a></li>
-  <li><a href="#diag-scaled" id="toc-diag-scaled" class="nav-link" data-scroll-target="#diag-scaled"><span class="header-section-number">6.3.6</span> Diagonally Scaled Steepest Descent</a></li>
+  <li><a href="#sec-gd-surrogate" id="toc-sec-gd-surrogate" class="nav-link" data-scroll-target="#sec-gd-surrogate"><span class="header-section-number">6.3.3</span> GD as Quadratic Upper Bound Minimization</a></li>
+  <li><a href="#steepest-l1" id="toc-steepest-l1" class="nav-link" data-scroll-target="#steepest-l1"><span class="header-section-number">6.3.4</span> Steepest Descent with <span class="math inline">\ell_1</span>-norm (Coordinate Descent)</a></li>
+  <li><a href="#sign-gd" id="toc-sign-gd" class="nav-link" data-scroll-target="#sign-gd"><span class="header-section-number">6.3.5</span> Steepest Descent with <span class="math inline">\ell_\infty</span>-norm (Sign Gradient Descent)</a></li>
+  <li><a href="#steepest-spectral" id="toc-steepest-spectral" class="nav-link" data-scroll-target="#steepest-spectral"><span class="header-section-number">6.3.6</span> Steepest Descent with Spectral Norm (Matrix Optimization)</a></li>
+  <li><a href="#newton-direction" id="toc-newton-direction" class="nav-link" data-scroll-target="#newton-direction"><span class="header-section-number">6.3.7</span> Newton’s Method</a></li>
+  <li><a href="#diag-scaled" id="toc-diag-scaled" class="nav-link" data-scroll-target="#diag-scaled"><span class="header-section-number">6.3.8</span> Diagonally Scaled Steepest Descent</a></li>
   </ul></li>
   <li><a href="#step-sizes" id="toc-step-sizes" class="nav-link" data-scroll-target="#step-sizes"><span class="header-section-number">6.4</span> Choice of Step Sizes</a>
   <ul class="collapse">
@@ -401,9 +448,9 @@ window.Quarto = {
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html">First-Order Methods</a></li><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html">First-Order Methods</a></li><li class="breadcrumb-item"><a href="../lectures/06-gradient-descent.html"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></a></li></ol></nav>
 <div class="quarto-title">
-<h1 class="title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></h1>
+<h1 class="title"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></h1>
 </div>
 
 
@@ -420,7 +467,7 @@ window.Quarto = {
 </header>
 
 
-<p>So far we have developed a rich theory of optimization – convexity, duality, KKT conditions – that tells us <em>what</em> an optimal solution looks like. But how do we actually <em>find</em> one? For most problems of practical interest, closed-form solutions do not exist, and we must turn to iterative algorithms that start from an initial guess and progressively improve it.</p>
+<p>In the previous chapters we developed a rich theory of convex optimization – convex sets, convex functions, and problem formulations – that tells us <em>what</em> an optimal solution looks like (for instance, a point where the gradient vanishes). But how do we actually <em>find</em> one? For most problems of practical interest, closed-form solutions do not exist, and we must turn to iterative algorithms that start from an initial guess and progressively improve it.</p>
 <p>The most natural idea is to use the gradient. The gradient of a function at a point tells us the direction of steepest ascent; moving in the opposite direction decreases the function value. This simple principle – “follow the negative gradient” – is the basis of <strong>gradient descent</strong>, one of the most fundamental algorithms in all of computational mathematics. It is the workhorse of modern machine learning (training neural networks), statistics (fitting models), and scientific computing.</p>
 <p>But gradient descent is just one member of a larger family. By choosing different descent directions (coordinate descent, Newton’s method) and different step size strategies (constant, diminishing, line search), we obtain a rich design space of first-order and second-order methods with different tradeoffs between computational cost per iteration and convergence speed. Understanding this design space is essential for choosing the right algorithm in practice.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
@@ -435,12 +482,25 @@ window.Quarto = {
 <div class="callout-body-container callout-body">
 <p>Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.</p>
 <ul>
-<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/09-steepest-descent.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Steepest Descent</strong> — steepest descent on quadratics with varying condition numbers</li>
-<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/10-gradient-descent-learning-rates.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Learning Rate Analysis</strong> — how learning rate and curvature interact in gradient descent convergence</li>
-<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/17-gd-visualization.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>GD Visualization</strong> — animated gradient descent trajectories on various objective landscapes</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/06a-steepest-descent.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Steepest Descent</strong> — steepest descent on quadratics with varying condition numbers</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/06b-gradient-descent-learning-rates.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Learning Rate Analysis</strong> — how learning rate and curvature interact in gradient descent convergence</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/06c-gd-visualization.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>GD Visualization</strong> — animated gradient descent trajectories on various objective landscapes</li>
 </ul>
 </div>
 </div>
+<section id="what-will-be-covered" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="what-will-be-covered">What Will Be Covered</h2>
+<ul>
+<li>Unconstrained optimization setup: stationary points and optimality conditions</li>
+<li>The general iterative framework: descent directions and step sizes</li>
+<li>Steepest descent under different norms: <span class="math inline">\ell_2</span> (gradient descent), <span class="math inline">\ell_1</span> (coordinate descent), <span class="math inline">\ell_\infty</span> (sign gradient descent), spectral norm (Muon optimizer)</li>
+<li>Newton’s method and diagonally scaled descent (preview)</li>
+<li>Step size strategies: constant, diminishing, and backtracking line search</li>
+<li>Convergence analysis: smoothness, strong convexity, the condition number, and the descent lemma</li>
+<li>Three convergence cases: nonconvex + smooth, convex + smooth, strongly convex + smooth</li>
+<li>The Polyak–Łojasiewicz condition and linear convergence without convexity</li>
+</ul>
+</section>
 <section id="setup" class="level2" data-number="6.1">
 <h2 data-number="6.1" class="anchored" data-anchor-id="setup"><span class="header-section-number">6.1</span> Unconstrained Optimization Setup</h2>
 <p>We consider the unconstrained optimization problem:</p>
@@ -464,7 +524,7 @@ window.Quarto = {
 <h3 data-number="6.1.1" class="anchored" data-anchor-id="stationary-points"><span class="header-section-number">6.1.1</span> Stationary Points</h3>
 <p>The key insight that connects calculus to optimization is that, for convex functions, the familiar condition “derivative equals zero” is both necessary and sufficient for optimality. This means that finding the minimum of a convex function reduces to finding a point where the gradient vanishes.</p>
 <div id="thm-optimality-convex" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 6.1 (Theorem 7.1 (Optimality Condition for Convex Functions))</strong></span> Let <span class="math inline">f</span> be convex and differentiable. Then <span class="math inline">x_0</span> is a local minimum of <span class="math inline">f</span> if and only if <span class="math inline">\nabla f(x_0) = 0</span>.</p>
+<p><span class="theorem-title"><strong>Theorem 6.1 (Optimality Condition for Convex Functions)</strong></span> Let <span class="math inline">f</span> be convex and differentiable. Then <span class="math inline">x_0</span> is a local minimum of <span class="math inline">f</span> if and only if <span class="math inline">\nabla f(x_0) = 0</span>.</p>
 </div>
 <div class="proof">
 <p><span class="proof-title"><em>Proof</em>. </span><strong>(<span class="math inline">\Rightarrow</span>):</strong> Define a univariate function <span class="math inline">g(t) = f(x_0 - t \cdot \nabla f(x_0))</span>. Since <span class="math inline">x_0</span> is a local minimum of <span class="math inline">f</span>, <span class="math inline">t = 0</span> is a local minimum of <span class="math inline">g</span>. Therefore:</p>
@@ -475,17 +535,32 @@ window.Quarto = {
 </div>
 <p>For nonconvex functions, the condition <span class="math inline">\nabla f(x) = 0</span> does not guarantee a global minimum – it could also be a local minimum, a local maximum, or a saddle point. Nevertheless, finding stationary points is still the primary goal of first-order algorithms, since it is the best we can guarantee without convexity.</p>
 <div id="def-stationary-point" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 6.1 (Definition 7.2 (Stationary Point))</strong></span> For any differentiable <span class="math inline">f</span> (possibly nonconvex), <span class="math inline">x</span> is called a <strong>stationary point</strong> of <span class="math inline">f</span> if <span class="math inline">\nabla f(x) = 0</span>.</p>
+<p><span class="theorem-title"><strong>Definition 6.1 (Stationary Point)</strong></span> For any differentiable <span class="math inline">f</span> (possibly nonconvex), <span class="math inline">x</span> is called a <strong>stationary point</strong> of <span class="math inline">f</span> if <span class="math inline">\nabla f(x) = 0</span>.</p>
+</div>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>Optimality <span class="math inline">\iff</span> Stationarity (Unconstrained Convex Case)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For <strong>unconstrained minimization of a convex, differentiable</strong> <span class="math inline">f</span>, <a href="#thm-optimality-convex" class="quarto-xref">Theorem&nbsp;<span>6.1</span></a> shows that the following are equivalent:</p>
+<p><span class="math display">x^* \text{ is a global minimizer of } f \quad \iff \quad \nabla f(x^*) = 0.</span></p>
+<p>This is the key reduction that makes convex optimization tractable: instead of searching over all of <span class="math inline">\mathbb{R}^n</span> for a global minimum, we only need to <strong>find a stationary point</strong>. The entire algorithmic program of this chapter — gradient descent, coordinate descent, Newton’s method — is built on this equivalence. Each method is simply a different strategy for solving the nonlinear equation <span class="math inline">\nabla f(x) = 0</span>.</p>
+</div>
 </div>
 </section>
 <section id="motivation" class="level3" data-number="6.1.2">
 <h3 data-number="6.1.2" class="anchored" data-anchor-id="motivation"><span class="header-section-number">6.1.2</span> Motivation for Iterative Methods</h3>
 <p>To minimize a convex and differentiable <span class="math inline">f</span>, it suffices to find a <strong>stationary point</strong>. Finding a stationary point is equivalent to solving the equation <span class="math inline">\nabla f(x) = 0</span>.</p>
-<p>This can be done by <strong>“local” algorithms</strong> — iterative algorithms that update using “local information” at each iterate:</p>
+<p>This can be done by <strong>“local” algorithms</strong> — iterative algorithms that update using “local information” at each iterate. The three levels of local information, in order of increasing richness, are:</p>
 <ul>
-<li><strong>Function value</strong> — zeroth-order information</li>
-<li><strong>Gradient</strong> — first-order information</li>
-<li><strong>Hessian</strong> — second-order information</li>
+<li><strong>Function value</strong> — zeroth-order information (the cheapest to evaluate).</li>
+<li><strong>Gradient</strong> — first-order information (the workhorse of most practical methods).</li>
+<li><strong>Hessian</strong> — second-order information (the most expensive, but captures curvature).</li>
 </ul>
 </section>
 <section id="iterative-form" class="level3" data-number="6.1.3">
@@ -517,24 +592,21 @@ window.Quarto = {
 <section id="gradient-based" class="level2" data-number="6.2">
 <h2 data-number="6.2" class="anchored" data-anchor-id="gradient-based"><span class="header-section-number">6.2</span> Descent Directions and the Gradient</h2>
 <p>The descent direction <span class="math inline">d^k</span> is based on the gradient <span class="math inline">\nabla f(x^k)</span> (and maybe other information such as the Hessian <span class="math inline">\nabla^2 f(x^k)</span>, previous gradients <span class="math inline">\{\nabla f(x^j)\}_{j &lt; k}</span>, etc.).</p>
-<p>The simplest case: <span class="math inline">d^k = -\nabla f(x^k)</span>. Why look at the gradient?</p>
+<p>The simplest and most natural choice is <span class="math inline">d^k = -\nabla f(x^k)</span>. Why?</p>
 <section id="steepest-descent-lemma" class="level3" data-number="6.2.1">
 <h3 data-number="6.2.1" class="anchored" data-anchor-id="steepest-descent-lemma"><span class="header-section-number">6.2.1</span> Why the Negative Gradient?</h3>
-<p>Among all unit-norm directions, which one decreases the function value at the fastest rate? The following lemma shows that the answer is the normalized negative gradient – justifying the name “steepest descent.”</p>
+<p>The idea comes from <strong>linearization</strong>. Near the current point <span class="math inline">x</span>, Taylor expansion gives</p>
+<p><span class="math display">f(x + \alpha\, d) \approx f(x) + \alpha \cdot \langle \nabla f(x),\, d \rangle.</span></p>
+<p>If we want to decrease <span class="math inline">f</span> as fast as possible, we should choose <span class="math inline">d</span> to minimize the linear term <span class="math inline">\langle \nabla f(x), d \rangle</span>. Of course, without a constraint on <span class="math inline">\|d\|</span>, we could make this arbitrarily negative. So the natural question is: <strong>among all unit-norm directions, which one decreases <span class="math inline">f</span> at the fastest rate?</strong></p>
 <div id="thm-steepest-descent" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 6.2 (Lemma 7.3 (Steepest Descent Direction))</strong></span> Assuming <span class="math inline">d \in B_2(1) = \{v \in \mathbb{R}^n \mid \|v\|_2 \leq 1\}</span>, the direction that decreases <span class="math inline">f</span> at the <strong>fastest rate</strong> within <span class="math inline">B_2(1)</span> is given by</p>
+<p><span class="theorem-title"><strong>Theorem 6.2 (Steepest Descent Direction)</strong></span> Assuming <span class="math inline">d \in B_2(1) = \{v \in \mathbb{R}^n \mid \|v\|_2 \leq 1\}</span>, the direction that decreases <span class="math inline">f</span> at the <strong>fastest rate</strong> within <span class="math inline">B_2(1)</span> is given by</p>
 <p><span id="eq-steepest-descent"><span class="math display">d^* = -\frac{\nabla f(x)}{\|\nabla f(x)\|_2}. \tag{6.2}</span></span></p>
 </div>
-<p>This lemma provides the theoretical justification for the gradient descent update (<a href="#eq-gradient-descent" class="quarto-xref">Equation&nbsp;<span>6.5</span></a>): among all unit-norm directions, the negative gradient decreases the function value at the fastest possible rate. This is why gradient descent is also called the “method of steepest descent.”</p>
-<p>The proof uses the Cauchy–Schwarz inequality to identify the minimizer of the directional derivative over the unit ball.</p>
+<p>This is why gradient descent is also called the “method of <strong>steepest descent</strong>.”</p>
 <div class="proof">
-<p><span class="proof-title"><em>Proof</em>. </span>Consider any search direction <span class="math inline">d</span>. The function value decrease is</p>
-<p><span class="math display">f(x) - f(x + \alpha \cdot d) =: g(\alpha;\, d).</span></p>
-<p>By the chain rule, the instantaneous rate of decrease at <span class="math inline">\alpha = 0</span> is</p>
-<p><span class="math display">g'(0;\, d) = -\langle \nabla f(x),\, d \rangle.</span></p>
-<p>To maximize this rate of decrease, we minimize <span class="math inline">\langle \nabla f(x), d \rangle</span> over unit-norm directions:</p>
+<p><span class="proof-title"><em>Proof</em>. </span>We want to maximize the instantaneous rate of decrease <span class="math inline">-\langle \nabla f(x), d \rangle</span> over unit-norm directions, i.e., solve</p>
 <p><span class="math display">\min_{d \in B_2(1)} \; d^\top \nabla f(x).</span></p>
-<p>By the Cauchy–Schwarz inequality, <span class="math inline">d^\top \nabla f(x) \geq -\|d\|_2 \cdot \|\nabla f(x)\|_2</span>, with equality when <span class="math inline">d</span> is a negative scalar multiple of <span class="math inline">\nabla f(x)</span>. Since <span class="math inline">\|d\|_2 \leq 1</span>, the minimizer is <span class="math inline">d^* = -\nabla f(x) / \|\nabla f(x)\|_2</span>. This completes the proof. <span class="math inline">\blacksquare</span></p>
+<p>By the Cauchy–Schwarz inequality, <span class="math inline">d^\top \nabla f(x) \geq -\|d\|_2 \cdot \|\nabla f(x)\|_2</span>, with equality when <span class="math inline">d</span> is a negative scalar multiple of <span class="math inline">\nabla f(x)</span>. Since <span class="math inline">\|d\|_2 \leq 1</span>, the minimizer is <span class="math inline">d^* = -\nabla f(x) / \|\nabla f(x)\|_2</span>. <span class="math inline">\blacksquare</span></p>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -554,31 +626,28 @@ window.Quarto = {
 <h3 data-number="6.2.2" class="anchored" data-anchor-id="descent-directions"><span class="header-section-number">6.2.2</span> General Descent Directions</h3>
 <p>The negative gradient is the steepest descent direction, but it is not the only direction that decreases the function. Any direction that makes an acute angle with the negative gradient – equivalently, an obtuse angle with the gradient – will also decrease the objective for a sufficiently small step. This flexibility is important because alternative descent directions (such as Newton’s direction) can converge much faster in practice.</p>
 <div id="def-descent-direction" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 6.2 (Definition 7.4 (Descent Direction))</strong></span> For a given point <span class="math inline">x \in \mathbb{R}^n</span>, a direction <span class="math inline">d \in \mathbb{R}^n</span> is called a <strong>descent direction</strong> if there exists <span class="math inline">\bar{\alpha} &gt; 0</span> such that</p>
+<p><span class="theorem-title"><strong>Definition 6.2 (Descent Direction)</strong></span> For a given point <span class="math inline">x \in \mathbb{R}^n</span>, a direction <span class="math inline">d \in \mathbb{R}^n</span> is called a <strong>descent direction</strong> if there exists <span class="math inline">\bar{\alpha} &gt; 0</span> such that</p>
 <p><span class="math display">f(x + \alpha \cdot d) &lt; f(x) \qquad \forall\, \alpha \in (0, \bar{\alpha}).</span></p>
 <p>Intuitively, <span class="math inline">d</span> is a descent direction means we can move at least a small step along <span class="math inline">d</span> and decrease the objective function.</p>
 </div>
 </section>
 <section id="descent-lemma" class="level3" data-number="6.2.3">
 <h3 data-number="6.2.3" class="anchored" data-anchor-id="descent-lemma"><span class="header-section-number">6.2.3</span> Descent Condition</h3>
-<p>The following lemma gives a simple and checkable condition for a direction to be a descent direction: its inner product with the gradient must be negative.</p>
+<p>The definition above is existential — it says <em>some</em> small step works, but doesn’t tell us how to check. The following lemma gives a <strong>simple, checkable condition</strong>: its inner product with the gradient must be negative.</p>
 <div id="thm-descent-condition" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 6.3 (Lemma 7.5 (Descent Condition))</strong></span> Consider a point <span class="math inline">x \in \mathbb{R}^n</span>. Any direction <span class="math inline">d</span> satisfying</p>
+<p><span class="theorem-title"><strong>Theorem 6.3 (Descent Condition)</strong></span> Consider a point <span class="math inline">x \in \mathbb{R}^n</span>. Any direction <span class="math inline">d</span> satisfying</p>
 <p><span id="eq-descent-condition"><span class="math display">\langle d, \nabla f(x) \rangle &lt; 0 \tag{6.3}</span></span></p>
 <p>is a descent direction. Geometrically, <span class="math inline">d</span> and <span class="math inline">\nabla f(x)</span> form an <strong>obtuse angle</strong>.</p>
 </div>
-<p>The descent condition (<a href="#eq-descent-condition" class="quarto-xref">Equation&nbsp;<span>6.3</span></a>) is more general than the steepest descent result (<a href="#eq-steepest-descent" class="quarto-xref">Equation&nbsp;<span>6.2</span></a>): it says that <em>any</em> direction making an obtuse angle with the gradient will decrease the function value. This flexibility is what allows us to use alternative descent directions (such as Newton’s direction or coordinate descent directions) that may converge faster than the steepest descent direction.</p>
-<div class="figure-container">
-  <div id="fig-descent-direction"></div>
-  <div class="figure-caption">Figure 7.1: Any direction forming an obtuse angle with the gradient is a descent direction. The half-space opposite to the gradient contains all descent directions.</div>
-</div>
-<div id="fig-descent-direction-svg" class="quarto-float quarto-figure quarto-figure-center anchored">
+<p>Why does this work? The gradient <span class="math inline">\nabla f(x)</span> points in the direction of steepest <em>increase</em>. Any direction <span class="math inline">d</span> that makes an obtuse angle with <span class="math inline">\nabla f(x)</span> has a negative projection onto the gradient — so the linear approximation <span class="math inline">f(x) + \langle \nabla f(x), d \rangle</span> decreases. The proof below makes this precise by showing the linear term dominates the higher-order remainder for small steps.</p>
+<p>This condition is much more permissive than steepest descent: the negative gradient is the <em>best</em> descent direction, but the entire <strong>half-space</strong> of directions opposite to <span class="math inline">\nabla f(x)</span> also works. This flexibility is what allows us to use alternative descent directions (such as Newton’s direction or coordinate descent directions) that may converge faster.</p>
+<div id="fig-descent-direction" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-descent-direction-svg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="figures/ch03-descent-direction.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;6.1: Descent directions: any vector d satisfying \langle d, \nabla f(x) \rangle < 0 is a descent direction. The shaded half-space shows all valid descent directions. The negative gradient -\nabla f(x) is the steepest descent direction, but choosing d = -B\nabla f(x) for a positive definite B (such as the inverse Hessian) can yield faster convergence."><img src="figures/ch03-descent-direction.svg" class="img-fluid figure-img"></a>
+<div aria-describedby="fig-descent-direction-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch06-descent-direction.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;6.1: Any direction forming an obtuse angle with the gradient is a descent direction. The half-space \{d : \langle d, \nabla f(x) \rangle < 0\} contains all descent directions, including the steepest descent -\nabla f(x)."><img src="figures/ch06-descent-direction.svg" class="img-fluid figure-img"></a>
 </div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-descent-direction-svg-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;6.1: Descent directions: any vector <span class="math inline">d</span> satisfying <span class="math inline">\langle d, \nabla f(x) \rangle &lt; 0</span> is a descent direction. The shaded half-space shows all valid descent directions. The negative gradient <span class="math inline">-\nabla f(x)</span> is the steepest descent direction, but choosing <span class="math inline">d = -B\nabla f(x)</span> for a positive definite <span class="math inline">B</span> (such as the inverse Hessian) can yield faster convergence.
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-descent-direction-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6.1: Any direction forming an obtuse angle with the gradient is a descent direction. The half-space <span class="math inline">\{d : \langle d, \nabla f(x) \rangle &lt; 0\}</span> contains all descent directions, including the steepest descent <span class="math inline">-\nabla f(x)</span>.
 </figcaption>
 </figure>
 </div>
@@ -596,23 +665,22 @@ Figure&nbsp;6.1: Descent directions: any vector <span class="math inline">d</spa
 </section>
 <section id="pd-lemma" class="level3" data-number="6.2.4">
 <h3 data-number="6.2.4" class="anchored" data-anchor-id="pd-lemma"><span class="header-section-number">6.2.4</span> Positive Definite Scaling</h3>
-<p>A natural way to produce descent directions is to premultiply the gradient by a positive definite matrix. This “reshapes” the gradient to account for the local curvature of the function and is the basis for Newton’s method and quasi-Newton methods.</p>
+<p>We now know that <em>any</em> direction satisfying <span class="math inline">\langle d, \nabla f(x) \rangle &lt; 0</span> works. A natural and powerful way to produce such directions is to premultiply the gradient by a <strong>positive definite matrix</strong> <span class="math inline">B</span>: setting <span class="math inline">d = -B\nabla f(x)</span> automatically satisfies the descent condition. Different choices of <span class="math inline">B</span> give different algorithms — this single idea unifies gradient descent, Newton’s method, and quasi-Newton methods.</p>
 <div id="thm-pd-descent" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 6.4 (Lemma 7.6 (Positive Definite Descent))</strong></span> Let <span class="math inline">B \in \mathbb{R}^{n \times n}</span> be a positive definite matrix. For any point <span class="math inline">x</span> with <span class="math inline">\nabla f(x) \neq 0</span>, <span class="math inline">d = -B\,\nabla f(x)</span> is a descent direction.</p>
+<p><span class="theorem-title"><strong>Theorem 6.4 (Positive Definite Descent)</strong></span> Let <span class="math inline">B \in \mathbb{R}^{n \times n}</span> be a positive definite matrix. For any point <span class="math inline">x</span> with <span class="math inline">\nabla f(x) \neq 0</span>, <span class="math inline">d = -B\,\nabla f(x)</span> is a descent direction.</p>
 </div>
 <div class="proof">
 <p><span class="proof-title"><em>Proof</em>. </span>With <span class="math inline">d = -B\,\nabla f(x)</span>:</p>
 <p><span class="math display">d^\top \nabla f(x) = -\nabla f(x)^\top B\,\nabla f(x) &lt; 0,</span></p>
-<p>where the strict inequality follows from the definition of positive definiteness (<span class="math inline">v^\top B v &gt; 0</span> for all <span class="math inline">v \neq 0</span>) and the assumption that <span class="math inline">\nabla f(x) \neq 0</span>. By the descent condition (<a href="#eq-descent-condition" class="quarto-xref">Equation&nbsp;<span>6.3</span></a>), <span class="math inline">d</span> is a descent direction. This completes the proof. <span class="math inline">\blacksquare</span></p>
+<p>where the strict inequality follows from positive definiteness (<span class="math inline">v^\top B v &gt; 0</span> for all <span class="math inline">v \neq 0</span>) and <span class="math inline">\nabla f(x) \neq 0</span>. By the descent condition (<a href="#eq-descent-condition" class="quarto-xref">Equation&nbsp;<span>6.3</span></a>), <span class="math inline">d</span> is a descent direction. <span class="math inline">\blacksquare</span></p>
 </div>
-<p>This lemma unifies many optimization algorithms under the general update rule (<a href="#eq-general-update" class="quarto-xref">Equation&nbsp;<span>6.4</span></a>). By choosing different positive definite matrices <span class="math inline">B</span>, we recover gradient descent (<span class="math inline">B = I</span>, giving <a href="#eq-gradient-descent" class="quarto-xref">Equation&nbsp;<span>6.5</span></a>), Newton’s method (<span class="math inline">B = (\nabla^2 f)^{-1}</span>, giving <a href="14-newton-method.html#eq-newton-update" class="quarto-xref">Equation&nbsp;<span>14.1</span></a>), and various preconditioned methods. The positive definiteness of <span class="math inline">B</span> guarantees that the resulting direction is always a descent direction.</p>
+<p>By choosing different positive definite matrices <span class="math inline">B^k</span> at each iteration, we recover a family of algorithms under the general update rule:</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p>This suggests a <strong>general form of the update rule</strong> using gradient information:</p>
 <p><span id="eq-general-update"><span class="math display">x^{k+1} = x^k - \alpha^k \cdot B^k\, \nabla f(x^k). \tag{6.4}</span></span></p>
 </div>
 </div>
@@ -621,10 +689,9 @@ Figure&nbsp;6.1: Descent directions: any vector <span class="math inline">d</spa
 </section>
 <section id="choices-directions" class="level2" data-number="6.3">
 <h2 data-number="6.3" class="anchored" data-anchor-id="choices-directions"><span class="header-section-number">6.3</span> Common Choices of Descent Directions</h2>
-<p>Having established that any direction satisfying <a href="#eq-descent-condition" class="quarto-xref">Equation&nbsp;<span>6.3</span></a> is a valid descent direction, we now explore specific choices. Each corresponds to a different norm in the steepest descent problem, or equivalently, a different choice of <span class="math inline">B^k</span> in the general update <a href="#eq-general-update" class="quarto-xref">Equation&nbsp;<span>6.4</span></a>.</p>
-<p>The <strong>steepest descent</strong> approach chooses the descent direction by solving:</p>
-<p><span class="math display">\min_{d:\,\|d\| \leq 1} \langle \nabla f(x),\, d \rangle,</span></p>
-<p>where <span class="math inline">\|\cdot\|</span> is some norm on <span class="math inline">\mathbb{R}^n</span>. The interpretation is that <span class="math inline">f(x + \alpha\, d) \approx f(x) + \alpha \cdot d^\top \nabla f(x) + o(\alpha)</span>, and approximately we minimize <span class="math inline">\min_{d:\,\|d\| \leq 1} f(x + \alpha \cdot d)</span>.</p>
+<p>Having established the general framework, we now explore specific choices. The unifying idea is <strong>steepest descent under different norms</strong>: given a norm <span class="math inline">\|\cdot\|</span> on <span class="math inline">\mathbb{R}^n</span>, find the direction that decreases the linear approximation the fastest within the unit ball:</p>
+<p><span class="math display">d^* = \operatorname{argmin}_{d:\,\|d\| \leq 1} \langle \nabla f(x),\, d \rangle.</span></p>
+<p>Different norms yield different unit balls, which yield different optimal directions. The <span class="math inline">\ell_2</span>-ball is a sphere (giving gradient descent), the <span class="math inline">\ell_1</span>-ball is a diamond (giving coordinate descent), and the <span class="math inline">\ell_\infty</span>-ball is a cube (giving sign gradient descent). Each can also be viewed as a different choice of <span class="math inline">B^k</span> in the general update <a href="#eq-general-update" class="quarto-xref">Equation&nbsp;<span>6.4</span></a>.</p>
 <section id="steepest-l2" class="level3" data-number="6.3.1">
 <h3 data-number="6.3.1" class="anchored" data-anchor-id="steepest-l2"><span class="header-section-number">6.3.1</span> Steepest Descent with <span class="math inline">\ell_2</span>-norm (Gradient Descent)</h3>
 <p>With the <span class="math inline">\ell_2</span>-norm:</p>
@@ -656,7 +723,7 @@ Figure&nbsp;6.2: Effect of the condition number <span class="math inline">\kappa
 </div>
 <div class="figure-container">
   <div id="fig-gd-contours"></div>
-  <div class="figure-caption">Figure 7.2: Gradient descent on an ill-conditioned quadratic. The iterates oscillate perpendicular to the valley and make slow progress along it.</div>
+  <div class="figure-caption">Figure 6.1: Gradient descent on an ill-conditioned quadratic. The iterates oscillate perpendicular to the valley and make slow progress along it.</div>
 </div>
 </section>
 <section id="gd-oscillation" class="level3" data-number="6.3.2">
@@ -677,16 +744,23 @@ Figure&nbsp;6.2: Effect of the condition number <span class="math inline">\kappa
 <li>If <span class="math inline">\alpha \in (1/a, 2/a)</span>: <span class="math inline">1 - a\alpha \in (-1,0)</span>, and <span class="math inline">\{x^k\}</span> <strong>oscillates</strong> to 0.</li>
 </ul>
 </div>
-<p>The key takeaway from <a href="#eq-1d-gd-convergence" class="quarto-xref">Equation&nbsp;<span>6.6</span></a> is that the convergence rate of gradient descent is controlled by the contraction factor <span class="math inline">|1 - a \cdot \alpha|</span>, which depends on both the curvature <span class="math inline">a</span> and the step size <span class="math inline">\alpha</span>. This analysis extends to higher dimensions, where the condition number plays the central role.</p>
+<p>The convergence rate is controlled by the <strong>contraction factor</strong> <span class="math inline">|1 - a\alpha|</span>: it depends on both the curvature <span class="math inline">a</span> and the step size <span class="math inline">\alpha</span>. The optimal choice <span class="math inline">\alpha^* = 1/a</span> gives <span class="math inline">|1-a\alpha^*| = 0</span>, so GD solves the 1D problem in <strong>one step</strong>. But in higher dimensions, we cannot simultaneously zero out the contraction factor for all eigenvalues.</p>
 <div id="exm-2d-quadratic-zigzag" class="theorem example">
 <p><span class="theorem-title"><strong>Example 6.2 (Example: 2D Quadratic — Zig-Zag Behavior)</strong></span> Consider the 2D case: <span class="math inline">f(x, y) = \tfrac{1}{2}(a\,x^2 + b\,y^2)</span> with <span class="math inline">a &lt; b</span>. GD gives:</p>
 <p><span class="math display">\begin{pmatrix} x' \\ y' \end{pmatrix} = \begin{pmatrix} (1 - a \cdot \alpha)\, x \\ (1 - b \cdot \alpha)\, y \end{pmatrix}.</span></p>
 <p>To get convergence, we need <span class="math inline">|1 - a\alpha| &lt; 1</span> and <span class="math inline">|1 - b\alpha| &lt; 1</span>, which gives <span class="math inline">\alpha \in (0, 2/b)</span>.</p>
 <p>If <span class="math inline">\alpha \in (1/b, 2/b)</span>: <span class="math inline">\{x^k\}</span> monotonically converges to 0 (since <span class="math inline">1-a\alpha &gt; 0</span>), while <span class="math inline">\{y^k\}</span> oscillates to 0 (since <span class="math inline">1-b\alpha &lt; 0</span>). This produces a <strong>zig-zag trajectory</strong>.</p>
+<p><strong>What is the best step size?</strong> The overall convergence rate is controlled by the <em>worst</em> contraction factor:</p>
+<p><span class="math display">\rho(\alpha) = \max\{|1 - a\alpha|,\; |1 - b\alpha|\}.</span></p>
+<p>We want to choose <span class="math inline">\alpha</span> to minimize <span class="math inline">\rho(\alpha)</span>. As <span class="math inline">\alpha</span> increases from <span class="math inline">0</span>, <span class="math inline">|1-a\alpha|</span> decreases while <span class="math inline">|1-b\alpha|</span> decreases faster then increases. The optimal <span class="math inline">\alpha</span> balances the two:</p>
+<p><span class="math display">1 - a\alpha = -(1 - b\alpha) \;\implies\; \alpha^* = \frac{2}{a + b}.</span></p>
+<p>At this step size, the contraction factor is:</p>
+<p><span class="math display">\rho^* = 1 - a \cdot \frac{2}{a+b} = \frac{b - a}{b + a} = \frac{\kappa - 1}{\kappa + 1}, \qquad \text{where } \kappa = b/a</span></p>
+<p>is the <strong>condition number</strong> of the Hessian. When <span class="math inline">\kappa \approx 1</span> (nearly equal curvatures), <span class="math inline">\rho^* \approx 0</span> and GD converges quickly. When <span class="math inline">\kappa \gg 1</span> (very different curvatures), <span class="math inline">\rho^* \approx 1</span> and convergence is slow. This quadratic warm-up foreshadows the general theory: <strong>the condition number <span class="math inline">\kappa</span> governs the convergence speed of gradient descent</strong>.</p>
 </div>
 <div class="figure-container">
   <div id="fig-zigzag"></div>
-  <div class="figure-caption">Figure 7.3: Zig-zag trajectory of gradient descent on a 2D quadratic with different eigenvalues. The iterate oscillates in the y-direction while progressing monotonically in x.</div>
+  <div class="figure-caption">Figure 6.2: Zig-zag trajectory of gradient descent on a 2D quadratic with different eigenvalues. The iterate oscillates in the y-direction while progressing monotonically in x.</div>
 </div>
 <div id="fig-gradient-descent-convergence" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
@@ -708,23 +782,20 @@ Figure&nbsp;6.4: Comparison of convergence rates encountered in first-order opti
 </figcaption>
 </figure>
 </div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Remark: GD as Quadratic Upper Bound Minimization
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Note that <span class="math inline">x^{k+1} = \operatorname{argmin}_{x \in \mathbb{R}^n} g_{\alpha^k}(x)</span>, where</p>
-<p><span class="math display">g_{\alpha^k}(x) = f(x^k) + (x - x^k)^\top \nabla f(x^k) + \frac{1}{2\alpha^k} \|x - x^k\|_2^2.</span></p>
-<p>When <span class="math inline">\alpha^k \leq \frac{1}{\lambda_{\max}(\nabla^2 f(x^k))}</span>, we have</p>
-<p><span class="math display">g_\alpha(x) \geq f(x^k) + \langle \nabla f(x^k),\, x - x^k \rangle + \tfrac{1}{2}(x - x^k)^\top \nabla^2 f(x^k)\, (x - x^k),</span></p>
-<p>which is the 2nd-order Taylor expansion. In fact, when <span class="math inline">\alpha</span> is small, <span class="math inline">g_\alpha(x) \geq f(x)</span>. Thus, <strong>GD updates by minimizing a quadratic upper bound of <span class="math inline">f</span></strong>.</p>
-</div>
-</div>
+</section>
+<section id="sec-gd-surrogate" class="level3" data-number="6.3.3">
+<h3 data-number="6.3.3" class="anchored" data-anchor-id="sec-gd-surrogate"><span class="header-section-number">6.3.3</span> GD as Quadratic Upper Bound Minimization</h3>
+<p>There is a deeper way to understand the GD update that will be the key to all convergence proofs. Two observations:</p>
+<ol type="1">
+<li><strong>The GD update minimizes a simple surrogate.</strong> Define</li>
+</ol>
+<p><span class="math display">g_{\alpha}(x) = f(x^k) + \langle \nabla f(x^k),\, x - x^k \rangle + \frac{1}{2\alpha} \|x - x^k\|_2^2.</span></p>
+<p>This is the first-order Taylor expansion of <span class="math inline">f</span> at <span class="math inline">x^k</span>, plus a <strong>proximity penalty</strong> that prevents us from moving too far. Setting the gradient to zero: <span class="math inline">\nabla f(x^k) + \frac{1}{\alpha}(x - x^k) = 0</span>, which gives <span class="math inline">x = x^k - \alpha \nabla f(x^k)</span>. This is exactly the GD update! So:</p>
+<p><span class="math display">x^{k+1} = \operatorname{argmin}_{x \in \mathbb{R}^n}\; g_{\alpha^k}(x).</span></p>
+<ol start="2" type="1">
+<li><strong>When <span class="math inline">\alpha</span> is small enough, the surrogate upper-bounds <span class="math inline">f</span>.</strong> When <span class="math inline">\alpha \leq 1/\lambda_{\max}(\nabla^2 f(x^k))</span>, the quadratic penalty <span class="math inline">\frac{1}{2\alpha}\|x - x^k\|_2^2</span> dominates the true curvature, so <span class="math inline">g_\alpha(x) \geq f(x)</span> for all <span class="math inline">x</span>.</li>
+</ol>
+<p>Combining these two observations: <strong>GD minimizes a quadratic upper bound of <span class="math inline">f</span></strong>. Since <span class="math inline">f(x^{k+1}) \leq g_\alpha(x^{k+1}) \leq g_\alpha(x^k) = f(x^k)</span>, each step is guaranteed to decrease the objective. This is the intuition behind the descent lemma that we will prove formally in <a href="#thm-descent-lemma" class="quarto-xref">Theorem&nbsp;<span>6.5</span></a>.</p>
 <div id="fig-quadratic-upper-bound" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-quadratic-upper-bound-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -736,9 +807,9 @@ Figure&nbsp;6.5: Gradient descent as quadratic upper bound minimization. At the 
 </figure>
 </div>
 </section>
-<section id="steepest-l1" class="level3" data-number="6.3.3">
-<h3 data-number="6.3.3" class="anchored" data-anchor-id="steepest-l1"><span class="header-section-number">6.3.3</span> Steepest Descent with <span class="math inline">\ell_1</span>-norm (Coordinate Descent)</h3>
-<p>With the <span class="math inline">\ell_1</span>-norm:</p>
+<section id="steepest-l1" class="level3" data-number="6.3.4">
+<h3 data-number="6.3.4" class="anchored" data-anchor-id="steepest-l1"><span class="header-section-number">6.3.4</span> Steepest Descent with <span class="math inline">\ell_1</span>-norm (Coordinate Descent)</h3>
+<p>With the <span class="math inline">\ell_1</span>-norm, the unit ball <span class="math inline">\{d : \|d\|_1 \leq 1\}</span> is a diamond (cross-polytope). Its extreme points are the standard basis vectors <span class="math inline">\pm e_j</span>. Since the linear objective <span class="math inline">\langle \nabla f(x), d \rangle</span> is minimized at an extreme point, the solution picks a single coordinate:</p>
 <p><span class="math display">\operatorname{argmin}_{d:\,\|d\|_1 \leq 1} \langle d,\, \nabla f(x) \rangle.</span></p>
 <p><strong>Solution:</strong> <span class="math inline">d^* \in \mathbb{R}^n</span> has only <strong>one nonzero entry</strong>:</p>
 <p><span class="math display">d^*_j = \begin{cases} -\operatorname{sign}\!\bigl(\frac{\partial f}{\partial x_j}(x)\bigr) &amp; \text{if } j = \operatorname{argmax}_j \bigl|\frac{\partial f}{\partial x_j}(x)\bigr| \\[4pt] 0 &amp; \text{otherwise.} \end{cases}</span></p>
@@ -765,8 +836,9 @@ Figure&nbsp;6.5: Gradient descent as quadratic upper bound minimization. At the 
 </div>
 </div>
 </section>
-<section id="sign-gd" class="level3" data-number="6.3.4">
-<h3 data-number="6.3.4" class="anchored" data-anchor-id="sign-gd"><span class="header-section-number">6.3.4</span> Steepest Descent with <span class="math inline">\ell_\infty</span>-norm (Sign Gradient Descent)</h3>
+<section id="sign-gd" class="level3" data-number="6.3.5">
+<h3 data-number="6.3.5" class="anchored" data-anchor-id="sign-gd"><span class="header-section-number">6.3.5</span> Steepest Descent with <span class="math inline">\ell_\infty</span>-norm (Sign Gradient Descent)</h3>
+<p>The <span class="math inline">\ell_\infty</span>-ball <span class="math inline">\{d : \|d\|_\infty \leq 1\}</span> is a cube. Its extreme points are the corners <span class="math inline">\{\pm 1\}^n</span>. The linear objective is minimized by choosing each coordinate independently: <span class="math inline">d_j^* = -\operatorname{sign}(\partial f / \partial x_j)</span>.</p>
 <p>With the <span class="math inline">\ell_\infty</span>-norm:</p>
 <p><span class="math display">\operatorname{argmin}_{d:\,\|d\|_\infty \leq 1} \langle d,\, \nabla f(x) \rangle = -\operatorname{sign}(\nabla f(x)) = -\begin{pmatrix} \operatorname{sign}\!\bigl(\frac{\partial f}{\partial x_1}(x)\bigr) \\ \operatorname{sign}\!\bigl(\frac{\partial f}{\partial x_2}(x)\bigr) \\ \vdots \\ \operatorname{sign}\!\bigl(\frac{\partial f}{\partial x_n}(x)\bigr) \end{pmatrix} \in \{\pm 1\}^n.</span></p>
 <p>The update is:</p>
@@ -785,11 +857,40 @@ Figure&nbsp;6.5: Gradient descent as quadratic upper bound minimization. At the 
 </div>
 </div>
 </section>
-<section id="newton-direction" class="level3" data-number="6.3.5">
-<h3 data-number="6.3.5" class="anchored" data-anchor-id="newton-direction"><span class="header-section-number">6.3.5</span> Newton’s Method</h3>
-<p>The previous methods used only first-order (gradient) information. By incorporating second-order information—the Hessian matrix—Newton’s method adapts the search direction to the local curvature, achieving much faster convergence at the cost of computing and inverting the Hessian at each step.</p>
-<p>Set <span class="math inline">B^k = \bigl(\nabla^2 f(x^k)\bigr)^{-1}</span>, so:</p>
-<p><span class="math display">d^k = \bigl(\nabla^2 f(x^k)\bigr)^{-1} \nabla f(x^k).</span></p>
+<section id="steepest-spectral" class="level3" data-number="6.3.6">
+<h3 data-number="6.3.6" class="anchored" data-anchor-id="steepest-spectral"><span class="header-section-number">6.3.6</span> Steepest Descent with Spectral Norm (Matrix Optimization)</h3>
+<p>When the optimization variable is a <strong>matrix</strong> <span class="math inline">W \in \mathbb{R}^{m \times n}</span> — for example, a weight matrix in a neural network — we can choose the <strong>spectral norm</strong> (operator norm) <span class="math inline">\|D\|_{\mathrm{op}} = \sigma_{\max}(D)</span> as the geometry:</p>
+<p><span class="math display">d^* = \operatorname{argmin}_{D:\,\|D\|_{\mathrm{op}} \leq 1} \langle \nabla f(W),\, D \rangle_F,</span></p>
+<p>where <span class="math inline">\langle A, B \rangle_F = \operatorname{tr}(A^\top B)</span> is the Frobenius inner product. This is the natural norm for the matrix viewed as a linear operator, treating all singular-value directions on an equal footing.</p>
+<p><strong>Solution.</strong> Let <span class="math inline">\nabla f(W) = U \Sigma V^\top</span> be the (compact) singular value decomposition. By the duality between the spectral norm and the nuclear norm <span class="math inline">\|G\|_* = \sum_i \sigma_i(G)</span>, the minimizer is</p>
+<p><span class="math display">d^* = -U V^\top.</span></p>
+<p>The steepest descent update becomes:</p>
+<p><span class="math display">W^{k+1} = W^k - \alpha^k \cdot U^k (V^k)^\top,</span></p>
+<p>where <span class="math inline">\nabla f(W^k) = U^k \Sigma^k (V^k)^\top</span>. The update direction <span class="math inline">UV^\top</span> is a partial isometry (orthogonal matrix when <span class="math inline">m = n</span>): it retains only the <em>directional</em> information of the gradient, discarding all singular value magnitudes. Contrast this with standard gradient descent on matrices, which uses the Frobenius norm <span class="math inline">\|D\|_F</span> (equivalent to <span class="math inline">\ell_2</span> on the vectorized matrix) and simply sets <span class="math inline">d^* = -\nabla f(W) / \|\nabla f(W)\|_F</span> — preserving the (often skewed) singular value profile.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: The Muon Optimizer
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The <strong>Muon</strong> (Momentum + Orthogonalization) optimizer combines spectral steepest descent with <a href="../lectures/07-momentum-adaptive.html">Nesterov momentum</a>:</p>
+<ol type="1">
+<li>Update momentum buffer: <span class="math inline">M \leftarrow \beta M + \nabla f(W)</span>.</li>
+<li><strong>Orthogonalize:</strong> compute the SVD <span class="math inline">M = U\Sigma V^\top</span> and set the update direction to <span class="math inline">UV^\top</span>.</li>
+<li>Update: <span class="math inline">W \leftarrow W - \alpha \cdot UV^\top</span>.</li>
+</ol>
+<p>Computing the full SVD at every step would be prohibitively expensive for large weight matrices. In practice, the orthogonalization <span class="math inline">M \mapsto UV^\top</span> is approximated efficiently using a <strong>Newton–Schulz iteration</strong> — a simple matrix recurrence that converges to <span class="math inline">UV^\top</span> without explicitly computing singular values. We discuss such numerical methods in the <a href="../lectures/14-newton-method.html">second-order methods</a> part of this book.</p>
+<p>The related <strong>SOAP</strong> optimizer combines spectral preconditioning with adaptive learning rates in a similar spirit. These spectral methods have shown strong empirical performance for training large-scale neural networks, where the weight matrices are naturally high-dimensional linear operators.</p>
+</div>
+</div>
+</section>
+<section id="newton-direction" class="level3" data-number="6.3.7">
+<h3 data-number="6.3.7" class="anchored" data-anchor-id="newton-direction"><span class="header-section-number">6.3.7</span> Newton’s Method</h3>
+<p>The previous methods used only first-order (gradient) information. <strong>Newton’s method</strong> incorporates second-order information — the Hessian matrix — to adapt the search direction to the local curvature. Set <span class="math inline">B^k = (\nabla^2 f(x^k))^{-1}</span>:</p>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -800,35 +901,16 @@ Figure&nbsp;6.5: Gradient descent as quadratic upper bound minimization. At the 
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Set step size <span class="math inline">\alpha^k = 1</span>:</p>
 <p><span id="eq-newton-update"><span class="math display">x^{k+1} = x^k - \bigl(\nabla^2 f(x^k)\bigr)^{-1} \nabla f(x^k). \tag{6.7}</span></span></p>
-<p>Properties:</p>
-<ul>
-<li>Uses the <strong>inverse Hessian</strong> to weight <span class="math inline">\nabla f(x^k)</span>.</li>
-<li>More <strong>computationally expensive</strong> per iteration.</li>
-<li><strong>Faster convergence</strong> (quadratic convergence near the solution).</li>
-</ul>
 </div>
 </div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Remark: Idea of Newton’s Method
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Newton’s method uses a <strong>local quadratic approximation</strong>. The 2nd-order Taylor approximation at <span class="math inline">x^k</span> is:</p>
+<p>The intuition: recall from <a href="#sec-gd-surrogate" class="quarto-xref"><span>Section 6.3.3</span></a> that GD minimizes a quadratic surrogate with an isotropic proximity penalty <span class="math inline">\frac{1}{2\alpha}\|x - x^k\|^2</span>. Newton’s method replaces this with the <strong>exact local curvature</strong> by minimizing the second-order Taylor expansion</p>
 <p><span class="math display">g_{x^k}(x) = f(x^k) + \langle \nabla f(x^k),\, x - x^k \rangle + \tfrac{1}{2}(x - x^k)^\top \nabla^2 f(x^k)\, (x - x^k).</span></p>
-<p>Then <span class="math inline">x^{k+1} = \operatorname{argmin}_{x \in \mathbb{R}^n} g_{x^k}(x)</span>.</p>
-<p><strong>Note:</strong> If <span class="math inline">f</span> is quadratic, Newton’s method solves <span class="math inline">\min_x f(x)</span> in just <strong>1 step</strong>.</p>
-</div>
-</div>
+<p>Setting <span class="math inline">\nabla g_{x^k}(x) = 0</span> recovers the Newton update. Since the surrogate matches <span class="math inline">f</span> up to second order, Newton’s method achieves <strong>quadratic convergence</strong> near the solution (the number of correct digits doubles per step), at the cost of computing and inverting the <span class="math inline">n \times n</span> Hessian (<span class="math inline">O(n^3)</span> per iteration). If <span class="math inline">f</span> is quadratic, the second-order Taylor expansion is exact, so Newton’s method converges in <strong>one step</strong>.</p>
+<p>We develop the full theory of Newton’s method — convergence analysis, damped Newton steps, and the connection to interior-point methods — in <a href="../lectures/14-newton-method.html">Chapter 14</a>.</p>
 </section>
-<section id="diag-scaled" class="level3" data-number="6.3.6">
-<h3 data-number="6.3.6" class="anchored" data-anchor-id="diag-scaled"><span class="header-section-number">6.3.6</span> Diagonally Scaled Steepest Descent</h3>
+<section id="diag-scaled" class="level3" data-number="6.3.8">
+<h3 data-number="6.3.8" class="anchored" data-anchor-id="diag-scaled"><span class="header-section-number">6.3.8</span> Diagonally Scaled Steepest Descent</h3>
 <p>Set <span class="math inline">B^k = \operatorname{diag}(b_1, b_2, \ldots, b_n)</span>, for example:</p>
 <p><span class="math display">b_j = \Bigl(\frac{\partial^2 f(x^k)}{\partial x_j^2}\Bigr)^{-1},</span></p>
 <p>i.e.,</p>
@@ -851,33 +933,60 @@ Figure&nbsp;6.5: Gradient descent as quadratic upper bound minimization. At the 
 </section>
 <section id="step-sizes" class="level2" data-number="6.4">
 <h2 data-number="6.4" class="anchored" data-anchor-id="step-sizes"><span class="header-section-number">6.4</span> Choice of Step Sizes</h2>
-<p>The step size <span class="math inline">\alpha^k</span> controls how far we move along the descent direction at each iteration. A good step size must balance two competing goals: making enough progress toward the optimum (large <span class="math inline">\alpha</span>) without overshooting and increasing the objective (small <span class="math inline">\alpha</span>). We consider three standard strategies.</p>
+<p>The step size <span class="math inline">\alpha^k</span> controls how far we move along the descent direction at each iteration. A good step size must balance two competing goals: making enough progress toward the optimum (large <span class="math inline">\alpha</span>) without overshooting and increasing the objective (small <span class="math inline">\alpha</span>).</p>
+<p>To see why this balance matters, recall the 1D quadratic example (<a href="#exm-1d-quadratic" class="quarto-xref">Example&nbsp;<span>6.1</span></a>): on <span class="math inline">f(x) = \frac{1}{2}ax^2</span>, the update <span class="math inline">x' = (1 - a\alpha)x</span> converges only when <span class="math inline">\alpha &lt; 2/a</span>, and converges fastest at <span class="math inline">\alpha^* = 1/a</span>. In higher dimensions, the curvature varies across directions, so no single step size is optimal everywhere — but the principle remains: <strong>the step size must be calibrated to the curvature of <span class="math inline">f</span></strong>. A step that is safe for the flattest direction may be far too aggressive for the steepest one.</p>
+<p>The three strategies below represent fundamentally different approaches to this calibration problem: ignore curvature entirely (constant), adapt conservatively over time (diminishing), or estimate the right scale at each step (line search).</p>
 <section id="constant-step" class="level3" data-number="6.4.1">
 <h3 data-number="6.4.1" class="anchored" data-anchor-id="constant-step"><span class="header-section-number">6.4.1</span> Constant Step Size</h3>
-<p><span class="math inline">\alpha^k = \alpha</span> for all <span class="math inline">k \geq 1</span>, for some <span class="math inline">\alpha \in \mathbb{R}</span>.</p>
+<p>The simplest strategy: fix <span class="math inline">\alpha^k = \alpha</span> for all <span class="math inline">k \geq 1</span>.</p>
 <ul>
-<li><strong>Simple to implement.</strong></li>
-<li>May <strong>not converge</strong> if <span class="math inline">\alpha</span> is too large.</li>
-<li>May be <strong>too slow</strong> if <span class="math inline">\alpha</span> is too small.</li>
+<li><strong>Simple to implement</strong> — no per-iteration computation of step sizes, no function evaluations beyond the gradient.</li>
+<li><strong>Requires knowledge of the problem.</strong> The convergence theory (see <a href="#thm-descent-lemma" class="quarto-xref">Theorem&nbsp;<span>6.5</span></a> below) will show that the step size <span class="math inline">\alpha = 1/L</span> — the reciprocal of the smoothness constant — guarantees descent. But <span class="math inline">L</span> may not be known in advance. If <span class="math inline">\alpha</span> is too large, the iterates overshoot and diverge; if too small, each step makes negligible progress.</li>
+<li><strong>Most common in practice for neural network training</strong>, where <span class="math inline">\alpha</span> (the “learning rate”) is treated as a hyperparameter tuned via grid search or heuristics.</li>
 </ul>
+<div id="exm-constant-step-quadratic" class="theorem example">
+<p><span class="theorem-title"><strong>Example 6.3 (Example: Constant Step Size on a Quadratic)</strong></span> For <span class="math inline">f(x) = \frac{1}{2}x^\top Q\,x</span> with eigenvalues <span class="math inline">\mu \leq \lambda_1 \leq \cdots \leq \lambda_n \leq L</span>, the GD update is <span class="math inline">x^{k+1} = (I - \alpha Q)x^k</span>. Convergence requires all eigenvalues of <span class="math inline">I - \alpha Q</span> to have magnitude less than 1, i.e., <span class="math inline">\alpha &lt; 2/L</span>. The optimal constant step size <span class="math inline">\alpha^* = 2/(\mu + L)</span> gives contraction factor <span class="math inline">\frac{\kappa - 1}{\kappa + 1}</span> (as derived in <a href="#exm-2d-quadratic-zigzag" class="quarto-xref">Example&nbsp;<span>6.2</span></a>), where <span class="math inline">\kappa = L/\mu</span>.</p>
+</div>
 </section>
 <section id="diminishing-step" class="level3" data-number="6.4.2">
 <h3 data-number="6.4.2" class="anchored" data-anchor-id="diminishing-step"><span class="header-section-number">6.4.2</span> Diminishing Step Size</h3>
-<p><span class="math inline">\alpha^k \to 0</span> and <span class="math inline">\sum_{k=1}^{\infty} \alpha^k = +\infty</span>. For example, <span class="math inline">\alpha_k = 1/k</span>.</p>
+<p>When the smoothness constant <span class="math inline">L</span> is unknown and line search is too expensive, a <strong>diminishing step size</strong> provides a safe default: the step sizes shrink to zero, so the algorithm eventually takes steps small enough to avoid overshooting any curvature. Formally, the step sizes satisfy two conditions:</p>
+<p><span class="math display">\alpha^k \to 0 \qquad \text{and} \qquad \sum_{k=1}^{\infty} \alpha^k = +\infty.</span></p>
+<p>For example, <span class="math inline">\alpha^k = c/k</span> for some constant <span class="math inline">c &gt; 0</span>, or <span class="math inline">\alpha^k = c/\sqrt{k}</span>.</p>
+<p><strong>Why both conditions?</strong> They serve complementary roles:</p>
 <ul>
-<li>Good <strong>theoretical guarantees</strong>, but can be slow in practice.</li>
-<li><span class="math inline">\sum \alpha^k = +\infty</span> ensures the algorithm moves far enough to reach the optimum.</li>
+<li><strong><span class="math inline">\sum \alpha^k = +\infty</span> (sufficient travel).</strong> The total distance the algorithm can travel is <span class="math inline">\sum_k \alpha^k \|\nabla f(x^k)\|</span>. If <span class="math inline">\sum \alpha^k &lt; \infty</span>, the iterates could converge to a non-stationary point simply because they run out of “fuel” before reaching the optimum. The divergence condition ensures the algorithm can always travel far enough.</li>
+<li><strong><span class="math inline">\alpha^k \to 0</span> (eventual caution).</strong> As the iterates approach the optimum, the gradient becomes small and the linear approximation is valid only in a shrinking neighborhood. Decaying step sizes ensure the algorithm does not overshoot in this delicate regime.</li>
 </ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Diminishing vs.&nbsp;Constant Step Sizes
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Diminishing step sizes are most important for <strong>stochastic</strong> gradient descent (SGD), where the gradient estimate is noisy. The noise does not vanish as <span class="math inline">x^k \to x^*</span>, so a constant step size causes the iterates to oscillate around the optimum rather than converging. Diminishing steps average out the noise. For deterministic GD with a known smoothness constant, the constant step size <span class="math inline">\alpha = 1/L</span> is typically preferred.</p>
+</div>
+</div>
 </section>
 <section id="line-search" class="level3" data-number="6.4.3">
 <h3 data-number="6.4.3" class="anchored" data-anchor-id="line-search"><span class="header-section-number">6.4.3</span> Line Search</h3>
-<p><strong>Exact line search:</strong></p>
-<p><span class="math display">\alpha^k = \operatorname{argmin}_{\alpha \geq 0} f(x^k + \alpha \cdot d^k).</span></p>
+<p>The most adaptive strategy: at each iteration, <strong>choose <span class="math inline">\alpha^k</span> by approximately solving a 1D optimization problem</strong> along the descent direction. This automatically calibrates the step size to the local curvature without requiring global knowledge of <span class="math inline">L</span>.</p>
+<p><strong>Exact line search</strong> solves the 1D problem exactly:</p>
+<p><span class="math display">\alpha^k = \operatorname{argmin}_{\alpha \geq 0}\; f(x^k + \alpha \cdot d^k).</span></p>
+<p>Three observations make this practical:</p>
 <ul>
-<li>Need to solve a <strong>1D optimization</strong> problem at each iteration.</li>
-<li>No need to solve the line search <em>exactly</em>.</li>
-<li>When <span class="math inline">f</span> is convex, the line search problem is also convex (restricting to a line).</li>
+<li>It is a <strong>1D optimization</strong> problem — much simpler than the original <span class="math inline">n</span>-dimensional problem.</li>
+<li>There is no need to solve it <em>exactly</em> — approximate solutions suffice (and are cheaper).</li>
+<li>When <span class="math inline">f</span> is convex, the line search problem is also convex (restricting a convex function to a line preserves convexity).</li>
 </ul>
+<p>However, even 1D optimization requires multiple function evaluations per iteration, which can be expensive. In practice, we use <strong>inexact line search</strong> methods that find a “good enough” step size with only a few function evaluations.</p>
+<p><strong>The Armijo condition (sufficient decrease).</strong> The key idea behind inexact line search is the <strong>Armijo condition</strong>: accept a step size <span class="math inline">\alpha</span> if it achieves a <em>sufficient</em> decrease in <span class="math inline">f</span>, meaning the actual decrease is at least a fixed fraction of the decrease predicted by the linear approximation:</p>
+<p><span id="eq-armijo"><span class="math display">f(x^k + \alpha\, d^k) \leq f(x^k) + c \cdot \alpha \cdot \langle \nabla f(x^k),\, d^k \rangle, \qquad c \in (0, 1). \tag{6.8}</span></span></p>
+<p>The parameter <span class="math inline">c</span> controls how much decrease we demand. With <span class="math inline">c = 0</span> we accept any decrease at all (too permissive); with <span class="math inline">c = 1</span> we demand the full linear prediction (too strict, since the linear approximation over-predicts for smooth functions). A typical choice is <span class="math inline">c = 1/2</span>.</p>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -888,13 +997,21 @@ Figure&nbsp;6.5: Gradient descent as quadratic upper bound minimization. At the 
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<pre><code>Start with alpha = 1
-While f(x^k + alpha * d^k) &gt; f(x^k) + (alpha/2) * &lt;d^k, grad f(x^k)&gt;:
-    Set alpha = beta * alpha      // shrink step size, beta in (0,1)
-Return alpha</code></pre>
-<p><strong>Idea:</strong> Try to find the largest step size among <span class="math inline">\{1,\, \beta,\, \beta^2,\, \ldots\}</span>.</p>
+<p><strong>Input:</strong> current point <span class="math inline">x^k</span>, descent direction <span class="math inline">d^k</span>, shrinkage factor <span class="math inline">\beta \in (0,1)</span>, Armijo parameter <span class="math inline">c \in (0,1)</span>.</p>
+<ol type="1">
+<li>Initialize <span class="math inline">\alpha \leftarrow 1</span>.</li>
+<li><strong>While</strong> <span class="math inline">f(x^k + \alpha\, d^k) &gt; f(x^k) + c \cdot \alpha\,\langle d^k,\, \nabla f(x^k) \rangle</span>:</li>
+</ol>
+<p><span class="math display">\alpha \leftarrow \beta \cdot \alpha \qquad \text{(shrink step size)}</span></p>
+<ol start="3" type="1">
+<li><strong>Return</strong> <span class="math inline">\alpha</span>.</li>
+</ol>
+<p><strong>Idea:</strong> Try step sizes <span class="math inline">\alpha \in \{1,\, \beta,\, \beta^2,\, \ldots\}</span> and accept the first one satisfying the Armijo condition <a href="#eq-armijo" class="quarto-xref">Equation&nbsp;<span>6.8</span></a>.</p>
 </div>
 </div>
+<p><strong>Why does backtracking terminate?</strong> Since <span class="math inline">d^k</span> is a descent direction, <span class="math inline">\langle \nabla f(x^k), d^k \rangle &lt; 0</span>. By continuity, for sufficiently small <span class="math inline">\alpha</span>:</p>
+<p><span class="math display">f(x^k + \alpha\,d^k) = f(x^k) + \alpha\,\langle \nabla f(x^k), d^k\rangle + o(\alpha) &lt; f(x^k) + c\,\alpha\,\langle \nabla f(x^k), d^k\rangle,</span></p>
+<p>so the Armijo condition is eventually satisfied. The algorithm terminates in at most <span class="math inline">O(\log(1/\alpha_{\min}))</span> function evaluations.</p>
 <p>The following figure lets you see the backtracking procedure in action. We plot the one-dimensional function <span class="math inline">\varphi(\alpha) = f(x^k + \alpha d^k)</span> against the sufficient-decrease line (the Armijo condition). The algorithm tests <span class="math inline">\alpha = 1, \beta, \beta^2, \ldots</span> and accepts the first <span class="math inline">\alpha</span> for which <span class="math inline">\varphi(\alpha)</span> drops below the Armijo line.</p>
 <style>
   .interactive-figure-container {
@@ -1091,25 +1208,32 @@ Return alpha</code></pre>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Tuning step sizes is an art. In practice, when <span class="math inline">f</span> is nonconvex, usually use a constant and small step size, or gradually decrease step sizes.</p>
-<p>When training neural networks (e.g., using PyTorch), <strong>learning rate scheduling</strong> is commonly used:</p>
+<p>In the theory above, the optimal constant step size requires knowing the smoothness constant <span class="math inline">L</span> (or the strong convexity parameter <span class="math inline">\mu</span>). In practice — especially when training neural networks — these constants are unknown and the loss landscape is highly nonconvex. The learning rate (step size) becomes the most important hyperparameter, and practitioners use <strong>learning rate schedules</strong> that vary <span class="math inline">\alpha^k</span> over the course of training. The key insight is that different phases of training benefit from different step sizes: early on, larger steps help escape flat regions and explore the landscape; later, smaller steps allow the optimizer to settle into a good minimum.</p>
+<p>The most widely used schedules include:</p>
 <ul>
-<li><strong>StepLR</strong> — decay learning rate by a factor every <span class="math inline">T</span> steps.</li>
-<li><strong>Cosine scheduler</strong> — refine solution using a very small learning rate at end.</li>
-<li><strong>Warmup</strong> — increase the learning rate first, then decay.</li>
+<li><p><strong>StepLR (piecewise constant decay).</strong> The learning rate stays constant for <span class="math inline">T</span> epochs, then drops by a fixed factor <span class="math inline">\gamma</span>:</p>
+<p><span class="math display">\alpha^k = \alpha_0 \cdot \gamma^{\lfloor k/T \rfloor}.</span></p>
+<p>For example, <span class="math inline">\alpha_0 = 0.1</span>, <span class="math inline">\gamma = 0.1</span>, <span class="math inline">T = 30</span> means the learning rate is <span class="math inline">0.1</span> for the first 30 epochs, <span class="math inline">0.01</span> for the next 30, and <span class="math inline">0.001</span> thereafter. This is the classic schedule used in early deep learning (e.g., training ResNets on ImageNet). The idea is simple: train at a high learning rate until progress plateaus, then “anneal” to a lower rate for fine-tuning. The downside is that it introduces discrete jumps, and the schedule parameters (<span class="math inline">T</span>, <span class="math inline">\gamma</span>) must be tuned.</p></li>
+<li><p><strong>Cosine annealing.</strong> The learning rate follows a half-cosine curve from <span class="math inline">\alpha_0</span> down to <span class="math inline">\alpha_{\min} \approx 0</span>:</p>
+<p><span class="math display">\alpha^k = \alpha_{\min} + \frac{1}{2}(\alpha_0 - \alpha_{\min})\!\left(1 + \cos\!\left(\frac{\pi k}{K}\right)\right),</span></p>
+<p>where <span class="math inline">K</span> is the total number of training steps. Unlike StepLR, the decay is smooth — the learning rate decreases slowly at first (when the model is still learning coarse features), then faster in the middle, then slowly again near the end (for fine-grained refinement). Cosine annealing has become the default schedule for training large language models and vision transformers, largely because it has only two hyperparameters (<span class="math inline">\alpha_0</span>, <span class="math inline">K</span>) and is robust to the total training duration.</p></li>
+<li><p><strong>Linear warmup + decay.</strong> The learning rate ramps up linearly from a small value to <span class="math inline">\alpha_0</span> during the first <span class="math inline">T_w</span> steps, then follows a decay schedule (typically cosine) for the remaining steps:</p>
+<p><span class="math display">\alpha^k = \begin{cases} \alpha_0 \cdot k / T_w &amp; k \leq T_w, \\ \text{decay}(\alpha_0, k - T_w) &amp; k &gt; T_w. \end{cases}</span></p>
+<p><strong>Why warmup?</strong> At initialization, the model parameters are random and the gradients can be very large or have high variance. Starting with a large learning rate in this unstable regime risks divergence. Warmup allows the optimizer’s internal statistics (e.g., the second-moment estimates in Adam) to stabilize before committing to large steps. This is especially important for transformers and other architectures with attention mechanisms, where early-stage gradient magnitudes can vary dramatically across layers.</p></li>
+<li><p><strong>Exponential decay.</strong> The learning rate decreases by a constant factor each epoch: <span class="math inline">\alpha^k = \alpha_0 \cdot \gamma^k</span> with <span class="math inline">\gamma \in (0,1)</span>. This gives a smooth, monotonic decrease, but the exponential drop-off can be too aggressive for long training runs.</p></li>
 </ul>
 </div>
 </div>
 <div class="figure-container">
   <div id="fig-lr-schedules"></div>
-  <div class="figure-caption">Figure 7.4: Comparison of common learning rate schedules used in deep learning.</div>
+  <div class="figure-caption">Figure 6.3: Comparison of common learning rate schedules used in deep learning.</div>
 </div>
 </section>
 </section>
 <section id="convergence-analysis" class="level2" data-number="6.5">
 <h2 data-number="6.5" class="anchored" data-anchor-id="convergence-analysis"><span class="header-section-number">6.5</span> Convergence Analysis of Gradient Descent</h2>
-<p>We have developed the gradient descent algorithm and its variants, along with step size strategies. The central question remains: <strong>how fast does gradient descent converge?</strong> The answer depends entirely on the structural properties of the objective function <span class="math inline">f</span>. In this section, we develop the convergence theory of gradient descent under three progressively stronger assumptions.</p>
-<p>The key insight is that convergence speed is governed by two numbers that bound the <strong>curvature</strong> of <span class="math inline">f</span>:</p>
+<p>We have developed the gradient descent algorithm and its variants, along with step size strategies. The central question remains: <strong>how fast does gradient descent converge?</strong></p>
+<p>The quadratic warm-up in <a href="#exm-2d-quadratic-zigzag" class="quarto-xref">Example&nbsp;<span>6.2</span></a> already gave us the answer for one special case: on the quadratic <span class="math inline">f(x,y) = \frac{1}{2}(ax^2 + by^2)</span>, the convergence rate is <span class="math inline">\frac{\kappa-1}{\kappa+1}</span> where <span class="math inline">\kappa = b/a</span> is the ratio of curvatures. We now develop the general theory, which shows that this is no coincidence — the convergence rate of GD is always governed by two numbers that bound the <strong>curvature</strong> of <span class="math inline">f</span>:</p>
 <ul>
 <li><strong>Smoothness parameter <span class="math inline">L</span>:</strong> an upper bound on how fast the gradient changes (curvature from above).</li>
 <li><strong>Strong convexity parameter <span class="math inline">\mu</span>:</strong> a lower bound on how much the function curves upward (curvature from below).</li>
@@ -1119,36 +1243,25 @@ Return alpha</code></pre>
 <h3 data-number="6.5.1" class="anchored" data-anchor-id="smoothness"><span class="header-section-number">6.5.1</span> Smoothness: Bounding Curvature from Above</h3>
 <p>The first structural property we need is <strong>smoothness</strong>, which says that the gradient of <span class="math inline">f</span> does not change too rapidly. Informally, a smooth function has no “sharp bends” in its gradient.</p>
 <div id="def-smoothness" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 6.3 (Definition 7.7 (<span class="math inline">L</span>-Smoothness))</strong></span> A differentiable function <span class="math inline">f</span> is <strong><span class="math inline">L</span>-smooth</strong> if its gradient is <span class="math inline">L</span>-Lipschitz continuous:</p>
+<p><span class="theorem-title"><strong>Definition 6.3 (<span class="math inline">L</span>-Smoothness)</strong></span> A differentiable function <span class="math inline">f</span> is <strong><span class="math inline">L</span>-smooth</strong> if its gradient is <span class="math inline">L</span>-Lipschitz continuous:</p>
 <p><span class="math display">\|\nabla f(x) - \nabla f(y)\|_2 \leq L \cdot \|x - y\|_2 \qquad \forall\, x, y.</span></p>
 </div>
 <p><strong>What does this mean?</strong> If you move from <span class="math inline">x</span> to <span class="math inline">y</span>, the gradient cannot change by more than <span class="math inline">L</span> times the distance you moved. A small <span class="math inline">L</span> means the gradient changes slowly (the function is “gently curved”), while a large <span class="math inline">L</span> means the gradient can change rapidly.</p>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Intuition: Quadratic Upper Bound
-</div>
-</div>
-<div class="callout-body-container callout-body">
+<p><strong>Why do we need this for convergence?</strong> Recall the linearization idea behind GD: we approximate <span class="math inline">f(x + \alpha d) \approx f(x) + \alpha \langle \nabla f(x), d \rangle</span> and move in the direction that decreases this linear approximation. But this approximation is only valid locally — if the gradient can change wildly (large <span class="math inline">L</span>), a step that looks good based on the current gradient may actually increase <span class="math inline">f</span>. Smoothness quantifies exactly how far we can trust the linear approximation.</p>
 <p>The most important consequence of <span class="math inline">L</span>-smoothness is the <strong>quadratic upper bound</strong>: for all <span class="math inline">x, y</span>,</p>
-<p><span id="eq-quadratic-upper"><span class="math display">f(y) \leq f(x) + \nabla f(x)^\top (y - x) + \frac{L}{2}\|y - x\|_2^2. \tag{6.8}</span></span></p>
+<p><span id="eq-quadratic-upper"><span class="math display">f(y) \leq f(x) + \nabla f(x)^\top (y - x) + \frac{L}{2}\|y - x\|_2^2. \tag{6.9}</span></span></p>
 <p>This says that <span class="math inline">f</span> is bounded above by a quadratic that “hugs” it from above. The linear part <span class="math inline">f(x) + \nabla f(x)^\top(y-x)</span> is the tangent-line approximation, and the quadratic term <span class="math inline">\frac{L}{2}\|y-x\|_2^2</span> controls how far <span class="math inline">f</span> can deviate from this tangent. See <a href="#fig-quadratic-upper-bound" class="quarto-xref">Figure&nbsp;<span>6.5</span></a> for an illustration.</p>
-</div>
-</div>
 <p>For twice-differentiable functions, <span class="math inline">L</span>-smoothness is equivalent to requiring that all eigenvalues of the Hessian are at most <span class="math inline">L</span>:</p>
 <p><span class="math display">\nabla^2 f(x) \preceq L \cdot I \qquad \forall\, x.</span></p>
 <div id="exm-quadratic-smooth" class="theorem example">
-<p><span class="theorem-title"><strong>Example 6.3 (Example: Quadratic Function)</strong></span> For <span class="math inline">f(x) = \frac{1}{2}x^\top Q\, x</span> with <span class="math inline">Q \succ 0</span>, we have <span class="math inline">\nabla^2 f(x) = Q</span>, so <span class="math inline">f</span> is <span class="math inline">L</span>-smooth with <span class="math inline">L = \lambda_{\max}(Q)</span>.</p>
+<p><span class="theorem-title"><strong>Example 6.4 (Example: Quadratic Function)</strong></span> For <span class="math inline">f(x) = \frac{1}{2}x^\top Q\, x</span> with <span class="math inline">Q \succ 0</span>, we have <span class="math inline">\nabla^2 f(x) = Q</span>, so <span class="math inline">f</span> is <span class="math inline">L</span>-smooth with <span class="math inline">L = \lambda_{\max}(Q)</span>.</p>
 </div>
 </section>
 <section id="strong-convexity" class="level3" data-number="6.5.2">
 <h3 data-number="6.5.2" class="anchored" data-anchor-id="strong-convexity"><span class="header-section-number">6.5.2</span> Strong Convexity: Bounding Curvature from Below</h3>
 <p>While smoothness bounds curvature from above, <strong>strong convexity</strong> bounds it from below. It says that <span class="math inline">f</span> curves upward at least as fast as a quadratic.</p>
 <div id="def-strong-convexity" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 6.4 (Definition 7.8 (<span class="math inline">\mu</span>-Strong Convexity))</strong></span> A differentiable function <span class="math inline">f</span> is <strong><span class="math inline">\mu</span>-strongly convex</strong> (with <span class="math inline">\mu &gt; 0</span>) if for all <span class="math inline">x, y</span>:</p>
+<p><span class="theorem-title"><strong>Definition 6.4 (<span class="math inline">\mu</span>-Strong Convexity)</strong></span> A differentiable function <span class="math inline">f</span> is <strong><span class="math inline">\mu</span>-strongly convex</strong> (with <span class="math inline">\mu &gt; 0</span>) if for all <span class="math inline">x, y</span>:</p>
 <p><span class="math display">f(y) \geq f(x) + \nabla f(x)^\top (y - x) + \frac{\mu}{2}\|y - x\|_2^2.</span></p>
 </div>
 <p><strong>What does this mean?</strong> Ordinary convexity says that <span class="math inline">f</span> lies above all of its tangent lines. Strong convexity says something stronger: <span class="math inline">f</span> lies above all of its tangent lines <strong>plus a quadratic bowl</strong> of curvature <span class="math inline">\mu</span>. The bigger <span class="math inline">\mu</span> is, the more strongly <span class="math inline">f</span> curves upward.</p>
@@ -1169,26 +1282,19 @@ Return alpha</code></pre>
 </div>
 <p>For twice-differentiable functions, <span class="math inline">\mu</span>-strong convexity is equivalent to <span class="math inline">\nabla^2 f(x) \succeq \mu \cdot I</span> for all <span class="math inline">x</span>. Together with smoothness, this means all Hessian eigenvalues are sandwiched:</p>
 <p><span class="math display">\mu \cdot I \preceq \nabla^2 f(x) \preceq L \cdot I \qquad \forall\, x.</span></p>
-<div class="callout callout-style-simple callout-note">
-<div class="callout-body d-flex">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-body-container">
 <p>Strong convexity guarantees two important properties:</p>
 <ol type="1">
-<li><strong>Unique minimizer.</strong> A <span class="math inline">\mu</span>-strongly convex function has exactly one minimizer <span class="math inline">x^*</span>.</li>
-<li><strong>Gradient domination.</strong> <span class="math inline">\frac{1}{2\mu}\|\nabla f(x)\|_2^2 \geq f(x) - f(x^*)</span>. When the gradient is small, the function value must be close to optimal.</li>
+<li><p><strong>Unique minimizer.</strong> A <span class="math inline">\mu</span>-strongly convex function has exactly one minimizer <span class="math inline">x^*</span>. (If there were two minimizers <span class="math inline">x_1^* \neq x_2^*</span>, applying the definition with <span class="math inline">x = x_1^*</span> and <span class="math inline">y = x_2^*</span> would give <span class="math inline">f(x_2^*) &gt; f(x_1^*)</span>, contradicting optimality of <span class="math inline">x_2^*</span>.)</p></li>
+<li><p><strong>Gradient domination.</strong> For all <span class="math inline">x</span>:</p></li>
 </ol>
-</div>
-</div>
-</div>
+<p><span id="eq-gradient-domination"><span class="math display">f(x) - f(x^*) \leq \frac{1}{2\mu}\|\nabla f(x)\|_2^2. \tag{6.10}</span></span></p>
+<p>This says: <strong>when the gradient is small, the function value must be close to optimal</strong>. To see why, minimize the strong convexity lower bound over <span class="math inline">y</span>: <span class="math inline">f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle + \frac{\mu}{2}\|y-x\|_2^2</span>. The right side is minimized at <span class="math inline">y = x - \frac{1}{\mu}\nabla f(x)</span>, giving <span class="math inline">f(x^*) \geq f(x) - \frac{1}{2\mu}\|\nabla f(x)\|_2^2</span>. Rearranging yields <a href="#eq-gradient-domination" class="quarto-xref">Equation&nbsp;<span>6.10</span></a>. This property is so useful that it has its own name — the <strong>Polyak–Łojasiewicz condition</strong> — which we revisit in <a href="#def-pl" class="quarto-xref">Definition&nbsp;<span>6.6</span></a>.</p>
 </section>
 <section id="condition-number" class="level3" data-number="6.5.3">
 <h3 data-number="6.5.3" class="anchored" data-anchor-id="condition-number"><span class="header-section-number">6.5.3</span> The Condition Number</h3>
 <p>When <span class="math inline">f</span> is both <span class="math inline">\mu</span>-strongly convex and <span class="math inline">L</span>-smooth, the ratio of these two parameters plays a central role.</p>
 <div id="def-condition-number" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 6.5 (Definition 7.9 (Condition Number))</strong></span> The <strong>condition number</strong> of a <span class="math inline">\mu</span>-strongly convex and <span class="math inline">L</span>-smooth function is</p>
+<p><span class="theorem-title"><strong>Definition 6.5 (Condition Number)</strong></span> The <strong>condition number</strong> of a <span class="math inline">\mu</span>-strongly convex and <span class="math inline">L</span>-smooth function is</p>
 <p><span class="math display">\kappa = \frac{L}{\mu} \geq 1.</span></p>
 </div>
 <p>The condition number measures how “elongated” the contours of <span class="math inline">f</span> are. When <span class="math inline">\kappa \approx 1</span>, the contours are nearly circular and gradient descent converges quickly in a direct path (<a href="14-newton-method.html#fig-condition-number" class="quarto-xref">Figure&nbsp;<span>14.1</span></a>, left panel). When <span class="math inline">\kappa \gg 1</span>, the contours are elongated ellipses and gradient descent zig-zags slowly toward the optimum (<a href="14-newton-method.html#fig-condition-number" class="quarto-xref">Figure&nbsp;<span>14.1</span></a>, right panel).</p>
@@ -1196,18 +1302,22 @@ Return alpha</code></pre>
 </section>
 <section id="descent-lemma-convergence" class="level3" data-number="6.5.4">
 <h3 data-number="6.5.4" class="anchored" data-anchor-id="descent-lemma-convergence"><span class="header-section-number">6.5.4</span> The Descent Lemma</h3>
-<p>The descent lemma is the engine behind all gradient descent convergence proofs. It says that <strong>every gradient descent step makes guaranteed progress</strong>, provided the step size is small enough.</p>
+<p>The descent lemma is the <strong>engine behind all gradient descent convergence proofs</strong>. It makes precise the surrogate-minimization intuition from <a href="#sec-gd-surrogate" class="quarto-xref"><span>Section 6.3.3</span></a>: every GD step makes guaranteed progress, provided the step size is small enough.</p>
 <div id="thm-descent-lemma" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 6.5 (Theorem 7.10 (Descent Lemma))</strong></span> If <span class="math inline">f</span> is <span class="math inline">L</span>-smooth and <span class="math inline">x^+ = x - \alpha\,\nabla f(x)</span> with <span class="math inline">\alpha \leq 1/L</span>, then</p>
-<p><span id="eq-descent-lemma"><span class="math display">f(x^+) \leq f(x) - \frac{\alpha}{2}\|\nabla f(x)\|_2^2. \tag{6.9}</span></span></p>
+<p><span class="theorem-title"><strong>Theorem 6.5 (Descent Lemma)</strong></span> If <span class="math inline">f</span> is <span class="math inline">L</span>-smooth and <span class="math inline">x^+ = x - \alpha\,\nabla f(x)</span> with <span class="math inline">\alpha \leq 1/L</span>, then</p>
+<p><span id="eq-descent-lemma"><span class="math display">f(x^+) \leq f(x) - \frac{\alpha}{2}\|\nabla f(x)\|_2^2. \tag{6.11}</span></span></p>
 </div>
-<p>The descent lemma guarantees that each GD step decreases the objective by at least <span class="math inline">\frac{\alpha}{2}\|\nabla f(x)\|_2^2</span>, which is strictly positive whenever <span class="math inline">\nabla f(x) \neq 0</span>. This means gradient descent with step size <span class="math inline">\alpha \leq 1/L</span> is a <strong>monotonically improving</strong> algorithm: <span class="math inline">f(x^0) \geq f(x^1) \geq f(x^2) \geq \cdots</span>.</p>
+<p>Note two things about this result:</p>
+<ul>
+<li>It is <strong>quantitative</strong>: each step decreases <span class="math inline">f</span> by at least <span class="math inline">\frac{\alpha}{2}\|\nabla f(x)\|_2^2</span>, which is large when the gradient is large (far from optimality) and small when the gradient is small (close to optimality).</li>
+<li>It requires <strong>no convexity</strong> — it works for any <span class="math inline">L</span>-smooth function, even nonconvex ones. Convexity will enter only when we translate “gradient gets small” into “function value gets close to optimal.”</li>
+</ul>
 <div class="proof">
-<p><span class="proof-title"><em>Proof</em>. </span>Start from the quadratic upper bound (<a href="#eq-quadratic-upper" class="quarto-xref">Equation&nbsp;<span>6.8</span></a>):</p>
+<p><span class="proof-title"><em>Proof</em>. </span>The proof is a direct calculation using the quadratic upper bound (<a href="#eq-quadratic-upper" class="quarto-xref">Equation&nbsp;<span>6.9</span></a>). Start from:</p>
 <p><span class="math display">f(x^+) \leq f(x) + \nabla f(x)^\top(x^+ - x) + \frac{L}{2}\|x^+ - x\|_2^2.</span></p>
 <p>Substitute the GD update <span class="math inline">x^+ - x = -\alpha\,\nabla f(x)</span>:</p>
 <p><span class="math display">f(x^+) \leq f(x) - \alpha\|\nabla f(x)\|_2^2 + \frac{L\alpha^2}{2}\|\nabla f(x)\|_2^2 = f(x) - \alpha\!\left(1 - \frac{L\alpha}{2}\right)\|\nabla f(x)\|_2^2.</span></p>
-<p>Since <span class="math inline">\alpha \leq 1/L</span>, we have <span class="math inline">L\alpha/2 \leq 1/2</span>, so <span class="math inline">(1 - L\alpha/2) \geq 1/2</span>:</p>
+<p>The coefficient <span class="math inline">(1 - L\alpha/2)</span> measures the tradeoff: the first term <span class="math inline">-\alpha\|\nabla f\|^2</span> comes from the linear decrease along the gradient, and the second term <span class="math inline">+\frac{L\alpha^2}{2}\|\nabla f\|^2</span> is the penalty for curvature. When <span class="math inline">\alpha \leq 1/L</span>, the curvature penalty is at most half the linear gain, giving <span class="math inline">(1 - L\alpha/2) \geq 1/2</span>:</p>
 <p><span class="math display">f(x^+) \leq f(x) - \frac{\alpha}{2}\|\nabla f(x)\|_2^2. \qquad \blacksquare</span></p>
 </div>
 </section>
@@ -1228,12 +1338,12 @@ Figure&nbsp;6.6: Convergence rates of gradient descent under three structural as
 <h4 data-number="6.5.5.1" class="anchored" data-anchor-id="case1"><span class="header-section-number">6.5.5.1</span> Case 1: Nonconvex + Smooth</h4>
 <p>When <span class="math inline">f</span> is only smooth (possibly nonconvex), we cannot hope to find a global minimum—the function may have many local minima and saddle points. The best we can guarantee is finding an <strong>approximate stationary point</strong> where <span class="math inline">\|\nabla f(x)\| \leq \varepsilon</span>.</p>
 <div id="thm-nonconvex-smooth" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 6.6 (Theorem 7.11 (GD: Nonconvex + Smooth))</strong></span> If <span class="math inline">f</span> is <span class="math inline">L</span>-smooth and <span class="math inline">\alpha = 1/L</span>, then after <span class="math inline">K</span> iterations:</p>
+<p><span class="theorem-title"><strong>Theorem 6.6 (GD: Nonconvex + Smooth)</strong></span> If <span class="math inline">f</span> is <span class="math inline">L</span>-smooth and <span class="math inline">\alpha = 1/L</span>, then after <span class="math inline">K</span> iterations:</p>
 <p><span class="math display">\min_{0 \leq k &lt; K} \|\nabla f(x^k)\|_2^2 \leq \frac{2L\bigl(f(x^0) - f(x^*)\bigr)}{K}.</span></p>
 <p>To find an <span class="math inline">\varepsilon</span>-approximate stationary point (<span class="math inline">\|\nabla f(x)\|_2 \leq \varepsilon</span>), we need <span class="math inline">K = O(L/\varepsilon^2)</span> iterations.</p>
 </div>
 <div class="proof">
-<p><span class="proof-title"><em>Proof</em>. </span>By the descent lemma (<a href="#eq-descent-lemma" class="quarto-xref">Equation&nbsp;<span>6.9</span></a>), each step satisfies <span class="math inline">f(x^{k+1}) \leq f(x^k) - \frac{1}{2L}\|\nabla f(x^k)\|_2^2</span>. Rearranging:</p>
+<p><span class="proof-title"><em>Proof</em>. </span>By the descent lemma (<a href="#eq-descent-lemma" class="quarto-xref">Equation&nbsp;<span>6.11</span></a>), each step satisfies <span class="math inline">f(x^{k+1}) \leq f(x^k) - \frac{1}{2L}\|\nabla f(x^k)\|_2^2</span>. Rearranging:</p>
 <p><span class="math display">\frac{1}{2L}\|\nabla f(x^k)\|_2^2 \leq f(x^k) - f(x^{k+1}).</span></p>
 <p>Now sum from <span class="math inline">k = 0</span> to <span class="math inline">K-1</span>. The right-hand side <strong>telescopes</strong>:</p>
 <p><span class="math display">\frac{1}{2L}\sum_{k=0}^{K-1}\|\nabla f(x^k)\|_2^2 \leq \bigl(f(x^0) - f(x^1)\bigr) + \bigl(f(x^1) - f(x^2)\bigr) + \cdots + \bigl(f(x^{K-1}) - f(x^K)\bigr) = f(x^0) - f(x^K) \leq f(x^0) - f(x^*).</span></p>
@@ -1255,25 +1365,46 @@ Figure&nbsp;6.6: Convergence rates of gradient descent under three structural as
 </section>
 <section id="case2" class="level4" data-number="6.5.5.2">
 <h4 data-number="6.5.5.2" class="anchored" data-anchor-id="case2"><span class="header-section-number">6.5.5.2</span> Case 2: Convex + Smooth</h4>
-<p>When <span class="math inline">f</span> is convex, every local minimum is a global minimum, so we can track the <strong>function value gap</strong> <span class="math inline">f(x^k) - f(x^*)</span> instead of just the gradient norm. Convexity upgrades the guarantee from “finding a stationary point” to “finding an approximate global minimizer.”</p>
+<p>When <span class="math inline">f</span> is convex, every stationary point is a global minimum, so we can track the <strong>function value gap</strong> <span class="math inline">f(x^k) - f(x^*)</span> directly. Convexity upgrades the guarantee from “finding a stationary point” to “finding an approximate global minimizer.” But convexity also gives us a new proof tool: the first-order characterization <span class="math inline">f(y) \geq f(x) + \langle \nabla f(x), y - x \rangle</span>, which provides a <strong>lower bound</strong> to complement the smoothness upper bound.</p>
 <div id="thm-convex-smooth" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 6.7 (Theorem 7.12 (GD: Convex + Smooth))</strong></span> If <span class="math inline">f</span> is convex and <span class="math inline">L</span>-smooth, with <span class="math inline">\alpha = 1/L</span>, then:</p>
+<p><span class="theorem-title"><strong>Theorem 6.7 (GD: Convex + Smooth)</strong></span> If <span class="math inline">f</span> is convex and <span class="math inline">L</span>-smooth, with <span class="math inline">\alpha = 1/L</span>, then:</p>
 <p><span class="math display">f(x^K) - f(x^*) \leq \frac{L\|x^0 - x^*\|_2^2}{2K}.</span></p>
 <p>To achieve <span class="math inline">f(x^K) - f(x^*) \leq \varepsilon</span>, we need <span class="math inline">K = O(L/\varepsilon)</span> iterations.</p>
 </div>
+<p>The proof strategy is: combine the smoothness <strong>upper bound</strong> with the convexity <strong>lower bound</strong> to show that each GD step makes progress measured by the <strong>distance to the optimum</strong> <span class="math inline">\|x^k - x^*\|_2^2</span>. A useful algebraic identity (the “three-point identity”) then converts inner products into squared distances, enabling a clean telescoping argument.</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>Three-Point Identity
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>For any three points <span class="math inline">a, b, c \in \mathbb{R}^n</span>:</p>
+<p><span class="math display">\langle a - b,\, a - c \rangle = \frac{1}{2}\|a - b\|_2^2 + \frac{1}{2}\|a - c\|_2^2 - \frac{1}{2}\|b - c\|_2^2.</span></p>
+<p>This follows by expanding <span class="math inline">\|b - c\|^2 = \|(a-c) - (a-b)\|^2</span> and rearranging. It converts an inner product (hard to telescope) into a difference of squared distances (easy to telescope). This identity appears repeatedly in optimization proofs — in projected gradient descent, proximal methods, and mirror descent.</p>
+</div>
+</div>
 <div class="proof">
-<p><span class="proof-title"><em>Proof</em>. </span>The proof combines smoothness with convexity in an elegant telescoping argument.</p>
-<p><strong>Step 1 (Smoothness).</strong> The quadratic upper bound (<a href="#eq-quadratic-upper" class="quarto-xref">Equation&nbsp;<span>6.8</span></a>) gives:</p>
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Step 1 (Smoothness — upper bound).</strong> The quadratic upper bound (<a href="#eq-quadratic-upper" class="quarto-xref">Equation&nbsp;<span>6.9</span></a>) at the GD update gives:</p>
 <p><span class="math display">f(x^{k+1}) \leq f(x^k) + \nabla f(x^k)^\top(x^{k+1} - x^k) + \frac{L}{2}\|x^{k+1} - x^k\|_2^2.</span></p>
-<p><strong>Step 2 (Convexity).</strong> The first-order characterization of convexity gives:</p>
+<p><strong>Step 2 (Convexity — lower bound).</strong> The first-order characterization of convexity, applied at <span class="math inline">x^k</span> with target <span class="math inline">x^*</span>, gives:</p>
 <p><span class="math display">f(x^*) \geq f(x^k) + \nabla f(x^k)^\top(x^* - x^k).</span></p>
-<p><strong>Step 3 (Combine).</strong> Subtracting Step 2 from Step 1 eliminates <span class="math inline">f(x^k)</span>:</p>
-<p><span class="math display">f(x^{k+1}) - f(x^*) \leq \nabla f(x^k)^\top(x^{k+1} - x^*) + \frac{L}{2}\|x^{k+1} - x^k\|_2^2.</span></p>
-<p>Substituting <span class="math inline">\nabla f(x^k) = \frac{1}{\alpha}(x^k - x^{k+1})</span> and using the algebraic identity <span class="math inline">\langle a - b,\, a - c \rangle = \frac{1}{2}\|a - b\|^2 + \frac{1}{2}\|a - c\|^2 - \frac{1}{2}\|b - c\|^2</span>, this simplifies to a telescoping bound:</p>
-<p><span id="eq-convex-telescope"><span class="math display">f(x^{k+1}) - f(x^*) \leq \frac{1}{2\alpha}\bigl[\|x^k - x^*\|_2^2 - \|x^{k+1} - x^*\|_2^2\bigr]. \tag{6.10}</span></span></p>
-<p><strong>Step 4 (Telescope).</strong> Summing <a href="#eq-convex-telescope" class="quarto-xref">Equation&nbsp;<span>6.10</span></a> over <span class="math inline">k = 0, \ldots, K-1</span>, the right side telescopes:</p>
+<p><strong>Step 3 (Subtract to eliminate <span class="math inline">f(x^k)</span>).</strong> Subtracting the lower bound from the upper bound cancels <span class="math inline">f(x^k)</span>:</p>
+<p><span class="math display">f(x^{k+1}) - f(x^*) \leq \nabla f(x^k)^\top\bigl[(x^{k+1} - x^k) - (x^* - x^k)\bigr] + \frac{L}{2}\|x^{k+1} - x^k\|_2^2 = \nabla f(x^k)^\top(x^{k+1} - x^*) + \frac{L}{2}\|x^{k+1} - x^k\|_2^2.</span></p>
+<p><strong>Step 4 (Use GD update to replace gradient).</strong> Since <span class="math inline">x^{k+1} = x^k - \alpha\nabla f(x^k)</span>, we have <span class="math inline">\nabla f(x^k) = \frac{1}{\alpha}(x^k - x^{k+1})</span>. Substituting:</p>
+<p><span class="math display">f(x^{k+1}) - f(x^*) \leq \frac{1}{\alpha}\langle x^k - x^{k+1},\, x^{k+1} - x^* \rangle + \frac{L}{2}\|x^{k+1} - x^k\|_2^2.</span></p>
+<p><strong>Step 5 (Apply three-point identity).</strong> Expanding <span class="math inline">\|x^k - x^*\|^2 = \|(x^k - x^{k+1}) + (x^{k+1} - x^*)\|^2</span> gives the identity:</p>
+<p><span class="math display">\langle x^k - x^{k+1},\, x^{k+1} - x^*\rangle = \tfrac{1}{2}\bigl[\|x^k - x^*\|^2 - \|x^{k+1} - x^*\|^2 - \|x^k - x^{k+1}\|^2\bigr].</span></p>
+<p>Substituting:</p>
+<p><span class="math display">f(x^{k+1}) - f(x^*) \leq \frac{1}{2\alpha}\bigl[\|x^k - x^*\|_2^2 - \|x^{k+1} - x^*\|_2^2\bigr] - \frac{1}{2\alpha}\|x^k - x^{k+1}\|_2^2 + \frac{L}{2}\|x^{k+1} - x^k\|_2^2.</span></p>
+<p>With <span class="math inline">\alpha = 1/L</span>, the last two terms cancel exactly, leaving:</p>
+<p><span id="eq-convex-telescope"><span class="math display">f(x^{k+1}) - f(x^*) \leq \frac{L}{2}\bigl[\|x^k - x^*\|_2^2 - \|x^{k+1} - x^*\|_2^2\bigr]. \tag{6.12}</span></span></p>
+<p><strong>Step 6 (Telescope).</strong> Summing <a href="#eq-convex-telescope" class="quarto-xref">Equation&nbsp;<span>6.12</span></a> over <span class="math inline">k = 0, \ldots, K-1</span>, the right side telescopes:</p>
 <p><span class="math display">\sum_{k=0}^{K-1}\bigl(f(x^{k+1}) - f(x^*)\bigr) \leq \frac{L}{2}\bigl[\|x^0 - x^*\|_2^2 - \|x^K - x^*\|_2^2\bigr] \leq \frac{L}{2}\|x^0 - x^*\|_2^2.</span></p>
-<p>Since <span class="math inline">f(x^k)</span> is monotonically decreasing (by the descent lemma), <span class="math inline">f(x^K)</span> is the smallest value:</p>
+<p>Since <span class="math inline">f(x^k)</span> is monotonically decreasing (by the descent lemma), <span class="math inline">f(x^K) \leq f(x^{k+1})</span> for all <span class="math inline">k &lt; K</span>:</p>
 <p><span class="math display">K \cdot \bigl(f(x^K) - f(x^*)\bigr) \leq \sum_{k=0}^{K-1}\bigl(f(x^{k+1}) - f(x^*)\bigr) \leq \frac{L}{2}\|x^0 - x^*\|_2^2.</span></p>
 <p>Dividing by <span class="math inline">K</span> gives the result. <span class="math inline">\blacksquare</span></p>
 </div>
@@ -1287,26 +1418,30 @@ Figure&nbsp;6.6: Convergence rates of gradient descent under three structural as
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Each GD step reduces the squared distance <span class="math inline">\|x^k - x^*\|_2^2</span> to the optimum. After <span class="math inline">K</span> steps, the total distance “budget” <span class="math inline">\|x^0 - x^*\|_2^2</span> is spread over <span class="math inline">K</span> steps, giving a <span class="math inline">1/K</span> rate for the function value gap.</p>
+<p>The proof reveals a clean picture: each GD step reduces the squared distance <span class="math inline">\|x^k - x^*\|_2^2</span> to the optimum, and the total “budget” of distance reduction is <span class="math inline">\|x^0 - x^*\|_2^2</span>. Spreading this budget over <span class="math inline">K</span> steps gives each step an average reduction of <span class="math inline">\|x^0 - x^*\|_2^2 / K</span>, which translates to a <span class="math inline">1/K</span> rate for the function value gap.</p>
+<p>Note the crucial role of <strong>convexity</strong>: it provided the lower bound in Step 2 that let us relate the function value gap <span class="math inline">f(x^{k+1}) - f(x^*)</span> to geometric quantities (distances to <span class="math inline">x^*</span>). Without convexity, we could only bound the gradient norm (Case 1).</p>
 </div>
 </div>
 </section>
 <section id="case3" class="level4" data-number="6.5.5.3">
 <h4 data-number="6.5.5.3" class="anchored" data-anchor-id="case3"><span class="header-section-number">6.5.5.3</span> Case 3: Strongly Convex + Smooth</h4>
-<p>The strongest setting gives the best result: <strong>linear convergence</strong> (also called geometric or exponential convergence), where the error contracts by a fixed factor at each step.</p>
+<p>The strongest setting gives the best result: <strong>linear convergence</strong> (also called geometric or exponential convergence), where the error contracts by a fixed factor at each step. The key insight is that the proof reduces to the same eigenvalue analysis as the 2D quadratic warm-up (<a href="#exm-2d-quadratic-zigzag" class="quarto-xref">Example&nbsp;<span>6.2</span></a>), but now applied to the Hessian of a general function via the mean value theorem.</p>
 <div id="thm-sc-smooth" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 6.8 (Theorem 7.13 (GD: Strongly Convex + Smooth))</strong></span> If <span class="math inline">f</span> is <span class="math inline">\mu</span>-strongly convex and <span class="math inline">L</span>-smooth, with step size <span class="math inline">\alpha = \frac{2}{\mu + L}</span> and condition number <span class="math inline">\kappa = L/\mu</span>, then:</p>
-<p><span id="eq-sc-rate-iterates"><span class="math display">\|x^k - x^*\|_2 \leq \left(\frac{\kappa - 1}{\kappa + 1}\right)^k \|x^0 - x^*\|_2, \tag{6.11}</span></span></p>
-<p><span id="eq-sc-rate-function"><span class="math display">f(x^k) - f(x^*) \leq \frac{L}{2}\left(\frac{\kappa - 1}{\kappa + 1}\right)^{2k} \|x^0 - x^*\|_2^2. \tag{6.12}</span></span></p>
+<p><span class="theorem-title"><strong>Theorem 6.8 (GD: Strongly Convex + Smooth)</strong></span> If <span class="math inline">f</span> is <span class="math inline">\mu</span>-strongly convex and <span class="math inline">L</span>-smooth, with step size <span class="math inline">\alpha = \frac{2}{\mu + L}</span> and condition number <span class="math inline">\kappa = L/\mu</span>, then:</p>
+<p><span id="eq-sc-rate-iterates"><span class="math display">\|x^k - x^*\|_2 \leq \left(\frac{\kappa - 1}{\kappa + 1}\right)^k \|x^0 - x^*\|_2, \tag{6.13}</span></span></p>
+<p><span id="eq-sc-rate-function"><span class="math display">f(x^k) - f(x^*) \leq \frac{L}{2}\left(\frac{\kappa - 1}{\kappa + 1}\right)^{2k} \|x^0 - x^*\|_2^2. \tag{6.14}</span></span></p>
 <p>To achieve <span class="math inline">f(x^k) - f(x^*) \leq \varepsilon</span>, we need <span class="math inline">K = O(\kappa \log(1/\varepsilon))</span> iterations.</p>
 </div>
 <div class="proof">
-<p><span class="proof-title"><em>Proof</em>. </span>By the mean value theorem, there exists a point <span class="math inline">\xi</span> on the segment between <span class="math inline">x^k</span> and <span class="math inline">x^*</span> such that <span class="math inline">\nabla f(x^k) - \nabla f(x^*) = \nabla^2 f(\xi)(x^k - x^*)</span>. Since <span class="math inline">\nabla f(x^*) = 0</span>, the GD update gives:</p>
-<p><span class="math display">x^{k+1} - x^* = x^k - x^* - \alpha\,\nabla f(x^k) = \bigl(I - \alpha\,\nabla^2 f(\xi)\bigr)(x^k - x^*).</span></p>
-<p>The eigenvalues of <span class="math inline">\nabla^2 f(\xi)</span> lie in <span class="math inline">[\mu, L]</span> (by strong convexity and smoothness), so the eigenvalues of <span class="math inline">I - \alpha\,\nabla^2 f(\xi)</span> lie in <span class="math inline">[1 - \alpha L,\, 1 - \alpha\mu]</span>.</p>
-<p>With the optimal step size <span class="math inline">\alpha = \frac{2}{\mu + L}</span>:</p>
-<p><span class="math display">\max\{|1 - \alpha\mu|,\, |1 - \alpha L|\} = \frac{L - \mu}{L + \mu} = \frac{\kappa - 1}{\kappa + 1}.</span></p>
-<p>Therefore <span class="math inline">\|x^{k+1} - x^*\|_2 \leq \frac{\kappa - 1}{\kappa + 1}\|x^k - x^*\|_2</span>, and unrolling gives <a href="#eq-sc-rate-iterates" class="quarto-xref">Equation&nbsp;<span>6.11</span></a>. The function value bound <a href="#eq-sc-rate-function" class="quarto-xref">Equation&nbsp;<span>6.12</span></a> follows from the smoothness inequality <span class="math inline">f(x) - f(x^*) \leq \frac{L}{2}\|x - x^*\|_2^2</span>. <span class="math inline">\blacksquare</span></p>
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Step 1 (Linearize the gradient via the mean value theorem).</strong> The key idea is to express the gradient <span class="math inline">\nabla f(x^k)</span> in terms of the error <span class="math inline">e^k = x^k - x^*</span>. By the mean value theorem (for vector-valued functions), there exists a point <span class="math inline">\xi</span> on the segment between <span class="math inline">x^k</span> and <span class="math inline">x^*</span> such that:</p>
+<p><span class="math display">\nabla f(x^k) = \nabla f(x^k) - \underbrace{\nabla f(x^*)}_{= 0} = \nabla^2 f(\xi)\,(x^k - x^*) = \nabla^2 f(\xi)\, e^k.</span></p>
+<p>This is the crucial step: it turns the nonlinear gradient into a <strong>linear operator</strong> applied to the error.</p>
+<p><strong>Step 2 (Write the error recursion).</strong> Substituting into the GD update:</p>
+<p><span class="math display">e^{k+1} = x^{k+1} - x^* = e^k - \alpha\,\nabla f(x^k) = \bigl(I - \alpha\,\nabla^2 f(\xi)\bigr)\, e^k.</span></p>
+<p>This is the same form as the 2D quadratic example! The matrix <span class="math inline">M = I - \alpha\,\nabla^2 f(\xi)</span> is the <strong>contraction matrix</strong>.</p>
+<p><strong>Step 3 (Bound the spectral radius).</strong> By strong convexity and smoothness, the eigenvalues of <span class="math inline">\nabla^2 f(\xi)</span> lie in <span class="math inline">[\mu, L]</span>, so the eigenvalues of <span class="math inline">M</span> lie in <span class="math inline">[1 - \alpha L,\, 1 - \alpha\mu]</span>. The spectral norm <span class="math inline">\|M\|_{\mathrm{op}} = \max\{|1 - \alpha\mu|,\, |1 - \alpha L|\}</span>. Just as in the 2D warm-up, the optimal step size balances these two extremes:</p>
+<p><span class="math display">\alpha^* = \frac{2}{\mu + L} \quad\implies\quad \|M\|_{\mathrm{op}} = \frac{L - \mu}{L + \mu} = \frac{\kappa - 1}{\kappa + 1}.</span></p>
+<p><strong>Step 4 (Unroll).</strong> Therefore <span class="math inline">\|e^{k+1}\|_2 \leq \frac{\kappa - 1}{\kappa + 1}\|e^k\|_2</span>, and unrolling gives <a href="#eq-sc-rate-iterates" class="quarto-xref">Equation&nbsp;<span>6.13</span></a>. The function value bound <a href="#eq-sc-rate-function" class="quarto-xref">Equation&nbsp;<span>6.14</span></a> follows from the smoothness inequality <span class="math inline">f(x) - f(x^*) \leq \frac{L}{2}\|x - x^*\|_2^2</span>. <span class="math inline">\blacksquare</span></p>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1366,20 +1501,23 @@ Figure&nbsp;6.6: Convergence rates of gradient descent under three structural as
 </tr>
 </tbody>
 </table>
-<p>Each row adds a structural assumption and gains a faster rate. The jump from <span class="math inline">O(1/K)</span> to linear convergence is the most dramatic: it is the difference between polynomial and logarithmic dependence on the target accuracy <span class="math inline">\varepsilon</span>. See <a href="07-momentum-adaptive-sgd.html#fig-convergence-rates" class="quarto-xref">Figure&nbsp;<span>7.10</span></a> for a visual comparison across different method classes.</p>
+<p>Each row adds a structural assumption and gains a faster rate. The jump from <span class="math inline">O(1/K)</span> to linear convergence is the most dramatic: it is the difference between polynomial and logarithmic dependence on the target accuracy <span class="math inline">\varepsilon</span>. See <a href="#fig-convergence-rates" class="quarto-xref">Figure&nbsp;<span>6.4</span></a> for a visual comparison across different method classes.</p>
 </section>
 </section>
 <section id="pl-condition" class="level3" data-number="6.5.6">
 <h3 data-number="6.5.6" class="anchored" data-anchor-id="pl-condition"><span class="header-section-number">6.5.6</span> The Polyak–Łojasiewicz Condition</h3>
 <p>A remarkable fact is that we do not need strong convexity—or even convexity at all—to achieve linear convergence. The <strong>Polyak–Łojasiewicz (PL) condition</strong> is a weaker assumption that still guarantees the same rate.</p>
 <div id="def-pl" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 6.6 (Definition 7.14 (Polyak–Łojasiewicz Condition))</strong></span> A function <span class="math inline">f</span> satisfies the <strong>PL condition</strong> with parameter <span class="math inline">\mu &gt; 0</span> if</p>
+<p><span class="theorem-title"><strong>Definition 6.6 (Polyak–Łojasiewicz Condition)</strong></span> A function <span class="math inline">f</span> satisfies the <strong>PL condition</strong> with parameter <span class="math inline">\mu &gt; 0</span> if</p>
 <p><span class="math display">\|\nabla f(x)\|_2^2 \geq 2\mu \cdot \bigl(f(x) - f(x^*)\bigr) \qquad \forall\, x.</span></p>
 </div>
-<p>The PL condition says: <em>whenever the gradient is small, the function value must be close to optimal</em>. This is automatically satisfied by <span class="math inline">\mu</span>-strongly convex functions (it is their “gradient domination” property), but it can also hold for some <strong>nonconvex</strong> functions.</p>
-<p><strong>PL + smoothness gives linear convergence.</strong> Combining the descent lemma (<a href="#eq-descent-lemma" class="quarto-xref">Equation&nbsp;<span>6.9</span></a>) with the PL condition, and using step size <span class="math inline">\alpha = 1/L</span>:</p>
+<p>The PL condition says: <em>whenever the gradient is small, the function value must be close to optimal</em>. This is automatically satisfied by <span class="math inline">\mu</span>-strongly convex functions (it is their gradient domination property <a href="#eq-gradient-domination" class="quarto-xref">Equation&nbsp;<span>6.10</span></a>), but it can also hold for some <strong>nonconvex</strong> functions.</p>
+<div id="exm-pl-nonconvex" class="theorem example">
+<p><span class="theorem-title"><strong>Example 6.5 (Example: A Nonconvex PL Function)</strong></span> Consider <span class="math inline">f(x) = x^2 + 3\sin^2(x)</span>. This function is <strong>nonconvex</strong> (it has inflection points where <span class="math inline">f''(x) &lt; 0</span>), yet it satisfies the PL condition. Intuitively, the <span class="math inline">x^2</span> term ensures the function always grows away from the origin, so the gradient cannot be small far from the minimizer <span class="math inline">x^* = 0</span>, even though the <span class="math inline">\sin^2</span> term creates wiggles. Every stationary point of <span class="math inline">f</span> is the global minimizer — there are no spurious local minima.</p>
+</div>
+<p><strong>PL + smoothness gives linear convergence.</strong> The proof is remarkably simple — just combine the descent lemma with the PL condition. Using step size <span class="math inline">\alpha = 1/L</span>:</p>
 <p><span class="math display">f(x^{k+1}) - f(x^*) \leq f(x^k) - f(x^*) - \frac{1}{2L}\|\nabla f(x^k)\|_2^2 \stackrel{\text{PL}}{\leq} \left(1 - \frac{\mu}{L}\right)\bigl(f(x^k) - f(x^*)\bigr).</span></p>
-<p>This gives <span class="math inline">f(x^k) - f(x^*) \leq (1 - \mu/L)^k \cdot (f(x^0) - f(x^*))</span>—the same linear convergence rate, without assuming convexity. The PL condition arises naturally in many practical settings, such as over-parameterized least squares and certain neural network training problems.</p>
+<p>Unrolling: <span class="math inline">f(x^k) - f(x^*) \leq (1 - \mu/L)^k \cdot (f(x^0) - f(x^*))</span> — linear convergence, without assuming convexity. The PL condition arises naturally in many practical settings, including over-parameterized least squares and certain neural network training problems, which helps explain why GD works well even on nonconvex objectives.</p>
 </section>
 </section>
 <section id="stopping-criteria" class="level2" data-number="6.6">
@@ -1405,6 +1543,19 @@ Figure&nbsp;6.6: Convergence rates of gradient descent under three structural as
 </ul></li>
 <li><strong>Relative iterate change:</strong> <span class="math inline">\displaystyle\frac{\|x_{k+1} - x_k\|}{\max\{1,\, \|x_k\|\}} &lt; \varepsilon</span>.</li>
 </ol>
+</section>
+<section id="summary" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
+<ul>
+<li><strong>Iterative descent framework.</strong> All first-order methods share the update <span class="math inline">x^{k+1} = x^k + \alpha^k d^k</span>; convergence requires <span class="math inline">d^k</span> to be a descent direction (<span class="math inline">\langle d^k, \nabla f(x^k) \rangle &lt; 0</span>) and an appropriate step size <span class="math inline">\alpha^k</span>.</li>
+<li><strong>Steepest descent and its variants.</strong> Choosing different norms in the steepest descent problem yields gradient descent (<span class="math inline">\ell_2</span>), coordinate descent (<span class="math inline">\ell_1</span>), sign gradient descent (<span class="math inline">\ell_\infty</span>), and spectral steepest descent (operator norm on matrices, giving the Muon optimizer); choosing <span class="math inline">B^k = [\nabla^2 f(x^k)]^{-1}</span> gives Newton’s direction.</li>
+<li><strong>Step size strategies.</strong> Constant step sizes are simple but require tuning; diminishing step sizes (<span class="math inline">\alpha^k \to 0</span>, <span class="math inline">\sum \alpha^k = \infty</span>) guarantee convergence; backtracking line search adaptively finds a step size ensuring sufficient decrease.</li>
+<li><strong>GD as surrogate minimization.</strong> Each GD step minimizes a quadratic upper bound <span class="math inline">g_\alpha(x) = f(x^k) + \langle \nabla f(x^k), x-x^k\rangle + \frac{1}{2\alpha}\|x-x^k\|^2</span>. Newton’s method replaces the isotropic penalty with the true Hessian.</li>
+<li><strong>Smoothness and strong convexity.</strong> <span class="math inline">L</span>-smoothness (<span class="math inline">\|\nabla f(x) - \nabla f(y)\| \leq L\|x-y\|</span>) bounds curvature from above; <span class="math inline">\mu</span>-strong convexity bounds it from below and gives gradient domination: <span class="math inline">f(x) - f^* \leq \frac{1}{2\mu}\|\nabla f(x)\|^2</span>. Their ratio <span class="math inline">\kappa = L/\mu</span> is the condition number.</li>
+<li><strong>Descent lemma.</strong> If <span class="math inline">f</span> is <span class="math inline">L</span>-smooth and <span class="math inline">\alpha \leq 1/L</span>, then <span class="math inline">f(x^+) \leq f(x) - \frac{\alpha}{2}\|\nabla f(x)\|^2</span>: every GD step makes guaranteed progress.</li>
+<li><strong>Three convergence cases.</strong> Nonconvex + smooth: <span class="math inline">\min_k \|\nabla f(x^k)\|^2 = O(1/K)</span>. Convex + smooth: <span class="math inline">f(x^K) - f^* = O(1/K)</span>. Strongly convex + smooth: linear convergence <span class="math inline">O((\frac{\kappa-1}{\kappa+1})^k)</span>, needing <span class="math inline">O(\kappa\log(1/\varepsilon))</span> iterations.</li>
+<li><strong>PL condition.</strong> The Polyak–Łojasiewicz condition <span class="math inline">\|\nabla f(x)\|^2 \geq 2\mu(f(x) - f^*)</span> yields linear convergence without convexity.</li>
+</ul>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1418,18 +1569,6 @@ Figure&nbsp;6.6: Convergence rates of gradient descent under three structural as
 <p>The convergence rates in this chapter—<span class="math inline">O(1/K)</span> for convex functions and <span class="math inline">O(\rho^k)</span> for strongly convex functions—are fundamental baselines, but they can be improved. In the next chapter, we study advanced first-order methods: momentum techniques (Heavy-Ball, Nesterov acceleration) that achieve the optimal <span class="math inline">O(1/K^2)</span> rate for smooth convex functions, and adaptive learning rate methods (AdaGrad, RMSProp, Adam) that automatically tune per-coordinate step sizes.</p>
 </div>
 </div>
-</section>
-<section id="summary" class="level2 unnumbered">
-<h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
-<ul>
-<li><strong>Iterative descent framework.</strong> All first-order methods share the update <span class="math inline">x^{k+1} = x^k + \alpha^k d^k</span>; convergence requires <span class="math inline">d^k</span> to be a descent direction (<span class="math inline">\langle d^k, \nabla f(x^k) \rangle &lt; 0</span>) and an appropriate step size <span class="math inline">\alpha^k</span>.</li>
-<li><strong>Steepest descent and its variants.</strong> Choosing different norms in the steepest descent problem yields gradient descent (<span class="math inline">\ell_2</span>), coordinate descent (<span class="math inline">\ell_1</span>), and sign gradient descent (<span class="math inline">\ell_\infty</span>); choosing <span class="math inline">B^k = [\nabla^2 f(x^k)]^{-1}</span> gives Newton’s direction.</li>
-<li><strong>Step size strategies.</strong> Constant step sizes are simple but require tuning; diminishing step sizes (<span class="math inline">\alpha^k \to 0</span>, <span class="math inline">\sum \alpha^k = \infty</span>) guarantee convergence; backtracking line search adaptively finds a step size ensuring sufficient decrease.</li>
-<li><strong>Smoothness and strong convexity.</strong> <span class="math inline">L</span>-smoothness (<span class="math inline">\|\nabla f(x) - \nabla f(y)\| \leq L\|x-y\|</span>) bounds curvature from above; <span class="math inline">\mu</span>-strong convexity bounds curvature from below. Together they sandwich the Hessian eigenvalues in <span class="math inline">[\mu, L]</span>, and their ratio <span class="math inline">\kappa = L/\mu</span> is the condition number.</li>
-<li><strong>Descent lemma.</strong> If <span class="math inline">f</span> is <span class="math inline">L</span>-smooth and <span class="math inline">\alpha \leq 1/L</span>, then <span class="math inline">f(x^+) \leq f(x) - \frac{\alpha}{2}\|\nabla f(x)\|^2</span>: every GD step makes guaranteed progress.</li>
-<li><strong>Three convergence cases.</strong> Nonconvex + smooth: <span class="math inline">\min_k \|\nabla f(x^k)\|^2 = O(1/K)</span>. Convex + smooth: <span class="math inline">f(x^K) - f^* = O(1/K)</span>. Strongly convex + smooth: linear convergence <span class="math inline">O((\frac{\kappa-1}{\kappa+1})^k)</span>, needing <span class="math inline">O(\kappa\log(1/\varepsilon))</span> iterations.</li>
-<li><strong>PL condition.</strong> The Polyak–Łojasiewicz condition <span class="math inline">\|\nabla f(x)\|^2 \geq 2\mu(f(x) - f^*)</span> yields linear convergence without convexity.</li>
-</ul>
 <!-- Plotly.js for interactive figures -->
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 
@@ -1471,79 +1610,6 @@ document.addEventListener('DOMContentLoaded', () => {
       borderwidth: 1,
     };
   }
-
-  // ---- Figure 1: Descent Direction ----
-  (function() {
-    const el = document.getElementById('fig-descent-direction');
-    if (!el) return;
-    const traces = [];
-    for (let r = 1; r <= 4; r++) {
-      const theta = Array.from({length: 100}, (_, i) => 2 * Math.PI * i / 99);
-      traces.push({
-        x: theta.map(t => r * Math.cos(t) * 1.5),
-        y: theta.map(t => r * Math.sin(t)),
-        mode: 'lines',
-        line: {color: '#b8995e', width: 1, dash: r === 2 ? 'solid' : 'dot'},
-        showlegend: false, hoverinfo: 'skip'
-      });
-    }
-    traces.push({
-      x: [0], y: [0], mode: 'markers+text',
-      marker: {color: '#8a6e5e', size: 10},
-      text: ['x'], textposition: 'bottom left',
-      textfont: {family: figFont, size: 14, color: '#3d3530'},
-      name: 'Current point x', hoverinfo: 'name'
-    });
-    const gx = 2.5, gy = 1.5;
-    traces.push({
-      x: [0, gx], y: [0, gy], mode: 'lines',
-      line: {color: '#b56b6b', width: 3},
-      name: 'Gradient nabla f(x)'
-    });
-    traces.push({
-      x: [gx], y: [gy], mode: 'markers',
-      marker: {color: '#b56b6b', size: 10, symbol: 'triangle-up'},
-      showlegend: false, hoverinfo: 'skip'
-    });
-    traces.push({
-      x: [0, -gx], y: [0, -gy], mode: 'lines',
-      line: {color: '#7a9a7e', width: 3},
-      name: 'Steepest descent -nabla f(x)'
-    });
-    const perpX = [-gy, gy];
-    const perpY = [gx, -gx];
-    const scale = 2.5 / Math.sqrt(gx*gx + gy*gy);
-    traces.push({
-      x: perpX.map(v => v * scale), y: perpY.map(v => v * scale),
-      mode: 'lines', line: {color: '#968a80', width: 2, dash: 'dash'},
-      name: 'Boundary: d^T nabla f = 0'
-    });
-    const hsX = [perpX[0]*scale, perpX[1]*scale, perpX[1]*scale - gx*2, perpX[0]*scale - gx*2];
-    const hsY = [perpY[0]*scale, perpY[1]*scale, perpY[1]*scale - gy*2, perpY[0]*scale - gy*2];
-    traces.push({
-      x: [...hsX, hsX[0]], y: [...hsY, hsY[0]],
-      fill: 'toself', fillcolor: 'rgba(122,154,126,0.2)',
-      line: {color: 'transparent'}, showlegend: false, hoverinfo: 'skip'
-    });
-    const angles = [-0.6, -0.3, 0, 0.3, 0.6];
-    const baseAngle = Math.atan2(-gy, -gx);
-    angles.forEach(a => {
-      const ang = baseAngle + a;
-      const len = 1.8;
-      traces.push({
-        x: [0, len*Math.cos(ang)], y: [0, len*Math.sin(ang)],
-        mode: 'lines', line: {color: '#7b97ad', width: 1.5},
-        showlegend: false, hoverinfo: 'skip'
-      });
-    });
-    const layout = themeLayout({
-      xaxis: themeAxis('', {range: [-4, 4], zeroline: false}),
-      yaxis: themeAxis('', {range: [-3, 3], zeroline: false, scaleanchor: 'x'}),
-      showlegend: true, legend: Object.assign({x: 0.01, y: 0.99}, legendStyle()),
-      margin: {t: 20, b: 40, l: 45, r: 20},
-    });
-    Plotly.newPlot(el, traces, layout, plotlyConfig);
-  })();
 
   // ---- Figure 2: GD on ill-conditioned quadratic ----
   (function() {
@@ -2090,56 +2156,12 @@ document.addEventListener('DOMContentLoaded', () => {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
-      <a href="../lectures/07-momentum-adaptive-sgd.html" class="pagination-link" aria-label="Momentum, Adaptive Methods, SGD, and Proximal Gradient">
-        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span> <i class="bi bi-arrow-right-short"></i>
+      <a href="../lectures/07-momentum-adaptive.html" class="pagination-link" aria-label="Momentum and Adaptive Methods">
+        <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span> <i class="bi bi-arrow-right-short"></i>
       </a>
   </div>
 </nav>
 </div> <!-- /content -->
-<script>
-// Plotly Warmtone theming helpers — shared across all lectures
-// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
-const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
-
-function css(v) {
-  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-}
-
-function legendStyle() {
-  return {
-    font: {family: figFont, size: 13, color: css('--fig-text')},
-    bgcolor: css('--fig-bg') + 'dd',
-    bordercolor: css('--fig-grid'),
-    borderwidth: 1,
-  };
-}
-
-function themeLayout(extra) {
-  return Object.assign({
-    paper_bgcolor: css('--fig-bg'),
-    plot_bgcolor: css('--fig-plot-bg'),
-    font: {family: figFont, color: css('--fig-text'), size: 14},
-  }, extra || {});
-}
-
-function themeAxis(title, extra) {
-  return Object.assign({
-    title: {text: title, font: {family: figFont, size: 14}},
-    gridcolor: css('--fig-grid'),
-    zerolinecolor: css('--fig-grid'),
-    linecolor: css('--fig-axis'),
-    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
-  }, extra || {});
-}
-
-// Plotly color sequences matching the Warmtone palette
-const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
-];
-</script>
 <script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
 (function() {
   let previousOnload = window.onload;

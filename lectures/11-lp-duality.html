@@ -23,41 +23,6 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
-/* CSS for syntax highlighting */
-html { -webkit-text-size-adjust: 100%; }
-pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
-pre > code.sourceCode > span:empty { height: 1.2em; }
-.sourceCode { overflow: visible; }
-code.sourceCode > span { color: inherit; text-decoration: inherit; }
-div.sourceCode { margin: 1em 0; }
-pre.sourceCode { margin: 0; }
-@media screen {
-div.sourceCode { overflow: auto; }
-}
-@media print {
-pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
-}
-pre.numberSource code
-  { counter-reset: source-line 0; }
-pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
-pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-  }
-pre.numberSource { margin-left: 3em;  padding-left: 4px; }
-div.sourceCode
-  {   }
-@media screen {
-pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
-}
 </style>
 
 
@@ -110,6 +75,50 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -265,19 +274,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  <a href="../lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  <a href="../lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
   </div>
 </li>
       </ul>
@@ -335,7 +344,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -391,12 +400,12 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-motivation" id="toc-sec-motivation" class="nav-link active" data-scroll-target="#sec-motivation"><span class="header-section-number">11.1</span> Motivation for Duality</a></li>
+  <li><a href="#what-will-be-covered" id="toc-what-will-be-covered" class="nav-link active" data-scroll-target="#what-will-be-covered">What Will Be Covered</a></li>
+  <li><a href="#sec-motivation" id="toc-sec-motivation" class="nav-link" data-scroll-target="#sec-motivation"><span class="header-section-number">11.1</span> Motivation for Duality</a></li>
   <li><a href="#sec-deriving-dual" id="toc-sec-deriving-dual" class="nav-link" data-scroll-target="#sec-deriving-dual"><span class="header-section-number">11.2</span> Deriving the Dual LP</a>
   <ul class="collapse">
   <li><a href="#the-multiplier-idea" id="toc-the-multiplier-idea" class="nav-link" data-scroll-target="#the-multiplier-idea"><span class="header-section-number">11.2.1</span> The Multiplier Idea</a></li>
-  <li><a href="#why-this-gives-an-upper-bound" id="toc-why-this-gives-an-upper-bound" class="nav-link" data-scroll-target="#why-this-gives-an-upper-bound"><span class="header-section-number">11.2.2</span> Why This Gives an Upper Bound</a></li>
-  <li><a href="#the-dual-lp" id="toc-the-dual-lp" class="nav-link" data-scroll-target="#the-dual-lp"><span class="header-section-number">11.2.3</span> The Dual LP</a></li>
+  <li><a href="#the-dual-lp" id="toc-the-dual-lp" class="nav-link" data-scroll-target="#the-dual-lp"><span class="header-section-number">11.2.2</span> The Dual LP</a></li>
   </ul></li>
   <li><a href="#sec-general-correspondence" id="toc-sec-general-correspondence" class="nav-link" data-scroll-target="#sec-general-correspondence"><span class="header-section-number">11.3</span> General Primal-Dual Correspondence</a>
   <ul class="collapse">
@@ -404,34 +413,34 @@ window.Quarto = {
   <li><a href="#deriving-the-dual" id="toc-deriving-the-dual" class="nav-link" data-scroll-target="#deriving-the-dual"><span class="header-section-number">11.3.2</span> Deriving the Dual</a></li>
   <li><a href="#correspondence-table" id="toc-correspondence-table" class="nav-link" data-scroll-target="#correspondence-table"><span class="header-section-number">11.3.3</span> Correspondence Table</a></li>
   <li><a href="#common-special-cases-vector-formulations" id="toc-common-special-cases-vector-formulations" class="nav-link" data-scroll-target="#common-special-cases-vector-formulations"><span class="header-section-number">11.3.4</span> Common Special Cases (Vector Formulations)</a></li>
+  <li><a href="#sec-dual-of-dual" id="toc-sec-dual-of-dual" class="nav-link" data-scroll-target="#sec-dual-of-dual"><span class="header-section-number">11.3.5</span> Dual of the Dual = Primal</a></li>
   </ul></li>
-  <li><a href="#sec-dual-of-dual" id="toc-sec-dual-of-dual" class="nav-link" data-scroll-target="#sec-dual-of-dual"><span class="header-section-number">11.4</span> Dual of the Dual = Primal</a></li>
-  <li><a href="#sec-weak-duality" id="toc-sec-weak-duality" class="nav-link" data-scroll-target="#sec-weak-duality"><span class="header-section-number">11.5</span> Weak Duality</a>
+  <li><a href="#sec-weak-duality" id="toc-sec-weak-duality" class="nav-link" data-scroll-target="#sec-weak-duality"><span class="header-section-number">11.4</span> Weak Duality</a>
   <ul class="collapse">
-  <li><a href="#the-duality-gap" id="toc-the-duality-gap" class="nav-link" data-scroll-target="#the-duality-gap"><span class="header-section-number">11.5.1</span> The Duality Gap</a></li>
+  <li><a href="#the-duality-gap" id="toc-the-duality-gap" class="nav-link" data-scroll-target="#the-duality-gap"><span class="header-section-number">11.4.1</span> The Duality Gap</a></li>
+  <li><a href="#sec-possibilities" id="toc-sec-possibilities" class="nav-link" data-scroll-target="#sec-possibilities"><span class="header-section-number">11.4.2</span> Primal-Dual Possibilities</a></li>
   </ul></li>
-  <li><a href="#sec-possibilities" id="toc-sec-possibilities" class="nav-link" data-scroll-target="#sec-possibilities"><span class="header-section-number">11.6</span> Primal-Dual Possibilities</a></li>
-  <li><a href="#sec-strong-duality" id="toc-sec-strong-duality" class="nav-link" data-scroll-target="#sec-strong-duality"><span class="header-section-number">11.7</span> Strong Duality</a>
+  <li><a href="#sec-strong-duality" id="toc-sec-strong-duality" class="nav-link" data-scroll-target="#sec-strong-duality"><span class="header-section-number">11.5</span> Strong Duality</a>
   <ul class="collapse">
-  <li><a href="#sec-strong-duality-proof" id="toc-sec-strong-duality-proof" class="nav-link" data-scroll-target="#sec-strong-duality-proof"><span class="header-section-number">11.7.1</span> Proof via the Simplex Method</a></li>
+  <li><a href="#sec-strong-duality-proof" id="toc-sec-strong-duality-proof" class="nav-link" data-scroll-target="#sec-strong-duality-proof"><span class="header-section-number">11.5.1</span> Proof via the Simplex Method</a></li>
   </ul></li>
-  <li><a href="#sec-geometric" id="toc-sec-geometric" class="nav-link" data-scroll-target="#sec-geometric"><span class="header-section-number">11.8</span> Geometric Interpretation</a>
+  <li><a href="#sec-geometric" id="toc-sec-geometric" class="nav-link" data-scroll-target="#sec-geometric"><span class="header-section-number">11.6</span> Geometric Interpretation</a>
   <ul class="collapse">
-  <li><a href="#shooting-a-ray-through-the-polytope" id="toc-shooting-a-ray-through-the-polytope" class="nav-link" data-scroll-target="#shooting-a-ray-through-the-polytope"><span class="header-section-number">11.8.1</span> Shooting a Ray Through the Polytope</a></li>
-  <li><a href="#combining-walls-the-dual-perspective" id="toc-combining-walls-the-dual-perspective" class="nav-link" data-scroll-target="#combining-walls-the-dual-perspective"><span class="header-section-number">11.8.2</span> Combining Walls: The Dual Perspective</a></li>
+  <li><a href="#shooting-a-ray-through-the-polytope" id="toc-shooting-a-ray-through-the-polytope" class="nav-link" data-scroll-target="#shooting-a-ray-through-the-polytope"><span class="header-section-number">11.6.1</span> Shooting a Ray Through the Polytope</a></li>
+  <li><a href="#combining-walls-the-dual-perspective" id="toc-combining-walls-the-dual-perspective" class="nav-link" data-scroll-target="#combining-walls-the-dual-perspective"><span class="header-section-number">11.6.2</span> Combining Walls: The Dual Perspective</a></li>
   </ul></li>
-  <li><a href="#sec-sensitivity" id="toc-sec-sensitivity" class="nav-link" data-scroll-target="#sec-sensitivity"><span class="header-section-number">11.9</span> Sensitivity Analysis and Shadow Prices</a>
+  <li><a href="#sec-sensitivity" id="toc-sec-sensitivity" class="nav-link" data-scroll-target="#sec-sensitivity"><span class="header-section-number">11.7</span> Sensitivity Analysis and Shadow Prices</a>
   <ul class="collapse">
-  <li><a href="#perturbed-primal" id="toc-perturbed-primal" class="nav-link" data-scroll-target="#perturbed-primal"><span class="header-section-number">11.9.1</span> Perturbed Primal</a></li>
-  <li><a href="#shadow-price-interpretation" id="toc-shadow-price-interpretation" class="nav-link" data-scroll-target="#shadow-price-interpretation"><span class="header-section-number">11.9.2</span> Shadow Price Interpretation</a></li>
+  <li><a href="#perturbed-primal" id="toc-perturbed-primal" class="nav-link" data-scroll-target="#perturbed-primal"><span class="header-section-number">11.7.1</span> Perturbed Primal</a></li>
+  <li><a href="#shadow-price-interpretation" id="toc-shadow-price-interpretation" class="nav-link" data-scroll-target="#shadow-price-interpretation"><span class="header-section-number">11.7.2</span> Shadow Price Interpretation</a></li>
   </ul></li>
-  <li><a href="#sec-complementary-slackness" id="toc-sec-complementary-slackness" class="nav-link" data-scroll-target="#sec-complementary-slackness"><span class="header-section-number">11.10</span> Complementary Slackness</a>
+  <li><a href="#sec-complementary-slackness" id="toc-sec-complementary-slackness" class="nav-link" data-scroll-target="#sec-complementary-slackness"><span class="header-section-number">11.8</span> Complementary Slackness</a>
   <ul class="collapse">
-  <li><a href="#slack-variables" id="toc-slack-variables" class="nav-link" data-scroll-target="#slack-variables"><span class="header-section-number">11.10.1</span> Slack Variables</a></li>
-  <li><a href="#using-complementary-slackness" id="toc-using-complementary-slackness" class="nav-link" data-scroll-target="#using-complementary-slackness"><span class="header-section-number">11.10.2</span> Using Complementary Slackness</a></li>
+  <li><a href="#slack-variables" id="toc-slack-variables" class="nav-link" data-scroll-target="#slack-variables"><span class="header-section-number">11.8.1</span> Slack Variables</a></li>
+  <li><a href="#using-complementary-slackness" id="toc-using-complementary-slackness" class="nav-link" data-scroll-target="#using-complementary-slackness"><span class="header-section-number">11.8.2</span> Using Complementary Slackness</a></li>
   </ul></li>
-  <li><a href="#sec-worked-example" id="toc-sec-worked-example" class="nav-link" data-scroll-target="#sec-worked-example"><span class="header-section-number">11.11</span> Worked Example</a></li>
-  <li><a href="#sec-summary" id="toc-sec-summary" class="nav-link" data-scroll-target="#sec-summary"><span class="header-section-number">11.12</span> Summary</a></li>
+  <li><a href="#sec-worked-example" id="toc-sec-worked-example" class="nav-link" data-scroll-target="#sec-worked-example"><span class="header-section-number">11.9</span> Worked Example</a></li>
+  <li><a href="#sec-summary" id="toc-sec-summary" class="nav-link" data-scroll-target="#sec-summary"><span class="header-section-number">11.10</span> Summary</a></li>
   </ul>
 </nav>
     </div>
@@ -457,117 +466,83 @@ window.Quarto = {
 </header>
 
 
-<p>We have seen the <a href="../lectures/10-simplex-method.html">simplex method</a>, which solves a linear program by moving from vertex to vertex. But in addition to algorithm design, we also want to know: <strong>have we found the optimal solution?</strong> How far is our current iterate from being optimal? Duality theory provides the answer. It gives us a systematic way to produce <em>certificates of optimality</em> – upper and lower bounds on the objective value that, when they match, prove we have found the best solution.</p>
-<p>The key idea is elegant: for every LP (the “primal”), there is a companion LP (the “dual”) whose feasible solutions provide bounds on the primal’s optimal value. Weak duality says the bound always holds; strong duality says the bound is tight at optimality. Together with complementary slackness, duality theory forms one of the most powerful and beautiful frameworks in optimization.</p>
+<p>The <a href="../lectures/10-simplex-method.html">simplex method</a> finds an optimal solution by moving from vertex to vertex. But suppose the algorithm hands you a solution <span class="math inline">x^*</span> and claims it is optimal. <strong>How do you know it is truly the best?</strong> Simply checking feasibility is not enough — you need a <em>certificate</em> that no feasible point can do better.</p>
+<p>Duality theory provides exactly this certificate. The core idea: for every LP (the <strong>primal</strong>), there is a companion LP (the <strong>dual</strong>) whose feasible solutions provide <strong>upper bounds</strong> on the primal’s optimal value. When a primal feasible value matches a dual feasible value, the gap is zero and both must be optimal. This simple idea — bounding from both sides — leads to one of the deepest and most useful frameworks in optimization.</p>
+<section id="what-will-be-covered" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="what-will-be-covered">What Will Be Covered</h2>
+<ul>
+<li>Motivation: certificates of optimality via upper bounds on the objective</li>
+<li>Constructing the dual LP from primal constraints</li>
+<li>Weak duality: dual feasible solutions bound the primal optimal value</li>
+<li>Strong duality: the primal and dual optimal values coincide</li>
+<li>Complementary slackness and its role in certifying optimality</li>
+<li>Economic interpretation of dual variables as shadow prices</li>
+</ul>
+</section>
 <section id="sec-motivation" class="level2" data-number="11.1">
 <h2 data-number="11.1" class="anchored" data-anchor-id="sec-motivation"><span class="header-section-number">11.1</span> Motivation for Duality</h2>
-<p>Consider an LP in the standard form (we use maximization here to have a clean form for the dual):</p>
+<p>Consider a maximization LP (duality is most naturally stated in this form):</p>
 <p><span class="math display">
 \max_{x \in \mathbb{R}^n} \; c^\top x \quad \text{s.t.} \quad Ax \leq b, \quad x \geq 0.
 </span></p>
-<p>Let <span class="math inline">\Omega = \{x \in \mathbb{R}^n \mid Ax \leq b, \; x \geq 0\}</span> be the feasible set, and let <span class="math inline">f^* = \max_{x \in \Omega} c^\top x</span> be the optimal value.</p>
-<p>Suppose someone asserts that the optimal solution is <span class="math inline">x_0 \in \Omega</span> and the optimal value is <span class="math inline">f_0 = c^\top x_0</span>. <strong>Can we check this claim?</strong></p>
-<p>Since <span class="math inline">x_0 \in \Omega</span>, we know <span class="math inline">f_0 = c^\top x_0</span> is a <strong>lower bound</strong> on <span class="math inline">f^*</span> (because <span class="math inline">f_0 \leq f^*</span>). To verify that <span class="math inline">f_0 = f^*</span>, we need to show <span class="math inline">f^* \leq f_0</span>. That is, we need an <strong>upper bound</strong> on the objective.</p>
-<p>This is the central question: can we find a certificate – an upper bound on <span class="math inline">c^\top x</span> for all feasible <span class="math inline">x</span> – that matches our candidate value <span class="math inline">f_0</span>? If so, <span class="math inline">x_0</span> must be optimal.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-duality-motivation</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 16.1: The duality gap between a lower bound (primal feasible value) and an upper bound (dual feasible value). When the gap closes, we have certified optimality."</span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Number line</span></span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="fl">10.5</span>], y<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">0</span>], mode<span class="op">=</span><span class="st">'lines'</span>,</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#999999'</span>, width<span class="op">=</span><span class="dv">2</span>), showlegend<span class="op">=</span><span class="va">False</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Lower bound region</span></span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">0</span>], y<span class="op">=</span>[<span class="op">-</span><span class="fl">0.3</span>, <span class="op">-</span><span class="fl">0.3</span>, <span class="fl">0.3</span>, <span class="fl">0.3</span>],</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    fill<span class="op">=</span><span class="st">'toself'</span>, fillcolor<span class="op">=</span><span class="st">'rgba(122,154,126,0.25)'</span>,</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">0</span>), showlegend<span class="op">=</span><span class="va">False</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Upper bound region</span></span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">7</span>, <span class="dv">10</span>, <span class="dv">10</span>, <span class="dv">7</span>], y<span class="op">=</span>[<span class="op">-</span><span class="fl">0.3</span>, <span class="op">-</span><span class="fl">0.3</span>, <span class="fl">0.3</span>, <span class="fl">0.3</span>],</span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>    fill<span class="op">=</span><span class="st">'toself'</span>, fillcolor<span class="op">=</span><span class="st">'rgba(181,107,107,0.25)'</span>,</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">0</span>), showlegend<span class="op">=</span><span class="va">False</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Duality gap region</span></span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">4</span>, <span class="dv">7</span>, <span class="dv">7</span>, <span class="dv">4</span>], y<span class="op">=</span>[<span class="op">-</span><span class="fl">0.15</span>, <span class="op">-</span><span class="fl">0.15</span>, <span class="fl">0.15</span>, <span class="fl">0.15</span>],</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>    fill<span class="op">=</span><span class="st">'toself'</span>, fillcolor<span class="op">=</span><span class="st">'rgba(184,153,94,0.2)'</span>,</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">0</span>), showlegend<span class="op">=</span><span class="va">False</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Primal feasible value (lower bound)</span></span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">4</span>], y<span class="op">=</span>[<span class="dv">0</span>], mode<span class="op">=</span><span class="st">'markers+text'</span>,</span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7a9a7e'</span>, size<span class="op">=</span><span class="dv">14</span>, symbol<span class="op">=</span><span class="st">'triangle-right'</span>,</span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">1</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>    text<span class="op">=</span>[<span class="st">'c&lt;sup&gt;T&lt;/sup&gt;x&lt;sub&gt;0&lt;/sub&gt; (lower bound)'</span>], textposition<span class="op">=</span><span class="st">'top center'</span>,</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Primal feasible value'</span>, hoverinfo<span class="op">=</span><span class="st">'text'</span>,</span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    hovertext<span class="op">=</span>[<span class="st">'Any feasible x gives c&lt;sup&gt;T&lt;/sup&gt;x &lt;= f*'</span>]))</span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a><span class="co"># Dual feasible value (upper bound)</span></span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">7</span>], y<span class="op">=</span>[<span class="dv">0</span>], mode<span class="op">=</span><span class="st">'markers+text'</span>,</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">14</span>, symbol<span class="op">=</span><span class="st">'triangle-left'</span>,</span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">1</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>    text<span class="op">=</span>[<span class="st">'b&lt;sup&gt;T&lt;/sup&gt;y&lt;sub&gt;0&lt;/sub&gt; (upper bound)'</span>], textposition<span class="op">=</span><span class="st">'top center'</span>,</span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Dual feasible value'</span>, hoverinfo<span class="op">=</span><span class="st">'text'</span>,</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>    hovertext<span class="op">=</span>[<span class="st">'Any dual feasible y gives b&lt;sup&gt;T&lt;/sup&gt;y &gt;= f*'</span>]))</span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimal value</span></span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="fl">5.5</span>], y<span class="op">=</span>[<span class="dv">0</span>], mode<span class="op">=</span><span class="st">'markers+text'</span>,</span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b8995e'</span>, size<span class="op">=</span><span class="dv">16</span>, symbol<span class="op">=</span><span class="st">'star'</span>,</span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">1</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>    text<span class="op">=</span>[<span class="st">'f*'</span>], textposition<span class="op">=</span><span class="st">'bottom center'</span>,</span>
-<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Optimal value f*'</span>, hoverinfo<span class="op">=</span><span class="st">'text'</span>,</span>
-<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>    hovertext<span class="op">=</span>[<span class="st">'Optimal value: c&lt;sup&gt;T&lt;/sup&gt;x* = b&lt;sup&gt;T&lt;/sup&gt;y*'</span>]))</span>
-<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="co"># Duality gap annotation</span></span>
-<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">5.5</span>, y<span class="op">=-</span><span class="fl">0.5</span>, text<span class="op">=</span><span class="st">'Duality gap = b&lt;sup&gt;T&lt;/sup&gt;y&lt;sub&gt;0&lt;/sub&gt; - c&lt;sup&gt;T&lt;/sup&gt;x&lt;sub&gt;0&lt;/sub&gt;'</span>,</span>
-<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>    showarrow<span class="op">=</span><span class="va">False</span>, font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">12</span>, color<span class="op">=</span><span class="st">'#b8995e'</span>))</span>
-<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
-<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a>    xaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'Objective value'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="dv">1</span>, <span class="dv">11</span>], showgrid<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>               zeroline<span class="op">=</span><span class="va">False</span>),</span>
-<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a>    yaxis<span class="op">=</span><span class="bu">dict</span>(<span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="dv">1</span>, <span class="fl">1.2</span>], showgrid<span class="op">=</span><span class="va">False</span>, zeroline<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>               showticklabels<span class="op">=</span><span class="va">False</span>),</span>
-<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a>    showlegend<span class="op">=</span><span class="va">True</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">20</span>, b<span class="op">=</span><span class="dv">60</span>, l<span class="op">=</span><span class="dv">40</span>, r<span class="op">=</span><span class="dv">20</span>),</span>
-<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>    legend<span class="op">=</span><span class="bu">dict</span>(orientation<span class="op">=</span><span class="st">'h'</span>, yanchor<span class="op">=</span><span class="st">'bottom'</span>, y<span class="op">=</span><span class="fl">1.02</span>))</span>
-<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>Let <span class="math inline">\Omega = \{x \in \mathbb{R}^n \mid Ax \leq b, \; x \geq 0\}</span> be the feasible set and <span class="math inline">f^* = \max_{x \in \Omega} c^\top x</span> the optimal value.</p>
+<p>Suppose someone hands you a feasible point <span class="math inline">x_0 \in \Omega</span> and claims it is optimal. <strong>How do you verify this?</strong></p>
+<ul>
+<li><strong>Lower bound (easy):</strong> Since <span class="math inline">x_0</span> is feasible, <span class="math inline">f_0 = c^\top x_0 \leq f^*</span>. Any feasible point gives a lower bound on <span class="math inline">f^*</span>.</li>
+<li><strong>Upper bound (hard):</strong> To prove <span class="math inline">f_0 = f^*</span>, we need to show that <em>no</em> feasible point can do better, i.e., <span class="math inline">f^* \leq f_0</span>. This requires an <strong>upper bound</strong> on <span class="math inline">c^\top x</span> that holds for <em>every</em> <span class="math inline">x \in \Omega</span>.</li>
+</ul>
+<div class="callout callout-style-default callout-important callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Important</span>The Central Question
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Can we systematically produce upper bounds on <span class="math inline">c^\top x</span> over all feasible <span class="math inline">x \in \Omega</span>, using only the constraint data <span class="math inline">(A, b)</span>? If we can find such an upper bound that equals our candidate value <span class="math inline">f_0</span>, then <span class="math inline">f_0 = f^*</span> and <span class="math inline">x_0</span> is certified optimal.</p>
+</div>
+</div>
+<div id="fig-duality-motivation" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-duality-motivation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/duality-gap.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;11.1: The duality gap between a lower bound (primal feasible value) and an upper bound (dual feasible value). When the gap closes, we have certified optimality."><img src="figures/duality-gap.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-duality-motivation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11.1: The duality gap between a lower bound (primal feasible value) and an upper bound (dual feasible value). When the gap closes, we have certified optimality.
+</figcaption>
+</figure>
+</div>
 </section>
 <section id="sec-deriving-dual" class="level2" data-number="11.2">
 <h2 data-number="11.2" class="anchored" data-anchor-id="sec-deriving-dual"><span class="header-section-number">11.2</span> Deriving the Dual LP</h2>
-<p>We now systematically construct the dual LP. Starting from the primal:</p>
+<p>We now answer the central question by systematically constructing upper bounds on the primal objective. Starting from the primal:</p>
 <p><span class="math display">
 \text{(Primal)} \quad \max_{x \in \mathbb{R}^n} \; c^\top x \quad \text{s.t.} \quad Ax \leq b, \quad x \geq 0,
 </span></p>
 <p>where <span class="math inline">A \in \mathbb{R}^{m \times n}</span>, <span class="math inline">b \in \mathbb{R}^m</span>, and <span class="math inline">c \in \mathbb{R}^n</span>. Write the constraints row-by-row as <span class="math inline">a_i^\top x \leq b_i</span> for <span class="math inline">i \in [m]</span>.</p>
 <section id="the-multiplier-idea" class="level3" data-number="11.2.1">
 <h3 data-number="11.2.1" class="anchored" data-anchor-id="the-multiplier-idea"><span class="header-section-number">11.2.1</span> The Multiplier Idea</h3>
-<p>For each linear inequality constraint <span class="math inline">a_i^\top x \leq b_i</span>, we associate a <strong>multiplier</strong> <span class="math inline">y_i \geq 0</span>. Since <span class="math inline">a_i^\top x \leq b_i</span> and <span class="math inline">y_i \geq 0</span>, we have:</p>
+<p>The derivation follows three simple steps: <strong>multiply</strong>, <strong>sum</strong>, and <strong>dominate</strong>.</p>
+<p><strong>Step 1: Multiply.</strong> For each constraint <span class="math inline">a_i^\top x \leq b_i</span>, introduce a <strong>multiplier</strong> <span class="math inline">y_i \geq 0</span>. Multiplying both sides by <span class="math inline">y_i</span> preserves the inequality direction (since <span class="math inline">y_i \geq 0</span>):</p>
 <p><span class="math display">
 y_i \cdot a_i^\top x \leq y_i \cdot b_i \quad \forall\, i \in [m].
 </span></p>
-<p>Summing up these <span class="math inline">m</span> inequalities:</p>
+<p><strong>Step 2: Sum.</strong> Add all <span class="math inline">m</span> weighted inequalities:</p>
 <p><span class="math display">
-\sum_{i=1}^{m} y_i \, a_i^\top x \leq \sum_{i=1}^{m} y_i \, b_i.
+\sum_{i=1}^{m} y_i \, a_i^\top x \leq \sum_{i=1}^{m} y_i \, b_i, \qquad \text{i.e.,} \quad (A^\top y)^\top x \leq b^\top y.
 </span></p>
-<p>In matrix form, this reads <span class="math inline">(A^\top y)^\top x \leq y^\top b</span>, or equivalently <span class="math inline">y^\top A x \leq y^\top b</span>.</p>
-<p>To obtain an <strong>upper bound</strong> on the objective <span class="math inline">c^\top x</span>, we just need to ensure that:</p>
+<p>The left side is a <em>new</em> linear function of <span class="math inline">x</span>; the right side is a constant (depending only on <span class="math inline">y</span>).</p>
+<p><strong>Step 3: Dominate.</strong> If the combined left side <em>dominates</em> the objective — meaning <span class="math inline">A^\top y \geq c</span> component-wise — then for any feasible <span class="math inline">x \geq 0</span>:</p>
 <p><span class="math display">
-\sum_{i=1}^{m} y_i \, a_i \geq c \qquad \left(\text{i.e., } \sum_{i=1}^{m} y_i \, a_{ij} \geq c_j \;\; \forall\, j \in [n]\right).
+c^\top x \;\leq\; (A^\top y)^\top x \;\leq\; b^\top y.
 </span></p>
-<p>In matrix form: <span class="math inline">A^\top y \geq c</span>.</p>
+<p>The first “<span class="math inline">\leq</span>” uses <span class="math inline">A^\top y \geq c</span> and <span class="math inline">x \geq 0</span>; the second uses the summed constraint from Step 2. We have produced an <strong>upper bound</strong> <span class="math inline">b^\top y</span> on <span class="math inline">c^\top x</span> that holds for <em>every</em> feasible <span class="math inline">x</span>.</p>
 </section>
-<section id="why-this-gives-an-upper-bound" class="level3" data-number="11.2.2">
-<h3 data-number="11.2.2" class="anchored" data-anchor-id="why-this-gives-an-upper-bound"><span class="header-section-number">11.2.2</span> Why This Gives an Upper Bound</h3>
-<p>For any <span class="math inline">y \in \mathbb{R}^m</span> satisfying <span class="math inline">A^\top y \geq c</span> and <span class="math inline">y \geq 0</span>, it is clear that for any feasible <span class="math inline">x</span> (i.e., <span class="math inline">Ax \leq b</span>, <span class="math inline">x \geq 0</span>):</p>
-<p><span class="math display">
-c^\top x \leq x^\top \left(\sum_{i=1}^{m} y_i \, a_i\right) = \sum_{i=1}^{m} y_i \, a_i^\top x \leq \sum_{i=1}^{m} y_i \cdot b_i = y^\top b = b^\top y.
-</span></p>
-<p>The first inequality uses <span class="math inline">A^\top y \geq c</span> and <span class="math inline">x \geq 0</span>; the second uses <span class="math inline">a_i^\top x \leq b_i</span> and <span class="math inline">y_i \geq 0</span>. Therefore, any <span class="math inline">f \in \{b^\top y : A^\top y \geq c, \; y \geq 0\}</span> satisfies <span class="math inline">f \geq f^*</span>.</p>
-</section>
-<section id="the-dual-lp" class="level3" data-number="11.2.3">
-<h3 data-number="11.2.3" class="anchored" data-anchor-id="the-dual-lp"><span class="header-section-number">11.2.3</span> The Dual LP</h3>
-<p>To find the <strong>tightest upper bound</strong>, we solve the following LP:</p>
+<section id="the-dual-lp" class="level3" data-number="11.2.2">
+<h3 data-number="11.2.2" class="anchored" data-anchor-id="the-dual-lp"><span class="header-section-number">11.2.2</span> The Dual LP</h3>
+<p>To find the <strong>tightest upper bound</strong>, we minimize <span class="math inline">b^\top y</span> over all valid multipliers:</p>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
 <div class="callout-icon-container">
@@ -603,38 +578,40 @@ c^\top x \leq x^\top \left(\sum_{i=1}^{m} y_i \, a_i\right) = \sum_{i=1}^{m} y_i
 </tr>
 </tbody>
 </table>
-<p>The primal has <span class="math inline">n</span> decision variables and <span class="math inline">m</span> constraints (plus sign constraints); the dual has <span class="math inline">m</span> decision variables and <span class="math inline">n</span> constraints (plus sign constraints). The data <span class="math inline">(A, b, c)</span> is shared – only the roles are swapped.</p>
-<p>The derivation above assumed the primal has only “<span class="math inline">\leq</span>” constraints and nonnegative variables. In practice, LPs may contain equality constraints, “<span class="math inline">\geq</span>” constraints, or free variables. The next section extends the correspondence to handle all these cases.</p>
+<p>Notice the elegant symmetry: the primal has <span class="math inline">n</span> variables and <span class="math inline">m</span> constraints; the dual has <span class="math inline">m</span> variables and <span class="math inline">n</span> constraints. The data <span class="math inline">(A, b, c)</span> is shared — only the roles are swapped. The constraint matrix <span class="math inline">A</span> becomes <span class="math inline">A^\top</span>, the objective <span class="math inline">c</span> becomes the right-hand side, and the right-hand side <span class="math inline">b</span> becomes the objective.</p>
+<p>The derivation above assumed the primal has only “<span class="math inline">\leq</span>” constraints and nonnegative variables. In practice, LPs may contain equality constraints, “<span class="math inline">\geq</span>” constraints, or free variables. The next section extends the correspondence to handle all cases.</p>
 </section>
 </section>
 <section id="sec-general-correspondence" class="level2" data-number="11.3">
 <h2 data-number="11.3" class="anchored" data-anchor-id="sec-general-correspondence"><span class="header-section-number">11.3</span> General Primal-Dual Correspondence</h2>
-<p>More generally, we can establish dual LPs when there are equality constraints or free variables in the primal. The correspondence rules follow from the multiplier derivation.</p>
+<p>The dual we derived assumed the primal has only “<span class="math inline">\leq</span>” constraints and nonneg variables. Real LPs may have equality constraints, “<span class="math inline">\geq</span>” constraints, or free variables. The same multiply-sum-dominate logic extends to all cases — the key is tracking how each constraint and variable type affects the signs.</p>
 <section id="general-primal-form" class="level3" data-number="11.3.1">
 <h3 data-number="11.3.1" class="anchored" data-anchor-id="general-primal-form"><span class="header-section-number">11.3.1</span> General Primal Form</h3>
-<p>Consider the general primal LP (maximization) with:</p>
+<p>Consider a general primal LP (maximization) with:</p>
 <ul>
 <li><span class="math inline">n</span> decision variables <span class="math inline">x_1, x_2, \ldots, x_n</span></li>
-<li>Sign constraints on <span class="math inline">\{x_j, \, j \in [n]\}</span>: either <span class="math inline">x_j \geq 0</span>, <span class="math inline">x_j \leq 0</span>, or <span class="math inline">x_j \in \mathbb{R}</span> (free)</li>
-<li><span class="math inline">m</span> linear constraints <span class="math inline">\{a_i^\top x \; \square \; b_i, \, i \in [m]\}</span> where <span class="math inline">\square</span> is <span class="math inline">\leq</span>, <span class="math inline">=</span>, or <span class="math inline">\geq</span></li>
-<li>Linear objective: <span class="math inline">\max \; c^\top x</span></li>
+<li>Sign constraints on each <span class="math inline">x_j</span>: either <span class="math inline">x_j \geq 0</span>, <span class="math inline">x_j \leq 0</span>, or <span class="math inline">x_j \in \mathbb{R}</span> (free)</li>
+<li><span class="math inline">m</span> linear constraints <span class="math inline">a_i^\top x \; \square \; b_i</span> where <span class="math inline">\square</span> is <span class="math inline">\leq</span>, <span class="math inline">=</span>, or <span class="math inline">\geq</span></li>
+<li>Objective: <span class="math inline">\max \; c^\top x</span></li>
 </ul>
 </section>
 <section id="deriving-the-dual" class="level3" data-number="11.3.2">
 <h3 data-number="11.3.2" class="anchored" data-anchor-id="deriving-the-dual"><span class="header-section-number">11.3.2</span> Deriving the Dual</h3>
-<p>For each constraint <span class="math inline">i \in [m]</span>, associate a multiplier <span class="math inline">y_i</span>:</p>
+<p>We apply the same recipe, but must handle each case:</p>
+<p><strong>Multiplier signs (from constraint types).</strong> For each constraint <span class="math inline">i</span>, the multiplier <span class="math inline">y_i</span> must have the right sign so that multiplying preserves a valid upper bound:</p>
 <ul>
-<li>If <span class="math inline">a_i^\top x \leq b_i</span>: we need <span class="math inline">y_i \geq 0</span> (so that multiplying preserves the inequality direction)</li>
-<li>If <span class="math inline">a_i^\top x \geq b_i</span>: we need <span class="math inline">y_i \leq 0</span></li>
-<li>If <span class="math inline">a_i^\top x = b_i</span>: <span class="math inline">y_i</span> is <strong>free</strong> (unconstrained in sign)</li>
+<li><span class="math inline">a_i^\top x \leq b_i</span>: need <span class="math inline">y_i \geq 0</span> (multiplying by a nonneg number preserves “<span class="math inline">\leq</span>”)</li>
+<li><span class="math inline">a_i^\top x \geq b_i</span>: need <span class="math inline">y_i \leq 0</span> (multiplying by a nonpositive number flips “<span class="math inline">\geq</span>” to “<span class="math inline">\leq</span>”)</li>
+<li><span class="math inline">a_i^\top x = b_i</span>: <span class="math inline">y_i</span> is <strong>free</strong> (both sides are equal, so any sign works)</li>
 </ul>
-<p>Aggregate the linear constraints such that <span class="math inline">(\sum_{i=1}^m y_i \, a_i) \cdot x \leq \sum_{i=1}^m y_i \, b_i</span>. Then require <span class="math inline">(\sum_{i=1}^m y_i \, a_i) \cdot x \geq c^\top x</span> for all <span class="math inline">x</span> in the feasible set. The sign constraint on <span class="math inline">x_j</span> determines the type of the <span class="math inline">j</span>-th dual constraint:</p>
+<p>After summing all weighted constraints, we get <span class="math inline">(A^\top y)^\top x \leq b^\top y</span> for all feasible <span class="math inline">x</span>.</p>
+<p><strong>Dual constraint types (from variable signs).</strong> We need the combined left side to dominate the objective: <span class="math inline">(A^\top y)_j x_j \geq c_j x_j</span> for all feasible <span class="math inline">x_j</span>. The sign constraint on <span class="math inline">x_j</span> determines what this requires:</p>
 <ul>
-<li>If <span class="math inline">x_j \geq 0</span>: we need <span class="math inline">\sum_{i=1}^m y_i \, a_{ij} \geq c_j</span> (i.e., “<span class="math inline">\geq c_j</span>”)</li>
-<li>If <span class="math inline">x_j \leq 0</span>: we need <span class="math inline">\sum_{i=1}^m y_i \, a_{ij} \leq c_j</span> (i.e., “<span class="math inline">\leq c_j</span>”)</li>
-<li>If <span class="math inline">x_j \in \mathbb{R}</span>: we need <span class="math inline">\sum_{i=1}^m y_i \, a_{ij} = c_j</span> (i.e., “<span class="math inline">= c_j</span>”)</li>
+<li><span class="math inline">x_j \geq 0</span> (can be positive): need <span class="math inline">(A^\top y)_j \geq c_j</span>, so that <span class="math inline">(A^\top y)_j x_j \geq c_j x_j</span></li>
+<li><span class="math inline">x_j \leq 0</span> (can be negative): need <span class="math inline">(A^\top y)_j \leq c_j</span>, so the inequality flips correctly</li>
+<li><span class="math inline">x_j</span> free (can be anything): need <span class="math inline">(A^\top y)_j = c_j</span> exactly (otherwise we could violate domination by choosing <span class="math inline">x_j</span> with the wrong sign)</li>
 </ul>
-<p>The dual LP is then: minimize <span class="math inline">y^\top b = \sum_{i=1}^m y_i \, b_i</span> subject to the <span class="math inline">n</span> constraints on <span class="math inline">\sum_{i=1}^m y_i \, a_{ij}</span> and the sign constraints on <span class="math inline">y_i</span>.</p>
+<p>The dual LP is: <span class="math inline">\min\, b^\top y</span> subject to these <span class="math inline">n</span> constraints and the sign constraints on <span class="math inline">y_i</span>.</p>
 </section>
 <section id="correspondence-table" class="level3" data-number="11.3.3">
 <h3 data-number="11.3.3" class="anchored" data-anchor-id="correspondence-table"><span class="header-section-number">11.3.3</span> Correspondence Table</h3>
@@ -723,17 +700,16 @@ Table&nbsp;11.1: Primal-dual correspondence rules. Each row shows how a primal e
 </tr>
 </tbody>
 </table>
-<p>With the correspondence table established, a natural question arises: if we take the dual of the dual, do we recover the original primal? The answer is yes, confirming that duality is a symmetric relationship with no preferred direction.</p>
 </section>
-</section>
-<section id="sec-dual-of-dual" class="level2" data-number="11.4">
-<h2 data-number="11.4" class="anchored" data-anchor-id="sec-dual-of-dual"><span class="header-section-number">11.4</span> Dual of the Dual = Primal</h2>
-<p>An important and satisfying observation: <strong>the dual of the dual is the primal</strong>. Duality is a symmetric relationship.</p>
+<section id="sec-dual-of-dual" class="level3" data-number="11.3.5">
+<h3 data-number="11.3.5" class="anchored" data-anchor-id="sec-dual-of-dual"><span class="header-section-number">11.3.5</span> Dual of the Dual = Primal</h3>
+<p>A natural question: if we take the dual of the dual, do we recover the original primal? The answer is yes, confirming that duality is a <strong>symmetric</strong> relationship.</p>
 <div id="thm-dual-of-dual" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 11.1 (Theorem 16.1 (Dual of the Dual is the Primal))</strong></span> The dual of the dual LP is the primal LP.</p>
+<p><span class="theorem-title"><strong>Theorem 11.1 (Dual of the Dual is the Primal)</strong></span> The dual of the dual LP is the primal LP.</p>
 </div>
 <div class="proof">
-<p><span class="proof-title"><em>Proof</em>. </span>Consider the dual problem:</p>
+<p><span class="proof-title"><em>Proof</em>. </span>The strategy is to rewrite the dual as a maximization problem, apply the primal-to-dual recipe, and simplify to recover the original primal.</p>
+<p>Consider the dual problem:</p>
 <p><span class="math display">
 \min \; b^\top y \quad \text{s.t.} \quad A^\top y \geq c, \quad y \geq 0.
 </span></p>
@@ -759,26 +735,15 @@ c \leftarrow -b, \quad A \leftarrow -A^\top, \quad b \leftarrow -c.
 </span></p>
 <p>This is exactly the primal! <span class="math inline">\blacksquare</span></p>
 </div>
-<div class="callout callout-style-default callout-tip callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Remark
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>Since the dual of the dual is the primal, there is no preferred “direction” in duality. We can always choose which LP to call the primal and which to call the dual. In practice, we pick whichever formulation is more natural for the application at hand.</p>
-</div>
-</div>
-<p>Having established what the dual LP is and that duality is a symmetric relationship, we now turn to the fundamental question: what is the quantitative relationship between the primal and dual optimal values? The answer comes in two stages – weak duality (an inequality that always holds) and strong duality (equality at optimality).</p>
+<p>Since the dual of the dual is the primal, there is no preferred “direction” — we can always choose which LP to call primal and which to call dual.</p>
+<p>With the dual LP defined and duality shown to be symmetric, we turn to the fundamental question: <strong>what is the quantitative relationship between the primal and dual optimal values?</strong> The answer comes in two stages — weak duality (an inequality that always holds) and strong duality (equality at optimality).</p>
 </section>
-<section id="sec-weak-duality" class="level2" data-number="11.5">
-<h2 data-number="11.5" class="anchored" data-anchor-id="sec-weak-duality"><span class="header-section-number">11.5</span> Weak Duality</h2>
+</section>
+<section id="sec-weak-duality" class="level2" data-number="11.4">
+<h2 data-number="11.4" class="anchored" data-anchor-id="sec-weak-duality"><span class="header-section-number">11.4</span> Weak Duality</h2>
 <p>We now formalize the bounding relationship between the primal and dual. Let <span class="math inline">\Omega_P = \{x : Ax \leq b, \; x \geq 0\}</span> denote the primal feasible set and <span class="math inline">\Omega_D = \{y : A^\top y \geq c, \; y \geq 0\}</span> denote the dual feasible set.</p>
 <div id="thm-weak-duality" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 11.2 (Theorem 16.2 (Weak Duality))</strong></span> If <span class="math inline">x</span> is feasible for the primal and <span class="math inline">y</span> is feasible for the dual, then</p>
+<p><span class="theorem-title"><strong>Theorem 11.2 (Weak Duality)</strong></span> If <span class="math inline">x</span> is feasible for the primal and <span class="math inline">y</span> is feasible for the dual, then</p>
 <p><span id="eq-weak-duality"><span class="math display">
 c^\top x \leq b^\top y.
 \tag{11.1}</span></span></p>
@@ -788,7 +753,8 @@ c^\top x \leq b^\top y.
 </span></p>
 </div>
 <div class="proof">
-<p><span class="proof-title"><em>Proof</em>. </span>Since <span class="math inline">x, y</span> are feasible for the primal and dual respectively, we have:</p>
+<p><span class="proof-title"><em>Proof</em>. </span>The strategy is to chain two inequalities: first use primal feasibility (<span class="math inline">Ax \leq b</span>) to bound <span class="math inline">b^\top y</span> from below by <span class="math inline">x^\top A^\top y</span>, then use dual feasibility (<span class="math inline">A^\top y \geq c</span>) to bound <span class="math inline">x^\top A^\top y</span> from below by <span class="math inline">c^\top x</span>.</p>
+<p>Since <span class="math inline">x, y</span> are feasible for the primal and dual respectively, we have:</p>
 <p><span class="math display">
 b^\top y = (b - Ax)^\top y + (Ax)^\top y.
 </span></p>
@@ -806,10 +772,10 @@ b^\top y = (b - Ax)^\top y + (Ax)^\top y.
 b^\top y \geq x^\top A^\top y \geq c^\top x. \qquad \blacksquare
 </span></p>
 </div>
-<section id="the-duality-gap" class="level3" data-number="11.5.1">
-<h3 data-number="11.5.1" class="anchored" data-anchor-id="the-duality-gap"><span class="header-section-number">11.5.1</span> The Duality Gap</h3>
+<section id="the-duality-gap" class="level3" data-number="11.4.1">
+<h3 data-number="11.4.1" class="anchored" data-anchor-id="the-duality-gap"><span class="header-section-number">11.4.1</span> The Duality Gap</h3>
 <div id="def-duality-gap" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 11.1 (Definition 16.3 (Duality Gap))</strong></span> For any primal feasible <span class="math inline">x</span> and dual feasible <span class="math inline">y</span>, the <strong>duality gap</strong> is</p>
+<p><span class="theorem-title"><strong>Definition 11.1 (Duality Gap)</strong></span> For any primal feasible <span class="math inline">x</span> and dual feasible <span class="math inline">y</span>, the <strong>duality gap</strong> is</p>
 <p><span id="eq-duality-gap"><span class="math display">
 \text{Gap}(x, y) = b^\top y - c^\top x.
 \tag{11.2}</span></span></p>
@@ -825,15 +791,24 @@ b^\top y \geq x^\top A^\top y \geq c^\top x. \qquad \blacksquare
 </div>
 </div>
 <div class="callout-body-container callout-body">
+<p>Weak duality immediately yields four important structural consequences for the primal-dual pair:</p>
 <ol type="1">
 <li>If we find primal feasible <span class="math inline">x</span> and dual feasible <span class="math inline">y</span> with <span class="math inline">c^\top x = b^\top y</span>, then <span class="math inline">x</span> is primal optimal and <span class="math inline">y</span> is dual optimal.</li>
 <li>If the primal is unbounded (objective <span class="math inline">\to +\infty</span>), the dual must be <strong>infeasible</strong> (otherwise weak duality would give a finite upper bound).</li>
 <li>If the dual is unbounded (objective <span class="math inline">\to -\infty</span>), the primal must be <strong>infeasible</strong>.</li>
 <li>The primal and dual <strong>cannot both be unbounded</strong> (this would violate weak duality).</li>
 </ol>
+<p>Together, these consequences show that feasible dual solutions serve as certificates of optimality, and that unboundedness in one problem forces infeasibility in the other.</p>
 </div>
 </div>
-<p>The following interactive figure lets you explore weak duality concretely. Consider the primal LP <span class="math inline">\max\, 3x_1 + 5x_2</span> subject to <span class="math inline">x_1 \leq 4</span>, <span class="math inline">x_2 \leq 6</span>, <span class="math inline">3x_1 + 2x_2 \leq 18</span>, <span class="math inline">x_1, x_2 \geq 0</span>, with optimal value <span class="math inline">f^* = 36</span>. For each choice of the dual variable <span class="math inline">y_3</span>, we set <span class="math inline">y_1</span> and <span class="math inline">y_2</span> to the tightest dual-feasible values. The left panel shows the primal feasible region together with the objective contour at <span class="math inline">f^* = 36</span> and the contour at the current dual bound. When the bound is tight (<span class="math inline">y_3 = 1</span>), the two contours merge — a geometric certificate of strong duality. The right panel traces out the dual bound as a piecewise-linear function of <span class="math inline">y_3</span>, with the minimum at <span class="math inline">y_3^* = 1</span> achieving <span class="math inline">g^* = f^* = 36</span>. (This LP is analyzed in full in <a href="12-dual-simplex.html#sec-worked-example" class="quarto-xref"><span>Section 12.6</span></a>.)</p>
+<p>The following interactive figure lets you explore weak duality concretely on the LP from <a href="12-dual-simplex.html#sec-worked-example" class="quarto-xref"><span>Section 12.6</span></a>.</p>
+<p><strong>Setup.</strong> The primal is <span class="math inline">\max\, 3x_1 + 5x_2</span> subject to <span class="math inline">x_1 \leq 4</span>, <span class="math inline">x_2 \leq 6</span>, <span class="math inline">3x_1 + 2x_2 \leq 18</span>, <span class="math inline">x_1, x_2 \geq 0</span>, with optimal value <span class="math inline">f^* = 36</span>. Its dual is <span class="math inline">\min\, 4y_1 + 6y_2 + 18y_3</span> subject to <span class="math inline">y_1 + 3y_3 \geq 3</span>, <span class="math inline">y_2 + 2y_3 \geq 5</span>, <span class="math inline">y \geq 0</span>.</p>
+<p><strong>How it works.</strong> Drag the slider to choose <span class="math inline">y_3</span>. The figure automatically sets <span class="math inline">y_1</span> and <span class="math inline">y_2</span> to the tightest dual-feasible values (i.e., <span class="math inline">y_1 = \max(0, 3 - 3y_3)</span> and <span class="math inline">y_2 = \max(0, 5 - 2y_3)</span>), then computes the dual bound <span class="math inline">g(y) = 4y_1 + 6y_2 + 18y_3</span>.</p>
+<p><strong>What to observe:</strong></p>
+<ul>
+<li><strong>Left panel:</strong> The green region is the primal feasible set. The dashed gold line is the optimal contour <span class="math inline">3x_1 + 5x_2 = 36</span>. The solid blue line is the contour at the current dual bound <span class="math inline">g(y)</span>. By weak duality, this blue line must lie <em>above</em> the gold line (a higher contour value). When <span class="math inline">y_3 = 1</span>, the two lines merge — the dual bound exactly matches <span class="math inline">f^* = 36</span>.</li>
+<li><strong>Right panel:</strong> The dual bound <span class="math inline">g(y)</span> as a function of <span class="math inline">y_3</span>. It is piecewise-linear and achieves its minimum at <span class="math inline">y_3^* = 1</span>, where <span class="math inline">g^* = 36 = f^*</span>. For any other <span class="math inline">y_3</span>, the bound is strictly larger — confirming that the gap is positive away from the dual optimum.</li>
+</ul>
 <style>
   .interactive-figure-container {
     font-family: 'Palatino Linotype', 'Palatino', 'Book Antiqua', 'Georgia', serif;
@@ -932,11 +907,10 @@ b^\top y \geq x^\top A^\top y \geq c^\top x. \qquad \blacksquare
 <script>
 (function() {
   const C = {
-    bg: '#f0ebe5', plotBg: '#faf7f3', text: '#3d3530', grid: '#e0d9d1',
-    axis: '#968a80', blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
+    text: css('--fig-text') || '#3d3530',
+    blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
     terracotta: '#c47a6a', lavender: '#907ea0', rosewood: '#ad8480'
   };
-  const font = {family: "'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif", color: C.text};
 
   const fStar = 36;
   /* Feasible polygon vertices (closed) */
@@ -962,13 +936,7 @@ b^\top y \geq x^\top A^\top y \geq c^\top x. \qquad \blacksquare
     return {x1: x1, x2: x2};
   }
 
-  var axisStyle = {
-    gridcolor: C.grid, gridwidth: 1, zerolinecolor: C.axis, zerolinewidth: 1.5,
-    linecolor: C.axis, linewidth: 1,
-    tickfont: {size: 13, family: font.family, color: font.color},
-    titlefont: {size: 15, family: font.family, color: font.color}
-  };
-  var plotCfg = {displayModeBar: false, responsive: true};
+  var font = {family: figFont, color: css('--fig-text')};
 
   /* Precompute dual bound curve */
   var y3Vals = [], gVals = [];
@@ -1007,18 +975,16 @@ b^\top y \geq x^\top A^\top y \geq c^\top x. \qquad \blacksquare
        name: 'x* = (2, 6)'}
     ];
 
-    var leftLayout = {
-      paper_bgcolor: C.bg, plot_bgcolor: C.plotBg, font: font, height: 440,
+    var leftLayout = themeLayout({
+      height: 440,
       margin: {t: 44, b: 58, l: 64, r: 16},
-      title: {text: 'Primal region & objective contours', font: {size: 15, family: font.family, color: font.color}},
-      xaxis: Object.assign({}, axisStyle, {title: 'x\u2081', range: [-0.8, 6.5]}),
-      yaxis: Object.assign({}, axisStyle, {title: 'x\u2082', range: [-0.8, 8.5], scaleanchor: 'x'}),
+      title: {text: 'Primal region & objective contours', font: {size: 15, family: figFont, color: css('--fig-text')}},
+      xaxis: themeAxis('x\u2081', {range: [-0.8, 6.5]}),
+      yaxis: themeAxis('x\u2082', {range: [-0.8, 8.5], scaleanchor: 'x'}),
       showlegend: true,
-      legend: {x: 0.42, y: 0.02, bgcolor: 'rgba(250,247,243,0.85)',
-               bordercolor: C.grid, borderwidth: 1,
-               font: {size: 11, family: font.family, color: font.color}},
+      legend: Object.assign(legendStyle(), {x: 0.42, y: 0.02, font: {size: 11, family: figFont, color: css('--fig-text')}}),
       hovermode: 'closest'
-    };
+    });
 
     /* --- Right panel: dual bound curve --- */
     var tracedY3 = [], tracedG = [];
@@ -1065,19 +1031,17 @@ b^\top y \geq x^\top A^\top y \geq c^\top x. \qquad \blacksquare
       });
     }
 
-    var rightLayout = {
-      paper_bgcolor: C.bg, plot_bgcolor: C.plotBg, font: font, height: 440,
+    var rightLayout = themeLayout({
+      height: 440,
       margin: {t: 44, b: 58, l: 64, r: 16},
       title: {text: 'Dual bound g(y) = 4y\u2081+6y\u2082+18y\u2083',
-              font: {size: 15, family: font.family, color: font.color}},
-      xaxis: Object.assign({}, axisStyle, {title: 'y\u2083', range: [-0.15, 3.15]}),
-      yaxis: Object.assign({}, axisStyle, {title: 'g(y)', range: [30, 58]}),
+              font: {size: 15, family: figFont, color: css('--fig-text')}},
+      xaxis: themeAxis('y\u2083', {range: [-0.15, 3.15]}),
+      yaxis: themeAxis('g(y)', {range: [30, 58]}),
       showlegend: true,
-      legend: {x: 0.38, y: 0.98, bgcolor: 'rgba(250,247,243,0.85)',
-               bordercolor: C.grid, borderwidth: 1,
-               font: {size: 11, family: font.family, color: font.color}},
+      legend: Object.assign(legendStyle(), {x: 0.38, y: 0.98, font: {size: 11, family: figFont, color: css('--fig-text')}}),
       hovermode: 'closest'
-    };
+    });
 
     /* Info box */
     var info;
@@ -1092,8 +1056,8 @@ b^\top y \geq x^\top A^\top y \geq c^\top x. \qquad \blacksquare
           + ' &ensp; (tightest dual feasible for this y<sub>3</sub>)';
     document.getElementById('lpdual-info').innerHTML = info;
 
-    Plotly.react('lpdual-left', leftTraces, leftLayout, plotCfg);
-    Plotly.react('lpdual-right', rightTraces, rightLayout, plotCfg);
+    Plotly.react('lpdual-left', leftTraces, leftLayout, plotlyConfig);
+    Plotly.react('lpdual-right', rightTraces, rightLayout, plotlyConfig);
   }
 
   document.getElementById('lpdual-y3').addEventListener('input', function() {
@@ -1106,146 +1070,92 @@ b^\top y \geq x^\top A^\top y \geq c^\top x. \qquad \blacksquare
 })();
 </script>
 </section>
+<section id="sec-possibilities" class="level3" data-number="11.4.2">
+<h3 data-number="11.4.2" class="anchored" data-anchor-id="sec-possibilities"><span class="header-section-number">11.4.2</span> Primal-Dual Possibilities</h3>
+<p>The Fundamental Theorem of LP says every LP is either infeasible, unbounded, or has a finite optimum. For a primal-dual pair, weak duality further constrains the combinations. Since “both unbounded” would violate <a href="#eq-weak-duality" class="quarto-xref">Equation&nbsp;<span>11.1</span></a> (consequence 4 above), exactly <strong>four possibilities</strong> remain:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;"><strong>Primal</strong></th>
+<th style="text-align: left;"><strong>Dual</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">1.</td>
+<td style="text-align: left;">Infeasible</td>
+<td style="text-align: left;">Infeasible</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">2.</td>
+<td style="text-align: left;">Infeasible</td>
+<td style="text-align: left;">Unbounded (<span class="math inline">\inf = -\infty</span>)</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">3.</td>
+<td style="text-align: left;">Unbounded (<span class="math inline">\sup = +\infty</span>)</td>
+<td style="text-align: left;">Infeasible</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">4.</td>
+<td style="text-align: left;"><strong>Finite optimum <span class="math inline">f^*</span></strong></td>
+<td style="text-align: left;"><strong>Finite optimum <span class="math inline">g^* = f^*</span></strong></td>
+</tr>
+</tbody>
+</table>
+<p>Case 4 asserts something stronger than weak duality alone: not just that a bound exists, but that the bound is <strong>tight</strong>. This is the content of strong duality, which we prove next.</p>
 </section>
-<section id="sec-possibilities" class="level2" data-number="11.6">
-<h2 data-number="11.6" class="anchored" data-anchor-id="sec-possibilities"><span class="header-section-number">11.6</span> Primal-Dual Possibilities</h2>
-<p>Combining the Fundamental Theorem of LP (every LP is either infeasible, unbounded, or has a finite optimum) with weak duality, we can enumerate all possible combinations of primal and dual status.</p>
-<div class="callout callout-style-default callout-important callout-titled">
-<div class="callout-header d-flex align-content-center">
-<div class="callout-icon-container">
-<i class="callout-icon"></i>
-</div>
-<div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Important</span>Remark
-</div>
-</div>
-<div class="callout-body-container callout-body">
-<p>The primal and dual cannot both be unbounded. If (P) is unbounded (<span class="math inline">\sup = +\infty</span>) and (D) is unbounded (<span class="math inline">\inf = -\infty</span>), then we could find primal feasible <span class="math inline">x</span> with <span class="math inline">c^\top x</span> arbitrarily large and dual feasible <span class="math inline">y</span> with <span class="math inline">b^\top y</span> arbitrarily small, violating weak duality.</p>
-</div>
-</div>
-<p>There are exactly <strong>four possibilities</strong> for a primal-dual pair:</p>
-<ol type="1">
-<li>Both primal and dual are <strong>infeasible</strong>.</li>
-<li>Primal is <strong>infeasible</strong> and dual is <strong>unbounded</strong> (<span class="math inline">\inf = -\infty</span>).</li>
-<li>Primal is <strong>unbounded</strong> (<span class="math inline">\sup = +\infty</span>) and dual is <strong>infeasible</strong>.</li>
-<li>Both primal and dual have <strong>finite optimal values</strong> (and by strong duality, they are equal).</li>
-</ol>
-<p>Notice that the fourth case asserts something stronger than weak duality alone can guarantee: not only does a bound exist, but the bound is tight. This is the content of strong duality, which we prove next.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-primal-dual-table</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 16.2: Primal-dual possibilities table. Green = possible, red = impossible. The only case where both have finite optima exhibits zero duality gap (strong duality)."</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Table data</span></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>row_labels <span class="op">=</span> [<span class="st">'Infeasible'</span>, <span class="st">'Unbounded'</span>, <span class="st">'Finite Optimal'</span>]</span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>col_labels <span class="op">=</span> [<span class="st">'Infeasible'</span>, <span class="st">'Unbounded'</span>, <span class="st">'Finite Optimal'</span>]</span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Possibility matrix: 1 = possible, 0 = impossible</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> [[<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>],</span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>     [<span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">0</span>],</span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>     [<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">1</span>]]</span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Colors</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> [[<span class="st">'rgba(122,154,126,0.35)'</span>, <span class="st">'rgba(122,154,126,0.35)'</span>, <span class="st">'rgba(181,107,107,0.25)'</span>],</span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a>          [<span class="st">'rgba(122,154,126,0.35)'</span>, <span class="st">'rgba(181,107,107,0.25)'</span>, <span class="st">'rgba(181,107,107,0.25)'</span>],</span>
-<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a>          [<span class="st">'rgba(181,107,107,0.25)'</span>, <span class="st">'rgba(181,107,107,0.25)'</span>, <span class="st">'rgba(122,154,126,0.35)'</span>]]</span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a>text <span class="op">=</span> [[<span class="st">'Possible'</span>, <span class="st">'Possible'</span>, <span class="st">'Impossible'</span>],</span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a>        [<span class="st">'Possible'</span>, <span class="st">'Impossible'</span>, <span class="st">'Impossible'</span>],</span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>        [<span class="st">'Impossible'</span>, <span class="st">'Impossible'</span>, <span class="st">'Possible&lt;br&gt;(zero duality gap)'</span>]]</span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
-<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Draw cells</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">3</span>):</span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">3</span>):</span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a>        fig.add_shape(<span class="bu">type</span><span class="op">=</span><span class="st">'rect'</span>,</span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a>            x0<span class="op">=</span>j, x1<span class="op">=</span>j<span class="op">+</span><span class="dv">1</span>, y0<span class="op">=</span><span class="dv">2</span><span class="op">-</span>i, y1<span class="op">=</span><span class="dv">3</span><span class="op">-</span>i,</span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a>            fillcolor<span class="op">=</span>colors[i][j],</span>
-<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a>            line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#968a80'</span>, width<span class="op">=</span><span class="fl">1.5</span>))</span>
-<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a>        fig.add_annotation(x<span class="op">=</span>j<span class="op">+</span><span class="fl">0.5</span>, y<span class="op">=</span><span class="fl">2.5</span><span class="op">-</span>i,</span>
-<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a>            text<span class="op">=</span>text[i][j],</span>
-<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a>            showarrow<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-37"><a href="#cb2-37" aria-hidden="true" tabindex="-1"></a>            font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">13</span>, color<span class="op">=</span><span class="st">'#3a3a3a'</span>))</span>
-<span id="cb2-38"><a href="#cb2-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-39"><a href="#cb2-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Row labels (Dual)</span></span>
-<span id="cb2-40"><a href="#cb2-40" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i, label <span class="kw">in</span> <span class="bu">enumerate</span>(row_labels):</span>
-<span id="cb2-41"><a href="#cb2-41" aria-hidden="true" tabindex="-1"></a>    fig.add_annotation(x<span class="op">=-</span><span class="fl">0.35</span>, y<span class="op">=</span><span class="fl">2.5</span><span class="op">-</span>i,</span>
-<span id="cb2-42"><a href="#cb2-42" aria-hidden="true" tabindex="-1"></a>        text<span class="op">=</span><span class="ss">f'&lt;b&gt;</span><span class="sc">{</span>label<span class="sc">}</span><span class="ss">&lt;/b&gt;'</span>,</span>
-<span id="cb2-43"><a href="#cb2-43" aria-hidden="true" tabindex="-1"></a>        showarrow<span class="op">=</span><span class="va">False</span>, font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">12</span>, color<span class="op">=</span><span class="st">'#7b97ad'</span>),</span>
-<span id="cb2-44"><a href="#cb2-44" aria-hidden="true" tabindex="-1"></a>        xanchor<span class="op">=</span><span class="st">'right'</span>)</span>
-<span id="cb2-45"><a href="#cb2-45" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-46"><a href="#cb2-46" aria-hidden="true" tabindex="-1"></a><span class="co"># Column labels (Primal)</span></span>
-<span id="cb2-47"><a href="#cb2-47" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> j, label <span class="kw">in</span> <span class="bu">enumerate</span>(col_labels):</span>
-<span id="cb2-48"><a href="#cb2-48" aria-hidden="true" tabindex="-1"></a>    fig.add_annotation(x<span class="op">=</span>j<span class="op">+</span><span class="fl">0.5</span>, y<span class="op">=</span><span class="fl">3.2</span>,</span>
-<span id="cb2-49"><a href="#cb2-49" aria-hidden="true" tabindex="-1"></a>        text<span class="op">=</span><span class="ss">f'&lt;b&gt;</span><span class="sc">{</span>label<span class="sc">}</span><span class="ss">&lt;/b&gt;'</span>,</span>
-<span id="cb2-50"><a href="#cb2-50" aria-hidden="true" tabindex="-1"></a>        showarrow<span class="op">=</span><span class="va">False</span>, font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">12</span>, color<span class="op">=</span><span class="st">'#8a6e5e'</span>))</span>
-<span id="cb2-51"><a href="#cb2-51" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-52"><a href="#cb2-52" aria-hidden="true" tabindex="-1"></a><span class="co"># Axis labels</span></span>
-<span id="cb2-53"><a href="#cb2-53" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">1.5</span>, y<span class="op">=</span><span class="fl">3.6</span>, text<span class="op">=</span><span class="st">'&lt;b&gt;Primal&lt;/b&gt;'</span>,</span>
-<span id="cb2-54"><a href="#cb2-54" aria-hidden="true" tabindex="-1"></a>    showarrow<span class="op">=</span><span class="va">False</span>, font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">14</span>, color<span class="op">=</span><span class="st">'#8a6e5e'</span>))</span>
-<span id="cb2-55"><a href="#cb2-55" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=-</span><span class="fl">0.8</span>, y<span class="op">=</span><span class="fl">1.5</span>, text<span class="op">=</span><span class="st">'&lt;b&gt;Dual&lt;/b&gt;'</span>,</span>
-<span id="cb2-56"><a href="#cb2-56" aria-hidden="true" tabindex="-1"></a>    showarrow<span class="op">=</span><span class="va">False</span>, font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">14</span>, color<span class="op">=</span><span class="st">'#7b97ad'</span>),</span>
-<span id="cb2-57"><a href="#cb2-57" aria-hidden="true" tabindex="-1"></a>    textangle<span class="op">=-</span><span class="dv">90</span>)</span>
-<span id="cb2-58"><a href="#cb2-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-59"><a href="#cb2-59" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
-<span id="cb2-60"><a href="#cb2-60" aria-hidden="true" tabindex="-1"></a>    xaxis<span class="op">=</span><span class="bu">dict</span>(<span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">1.2</span>, <span class="fl">3.5</span>], showgrid<span class="op">=</span><span class="va">False</span>, zeroline<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-61"><a href="#cb2-61" aria-hidden="true" tabindex="-1"></a>               showticklabels<span class="op">=</span><span class="va">False</span>),</span>
-<span id="cb2-62"><a href="#cb2-62" aria-hidden="true" tabindex="-1"></a>    yaxis<span class="op">=</span><span class="bu">dict</span>(<span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.3</span>, <span class="dv">4</span>], showgrid<span class="op">=</span><span class="va">False</span>, zeroline<span class="op">=</span><span class="va">False</span>,</span>
-<span id="cb2-63"><a href="#cb2-63" aria-hidden="true" tabindex="-1"></a>               showticklabels<span class="op">=</span><span class="va">False</span>, scaleanchor<span class="op">=</span><span class="st">'x'</span>),</span>
-<span id="cb2-64"><a href="#cb2-64" aria-hidden="true" tabindex="-1"></a>    showlegend<span class="op">=</span><span class="va">False</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">20</span>, b<span class="op">=</span><span class="dv">20</span>, l<span class="op">=</span><span class="dv">20</span>, r<span class="op">=</span><span class="dv">20</span>),</span>
-<span id="cb2-65"><a href="#cb2-65" aria-hidden="true" tabindex="-1"></a>    plot_bgcolor<span class="op">=</span><span class="st">'white'</span>)</span>
-<span id="cb2-66"><a href="#cb2-66" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </section>
-<section id="sec-strong-duality" class="level2" data-number="11.7">
-<h2 data-number="11.7" class="anchored" data-anchor-id="sec-strong-duality"><span class="header-section-number">11.7</span> Strong Duality</h2>
+<section id="sec-strong-duality" class="level2" data-number="11.5">
+<h2 data-number="11.5" class="anchored" data-anchor-id="sec-strong-duality"><span class="header-section-number">11.5</span> Strong Duality</h2>
 <p>Weak duality (<a href="#eq-weak-duality" class="quarto-xref">Equation&nbsp;<span>11.1</span></a>) gives an inequality. The remarkable <strong>strong duality theorem</strong> says that at optimality, the gap vanishes.</p>
 <div id="thm-strong-duality" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 11.3 (Theorem 16.4 (Strong Duality))</strong></span> If one of (P) and (D) has a finite optimal value (and hence an optimal solution), so does the other. Moreover,</p>
+<p><span class="theorem-title"><strong>Theorem 11.3 (Strong Duality)</strong></span> If one of (P) and (D) has a finite optimal value (and hence an optimal solution), so does the other. Moreover,</p>
 <p><span id="eq-strong-duality"><span class="math display">
 \max_{x \in \Omega_P} c^\top x \;=\; \min_{y \in \Omega_D} b^\top y.
 \tag{11.3}</span></span></p>
 <p>That is, the duality gap is zero at optimality.</p>
 </div>
-<section id="sec-strong-duality-proof" class="level3" data-number="11.7.1">
-<h3 data-number="11.7.1" class="anchored" data-anchor-id="sec-strong-duality-proof"><span class="header-section-number">11.7.1</span> Proof via the Simplex Method</h3>
-<p>The proof strategy is constructive: we run the simplex method on the primal and extract dual variables directly from the final tableau, then verify that these variables are dual feasible with a matching objective value.</p>
+<section id="sec-strong-duality-proof" class="level3" data-number="11.5.1">
+<h3 data-number="11.5.1" class="anchored" data-anchor-id="sec-strong-duality-proof"><span class="header-section-number">11.5.1</span> Proof via the Simplex Method</h3>
+<p>The proof is constructive: we run the simplex method on the primal and extract a dual feasible solution directly from the final tableau, then show it achieves the same objective value.</p>
 <div class="proof">
 <p><span class="proof-title"><em>Proof</em>. </span><strong>Proof of Strong Duality.</strong></p>
-<p>We prove this by constructing a dual optimal solution from the simplex output. Suppose the primal has a finite optimal value <span class="math inline">f^*</span> with optimal solution <span class="math inline">x^*</span>. Run the <a href="../lectures/10-simplex-method.html">simplex method</a> on the primal to obtain an optimal basic feasible solution (BFS).</p>
-<p>Let <span class="math inline">B</span> and <span class="math inline">N</span> denote the sets of basic and nonbasic variable indices at the optimal BFS. The final simplex dictionary expresses the objective as:</p>
+<p>Suppose the primal <span class="math inline">\max\, c^\top x</span> s.t. <span class="math inline">Ax \leq b</span>, <span class="math inline">x \geq 0</span> has a finite optimal value <span class="math inline">f^*</span>. Adding slack variables <span class="math inline">w = b - Ax \geq 0</span>, the equational form is</p>
 <p><span class="math display">
-\zeta = \zeta^* + \widetilde{c}^\top x_N,
+\max \; c^\top x \quad \text{s.t.} \quad \begin{pmatrix} A &amp; I \end{pmatrix} \begin{pmatrix} x \\ w \end{pmatrix} = b, \quad x \geq 0, \quad w \geq 0.
 </span></p>
-<p>where <span class="math inline">\widetilde{c} \geq 0</span> component-wise (this is the optimality condition for the simplex method – if any reduced cost were negative, we could improve the objective by bringing that variable into the basis). Here <span class="math inline">\zeta^* = f^*</span> is the optimal value.</p>
-<p>Now consider the full set of variables: the <span class="math inline">n</span> original decision variables <span class="math inline">x_j</span> and the <span class="math inline">m</span> slack variables <span class="math inline">w_i = b_i - a_i^\top x</span> (so <span class="math inline">w = b - Ax</span>). Define the augmented variable <span class="math inline">\bar{x} = \binom{x}{w}</span>.</p>
-<p>For each variable, we can read off its <strong>reduced cost</strong> from the final dictionary:</p>
+<p>This LP has <span class="math inline">n + m</span> variables and <span class="math inline">m</span> equality constraints. The augmented cost vector is <span class="math inline">(c^\top, 0^\top)^\top</span> (original variables carry cost <span class="math inline">c_j</span>; slack variables carry cost <span class="math inline">0</span>).</p>
+<p>Run the <a href="../lectures/10-simplex-method.html">simplex method</a> on this LP to obtain an optimal BFS with basis <span class="math inline">B</span>. Let <span class="math inline">\mathbf{A}_B</span> denote the <span class="math inline">m \times m</span> submatrix of <span class="math inline">(A \mid I)</span> formed by the basic columns, and let <span class="math inline">c_B</span> denote the corresponding cost coefficients.</p>
+<p><strong>Step 1: Define the candidate dual solution.</strong></p>
+<p><span class="math display">
+y^* \;=\; (\mathbf{A}_B^{-1})^\top c_B \;\in\; \mathbb{R}^m.
+</span></p>
+<p>This is the <strong>simplex multiplier</strong> vector — the same object that appears implicitly in the reduced cost formulas of the simplex method.</p>
+<p><strong>Step 2: Show <span class="math inline">y^*</span> is dual feasible.</strong></p>
+<p>At the optimal BFS of a maximization LP, every nonbasic variable has a <strong>nonpositive</strong> reduced cost (otherwise we could improve the objective by bringing it into the basis). We check two types of variables:</p>
 <ul>
-<li>For each decision variable <span class="math inline">x_j</span>: if <span class="math inline">x_j</span> is nonbasic, its reduced cost is <span class="math inline">\widetilde{c}_j \geq 0</span>; define <span class="math inline">c_j^* = \widetilde{c}_j</span>. If <span class="math inline">x_j</span> is basic, define <span class="math inline">c_j^* = 0</span>.</li>
-<li>For each slack variable <span class="math inline">w_i</span>: if <span class="math inline">w_i</span> is nonbasic, its reduced cost is <span class="math inline">\widetilde{c}_{n+i} \geq 0</span>; define <span class="math inline">d_i^* = \widetilde{c}_{n+i}</span>. If <span class="math inline">w_i</span> is basic, define <span class="math inline">d_i^* = 0</span>.</li>
+<li><em>Original variable <span class="math inline">x_j</span>:</em> Its column in <span class="math inline">(A \mid I)</span> is <span class="math inline">a_j</span> (the <span class="math inline">j</span>-th column of <span class="math inline">A</span>). Its reduced cost is</li>
 </ul>
-<p>Then the objective can be written (in terms of all variables) as:</p>
 <p><span class="math display">
-\zeta = c^\top x = \zeta^* + (c^*)^\top x + (d^*)^\top w.
+\bar{c}_j = c_j - c_B^\top \mathbf{A}_B^{-1} a_j = c_j - (y^*)^\top a_j \;\leq\; 0,
 </span></p>
-<p>Now <strong>define <span class="math inline">y_i^* = -d_i^*</span></strong> for each <span class="math inline">i \in [m]</span>.</p>
-<p><strong>Claim: <span class="math inline">y^* \geq 0</span>.</strong> Since <span class="math inline">\widetilde{c} \geq 0</span> at optimality, we have <span class="math inline">d_i^* \geq 0</span> for all <span class="math inline">i</span>. Wait – we need to be careful with signs here. In the maximization simplex, the optimality condition is that the reduced costs of nonbasic variables are <span class="math inline">\leq 0</span> (we cannot improve the objective). So <span class="math inline">\widetilde{c} \leq 0</span> for nonbasic variables. This means <span class="math inline">d_i^* \leq 0</span>, so <span class="math inline">y_i^* = -d_i^* \geq 0</span>.</p>
-<p>Substituting <span class="math inline">w = b - Ax</span> into the expression for <span class="math inline">\zeta</span>:</p>
-<p><span class="math display">
-c^\top x = \zeta^* + (c^*)^\top x + (-y^*)^\top (b - Ax) = \zeta^* - b^\top y^* + (c^* + A^\top y^*)^\top x.
-</span></p>
-<p>Since the left-hand side is <span class="math inline">c^\top x</span> and the right-hand side is linear in <span class="math inline">x</span>, this identity must hold for <strong>all</strong> <span class="math inline">x</span>. Matching coefficients:</p>
+<p>which gives <span class="math inline">(A^\top y^*)_j \geq c_j</span>. Since this holds for every <span class="math inline">j \in [n]</span>, we have <span class="math inline">A^\top y^* \geq c</span>. (If <span class="math inline">x_j</span> is basic, its reduced cost is zero by definition, so the inequality still holds.)</p>
 <ul>
-<li><strong>Constant terms</strong>: <span class="math inline">0 = \zeta^* - b^\top y^*</span>, i.e., <span class="math inline">\zeta^* = b^\top y^*</span>.</li>
-<li><strong>Coefficient of <span class="math inline">x</span></strong>: <span class="math inline">c = c^* + A^\top y^*</span>, i.e., <span class="math inline">A^\top y^* = c - c^*</span>.</li>
+<li><em>Slack variable <span class="math inline">w_i</span>:</em> Its column in <span class="math inline">(A \mid I)</span> is <span class="math inline">e_i</span> (the <span class="math inline">i</span>-th standard basis vector). Its reduced cost is</li>
 </ul>
-<p>Since <span class="math inline">c^* \geq 0</span> (all reduced costs of decision variables are non-negative in the final dictionary after accounting for signs), we get <span class="math inline">A^\top y^* \leq c</span>. For the dual in our convention (<span class="math inline">\min b^\top y</span> s.t. <span class="math inline">A^\top y \geq c</span>), we need <span class="math inline">A^\top y^* \geq c</span>. The sign conventions work out correctly when we track the simplex algebra carefully: <span class="math inline">c^* \leq 0</span> for the nonbasic decision variables in a maximization simplex, giving <span class="math inline">A^\top y^* \geq c</span>.</p>
-<p>Therefore <span class="math inline">y^*</span> is <strong>dual feasible</strong> (satisfying <span class="math inline">A^\top y^* \geq c</span> and <span class="math inline">y^* \geq 0</span>), and</p>
 <p><span class="math display">
-b^\top y^* = \zeta^* = f^* = \max_{x \in \Omega_P} c^\top x.
+\bar{c}_{n+i} = 0 - c_B^\top \mathbf{A}_B^{-1} e_i = -y_i^* \;\leq\; 0,
 </span></p>
-<p>By weak duality, <span class="math inline">b^\top y^* \geq \min_{y \in \Omega_D} b^\top y \geq \max_{x \in \Omega_P} c^\top x = b^\top y^*</span>. Thus <span class="math inline">y^*</span> is dual optimal and the duality gap is zero. <span class="math inline">\blacksquare</span></p>
+<p>which gives <span class="math inline">y_i^* \geq 0</span>. Therefore <span class="math inline">y^* \geq 0</span>.</p>
+<p>Combining: <span class="math inline">y^*</span> satisfies <span class="math inline">A^\top y^* \geq c</span> and <span class="math inline">y^* \geq 0</span>, so it is <strong>dual feasible</strong>.</p>
+<p><strong>Step 3: Show the objectives match.</strong></p>
+<p>At the optimal BFS, all nonbasic variables are zero, so</p>
+<p><span class="math display">
+f^* = c^\top x^* = c_B^\top x_B^* = c_B^\top \mathbf{A}_B^{-1} b = (y^*)^\top b = b^\top y^*.
+</span></p>
+<p><strong>Conclusion.</strong> We have constructed <span class="math inline">y^*</span> that is dual feasible with <span class="math inline">b^\top y^* = f^*</span>. By weak duality, <span class="math inline">b^\top y^* \geq \min_{y \in \Omega_D} b^\top y \geq f^*</span>. Since <span class="math inline">b^\top y^* = f^*</span>, all inequalities are equalities: <span class="math inline">y^*</span> is dual optimal and the duality gap is zero. <span class="math inline">\blacksquare</span></p>
 </div>
 <div class="callout callout-style-simple callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1257,28 +1167,28 @@ b^\top y^* = \zeta^* = f^* = \max_{x \in \Omega_P} c^\top x.
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>The simplex method simultaneously solves both the primal and the dual! The optimal dual variables <span class="math inline">y^*</span> can be read off directly from the final simplex tableau as the negatives of the reduced costs of the slack variables.</p>
+<p>The simplex method simultaneously solves both the primal and the dual! The optimal dual variables are the <strong>simplex multipliers</strong> <span class="math inline">y^* = (\mathbf{A}_B^{-1})^\top c_B</span>, and each <span class="math inline">y_i^*</span> equals the <strong>negative of the reduced cost</strong> of the <span class="math inline">i</span>-th slack variable <span class="math inline">w_i</span>. You never need to solve the dual LP separately — it comes for free from the primal simplex tableau.</p>
 </div>
 </div>
 <div id="fig-lp-duality-relationships" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-lp-duality-relationships-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="figures/lp-duality-relationships.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;11.1: Relationships between primal and dual linear programs: weak duality provides a bound, strong duality gives equality at optimality, and complementary slackness links the solutions."><img src="figures/lp-duality-relationships.svg" class="img-fluid figure-img"></a>
+<a href="figures/lp-duality-relationships.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;11.2: Relationships between primal and dual linear programs: weak duality provides a bound, strong duality gives equality at optimality, and complementary slackness links the solutions."><img src="figures/lp-duality-relationships.svg" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-lp-duality-relationships-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;11.1: Relationships between primal and dual linear programs: weak duality provides a bound, strong duality gives equality at optimality, and complementary slackness links the solutions.
+Figure&nbsp;11.2: Relationships between primal and dual linear programs: weak duality provides a bound, strong duality gives equality at optimality, and complementary slackness links the solutions.
 </figcaption>
 </figure>
 </div>
-<p>The algebraic proof is constructive: the simplex method produces dual variables for free. But it is natural to ask whether there is a more intuitive, geometric understanding of why duality works. The next section provides exactly that.</p>
-<p><a href="#fig-lp-duality-relationships" class="quarto-xref">Figure&nbsp;<span>11.1</span></a> summarizes the three pillars of LP duality. The top row shows the primal-dual pairing: every LP has a partner obtained by transposing <span class="math inline">A</span> and swapping the roles of <span class="math inline">b</span> and <span class="math inline">c</span>. The middle row displays the three key results: <strong>weak duality</strong> (the dual objective always lower-bounds the primal), <strong>strong duality</strong> (the bounds meet at optimality), and <strong>complementary slackness</strong> (which links the optimal primal and dual solutions). The number line at the bottom illustrates the duality gap — the interval between any dual-feasible value <span class="math inline">b^\top y</span> and any primal-feasible value <span class="math inline">c^\top x</span> — which shrinks to zero at the optimal pair <span class="math inline">(x^*, y^*)</span>.</p>
+<p><a href="#fig-lp-duality-relationships" class="quarto-xref">Figure&nbsp;<span>11.2</span></a> summarizes the three pillars of LP duality: <strong>weak duality</strong> (the dual always bounds the primal), <strong>strong duality</strong> (the bounds meet at optimality), and <strong>complementary slackness</strong> (which links the structure of optimal solutions). The number line at the bottom illustrates the duality gap shrinking to zero at the optimal pair <span class="math inline">(x^*, y^*)</span>.</p>
+<p>The algebraic proof is constructive: the simplex method produces dual variables for free. But is there a more intuitive, geometric understanding of <em>why</em> duality works?</p>
 </section>
 </section>
-<section id="sec-geometric" class="level2" data-number="11.8">
-<h2 data-number="11.8" class="anchored" data-anchor-id="sec-geometric"><span class="header-section-number">11.8</span> Geometric Interpretation</h2>
+<section id="sec-geometric" class="level2" data-number="11.6">
+<h2 data-number="11.6" class="anchored" data-anchor-id="sec-geometric"><span class="header-section-number">11.6</span> Geometric Interpretation</h2>
 <p>The algebraic derivation tells us <em>what</em> the dual is. A geometric picture reveals <em>why</em> it works.</p>
-<section id="shooting-a-ray-through-the-polytope" class="level3" data-number="11.8.1">
-<h3 data-number="11.8.1" class="anchored" data-anchor-id="shooting-a-ray-through-the-polytope"><span class="header-section-number">11.8.1</span> Shooting a Ray Through the Polytope</h3>
+<section id="shooting-a-ray-through-the-polytope" class="level3" data-number="11.6.1">
+<h3 data-number="11.6.1" class="anchored" data-anchor-id="shooting-a-ray-through-the-polytope"><span class="header-section-number">11.6.1</span> Shooting a Ray Through the Polytope</h3>
 <p>Consider the feasible polytope <span class="math inline">P = \{x \in \mathbb{R}^n : Ax \leq b, \; x \geq 0\}</span> with the origin inside (which holds whenever <span class="math inline">b \geq 0</span>). Imagine standing at the origin and firing a ray in the direction of an objective vector <span class="math inline">c</span>:</p>
 <p><span class="math display">
 x(\alpha) = \alpha \cdot c, \qquad \alpha \geq 0.
@@ -1292,8 +1202,8 @@ a_i^\top (\alpha c) = \alpha \, (a_i^\top c) \leq b_i \quad \Longleftrightarrow 
 \alpha^* = \min_{i \,:\, a_i^\top c &gt; 0} \frac{b_i}{a_i^\top c}.
 </span></p>
 </section>
-<section id="combining-walls-the-dual-perspective" class="level3" data-number="11.8.2">
-<h3 data-number="11.8.2" class="anchored" data-anchor-id="combining-walls-the-dual-perspective"><span class="header-section-number">11.8.2</span> Combining Walls: The Dual Perspective</h3>
+<section id="combining-walls-the-dual-perspective" class="level3" data-number="11.6.2">
+<h3 data-number="11.6.2" class="anchored" data-anchor-id="combining-walls-the-dual-perspective"><span class="header-section-number">11.6.2</span> Combining Walls: The Dual Perspective</h3>
 <p>Each wall provides an individual bound on <span class="math inline">\alpha</span>. But the dual does something cleverer: it <strong>combines walls</strong> with nonnegative weights <span class="math inline">y_1, \ldots, y_m \geq 0</span>. Adding up <span class="math inline">y_i \cdot (a_i^\top x \leq b_i)</span> yields:</p>
 <p><span class="math display">
 \left(\sum_{i=1}^m y_i \, a_i\right)^\top x \;\leq\; \sum_{i=1}^m y_i \, b_i = b^\top y.
@@ -1313,21 +1223,24 @@ c^\top x \;\leq\; (A^\top y)^\top x \;\leq\; b^\top y.
 </div>
 </div>
 <div class="callout-body-container callout-body">
+<p>The primal-dual pair captures a push-versus-block contest between the objective and the constraints:</p>
 <ul>
 <li><strong>Primal</strong> = push the objective forward as far as the polytope allows</li>
 <li><strong>Dual</strong> = combine constraint walls to form the tightest barrier against forward progress</li>
 <li><strong>Weak duality</strong> = the barrier always lies ahead of the farthest reachable point</li>
 <li><strong>Strong duality</strong> = at optimality, the barrier <em>exactly touches</em> the farthest reachable point</li>
 </ul>
+<p>In short, duality theory tells us that the tightest combined barrier exactly meets the farthest reachable point — there is never a gap between what the polytope permits and what the constraints can certify.</p>
 </div>
 </div>
-<p>Drag the slider below to rotate the ray direction <span class="math inline">\theta</span>. As the angle changes, different constraint walls become the binding barrier — the one that stops the ray first. The colored dots along the ray mark where each wall would block it; the star marks the actual exit point (the tightest individual bound).</p>
+<p><strong>Connection to duality.</strong> The ray picture illustrates the <em>primal</em> side: how far can we push in direction <span class="math inline">c</span> before a wall stops us? Each wall <span class="math inline">a_i^\top x \leq b_i</span> gives an individual bound <span class="math inline">\alpha \leq b_i / (a_i^\top c)</span>. The tightest wall determines the exit point. The <em>dual</em> side does something more powerful: instead of using one wall at a time, it <strong>combines walls</strong> with weights <span class="math inline">y_1, \ldots, y_m \geq 0</span> to create a synthetic barrier that bounds the objective over the <em>entire</em> polytope, not just along a single ray. The dual LP finds the tightest such combination.</p>
+<p>Drag the slider below to rotate the ray direction <span class="math inline">\theta</span>. As the angle changes, different constraint walls become the binding barrier. The colored dots mark where each wall would block the ray; the <strong>star</strong> marks the ray’s exit point. The <strong>diamond</strong> marks the LP-optimal vertex, and the dashed line shows the dual barrier <span class="math inline">c^\top x = b^\top y^*</span>. The stacked bar decomposes the dual bound into each wall’s contribution.</p>
 <div class="interactive-figure-container" id="geo-wrapper">
   <h3 class="anchored">Ray Through Polytope</h3>
   <p class="fig-subtitle">
     Polytope: x<sub>1</sub> ≤ 4,   x<sub>2</sub> ≤ 6,  
     3x<sub>1</sub>+2x<sub>2</sub> ≤ 18,   x ≥ 0.
-      The ray from the origin in direction c exits through the most restrictive wall.
+      The ray exits through the tightest wall; the dual combines walls to certify the LP optimum.
   </p>
   <div class="slider-row">
     <label for="geo-theta">Direction θ =</label>
@@ -1341,13 +1254,14 @@ c^\top x \;\leq\; (A^\top y)^\top x \;\leq\; b^\top y.
 <script>
 (function() {
   var C = {
-    bg: '#f0ebe5', plotBg: '#faf7f3', text: '#3d3530', grid: '#e0d9d1',
-    axis: '#968a80', blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
+    text: css('--fig-text') || '#3d3530',
+    blue: '#7b97ad', gold: '#b8995e', sage: '#7a9a7e',
     terracotta: '#c47a6a', lavender: '#907ea0', rosewood: '#ad8480'
   };
-  var font = {family: "'Palatino Linotype','Palatino','Book Antiqua','Georgia',serif", color: C.text};
+  var font = {family: figFont, color: css('--fig-text')};
 
   var polyX = [0, 4, 4, 2, 0, 0], polyY = [0, 0, 3, 6, 6, 0];
+  var verts = [[0,0], [4,0], [4,3], [2,6], [0,6]];
   var walls = [
     {a: [1, 0], b: 4, label: 'x\u2081 \u2264 4', color: C.blue,
      lx: [4, 4], ly: [-0.5, 8]},
@@ -1356,103 +1270,192 @@ c^\top x \;\leq\; (A^\top y)^\top x \;\leq\; b^\top y.
     {a: [3, 2], b: 18, label: '3x\u2081+2x\u2082 \u2264 18', color: C.terracotta,
      lx: [-0.5, 6.5], ly: [9.75, -0.75]}
   ];
-  var cfg = {displayModeBar: false, responsive: true};
+  var cfg = plotlyConfig;
+  var thCrit = Math.atan(2/3); /* transition angle ~33.69 deg */
+
+  /* Dual optimal solution via complementary slackness.
+     theta < thCrit  => optimum at (4,3): binding x1<=4, 3x1+2x2<=18
+     theta >= thCrit => optimum at (2,6): binding x2<=6, 3x1+2x2<=18 */
+  function dualSol(cx, cy) {
+    if (Math.atan2(cy, cx) <= thCrit)
+      return [cx - 1.5*cy, 0, 0.5*cy];
+    return [0, cy - (2/3)*cx, (1/3)*cx];
+  }
+
+  /* Liang-Barsky line clip to axis rectangle */
+  function clipLn(x1, y1, x2, y2, xlo, xhi, ylo, yhi) {
+    var dx = x2 - x1, dy = y2 - y1;
+    var p = [-dx, dx, -dy, dy];
+    var q = [x1 - xlo, xhi - x1, y1 - ylo, yhi - y1];
+    var t0 = 0, t1 = 1;
+    for (var i = 0; i < 4; i++) {
+      if (Math.abs(p[i]) < 1e-10) { if (q[i] < 0) return null; }
+      else {
+        var r = q[i] / p[i];
+        if (p[i] < 0) { if (r > t0) t0 = r; }
+        else { if (r < t1) t1 = r; }
+      }
+    }
+    return t0 <= t1 ? [x1 + t0*dx, y1 + t0*dy, x1 + t1*dx, y1 + t1*dy] : null;
+  }
 
   function update(deg) {
     var th = deg * Math.PI / 180, cx = Math.cos(th), cy = Math.sin(th);
+
+    /* Ray: individual wall bounds on alpha */
     var bounds = [];
     for (var i = 0; i < walls.length; i++) {
       var d = walls[i].a[0]*cx + walls[i].a[1]*cy;
-      if (d > 1e-9) bounds.push({a: walls[i].b/d, i: i});
+      if (d > 1e-9) bounds.push({a: walls[i].b / d, i: i});
     }
     bounds.sort(function(a, b) { return a.a - b.a; });
+    var aS = bounds[0].a, eX = aS*cx, eY = aS*cy;
 
-    var aS = bounds[0].a, eX = aS*cx, eY = aS*cy, rE = aS*1.25;
+    /* LP optimum: max c^T v over vertices */
+    var bestVal = -1e9, bv = 0;
+    for (var v = 0; v < verts.length; v++) {
+      var val = cx*verts[v][0] + cy*verts[v][1];
+      if (val > bestVal) { bestVal = val; bv = v; }
+    }
+    var oX = verts[bv][0], oY = verts[bv][1];
 
+    /* Dual solution and wall contributions */
+    var y = dualSol(cx, cy);
+    var ctr = [y[0]*4, y[1]*6, y[2]*18];
+    var dVal = ctr[0] + ctr[1] + ctr[2];
+
+    /* Level set line c^T x = bestVal through optimal vertex */
+    var lc = clipLn(oX - 12*cy, oY + 12*cx, oX + 12*cy, oY - 12*cx,
+                    -0.5, 7.0, -0.5, 8.0);
+
+    var rE = aS * 1.2;
     var tr = [
       /* polytope */
       {x: polyX, y: polyY, mode: 'lines', fill: 'toself',
-       fillcolor: 'rgba(122,154,126,0.13)', line: {color: C.sage, width: 2.2},
-       name: 'Feasible polytope', hoverinfo: 'skip'},
-      /* constraint boundary lines (subtle) */
+       fillcolor: 'rgba(122,154,126,0.10)', line: {color: C.sage, width: 2},
+       name: 'Feasible region', hoverinfo: 'skip'},
+      /* constraint boundary lines */
       {x: walls[0].lx, y: walls[0].ly, mode: 'lines',
-       line: {color: C.blue, width: 1, dash: 'dot'}, opacity: 0.45,
+       line: {color: C.blue, width: 1.2, dash: 'dot'}, opacity: 0.35,
        showlegend: false, hoverinfo: 'skip'},
       {x: walls[1].lx, y: walls[1].ly, mode: 'lines',
-       line: {color: C.sage, width: 1, dash: 'dot'}, opacity: 0.45,
+       line: {color: C.sage, width: 1.2, dash: 'dot'}, opacity: 0.35,
        showlegend: false, hoverinfo: 'skip'},
       {x: walls[2].lx, y: walls[2].ly, mode: 'lines',
-       line: {color: C.terracotta, width: 1, dash: 'dot'}, opacity: 0.45,
-       showlegend: false, hoverinfo: 'skip'},
-      /* ray: solid to exit */
-      {x: [0, eX], y: [0, eY], mode: 'lines',
-       line: {color: C.gold, width: 3.5},
-       name: 'Ray x = \u03b1c', hoverinfo: 'skip'},
-      /* ray: faded past exit */
-      {x: [eX, rE*cx], y: [eY, rE*cy], mode: 'lines',
-       line: {color: C.gold, width: 2, dash: 'dash'}, opacity: 0.3,
+       line: {color: C.terracotta, width: 1.2, dash: 'dot'}, opacity: 0.35,
        showlegend: false, hoverinfo: 'skip'}
     ];
+
+    /* dual barrier level set */
+    if (lc) {
+      tr.push({x: [lc[0], lc[2]], y: [lc[1], lc[3]], mode: 'lines',
+        line: {color: C.lavender, width: 2.5, dash: 'dashdot'},
+        name: 'Dual barrier', hoverinfo: 'skip'});
+    }
+
+    /* ray: solid to exit, dashed beyond */
+    tr.push({x: [0, eX], y: [0, eY], mode: 'lines',
+      line: {color: C.gold, width: 3},
+      name: 'Ray x = \u03b1c', hoverinfo: 'skip'});
+    tr.push({x: [eX, rE*cx], y: [eY, rE*cy], mode: 'lines',
+      line: {color: C.gold, width: 1.5, dash: 'dash'}, opacity: 0.3,
+      showlegend: false, hoverinfo: 'skip'});
 
     /* wall hit points */
     for (var j = 0; j < bounds.length; j++) {
       var w = walls[bounds[j].i], al = bounds[j].a;
       var hx = al*cx, hy = al*cy, bind = (j === 0);
-      /* skip non-binding points that are off-screen */
       if (!bind && (hx > 7 || hy > 8.2 || hx < -0.5 || hy < -0.5)) continue;
-      tr.push({
-        x: [hx], y: [hy], mode: 'markers',
-        marker: {size: bind ? 14 : 9, color: w.color,
+      tr.push({x: [hx], y: [hy], mode: 'markers',
+        marker: {size: bind ? 13 : 8, color: w.color,
                  symbol: bind ? 'star' : 'circle',
-                 line: {width: bind ? 1.5 : 1, color: 'white'}},
-        name: (bind ? 'Exit: ' : '') + w.label,
+                 line: {width: bind ? 1.5 : 0.8, color: 'white'}},
+        name: (bind ? 'Exit: ' : 'Wall ') + w.label,
         hovertext: ['\u03b1 = ' + al.toFixed(2) + (bind ? ' (binding)' : '')],
-        hoverinfo: 'text'
-      });
+        hoverinfo: 'text'});
     }
+
+    /* LP optimal vertex */
+    tr.push({x: [oX], y: [oY], mode: 'markers',
+      marker: {size: 12, color: C.lavender, symbol: 'diamond',
+               line: {width: 1.5, color: 'white'}},
+      name: 'Optimum x*',
+      hovertext: ['c\u1d40x* = ' + bestVal.toFixed(2)],
+      hoverinfo: 'text'});
+
+    /* x* label */
+    tr.push({x: [oX + 0.35], y: [oY + 0.3], mode: 'text',
+      text: ['x*'], textfont: {size: 13, color: C.lavender, family: font.family},
+      showlegend: false, hoverinfo: 'skip'});
 
     /* origin */
     tr.push({x: [0], y: [0], mode: 'markers',
-      marker: {size: 6, color: C.text}, showlegend: false, hoverinfo: 'skip'});
+      marker: {size: 5, color: C.text}, showlegend: false, hoverinfo: 'skip'});
 
-    /* direction label */
-    var lr = Math.min(aS*0.4, 2.5);
+    /* c label on ray */
+    var lr = Math.min(aS * 0.4, 2.5);
     tr.push({x: [lr*cx + 0.25*cy], y: [lr*cy - 0.25*cx], mode: 'text',
-      text: ['c'], textfont: {size: 16, color: C.gold, family: font.family},
+      text: ['c'], textfont: {size: 15, color: C.gold, family: font.family},
       showlegend: false, hoverinfo: 'skip'});
 
-    var ax = {gridcolor: C.grid, gridwidth: 1, zerolinecolor: C.axis,
-              zerolinewidth: 1.5, linecolor: C.axis, linewidth: 1,
-              tickfont: {size: 12, family: font.family, color: font.color},
-              titlefont: {size: 14, family: font.family, color: font.color}};
-
-    var layout = {
-      paper_bgcolor: C.bg, plot_bgcolor: C.plotBg, font: font,
-      height: 460, margin: {t: 14, b: 52, l: 56, r: 14},
-      xaxis: Object.assign({title: 'x\u2081', range: [-0.8, 7.2]}, ax),
-      yaxis: Object.assign({title: 'x\u2082', range: [-0.8, 8.5], scaleanchor: 'x'}, ax),
+    Plotly.react('geo-plot', tr, themeLayout({
+      height: 470, margin: {t: 10, b: 48, l: 52, r: 150},
+      xaxis: themeAxis('x\u2081', {range: [-0.8, 7.2]}),
+      yaxis: themeAxis('x\u2082', {range: [-0.8, 8.5], scaleanchor: 'x'}),
       showlegend: true,
-      legend: {x: 0.52, y: 0.01, bgcolor: 'rgba(250,247,243,0.88)',
-               bordercolor: C.grid, borderwidth: 1,
-               font: {size: 10.5, family: font.family, color: font.color}},
+      legend: Object.assign(legendStyle(), {
+        x: 1.02, y: 1, xanchor: 'left', yanchor: 'top',
+        font: {size: 11, family: figFont, color: css('--fig-text')}
+      }),
       hovermode: 'closest'
-    };
+    }), cfg);
 
-    /* info box */
+    /* --- Info box --- */
     var info = '<b>Direction:</b> c = (' + cx.toFixed(3) + ', ' + cy.toFixed(3) + ')';
+
+    /* individual wall bounds */
     info += '<br><b>Wall bounds on \u03b1:</b> &ensp;';
     for (var j = 0; j < bounds.length; j++) {
       var w = walls[bounds[j].i], al = bounds[j].a, bind = (j === 0);
       info += '<span style="color:' + w.color + '">\u25cf</span> '
         + w.label + ': \u03b1 \u2264 ' + al.toFixed(2)
-        + (bind ? ' <b>\u2190 binding</b>' : '') + ' &ensp; ';
+        + (bind ? ' <b>\u2190 exit</b>' : '') + ' &ensp; ';
     }
-    info += '<br><b>Exit:</b> (' + eX.toFixed(2) + ', ' + eY.toFixed(2)
-      + ') at \u03b1* = ' + aS.toFixed(2)
-      + '<br><span style="color:#968a80">The dual LP combines these walls '
-      + 'to produce the tightest upper bound on c<sup>T</sup>x over the entire polytope.</span>';
+
+    /* primal and dual values */
+    info += '<br><b>Ray exit:</b> \u03b1* = ' + aS.toFixed(2)
+      + ' &emsp; <b>LP optimum:</b> c<sup>T</sup>x* = ' + bestVal.toFixed(2)
+      + ' at (' + oX + ',\u2009' + oY + ')';
+    info += '<br><b>Dual certificate:</b> y* = ('
+      + y[0].toFixed(3) + ',\u2009' + y[1].toFixed(3) + ',\u2009' + y[2].toFixed(3) + ')';
+
+    /* stacked bar: dual bound decomposition */
+    var tot = Math.max(dVal, 0.01);
+    info += '<div style="margin:5px 0 2px;display:flex;align-items:center;gap:8px;">'
+      + '<span style="font-size:0.85em;color:#968a80;">b<sup>T</sup>y*\u2009=</span>'
+      + '<div style="flex:1;max-width:400px;display:flex;height:22px;border-radius:4px;'
+      + 'overflow:hidden;border:1px solid #d4c9b8;">';
+    var blab = ['4y\u2081', '6y\u2082', '18y\u2083'];
+    var cols = [C.blue, C.sage, C.terracotta];
+    for (var k = 0; k < 3; k++) {
+      if (ctr[k] > 0.005) {
+        var pct = 100 * ctr[k] / tot;
+        info += '<div style="width:' + pct.toFixed(1) + '%;background:' + cols[k]
+          + ';display:flex;align-items:center;justify-content:center;'
+          + 'color:#fff;font-size:' + (pct > 18 ? '0.78' : '0.68') + 'em;'
+          + 'font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.35);">'
+          + (pct > 14 ? blab[k] + '\u2009=\u2009' + ctr[k].toFixed(2) : ctr[k].toFixed(1))
+          + '</div>';
+      }
+    }
+    info += '</div><span style="font-size:0.92em;font-weight:600;color:#3d3530;">'
+      + '=\u2009' + dVal.toFixed(2) + '</span></div>';
+
+    info += '<div style="font-size:0.82em;color:#968a80;margin-top:1px;">'
+      + 'Strong duality: c<sup>T</sup>x* = b<sup>T</sup>y* = ' + dVal.toFixed(2)
+      + ' \u2014 the combined barrier touches the optimum exactly.</div>';
+
     document.getElementById('geo-info').innerHTML = info;
-    Plotly.react('geo-plot', tr, layout, cfg);
   }
 
   document.getElementById('geo-theta').addEventListener('input', function() {
@@ -1467,11 +1470,11 @@ c^\top x \;\leq\; (A^\top y)^\top x \;\leq\; b^\top y.
 <p>The geometric picture – pushing forward against combined barriers – gives powerful intuition for why weak duality holds (the barrier is always ahead) and why strong duality is remarkable (the barrier touches the farthest reachable point). We now move from geometry to economics, asking what the dual variables tell us about the sensitivity of the optimal value to changes in the problem data.</p>
 </section>
 </section>
-<section id="sec-sensitivity" class="level2" data-number="11.9">
-<h2 data-number="11.9" class="anchored" data-anchor-id="sec-sensitivity"><span class="header-section-number">11.9</span> Sensitivity Analysis and Shadow Prices</h2>
-<p>Strong duality (<a href="#eq-strong-duality" class="quarto-xref">Equation&nbsp;<span>11.3</span></a>) tells us that the primal and dual optimal values coincide, but it says nothing about what happens when we perturb the problem data. The dual variables have a beautiful economic interpretation: they tell us how sensitive the optimal value is to changes in the right-hand side <span class="math inline">b</span>.</p>
-<section id="perturbed-primal" class="level3" data-number="11.9.1">
-<h3 data-number="11.9.1" class="anchored" data-anchor-id="perturbed-primal"><span class="header-section-number">11.9.1</span> Perturbed Primal</h3>
+<section id="sec-sensitivity" class="level2" data-number="11.7">
+<h2 data-number="11.7" class="anchored" data-anchor-id="sec-sensitivity"><span class="header-section-number">11.7</span> Sensitivity Analysis and Shadow Prices</h2>
+<p>So far, duality has told us about the <em>value</em> of the optimal solution. But in practice, we also want to know: <strong>if we change the problem slightly, how does the optimal value respond?</strong> For instance, if a factory has 100 units of a resource and could acquire 1 more, how much additional profit would that yield? The dual variables answer exactly this question.</p>
+<section id="perturbed-primal" class="level3" data-number="11.7.1">
+<h3 data-number="11.7.1" class="anchored" data-anchor-id="perturbed-primal"><span class="header-section-number">11.7.1</span> Perturbed Primal</h3>
 <p>Consider a <strong>perturbed primal</strong> LP where we change <span class="math inline">b</span> to <span class="math inline">b + \Delta</span>:</p>
 <p><span class="math display">
 \text{(P')} \quad \max \; c^\top x \quad \text{s.t.} \quad Ax \leq b + \Delta, \quad x \geq 0.
@@ -1489,97 +1492,25 @@ c^\top x \;\leq\; (A^\top y)^\top x \;\leq\; b^\top y.
 </span></p></li>
 </ol>
 </section>
-<section id="shadow-price-interpretation" class="level3" data-number="11.9.2">
-<h3 data-number="11.9.2" class="anchored" data-anchor-id="shadow-price-interpretation"><span class="header-section-number">11.9.2</span> Shadow Price Interpretation</h3>
+<section id="shadow-price-interpretation" class="level3" data-number="11.7.2">
+<h3 data-number="11.7.2" class="anchored" data-anchor-id="shadow-price-interpretation"><span class="header-section-number">11.7.2</span> Shadow Price Interpretation</h3>
 <div id="def-shadow-price" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 11.2 (Definition 16.5 (Shadow Price))</strong></span> The optimal dual variable <span class="math inline">y_i^*</span> is called the <strong>shadow price</strong> of the <span class="math inline">i</span>-th constraint. It measures the rate of change of the optimal value with respect to the <span class="math inline">i</span>-th constraint’s right-hand side:</p>
+<p><span class="theorem-title"><strong>Definition 11.2 (Shadow Price)</strong></span> The optimal dual variable <span class="math inline">y_i^*</span> is called the <strong>shadow price</strong> of the <span class="math inline">i</span>-th constraint. It measures the rate of change of the optimal value with respect to the <span class="math inline">i</span>-th constraint’s right-hand side:</p>
 <p><span class="math display">
 y_i^* = \frac{\partial}{\partial b_i} \text{OptVal}(\text{LP}(A, b, c)).
 </span></p>
 </div>
 <p>Intuitively, <span class="math inline">y^* = (y_1^*, \ldots, y_m^*)</span> reflects how much the objective changes when we change each constraint by one unit. In economics, <span class="math inline">y_i^*</span> represents the <strong>marginal value</strong> of relaxing the <span class="math inline">i</span>-th constraint – if the constraint <span class="math inline">a_i^\top x \leq b_i</span> represents a resource limit, then <span class="math inline">y_i^*</span> is the price one should be willing to pay for one additional unit of that resource.</p>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-sensitivity</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 16.3: Sensitivity analysis. Perturbing the resource constraint bound b₃ (3x₁+2x₂ ≤ b₃) changes the optimal value. The slope of the tangent line equals the shadow price y₃* = 1."</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># LP: max 3x1 + 5x2</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># s.t.  x1         &lt;= 4</span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#              x2   &lt;= 6</span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#       3x1 + 2x2  &lt;= b3 (default 18)</span></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="co">#       x1, x2 &gt;= 0</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> solve_lp_b3(b3_val):</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Solve by vertex enumeration for this small LP."""</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    b_vec <span class="op">=</span> np.array([<span class="dv">4</span>, <span class="dv">6</span>, b3_val])</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    A_mat <span class="op">=</span> np.array([[<span class="dv">1</span>, <span class="dv">0</span>], [<span class="dv">0</span>, <span class="dv">1</span>], [<span class="dv">3</span>, <span class="dv">2</span>]])</span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    c_vec <span class="op">=</span> np.array([<span class="dv">3</span>, <span class="dv">5</span>])</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="im">from</span> itertools <span class="im">import</span> combinations</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    A_full <span class="op">=</span> np.vstack([<span class="op">-</span>np.eye(<span class="dv">2</span>), A_mat])</span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    b_full <span class="op">=</span> np.concatenate([np.zeros(<span class="dv">2</span>), b_vec])</span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    best_val <span class="op">=</span> <span class="op">-</span>np.inf</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    best_x <span class="op">=</span> <span class="va">None</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> idx <span class="kw">in</span> combinations(<span class="bu">range</span>(<span class="dv">5</span>), <span class="dv">2</span>):</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        A_sub <span class="op">=</span> A_full[<span class="bu">list</span>(idx), :]</span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">abs</span>(np.linalg.det(A_sub)) <span class="op">&lt;</span> <span class="fl">1e-12</span>:</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>        x_sub <span class="op">=</span> np.linalg.solve(A_sub, b_full[<span class="bu">list</span>(idx)])</span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> np.<span class="bu">all</span>(A_full <span class="op">@</span> x_sub <span class="op">&lt;=</span> b_full <span class="op">+</span> <span class="fl">1e-9</span>):</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>            val <span class="op">=</span> c_vec <span class="op">@</span> x_sub</span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> val <span class="op">&gt;</span> best_val:</span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>                best_val <span class="op">=</span> val</span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>                best_x <span class="op">=</span> x_sub.copy()</span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> best_val, best_x</span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute optimal values for a range of b3</span></span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>b3_range <span class="op">=</span> np.linspace(<span class="dv">6</span>, <span class="dv">30</span>, <span class="dv">97</span>)</span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>opt_vals <span class="op">=</span> []</span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> b3 <span class="kw">in</span> b3_range:</span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    val, _ <span class="op">=</span> solve_lp_b3(b3)</span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    opt_vals.append(val)</span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="co"># Default solution</span></span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>default_val, default_x <span class="op">=</span> solve_lp_b3(<span class="fl">18.0</span>)</span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot optimal value as function of b3</span></span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>b3_range, y<span class="op">=</span>opt_vals, mode<span class="op">=</span><span class="st">'lines'</span>,</span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7b97ad'</span>, width<span class="op">=</span><span class="dv">3</span>),</span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'f*(b&lt;sub&gt;3&lt;/sub&gt;)'</span>,</span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>    hovertemplate<span class="op">=</span><span class="st">'b&lt;sub&gt;3&lt;/sub&gt; = %</span><span class="sc">{x:.1f}</span><span class="st">&lt;br&gt;f* = %</span><span class="sc">{y:.1f}</span><span class="st">&lt;extra&gt;&lt;/extra&gt;'</span>))</span>
-<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="co"># Mark the default point</span></span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="fl">18.0</span>], y<span class="op">=</span>[default_val], mode<span class="op">=</span><span class="st">'markers'</span>,</span>
-<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">14</span>, symbol<span class="op">=</span><span class="st">'star'</span>,</span>
-<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">1</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="ss">f'Default: b&lt;sub&gt;3&lt;/sub&gt;=18, f*=</span><span class="sc">{</span>default_val<span class="sc">:.0f}</span><span class="ss">'</span>,</span>
-<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>    hovertemplate<span class="op">=</span><span class="st">'b&lt;sub&gt;3&lt;/sub&gt; = 18&lt;br&gt;f* = %</span><span class="sc">{y:.1f}</span><span class="st">&lt;extra&gt;&lt;/extra&gt;'</span>))</span>
-<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a><span class="co"># Show shadow price as tangent line</span></span>
-<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>slope <span class="op">=</span> <span class="fl">1.0</span>  <span class="co"># shadow price y3* for this LP</span></span>
-<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>tangent_x <span class="op">=</span> np.linspace(<span class="dv">14</span>, <span class="dv">22</span>, <span class="dv">50</span>)</span>
-<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>tangent_y <span class="op">=</span> default_val <span class="op">+</span> slope <span class="op">*</span> (tangent_x <span class="op">-</span> <span class="fl">18.0</span>)</span>
-<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>tangent_x, y<span class="op">=</span>tangent_y, mode<span class="op">=</span><span class="st">'lines'</span>,</span>
-<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b8995e'</span>, dash<span class="op">=</span><span class="st">'dash'</span>, width<span class="op">=</span><span class="dv">2</span>),</span>
-<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="ss">f'Shadow price slope y&lt;sub&gt;3&lt;/sub&gt;* = </span><span class="sc">{</span>slope<span class="sc">}</span><span class="ss">'</span>,</span>
-<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>    hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="dv">21</span>, y<span class="op">=</span>default_val <span class="op">+</span> slope<span class="op">*</span><span class="dv">3</span> <span class="op">+</span> <span class="fl">0.5</span>,</span>
-<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    text<span class="op">=</span><span class="ss">f'slope = y&lt;sub&gt;3&lt;/sub&gt;* = </span><span class="sc">{</span>slope<span class="sc">:.0f}</span><span class="ss">'</span>,</span>
-<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>    showarrow<span class="op">=</span><span class="va">True</span>, arrowhead<span class="op">=</span><span class="dv">2</span>, arrowcolor<span class="op">=</span><span class="st">'#b8995e'</span>,</span>
-<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>    ax<span class="op">=-</span><span class="dv">40</span>, ay<span class="op">=</span><span class="dv">30</span>, font<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b8995e'</span>, size<span class="op">=</span><span class="dv">12</span>))</span>
-<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
-<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>    xaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'b&lt;sub&gt;3&lt;/sub&gt; (resource constraint: 3x&lt;sub&gt;1&lt;/sub&gt;+2x&lt;sub&gt;2&lt;/sub&gt; ≤ b&lt;sub&gt;3&lt;/sub&gt;)'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="dv">5</span>, <span class="dv">31</span>]),</span>
-<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>    yaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'Optimal value f*(b&lt;sub&gt;3&lt;/sub&gt;)'</span>),</span>
-<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>    showlegend<span class="op">=</span><span class="va">True</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">20</span>, b<span class="op">=</span><span class="dv">60</span>, l<span class="op">=</span><span class="dv">60</span>, r<span class="op">=</span><span class="dv">20</span>),</span>
-<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>    legend<span class="op">=</span><span class="bu">dict</span>(yanchor<span class="op">=</span><span class="st">'top'</span>, y<span class="op">=</span><span class="fl">0.99</span>, xanchor<span class="op">=</span><span class="st">'left'</span>, x<span class="op">=</span><span class="fl">0.01</span>))</span>
-<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="fig-sensitivity" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sensitivity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/sensitivity.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;11.3: Sensitivity analysis. Perturbing the resource constraint bound b_3 (3x_1+2x_2 \leq b_3) changes the optimal value. The slope of the tangent line at the default point (18, 36) equals the shadow price y_3^* = 1."><img src="figures/sensitivity.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sensitivity-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11.3: Sensitivity analysis. Perturbing the resource constraint bound <span class="math inline">b_3</span> (<span class="math inline">3x_1+2x_2 \leq b_3</span>) changes the optimal value. The slope of the tangent line at the default point <span class="math inline">(18, 36)</span> equals the shadow price <span class="math inline">y_3^* = 1</span>.
+</figcaption>
+</figure>
+</div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1590,34 +1521,50 @@ y_i^* = \frac{\partial}{\partial b_i} \text{OptVal}(\text{LP}(A, b, c)).
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Consider a production planning LP where:</p>
+<p>Consider a production planning LP where the decision variables and parameters have the following economic meaning:</p>
 <ul>
 <li><span class="math inline">x_j</span> = amount of product <span class="math inline">j</span> to produce</li>
 <li><span class="math inline">c_j</span> = profit per unit of product <span class="math inline">j</span></li>
 <li><span class="math inline">b_i</span> = available amount of resource <span class="math inline">i</span></li>
 <li><span class="math inline">a_{ij}</span> = amount of resource <span class="math inline">i</span> needed per unit of product <span class="math inline">j</span></li>
 </ul>
-<p>Then <span class="math inline">y_i^*</span> is the <strong>marginal value of resource <span class="math inline">i</span></strong>: how much additional profit we could earn if we had one more unit of resource <span class="math inline">i</span>. A resource with <span class="math inline">y_i^* = 0</span> is not a bottleneck (the constraint is not tight at optimality); a resource with <span class="math inline">y_i^* &gt; 0</span> is scarce and limits our profit.</p>
+<p>Under this interpretation, the optimal dual variable <span class="math inline">y_i^*</span> is the <strong>marginal value of resource <span class="math inline">i</span></strong>: how much additional profit we could earn if we had one more unit of resource <span class="math inline">i</span>. A resource with <span class="math inline">y_i^* = 0</span> is not a bottleneck (the constraint is not tight at optimality); a resource with <span class="math inline">y_i^* &gt; 0</span> is scarce and limits our profit.</p>
 </div>
 </div>
 <p>Shadow prices tell us how the optimal value changes with perturbations to the right-hand side, but they do not directly characterize the structure of optimal solutions. For that, we need a pointwise condition linking primal and dual optima: complementary slackness.</p>
 </section>
 </section>
-<section id="sec-complementary-slackness" class="level2" data-number="11.10">
-<h2 data-number="11.10" class="anchored" data-anchor-id="sec-complementary-slackness"><span class="header-section-number">11.10</span> Complementary Slackness</h2>
-<p>While strong duality (<a href="#eq-strong-duality" class="quarto-xref">Equation&nbsp;<span>11.3</span></a>) tells us the optimal values match, complementary slackness provides a pointwise characterization of optimality: it tells us exactly which constraints must be tight and which variables must be zero at any optimal primal-dual pair.</p>
-<section id="slack-variables" class="level3" data-number="11.10.1">
-<h3 data-number="11.10.1" class="anchored" data-anchor-id="slack-variables"><span class="header-section-number">11.10.1</span> Slack Variables</h3>
-<p>Define the <strong>primal slack variables</strong> <span class="math inline">w_i = b_i - \sum_{j=1}^n a_{ij} x_j</span> (so <span class="math inline">w_i \geq 0</span> when <span class="math inline">x</span> is primal feasible) and the <strong>dual slack variables</strong> <span class="math inline">z_j = \sum_{i=1}^m a_{ij} y_i - c_j</span> (so <span class="math inline">z_j \geq 0</span> when <span class="math inline">y</span> is dual feasible).</p>
+<section id="sec-complementary-slackness" class="level2" data-number="11.8">
+<h2 data-number="11.8" class="anchored" data-anchor-id="sec-complementary-slackness"><span class="header-section-number">11.8</span> Complementary Slackness</h2>
+<p>Strong duality (<a href="#eq-strong-duality" class="quarto-xref">Equation&nbsp;<span>11.3</span></a>) tells us that the optimal values match, but says nothing about the <em>structure</em> of optimal solutions. Which constraints are binding? Which variables are positive? Complementary slackness answers both questions: it provides a precise, pointwise link between optimal primal and dual solutions.</p>
+<section id="slack-variables" class="level3" data-number="11.8.1">
+<h3 data-number="11.8.1" class="anchored" data-anchor-id="slack-variables"><span class="header-section-number">11.8.1</span> Slack Variables</h3>
+<p>We need notation for “how much room” each constraint has. Define the <strong>primal slack</strong> <span class="math inline">w_i = b_i - \sum_{j=1}^n a_{ij} x_j</span> (nonneg when <span class="math inline">x</span> is primal feasible; zero when the <span class="math inline">i</span>-th constraint is tight) and the <strong>dual slack</strong> <span class="math inline">z_j = \sum_{i=1}^m a_{ij} y_i - c_j</span> (nonneg when <span class="math inline">y</span> is dual feasible; zero when the <span class="math inline">j</span>-th dual constraint is tight).</p>
 <div id="thm-complementary-slackness" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 11.4 (Theorem 16.6 (Complementary Slackness))</strong></span> Suppose <span class="math inline">x = (x_1, \ldots, x_n)^\top</span> is primal feasible and <span class="math inline">y = (y_1, \ldots, y_m)^\top</span> is dual feasible. Then <span class="math inline">x</span> and <span class="math inline">y</span> are optimal for the primal and dual problems respectively <strong>if and only if</strong></p>
+<p><span class="theorem-title"><strong>Theorem 11.4 (Complementary Slackness)</strong></span> Suppose <span class="math inline">x = (x_1, \ldots, x_n)^\top</span> is primal feasible and <span class="math inline">y = (y_1, \ldots, y_m)^\top</span> is dual feasible. Then <span class="math inline">x</span> and <span class="math inline">y</span> are optimal for the primal and dual problems respectively <strong>if and only if</strong></p>
 <p><span class="math display">
 x_j \cdot z_j = 0 \quad \forall\, j \in [n] \qquad \text{and} \qquad w_i \cdot y_i = 0 \quad \forall\, i \in [m].
 </span></p>
 <p>Equivalently, in vector form: <span class="math inline">x^\top z = 0</span> and <span class="math inline">y^\top w = 0</span>.</p>
 </div>
-<p>In words: for each primal variable <span class="math inline">x_j</span>, either <span class="math inline">x_j = 0</span> or the corresponding dual constraint is tight (<span class="math inline">z_j = 0</span>); and for each dual variable <span class="math inline">y_i</span>, either <span class="math inline">y_i = 0</span> or the corresponding primal constraint is tight (<span class="math inline">w_i = 0</span>). At optimality, there is no “slack” in both a variable and its corresponding constraint simultaneously.</p>
-<p>The proof expresses the duality gap (<a href="#eq-duality-gap" class="quarto-xref">Equation&nbsp;<span>11.2</span></a>) as a sum of nonnegative terms and uses strong duality (<a href="#eq-strong-duality" class="quarto-xref">Equation&nbsp;<span>11.3</span></a>) to force all terms to zero.</p>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>In Words
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>At an optimal pair <span class="math inline">(x^*, y^*)</span>, every variable-constraint pair exhibits a <strong>complementary</strong> relationship:</p>
+<ul>
+<li><strong>Primal side:</strong> If <span class="math inline">x_j^* &gt; 0</span> (variable is active), then <span class="math inline">z_j = 0</span> (dual constraint is tight). If <span class="math inline">z_j &gt; 0</span> (dual constraint has slack), then <span class="math inline">x_j^* = 0</span> (variable is inactive).</li>
+<li><strong>Dual side:</strong> If <span class="math inline">y_i^* &gt; 0</span> (multiplier is active), then <span class="math inline">w_i = 0</span> (primal constraint is tight). If <span class="math inline">w_i &gt; 0</span> (primal constraint has slack), then <span class="math inline">y_i^* = 0</span> (multiplier is inactive).</li>
+</ul>
+<p>There is never slack on both sides simultaneously — hence the name “complementary slackness.”</p>
+</div>
+</div>
 <div class="proof">
 <p><span class="proof-title"><em>Proof</em>. </span><strong>Proof of Complementary Slackness.</strong></p>
 <p>The strategy is to express the duality gap as a sum of nonnegative terms, then use the fact that strong duality forces the gap to zero, which in turn forces each individual term to vanish.</p>
@@ -1642,18 +1589,16 @@ x^\top z = 0 \quad \text{and} \quad y^\top w = 0.
 <p>Since <span class="math inline">x_j \geq 0</span> and <span class="math inline">z_j \geq 0</span> for all <span class="math inline">j</span>, the condition <span class="math inline">x^\top z = \sum_j x_j z_j = 0</span> holds if and only if <span class="math inline">x_j z_j = 0</span> for all <span class="math inline">j</span>. Similarly, <span class="math inline">y^\top w = 0</span> if and only if <span class="math inline">y_i w_i = 0</span> for all <span class="math inline">i</span>. <span class="math inline">\blacksquare</span></p>
 </div>
 </section>
-<section id="using-complementary-slackness" class="level3" data-number="11.10.2">
-<h3 data-number="11.10.2" class="anchored" data-anchor-id="using-complementary-slackness"><span class="header-section-number">11.10.2</span> Using Complementary Slackness</h3>
-<p>Complementary slackness is extremely useful in practice for:</p>
-<ol type="1">
-<li><p><strong>Recovering the dual solution from the primal</strong>: Given an optimal primal solution <span class="math inline">x^*</span>, we can find the optimal dual solution <span class="math inline">y^*</span> by solving the system of equations determined by complementary slackness.</p></li>
-<li><p><strong>Verifying optimality</strong>: Given candidate primal and dual solutions, check that they satisfy complementary slackness (along with feasibility).</p></li>
-<li><p><strong>Reducing the dual to a smaller system</strong>: At the optimal primal BFS, let <span class="math inline">B</span> be the set of basic variables (with <span class="math inline">\bar{x}_B &gt; 0</span> if nondegenerate). Then complementary slackness implies <span class="math inline">z_B = 0</span>, i.e., the dual constraints corresponding to basic primal variables are tight. This gives <span class="math inline">|B| = m</span> equations in <span class="math inline">n</span> unknowns, which (combined with the structure of the simplex) allows us to solve for <span class="math inline">y^*</span>.</p></li>
-</ol>
+<section id="using-complementary-slackness" class="level3" data-number="11.8.2">
+<h3 data-number="11.8.2" class="anchored" data-anchor-id="using-complementary-slackness"><span class="header-section-number">11.8.2</span> Using Complementary Slackness</h3>
+<p>Complementary slackness is one of the most practically useful results in LP theory. Here are three concrete ways to use it:</p>
+<p><strong>1. Recovering the dual from the primal.</strong> Given an optimal primal <span class="math inline">x^*</span>, complementary slackness tells you which dual constraints must be tight. For each <span class="math inline">j</span> with <span class="math inline">x_j^* &gt; 0</span>, you know <span class="math inline">z_j = 0</span>, i.e., <span class="math inline">(A^\top y)_j = c_j</span>. These tight constraints form a linear system that you solve for <span class="math inline">y^*</span>. (This is exactly what the worked example in <a href="12-dual-simplex.html#sec-worked-example" class="quarto-xref"><span>Section 12.6</span></a> demonstrates.)</p>
+<p><strong>2. Verifying optimality.</strong> Given candidate solutions <span class="math inline">x</span> (primal feasible) and <span class="math inline">y</span> (dual feasible), compute the slacks <span class="math inline">w_i = b_i - a_i^\top x</span> and <span class="math inline">z_j = (A^\top y)_j - c_j</span>, then check that <span class="math inline">x_j z_j = 0</span> for all <span class="math inline">j</span> and <span class="math inline">y_i w_i = 0</span> for all <span class="math inline">i</span>. If all products vanish, the pair is optimal — no need to solve anything.</p>
+<p><strong>3. Identifying binding constraints.</strong> At optimality, complementary slackness reveals the <em>active set</em> — the constraints that are tight. If <span class="math inline">y_i^* &gt; 0</span>, the <span class="math inline">i</span>-th primal constraint must be binding (<span class="math inline">w_i = 0</span>). If <span class="math inline">y_i^* = 0</span>, the constraint may or may not be binding but it is not “pushing” against the optimum. This structural information is essential for sensitivity analysis and for understanding which constraints matter.</p>
 </section>
 </section>
-<section id="sec-worked-example" class="level2" data-number="11.11">
-<h2 data-number="11.11" class="anchored" data-anchor-id="sec-worked-example"><span class="header-section-number">11.11</span> Worked Example</h2>
+<section id="sec-worked-example" class="level2" data-number="11.9">
+<h2 data-number="11.9" class="anchored" data-anchor-id="sec-worked-example"><span class="header-section-number">11.9</span> Worked Example</h2>
 <p>Let us trace through a complete example to see all the duality results in action.</p>
 <div id="exm-duality-example" class="theorem example">
 <p><span class="theorem-title"><strong>Example 11.1 (Complete Duality Example)</strong></span> Consider the primal LP:</p>
@@ -1678,69 +1623,19 @@ w_1 = 4 - 2 = 2, \quad w_2 = 6 - 6 = 0, \quad w_3 = 18 - 3(2) - 2(6) = 0.
 <p><strong>Step 4: Verify strong duality.</strong> <span class="math inline">b^\top y^* = 4(0) + 6(3) + 18(1) = 36 = f^*</span>. The duality gap is zero!</p>
 <p><strong>Step 5: Shadow prices.</strong> <span class="math inline">y_1^* = 0</span> means the constraint <span class="math inline">x_1 \leq 4</span> is not binding (we have slack <span class="math inline">w_1 = 2</span>), so relaxing it has no effect on the optimum. <span class="math inline">y_2^* = 3</span> means that increasing the bound on <span class="math inline">x_2</span> by one unit (from 6 to 7) would increase the optimal profit by approximately 3. <span class="math inline">y_3^* = 1</span> means relaxing the combined resource constraint by one unit increases profit by approximately 1.</p>
 </div>
-<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co">#| label: fig-worked-example</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co">#| fig-cap: "Figure 16.5: Worked example: primal feasible region with objective contours. The optimal vertex (2,6) achieves f* = 36, which equals the dual optimal value."</span></span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#| echo: false</span></span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Primal: max 3x1 + 5x2 s.t. x1&lt;=4, x2&lt;=6, 3x1+2x2&lt;=18, x1,x2&gt;=0</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Vertices: (0,0), (4,0), (4,3), (2,6), (0,6)</span></span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>vx <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">4</span>, <span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">0</span>]</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>vy <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">3</span>, <span class="dv">6</span>, <span class="dv">6</span>, <span class="dv">0</span>]</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> go.Figure()</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>vx, y<span class="op">=</span>vy, fill<span class="op">=</span><span class="st">'toself'</span>,</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    fillcolor<span class="op">=</span><span class="st">'rgba(122,154,126,0.2)'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#7a9a7e'</span>, width<span class="op">=</span><span class="fl">2.5</span>),</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Feasible region'</span>, mode<span class="op">=</span><span class="st">'lines'</span>))</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Vertices with labels</span></span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>vert_pts <span class="op">=</span> [(<span class="dv">0</span>,<span class="dv">0</span>), (<span class="dv">4</span>,<span class="dv">0</span>), (<span class="dv">4</span>,<span class="dv">3</span>), (<span class="dv">2</span>,<span class="dv">6</span>), (<span class="dv">0</span>,<span class="dv">6</span>)]</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>vert_vals <span class="op">=</span> [<span class="dv">3</span><span class="op">*</span>x<span class="op">+</span><span class="dv">5</span><span class="op">*</span>y <span class="cf">for</span> x,y <span class="kw">in</span> vert_pts]</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (x,y), v <span class="kw">in</span> <span class="bu">zip</span>(vert_pts, vert_vals):</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    fig.add_trace(go.Scatter(x<span class="op">=</span>[x], y<span class="op">=</span>[y], mode<span class="op">=</span><span class="st">'markers+text'</span>,</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#8a6e5e'</span>, size<span class="op">=</span><span class="dv">8</span>, line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="dv">1</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>        text<span class="op">=</span>[<span class="ss">f'(</span><span class="sc">{</span>x<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>y<span class="sc">}</span><span class="ss">), f=</span><span class="sc">{</span>v<span class="sc">}</span><span class="ss">'</span>], textposition<span class="op">=</span><span class="st">'top right'</span>,</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>        textfont<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">10</span>),</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>        showlegend<span class="op">=</span><span class="va">False</span>, hoverinfo<span class="op">=</span><span class="st">'text'</span>,</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>        hovertext<span class="op">=</span>[<span class="ss">f'Vertex (</span><span class="sc">{</span>x<span class="sc">}</span><span class="ss">,</span><span class="sc">{</span>y<span class="sc">}</span><span class="ss">)&lt;br&gt;f = </span><span class="sc">{</span>v<span class="sc">}</span><span class="ss">'</span>]))</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimal vertex</span></span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>fig.add_trace(go.Scatter(x<span class="op">=</span>[<span class="dv">2</span>], y<span class="op">=</span>[<span class="dv">6</span>], mode<span class="op">=</span><span class="st">'markers'</span>,</span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b56b6b'</span>, size<span class="op">=</span><span class="dv">16</span>, symbol<span class="op">=</span><span class="st">'star'</span>,</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    line<span class="op">=</span><span class="bu">dict</span>(width<span class="op">=</span><span class="fl">1.5</span>, color<span class="op">=</span><span class="st">'white'</span>)),</span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">'Optimal: (2,6), f*=36'</span>))</span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a><span class="co"># Objective contours</span></span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> val <span class="kw">in</span> [<span class="dv">10</span>, <span class="dv">20</span>, <span class="dv">30</span>, <span class="dv">36</span>]:</span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>    x_line <span class="op">=</span> np.linspace(<span class="op">-</span><span class="dv">1</span>, <span class="dv">7</span>, <span class="dv">50</span>)</span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a>    y_line <span class="op">=</span> (val <span class="op">-</span> <span class="dv">3</span><span class="op">*</span>x_line) <span class="op">/</span> <span class="dv">5</span></span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>    mask <span class="op">=</span> (y_line <span class="op">&gt;=</span> <span class="op">-</span><span class="dv">1</span>) <span class="op">&amp;</span> (y_line <span class="op">&lt;=</span> <span class="dv">8</span>) <span class="op">&amp;</span> (x_line <span class="op">&gt;=</span> <span class="op">-</span><span class="dv">1</span>) <span class="op">&amp;</span> (x_line <span class="op">&lt;=</span> <span class="dv">6</span>)</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a>    fig.add_trace(go.Scatter(x<span class="op">=</span>x_line[mask], y<span class="op">=</span>y_line[mask],</span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a>        mode<span class="op">=</span><span class="st">'lines'</span>, line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span><span class="st">'#b8995e'</span>, dash<span class="op">=</span><span class="st">'dot'</span>, width<span class="op">=</span><span class="fl">1.2</span>),</span>
-<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a>        showlegend<span class="op">=</span><span class="va">False</span>, hoverinfo<span class="op">=</span><span class="st">'skip'</span>))</span>
-<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">4.5</span>, y<span class="op">=</span><span class="fl">4.5</span>, text<span class="op">=</span><span class="st">'3x&lt;sub&gt;1&lt;/sub&gt;+5x&lt;sub&gt;2&lt;/sub&gt;=36'</span>,</span>
-<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>    showarrow<span class="op">=</span><span class="va">False</span>, font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">10</span>, color<span class="op">=</span><span class="st">'#b8995e'</span>))</span>
-<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a><span class="co"># Constraint labels</span></span>
-<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">4.3</span>, y<span class="op">=</span><span class="fl">1.5</span>, text<span class="op">=</span><span class="st">'x&lt;sub&gt;1&lt;/sub&gt;=4'</span>,</span>
-<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>    showarrow<span class="op">=</span><span class="va">False</span>, font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">10</span>, color<span class="op">=</span><span class="st">'#968a80'</span>))</span>
-<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="dv">1</span>, y<span class="op">=</span><span class="fl">6.4</span>, text<span class="op">=</span><span class="st">'x&lt;sub&gt;2&lt;/sub&gt;=6'</span>,</span>
-<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>    showarrow<span class="op">=</span><span class="va">False</span>, font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">10</span>, color<span class="op">=</span><span class="st">'#968a80'</span>))</span>
-<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>fig.add_annotation(x<span class="op">=</span><span class="fl">3.8</span>, y<span class="op">=</span><span class="fl">4.2</span>, text<span class="op">=</span><span class="st">'3x&lt;sub&gt;1&lt;/sub&gt;+2x&lt;sub&gt;2&lt;/sub&gt;=18'</span>,</span>
-<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>    showarrow<span class="op">=</span><span class="va">False</span>, font<span class="op">=</span><span class="bu">dict</span>(size<span class="op">=</span><span class="dv">10</span>, color<span class="op">=</span><span class="st">'#968a80'</span>))</span>
-<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>fig.update_layout(</span>
-<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a>    xaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'x&lt;sub&gt;1&lt;/sub&gt;'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="dv">6</span>], zeroline<span class="op">=</span><span class="va">True</span>),</span>
-<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>    yaxis<span class="op">=</span><span class="bu">dict</span>(title<span class="op">=</span><span class="st">'x&lt;sub&gt;2&lt;/sub&gt;'</span>, <span class="bu">range</span><span class="op">=</span>[<span class="op">-</span><span class="fl">0.5</span>, <span class="dv">8</span>], zeroline<span class="op">=</span><span class="va">True</span>, scaleanchor<span class="op">=</span><span class="st">'x'</span>),</span>
-<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>    showlegend<span class="op">=</span><span class="va">True</span>, margin<span class="op">=</span><span class="bu">dict</span>(t<span class="op">=</span><span class="dv">20</span>, b<span class="op">=</span><span class="dv">60</span>, l<span class="op">=</span><span class="dv">55</span>, r<span class="op">=</span><span class="dv">20</span>))</span>
-<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="fig-worked-example" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-worked-example-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/duality-worked-example.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;11.4: Worked example: primal feasible region with objective contours at f = 10, 20, 30, 36. Each vertex is labeled with its objective value. The optimal vertex (2,6) achieves f^* = 36, which equals the dual optimal value."><img src="figures/duality-worked-example.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-worked-example-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;11.4: Worked example: primal feasible region with objective contours at <span class="math inline">f = 10, 20, 30, 36</span>. Each vertex is labeled with its objective value. The optimal vertex <span class="math inline">(2,6)</span> achieves <span class="math inline">f^* = 36</span>, which equals the dual optimal value.
+</figcaption>
+</figure>
+</div>
 </section>
-<section id="sec-summary" class="level2" data-number="11.12">
-<h2 data-number="11.12" class="anchored" data-anchor-id="sec-summary"><span class="header-section-number">11.12</span> Summary</h2>
+<section id="sec-summary" class="level2" data-number="11.10">
+<h2 data-number="11.10" class="anchored" data-anchor-id="sec-summary"><span class="header-section-number">11.10</span> Summary</h2>
 <div class="callout callout-style-simple callout-note callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -1752,9 +1647,9 @@ w_1 = 4 - 2 = 2, \quad w_2 = 6 - 6 = 0, \quad w_3 = 18 - 3(2) - 2(6) = 0.
 </div>
 <div class="callout-body-container callout-body">
 <ol type="1">
-<li><p><strong>Every LP has a dual LP</strong> obtained by introducing multipliers for each constraint. The dual provides bounds on the primal’s optimal value.</p></li>
-<li><p><strong>Weak duality</strong> always holds: every primal feasible value <span class="math inline">\leq</span> every dual feasible value. This gives certificates of optimality: if the gap is zero, both solutions are optimal.</p></li>
-<li><p><strong>Strong duality</strong> holds at optimality: the primal and dual optimal values are equal (<span class="math inline">c^\top x^* = b^\top y^*</span>). The proof constructs the dual optimal solution from the simplex tableau.</p></li>
+<li><p><strong>Every LP has a dual LP</strong> obtained by the multiply-sum-dominate recipe: weight constraints by multipliers <span class="math inline">y \geq 0</span>, sum to get a combined inequality, require the left side to dominate <span class="math inline">c</span>. The dual minimizes the resulting upper bound.</p></li>
+<li><p><strong>Weak duality</strong> always holds: <span class="math inline">c^\top x \leq b^\top y</span> for every primal feasible <span class="math inline">x</span> and dual feasible <span class="math inline">y</span>. If the gap is zero, both solutions are optimal.</p></li>
+<li><p><strong>Strong duality</strong> holds at optimality: <span class="math inline">c^\top x^* = b^\top y^*</span>. The simplex multipliers <span class="math inline">y^* = (\mathbf{A}_B^{-1})^\top c_B</span> are automatically dual optimal.</p></li>
 <li><p><strong>Shadow prices</strong> (<span class="math inline">y_i^*</span>) measure the sensitivity of the optimal value to changes in the right-hand side: <span class="math inline">y_i^* = \partial f^* / \partial b_i</span>.</p></li>
 <li><p><strong>Complementary slackness</strong> characterizes optimality pointwise: at an optimal pair, if a variable is positive, the corresponding constraint is tight, and vice versa.</p></li>
 <li><p>The <strong>four possibilities</strong> for a primal-dual pair are: both infeasible, primal infeasible &amp; dual unbounded, primal unbounded &amp; dual infeasible, or both finite optimal (with zero duality gap).</p></li>
@@ -2192,50 +2087,6 @@ w_1 = 4 - 2 = 2, \quad w_2 = 6 - 6 = 0, \quad w_3 = 18 - 3(2) - 2(6) = 0.
   </div>
 </nav>
 </div> <!-- /content -->
-<script>
-// Plotly Warmtone theming helpers — shared across all lectures
-// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
-const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
-
-function css(v) {
-  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-}
-
-function legendStyle() {
-  return {
-    font: {family: figFont, size: 13, color: css('--fig-text')},
-    bgcolor: css('--fig-bg') + 'dd',
-    bordercolor: css('--fig-grid'),
-    borderwidth: 1,
-  };
-}
-
-function themeLayout(extra) {
-  return Object.assign({
-    paper_bgcolor: css('--fig-bg'),
-    plot_bgcolor: css('--fig-plot-bg'),
-    font: {family: figFont, color: css('--fig-text'), size: 14},
-  }, extra || {});
-}
-
-function themeAxis(title, extra) {
-  return Object.assign({
-    title: {text: title, font: {family: figFont, size: 14}},
-    gridcolor: css('--fig-grid'),
-    zerolinecolor: css('--fig-grid'),
-    linecolor: css('--fig-axis'),
-    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
-  }, extra || {});
-}
-
-// Plotly color sequences matching the Warmtone palette
-const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
-];
-</script>
 <script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
 (function() {
   let previousOnload = window.onload;

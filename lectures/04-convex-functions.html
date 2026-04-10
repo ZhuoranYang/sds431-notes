@@ -75,6 +75,50 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -230,19 +274,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  <a href="../lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  <a href="../lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
   </div>
 </li>
       </ul>
@@ -300,7 +344,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -356,11 +400,31 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-convex-func-def" id="toc-sec-convex-func-def" class="nav-link active" data-scroll-target="#sec-convex-func-def"><span class="header-section-number">4.1</span> Definition and the Chord Inequality</a></li>
-  <li><a href="#sec-first-order-condition" id="toc-sec-first-order-condition" class="nav-link" data-scroll-target="#sec-first-order-condition"><span class="header-section-number">4.2</span> First-Order Condition</a></li>
-  <li><a href="#sec-second-order-condition" id="toc-sec-second-order-condition" class="nav-link" data-scroll-target="#sec-second-order-condition"><span class="header-section-number">4.3</span> Second-Order Condition</a></li>
-  <li><a href="#sec-operations-convex-funcs" id="toc-sec-operations-convex-funcs" class="nav-link" data-scroll-target="#sec-operations-convex-funcs"><span class="header-section-number">4.4</span> Operations That Preserve Convexity</a></li>
-  <li><a href="#sec-sublevel-sets" id="toc-sec-sublevel-sets" class="nav-link" data-scroll-target="#sec-sublevel-sets"><span class="header-section-number">4.5</span> Sublevel Sets and Quasiconvexity</a></li>
+  <li><a href="#what-will-be-covered" id="toc-what-will-be-covered" class="nav-link active" data-scroll-target="#what-will-be-covered">What Will Be Covered</a></li>
+  <li><a href="#sec-convex-func-def" id="toc-sec-convex-func-def" class="nav-link" data-scroll-target="#sec-convex-func-def"><span class="header-section-number">4.1</span> Definition and the Chord Inequality</a>
+  <ul class="collapse">
+  <li><a href="#sec-strict-strong-convex" id="toc-sec-strict-strong-convex" class="nav-link" data-scroll-target="#sec-strict-strong-convex"><span class="header-section-number">4.1.1</span> Strictly Convex and Strongly Convex Functions</a></li>
+  <li><a href="#sec-convex-function-examples" id="toc-sec-convex-function-examples" class="nav-link" data-scroll-target="#sec-convex-function-examples"><span class="header-section-number">4.1.2</span> Examples of Convex Functions</a></li>
+  </ul></li>
+  <li><a href="#sec-first-order-condition" id="toc-sec-first-order-condition" class="nav-link" data-scroll-target="#sec-first-order-condition"><span class="header-section-number">4.2</span> First-Order Condition</a>
+  <ul class="collapse">
+  <li><a href="#sec-gradient-monotonicity" id="toc-sec-gradient-monotonicity" class="nav-link" data-scroll-target="#sec-gradient-monotonicity"><span class="header-section-number">4.2.1</span> Gradient Monotonicity</a></li>
+  </ul></li>
+  <li><a href="#sec-second-order-condition" id="toc-sec-second-order-condition" class="nav-link" data-scroll-target="#sec-second-order-condition"><span class="header-section-number">4.3</span> Second-Order Condition</a>
+  <ul class="collapse">
+  <li><a href="#sec-zeroth-order-char" id="toc-sec-zeroth-order-char" class="nav-link" data-scroll-target="#sec-zeroth-order-char"><span class="header-section-number">4.3.1</span> Zero-th Order Characterization: Restriction to a Line</a></li>
+  <li><a href="#sec-equivalence-summary" id="toc-sec-equivalence-summary" class="nav-link" data-scroll-target="#sec-equivalence-summary"><span class="header-section-number">4.3.2</span> Summary of Equivalent Characterizations</a></li>
+  <li><a href="#sec-practical-convexity" id="toc-sec-practical-convexity" class="nav-link" data-scroll-target="#sec-practical-convexity"><span class="header-section-number">4.3.3</span> Practical Methods for Establishing Convexity</a></li>
+  </ul></li>
+  <li><a href="#sec-operations-convex-funcs" id="toc-sec-operations-convex-funcs" class="nav-link" data-scroll-target="#sec-operations-convex-funcs"><span class="header-section-number">4.4</span> Operations That Preserve Convexity</a>
+  <ul class="collapse">
+  <li><a href="#sec-additional-preservation" id="toc-sec-additional-preservation" class="nav-link" data-scroll-target="#sec-additional-preservation"><span class="header-section-number">4.4.1</span> Additional Preservation Rules</a></li>
+  <li><a href="#sec-preservation-examples" id="toc-sec-preservation-examples" class="nav-link" data-scroll-target="#sec-preservation-examples"><span class="header-section-number">4.4.2</span> Examples of Preservation Rules</a></li>
+  </ul></li>
+  <li><a href="#sec-epigraph" id="toc-sec-epigraph" class="nav-link" data-scroll-target="#sec-epigraph"><span class="header-section-number">4.5</span> Epigraph and Connections to Convex Sets</a></li>
+  <li><a href="#sec-sublevel-sets" id="toc-sec-sublevel-sets" class="nav-link" data-scroll-target="#sec-sublevel-sets"><span class="header-section-number">4.6</span> Sublevel Sets and Quasiconvexity</a></li>
+  <li><a href="#sec-jensen" id="toc-sec-jensen" class="nav-link" data-scroll-target="#sec-jensen"><span class="header-section-number">4.7</span> Jensen’s Inequality</a></li>
+  <li><a href="#sec-optimality-convex-functions" id="toc-sec-optimality-convex-functions" class="nav-link" data-scroll-target="#sec-optimality-convex-functions"><span class="header-section-number">4.8</span> Optimality of Convex Functions</a></li>
   <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   </ul>
 </nav>
@@ -387,7 +451,7 @@ window.Quarto = {
 </header>
 
 
-<p>Having established the theory of convex sets in the previous chapter — including the convexity definition (<a href="03-convex-sets.html#eq-convex-set-def" class="quarto-xref">Equation&nbsp;<span>3.1</span></a>) and the preservation rules in <a href="03-convex-sets.html#thm-operations-convex-sets" class="quarto-xref">Theorem&nbsp;<span>3.2</span></a> — we now turn to the functions we optimize over them. A convex function is one whose graph “curves upward,” ensuring that there are no hidden valleys or local minima that could trap an optimization algorithm.</p>
+<p>Having established the theory of convex sets in the previous chapter — including the convexity definition (<a href="03-convex-sets.html#eq-convex-set-def" class="quarto-xref">Equation&nbsp;<span>3.1</span></a>) and the preservation rules in <a href="03-convex-sets.html#thm-operations-convex-sets" class="quarto-xref">Theorem&nbsp;<span>3.4</span></a> — we now turn to the functions we optimize over them. A convex function is one whose graph “curves upward,” ensuring that there are no hidden valleys or local minima that could trap an optimization algorithm.</p>
 <p>We develop the theory of convex functions through three equivalent characterizations — the chord inequality, the tangent-line condition, and the Hessian test — culminating in powerful preservation rules that let us establish convexity of complex objectives without resorting to direct computation. These tools will be used in every subsequent chapter of the course.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -401,16 +465,30 @@ window.Quarto = {
 <div class="callout-body-container callout-body">
 <p>Hands-on Python notebooks accompany this chapter. Click a badge to open in Google Colab.</p>
 <ul>
-<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/03-convex-functions.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Convex Function Properties</strong> — visualizing epigraphs, level sets, and tangent-line characterizations</li>
-<li><a href="https://colab.research.google.com/github/ZhuoranYang/zhuoran-yale-teaching/blob/main/SDS431/notebooks/04-convex-functions-3d.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>3D Convex Geometry</strong> — interactive 3D plots of convex sets, ellipsoids, convex hulls, and level sets</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/03a-convex-functions.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Convex Function Properties</strong> — visualizing epigraphs, level sets, and tangent-line characterizations</li>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/04a-convex-functions-3d.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>3D Convex Geometry</strong> — interactive 3D plots of convex sets, ellipsoids, convex hulls, and level sets</li>
 </ul>
 </div>
 </div>
+<section id="what-will-be-covered" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="what-will-be-covered">What Will Be Covered</h2>
+<ul>
+<li>Definition of convex functions via the chord inequality</li>
+<li>First-order characterization: the tangent-line condition and gradient monotonicity</li>
+<li>Second-order characterization: the Hessian test</li>
+<li>Strong convexity and its implications</li>
+<li>Restriction to a line as a proof technique</li>
+<li>Operations that preserve convexity: sums, pointwise maximum, composition rules</li>
+<li>Epigraphs and sublevel sets</li>
+<li>Jensen’s inequality</li>
+<li>Practical methods for establishing convexity, with worked examples</li>
+</ul>
+</section>
 <section id="sec-convex-func-def" class="level2" data-number="4.1">
 <h2 data-number="4.1" class="anchored" data-anchor-id="sec-convex-func-def"><span class="header-section-number">4.1</span> Definition and the Chord Inequality</h2>
 <p>The most basic way to express “curving upward” is the <strong>chord inequality</strong>: the function value at any mixture of two points lies below the chord connecting them. The formal definition below makes this intuition precise.</p>
 <div id="def-convex-function" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 4.1 (Definition 4.7 (Convex Function))</strong></span> A function <span class="math inline">f : \mathbb{R}^n \to \mathbb{R}</span> is <strong>convex</strong> if <span class="math inline">\text{dom}(f)</span> is a convex set and for all <span class="math inline">x, y \in \text{dom}(f)</span> and <span class="math inline">\lambda \in [0,1]</span>,</p>
+<p><span class="theorem-title"><strong>Definition 4.1 (Convex Function)</strong></span> A function <span class="math inline">f : \mathbb{R}^n \to \mathbb{R}</span> is <strong>convex</strong> if <span class="math inline">\text{dom}(f)</span> is a convex set and for all <span class="math inline">x, y \in \text{dom}(f)</span> and <span class="math inline">\lambda \in [0,1]</span>,</p>
 <p><span id="eq-convex-function-def"><span class="math display">f(\lambda x + (1-\lambda)y) \leq \lambda f(x) + (1-\lambda)f(y). \tag{4.1}</span></span></p>
 <p>Geometrically: the function value at any convex combination lies below (or on) the chord connecting <span class="math inline">(x, f(x))</span> and <span class="math inline">(y, f(y))</span>.</p>
 <p><span class="math inline">f</span> is <strong>strictly convex</strong> if the inequality is strict for <span class="math inline">\lambda \in (0,1)</span> and <span class="math inline">x \neq y</span>.</p>
@@ -419,7 +497,7 @@ window.Quarto = {
 <p>The defining inequality (<a href="#eq-convex-function-def" class="quarto-xref">Equation&nbsp;<span>4.1</span></a>) says that the graph of a convex function always lies <strong>below</strong> any chord drawn between two of its points. Equivalently, a convex function “bows upward.” This simple geometric property has profound algorithmic consequences: it ensures that every local minimum is a global minimum, which is the reason convex optimization problems are tractable.</p>
 <div class="figure-container">
   <div id="fig-convex-function"></div>
-  <div class="figure-caption">Figure 4.2: A convex function in 3D: f(x₁,x₂) = x₁² + x₂². The surface lies below any chord, and every sublevel set is convex.</div>
+  <div class="figure-caption">Figure 4.1: A convex function in 3D: f(x₁,x₂) = x₁² + x₂². The surface lies below any chord, and every sublevel set is convex.</div>
 </div>
 
 <script>
@@ -482,93 +560,561 @@ document.addEventListener('DOMContentLoaded', () => {
   Plotly.newPlot('fig-convex-function', traces, layout, plotlyConfig);
 });
 </script>
-<div id="exm-common-convex-concave-functions" class="theorem example">
-<p><span class="theorem-title"><strong>Example 4.1 (Common Convex and Concave Functions)</strong></span> <strong>Convex functions:</strong></p>
+<section id="sec-strict-strong-convex" class="level3" data-number="4.1.1">
+<h3 data-number="4.1.1" class="anchored" data-anchor-id="sec-strict-strong-convex"><span class="header-section-number">4.1.1</span> Strictly Convex and Strongly Convex Functions</h3>
+<p>The definition above allows a convex function to be “flat” along certain directions (think of an affine function, which is convex but has no curvature at all). Two stronger notions quantify how much a function “curves upward.”</p>
+<div id="def-strictly-convex" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 4.2 (Strictly Convex Function)</strong></span> A function <span class="math inline">f : D \subseteq \mathbb{R}^n \to \mathbb{R}</span> is <strong>strictly convex</strong> if <span class="math inline">D</span> is a convex set, and for all <span class="math inline">x, y \in D</span> with <span class="math inline">x \neq y</span> and all <span class="math inline">\lambda \in (0,1)</span>:</p>
+<p><span class="math display">f(\lambda x + (1-\lambda) y) &lt; \lambda \, f(x) + (1-\lambda) \, f(y).</span></p>
+<p>The inequality is <strong>strict</strong>. Geometrically, the chord between any two distinct points lies <em>strictly above</em> the graph — the function has no flat segments.</p>
+</div>
+<p>Strict convexity guarantees that the minimizer, if it exists, is <strong>unique</strong>. However, it does not quantify <em>how much</em> the function curves. For convergence rate analysis, we need a stronger notion that provides a quantitative lower bound on curvature.</p>
+<div id="def-strongly-convex" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 4.3 (<span class="math inline">m</span>-Strongly Convex Function)</strong></span> A function <span class="math inline">f : D \subseteq \mathbb{R}^n \to \mathbb{R}</span> is <strong><span class="math inline">m</span>-strongly convex</strong> (with parameter <span class="math inline">m &gt; 0</span>) if and only if the function <span class="math inline">f(x) - \frac{m}{2}\|x\|_2^2</span> is convex.</p>
+</div>
+<p>In other words, <span class="math inline">f</span> is at least “as convex as” the quadratic <span class="math inline">g(x) = \frac{m}{2}\|x\|_2^2</span>. The parameter <span class="math inline">m</span> measures the <em>minimum curvature</em> of <span class="math inline">f</span>: the larger <span class="math inline">m</span> is, the more strongly the function curves upward. This lower bound on curvature is what gives strongly convex functions their fast (linear) convergence rates under gradient descent.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Hierarchy:</strong> <span class="math inline">m</span>-strongly convex (<span class="math inline">m &gt; 0</span>) <span class="math inline">\implies</span> strictly convex <span class="math inline">\implies</span> convex. The converses are false: <span class="math inline">f(x) = x^4</span> is strictly convex but not strongly convex (its curvature vanishes at <span class="math inline">x = 0</span>), and <span class="math inline">f(x) = |x|</span> is convex but not strictly convex (it is affine on <span class="math inline">(-\infty, 0)</span> and on <span class="math inline">(0, +\infty)</span>).</p>
+</div>
+</div>
+</div>
+<div id="def-concave-function" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 4.4 (Concave Functions)</strong></span> A function <span class="math inline">f</span> is <strong>concave</strong> if <span class="math inline">(-f)</span> is convex; <strong>strictly concave</strong> if <span class="math inline">(-f)</span> is strictly convex; <strong><span class="math inline">m</span>-strongly concave</strong> if <span class="math inline">(-f)</span> is <span class="math inline">m</span>-strongly convex. Concave functions are also defined on convex domains.</p>
+<p>If <span class="math inline">f</span> is both convex and concave, then <span class="math inline">f</span> must be <strong>affine</strong>: <span class="math inline">f(x) = a^\top x + b</span>.</p>
+</div>
+</section>
+<section id="sec-convex-function-examples" class="level3" data-number="4.1.2">
+<h3 data-number="4.1.2" class="anchored" data-anchor-id="sec-convex-function-examples"><span class="header-section-number">4.1.2</span> Examples of Convex Functions</h3>
+<div id="exm-univariate-convex" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.1 (Univariate Convex Functions (<span class="math inline">f : \mathbb{R} \to \mathbb{R}</span>))</strong></span> The following functions of a single variable are convex (verify by checking <span class="math inline">f'' \geq 0</span>):</p>
 <ul>
-<li>Affine: <span class="math inline">f(x) = a^\top x + b</span> (also concave)</li>
-<li>Quadratic: <span class="math inline">f(x) = x^\top Q x</span> for <span class="math inline">Q \succeq 0</span></li>
-<li>Norms: <span class="math inline">f(x) = \|x\|_p</span> for <span class="math inline">p \geq 1</span></li>
-<li>Exponential: <span class="math inline">f(x) = e^{ax}</span></li>
-<li>Log-sum-exp: <span class="math inline">f(x) = \log\left(\sum_i e^{x_i}\right)</span></li>
-<li>Max function: <span class="math inline">f(x) = \max(x_1, \ldots, x_n)</span></li>
+<li><span class="math inline">e^{ax}</span> for any <span class="math inline">a \in \mathbb{R}</span> (exponential)</li>
+<li><span class="math inline">-\log x</span> on <span class="math inline">x &gt; 0</span> (negative log)</li>
+<li><span class="math inline">x^\alpha</span> on <span class="math inline">\mathbb{R}_{++} = \{x &gt; 0\}</span> for <span class="math inline">\alpha \geq 1</span> or <span class="math inline">\alpha \leq 0</span> (power functions with sufficient curvature)</li>
+<li><span class="math inline">-x^\alpha</span> on <span class="math inline">\mathbb{R}_{++}</span> for <span class="math inline">0 \leq \alpha \leq 1</span> (e.g., <span class="math inline">-\sqrt{x}</span> is convex)</li>
+<li><span class="math inline">|x|^\alpha</span> on <span class="math inline">\mathbb{R}</span> for <span class="math inline">\alpha \geq 1</span> (e.g., <span class="math inline">|x|</span> is convex but not differentiable at <span class="math inline">0</span>)</li>
+<li><span class="math inline">x \log x</span> on <span class="math inline">\mathbb{R}_{++}</span> (negative entropy — key in information theory)</li>
 </ul>
-<p><strong>Concave functions:</strong> <span class="math inline">\log(x)</span> on <span class="math inline">x &gt; 0</span>, <span class="math inline">\sqrt{x}</span> on <span class="math inline">x \geq 0</span>.</p>
+</div>
+<div id="exm-common-convex-concave-functions" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.2 (Multivariate Convex Functions (<span class="math inline">f : \mathbb{R}^n \to \mathbb{R}</span>))</strong></span> <strong>(i) Affine functions.</strong> <span class="math inline">f(x) = a^\top x + b</span> is both convex and concave for any <span class="math inline">a \in \mathbb{R}^n</span>, <span class="math inline">b \in \mathbb{R}</span>.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><span class="math inline">f(\lambda x + (1-\lambda)y) = a^\top(\lambda x + (1-\lambda)y) + b = \lambda(a^\top x + b) + (1-\lambda)(a^\top y + b) = \lambda \, f(x) + (1-\lambda) \, f(y)</span>. Equality holds, so <span class="math inline">f</span> is both convex and concave. <span class="math inline">\blacksquare</span></p>
+</div>
+<p><strong>(ii) Quadratic functions.</strong> <span class="math inline">f(x) = x^\top Q x + c^\top x + b</span> where <span class="math inline">Q</span> is symmetric:</p>
+<ul>
+<li>Convex <span class="math inline">\iff</span> <span class="math inline">Q \succeq 0</span> (positive semidefinite)</li>
+<li>Strictly convex <span class="math inline">\iff</span> <span class="math inline">Q \succ 0</span> (positive definite)</li>
+<li><span class="math inline">m</span>-strongly convex <span class="math inline">\iff</span> <span class="math inline">Q \succeq \frac{m}{2} I_n</span> (i.e., all eigenvalues of <span class="math inline">Q</span> are at least <span class="math inline">m/2</span>)</li>
+<li>Concave <span class="math inline">\iff</span> <span class="math inline">Q \preceq 0</span>; strictly concave <span class="math inline">\iff</span> <span class="math inline">Q \prec 0</span>; <span class="math inline">m</span>-strongly concave <span class="math inline">\iff</span> <span class="math inline">Q \preceq -\frac{m}{2} I_n</span></li>
+</ul>
+<p><strong>(iii) Least squares.</strong> <span class="math inline">\mathcal{L}(x) = \|Ax - b\|_2^2</span> is always convex (since <span class="math inline">\nabla^2 \mathcal{L} = 2A^\top A \succeq 0</span>).</p>
+<p><strong>(iv) Norms.</strong> Any function <span class="math inline">f : D \to \mathbb{R}</span> satisfying positivity (<span class="math inline">f(x) \geq 0</span>, <span class="math inline">f(x) = 0</span> iff <span class="math inline">x = 0</span>), homogeneity (<span class="math inline">f(\alpha x) = |\alpha| f(x)</span>), and the triangle inequality (<span class="math inline">f(x+y) \leq f(x) + f(y)</span>) is convex.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><span class="math inline">f(\lambda x + (1-\lambda)y) \leq f(\lambda x) + f((1-\lambda)y) = \lambda \, f(x) + (1-\lambda) \, f(y)</span>, using the triangle inequality and then homogeneity. <span class="math inline">\blacksquare</span></p>
+</div>
+<p>Examples include all vector <span class="math inline">\ell_p</span>-norms (<span class="math inline">\|x\|_\infty</span>, <span class="math inline">\|x\|_1</span>, <span class="math inline">\|x\|_2</span>) and matrix norms (operator norm <span class="math inline">\|A\|_p</span>, vectorized norms <span class="math inline">\|A\|_{\ell_p}</span>). The <span class="math inline">\ell_2</span>-norm is strictly convex; the <span class="math inline">\ell_1</span>- and <span class="math inline">\ell_\infty</span>-norms are convex but not strictly convex.</p>
+<p><strong>(v) Max function.</strong> <span class="math inline">f(x) = \max\{x_1, \ldots, x_n\}</span> is convex.</p>
+<p><strong>(vi) Support function.</strong> For any set <span class="math inline">\mathcal{C}</span> (convex or not), its support function <span class="math inline">S_{\mathcal{C}}(x) = \sup_{y \in \mathcal{C}} x^\top y</span> is convex.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><span class="math inline">S_{\mathcal{C}}(\lambda x + (1-\lambda)y) = \sup_{z \in \mathcal{C}} z^\top (\lambda x + (1-\lambda)y) = \sup_{z \in \mathcal{C}} \{\lambda z^\top x + (1-\lambda)z^\top y\} \leq \lambda \sup_{z_1 \in \mathcal{C}} z_1^\top x + (1-\lambda) \sup_{z_2 \in \mathcal{C}} z_2^\top y = \lambda \, S_{\mathcal{C}}(x) + (1-\lambda) \, S_{\mathcal{C}}(y)</span>. The inequality uses the fact that taking the supremum over a single <span class="math inline">z</span> is at most taking independent suprema. <span class="math inline">\blacksquare</span></p>
+</div>
+<p><strong>(vii) Log-sum-exp.</strong> <span class="math inline">f(x) = \log\!\left(\sum_{j=1}^n e^{x_j}\right)</span> is convex. This is a smooth approximation to the max function: <span class="math inline">\max(x_1, \ldots, x_n) \leq f(x) \leq \max(x_1, \ldots, x_n) + \log n</span>.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof via second-order condition.</strong> Let <span class="math inline">z_j = e^{x_j}</span> and <span class="math inline">\mathbf{1}_n^\top z = \sum_j z_j</span>. The gradient is <span class="math inline">\nabla f(x) = \frac{1}{\mathbf{1}_n^\top z} \cdot z</span> (the softmax vector). The Hessian is</p>
+<p><span class="math display">\nabla^2 f(x) = \frac{1}{\mathbf{1}_n^\top z} \operatorname{diag}(z) - \frac{1}{(\mathbf{1}_n^\top z)^2} z z^\top.</span></p>
+<p>To show <span class="math inline">\nabla^2 f \succeq 0</span>, compute <span class="math inline">v^\top \nabla^2 f(x) \, v</span> for any <span class="math inline">v \in \mathbb{R}^n</span>:</p>
+<p><span class="math display">v^\top \nabla^2 f(x) \, v = \frac{\bigl(\sum_j z_j v_j^2\bigr)\bigl(\sum_j z_j\bigr) - \bigl(\sum_j z_j v_j\bigr)^2}{(\mathbf{1}_n^\top z)^2} \geq 0,</span></p>
+<p>where the last inequality follows from the <strong>Cauchy–Schwarz inequality</strong> applied to the vectors <span class="math inline">(\sqrt{z_1} v_1, \ldots, \sqrt{z_n} v_n)</span> and <span class="math inline">(\sqrt{z_1}, \ldots, \sqrt{z_n})</span>. <span class="math inline">\blacksquare</span></p>
+</div>
+</div>
+<div id="fig-convex-gallery" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-convex-gallery-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch04-convex-functions-gallery.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;4.1: Common convex and concave functions in 1D, illustrating the chord property. (a–c) For convex functions, the chord between any two points lies above the graph (shaded gap). (d) For concave \log x, the chord lies below — equivalently, -\log x is convex."><img src="figures/ch04-convex-functions-gallery.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-convex-gallery-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.1: Common convex and concave functions in 1D, illustrating the chord property. (a–c) For convex functions, the chord between any two points lies above the graph (shaded gap). (d) For concave <span class="math inline">\log x</span>, the chord lies below — equivalently, <span class="math inline">-\log x</span> is convex.
+</figcaption>
+</figure>
 </div>
 <p>With the definition and examples in hand, we now ask: how do we <em>verify</em> convexity in practice? The chord inequality requires checking all pairs of points, which is impractical. For differentiable functions, there is a far more useful equivalent condition involving only the gradient.</p>
+</section>
 </section>
 <section id="sec-first-order-condition" class="level2" data-number="4.2">
 <h2 data-number="4.2" class="anchored" data-anchor-id="sec-first-order-condition"><span class="header-section-number">4.2</span> First-Order Condition</h2>
 <p>For differentiable functions, convexity is equivalent to a single elegant condition: the tangent hyperplane at any point must lie below the function everywhere. This <strong>first-order condition</strong> is the workhorse for proving optimality in convex optimization.</p>
 <div id="thm-first-order-condition" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 4.1 (Theorem 4.5 (First-Order Condition))</strong></span> Suppose <span class="math inline">f</span> is differentiable and <span class="math inline">\text{dom}(f)</span> is convex. Then <span class="math inline">f</span> is convex if and only if</p>
+<p><span class="theorem-title"><strong>Theorem 4.1 (First-Order Condition)</strong></span> Suppose <span class="math inline">f</span> is differentiable and <span class="math inline">\text{dom}(f)</span> is convex. Then <span class="math inline">f</span> is convex if and only if</p>
 <p><span id="eq-first-order-convexity"><span class="math display">f(y) \geq f(x) + \nabla f(x)^\top (y - x) \quad \forall\, x, y \in \text{dom}(f). \tag{4.2}</span></span></p>
 <p>Geometrically: the tangent line (first-order Taylor approximation) at any point is a <strong>global underestimator</strong> of <span class="math inline">f</span>.</p>
 </div>
 <div id="fig-first-order-condition" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-first-order-condition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="figures/ch01-first-order-condition.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;4.1: First-order condition: at every point the tangent line lies below the graph of a convex function. The gap f(y) - [f(x) + \nabla f(x)^\top(y-x)] is non-negative everywhere, and equals zero only at y = x."><img src="figures/ch01-first-order-condition.svg" class="img-fluid figure-img"></a>
+<a href="figures/ch01-first-order-condition.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;4.2: First-order condition: at every point the tangent line lies below the graph of a convex function. The gap f(y) - [f(x) + \nabla f(x)^\top(y-x)] is non-negative everywhere, and equals zero only at y = x."><img src="figures/ch01-first-order-condition.svg" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-first-order-condition-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4.1: First-order condition: at every point the tangent line lies below the graph of a convex function. The gap <span class="math inline">f(y) - [f(x) + \nabla f(x)^\top(y-x)]</span> is non-negative everywhere, and equals zero only at <span class="math inline">y = x</span>.
+Figure&nbsp;4.2: First-order condition: at every point the tangent line lies below the graph of a convex function. The gap <span class="math inline">f(y) - [f(x) + \nabla f(x)^\top(y-x)]</span> is non-negative everywhere, and equals zero only at <span class="math inline">y = x</span>.
 </figcaption>
 </figure>
 </div>
 <p>The first-order condition provides an equivalent characterization of convexity for differentiable functions. It says that the tangent hyperplane at any point lies entirely below the graph of <span class="math inline">f</span>. This is a much stronger statement than the chord condition in the definition: it must hold globally, not just between two specific points. This property is the key reason why gradient-based methods work so well for convex functions.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof of <a href="#thm-first-order-condition" class="quarto-xref">Theorem&nbsp;<span>4.1</span></a>.</strong> We prove both directions of the equivalence.</p>
+<p><strong>(<span class="math inline">\Longrightarrow</span>) Convexity implies the first-order condition.</strong> Assume <span class="math inline">f</span> is convex. Fix <span class="math inline">x, y \in \text{dom}(f)</span> and let <span class="math inline">\lambda \in (0, 1]</span>. By the definition of convexity applied to the point <span class="math inline">z_\lambda = x + \lambda(y - x) = (1-\lambda)x + \lambda y</span>:</p>
+<p><span class="math display">f(x + \lambda(y - x)) \leq (1-\lambda) \, f(x) + \lambda \, f(y) = f(x) + \lambda\bigl(f(y) - f(x)\bigr).</span></p>
+<p>Rearranging and dividing by <span class="math inline">\lambda &gt; 0</span>:</p>
+<p><span class="math display">\frac{f(x + \lambda(y - x)) - f(x)}{\lambda} \leq f(y) - f(x).</span></p>
+<p>The left-hand side is a difference quotient. Taking <span class="math inline">\lambda \to 0^+</span>, the limit is the directional derivative of <span class="math inline">f</span> at <span class="math inline">x</span> in the direction <span class="math inline">y - x</span>:</p>
+<p><span class="math display">\nabla f(x)^\top(y - x) = \lim_{\lambda \to 0^+} \frac{f(x + \lambda(y - x)) - f(x)}{\lambda} \leq f(y) - f(x).</span></p>
+<p>Rearranging gives <span class="math inline">f(y) \geq f(x) + \nabla f(x)^\top(y - x)</span>.</p>
+<p><strong>(<span class="math inline">\Longleftarrow</span>) The first-order condition implies convexity.</strong> Assume <span class="math inline">f(y) \geq f(x) + \nabla f(x)^\top(y - x)</span> for all <span class="math inline">x, y</span>. Fix any <span class="math inline">x, y \in \text{dom}(f)</span>, <span class="math inline">\lambda \in [0,1]</span>, and let <span class="math inline">z = \lambda x + (1-\lambda)y</span>. Apply the first-order condition at <span class="math inline">z</span> toward <span class="math inline">x</span> and toward <span class="math inline">y</span>:</p>
+<p><span class="math display">f(x) \geq f(z) + \nabla f(z)^\top(x - z), \qquad f(y) \geq f(z) + \nabla f(z)^\top(y - z).</span></p>
+<p>Multiply the first by <span class="math inline">\lambda</span> and the second by <span class="math inline">(1-\lambda)</span> and add:</p>
+<p><span class="math display">\lambda \, f(x) + (1-\lambda) \, f(y) \geq f(z) + \nabla f(z)^\top\bigl(\lambda(x - z) + (1-\lambda)(y - z)\bigr).</span></p>
+<p>Now observe that <span class="math inline">\lambda(x - z) + (1-\lambda)(y - z) = \lambda x + (1-\lambda)y - z = z - z = 0</span>. Therefore</p>
+<p><span class="math display">\lambda \, f(x) + (1-\lambda) \, f(y) \geq f(z) = f(\lambda x + (1-\lambda)y),</span></p>
+<p>which is the definition of convexity. <span class="math inline">\blacksquare</span></p>
+</div>
 <p>An immediate and powerful consequence of <a href="#eq-first-order-convexity" class="quarto-xref">Equation&nbsp;<span>4.2</span></a> is that, for convex functions, the familiar necessary condition <span class="math inline">\nabla f(x^*) = 0</span> becomes <em>sufficient</em> for global optimality. This is the fundamental reason why convex optimization is tractable.</p>
 <div id="cor-optimality-convex" class="theorem corollary">
-<p><span class="theorem-title"><strong>Corollary 4.1 (Corollary 4.1 (Optimality Condition for Convex Functions))</strong></span> If <span class="math inline">f</span> is convex and differentiable, then <span class="math inline">\nabla f(x^*) = 0</span> implies <span class="math inline">x^*</span> is a <strong>global</strong> minimizer. That is, for convex functions, every local minimum is a global minimum.</p>
+<p><span class="theorem-title"><strong>Corollary 4.1 (Optimality Condition for Convex Functions)</strong></span> If <span class="math inline">f</span> is convex and differentiable, then <span class="math inline">\nabla f(x^*) = 0</span> implies <span class="math inline">x^*</span> is a <strong>global</strong> minimizer. That is, for convex functions, every local minimum is a global minimum.</p>
 </div>
 <div class="proof">
 <p><span class="proof-title"><em>Proof</em>. </span>If <span class="math inline">\nabla f(x^*) = 0</span>, then by <a href="#eq-first-order-convexity" class="quarto-xref">Equation&nbsp;<span>4.2</span></a>, for every <span class="math inline">y</span> we have <span class="math inline">f(y) \geq f(x^*) + \nabla f(x^*)^\top(y - x^*) = f(x^*) + 0 = f(x^*)</span>. Since this holds for all <span class="math inline">y</span>, the point <span class="math inline">x^*</span> achieves the smallest possible function value. Hence we conclude the proof. <span class="math inline">\blacksquare</span></p>
 </div>
+<section id="sec-gradient-monotonicity" class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1" class="anchored" data-anchor-id="sec-gradient-monotonicity"><span class="header-section-number">4.2.1</span> Gradient Monotonicity</h3>
+<p>The first-order condition has an equivalent reformulation in terms of the gradient map <span class="math inline">x \mapsto \nabla f(x)</span> that is often more convenient for proofs. Writing the first-order condition at <span class="math inline">(x, y)</span> and at <span class="math inline">(y, x)</span> and adding the two inequalities yields:</p>
+<div id="thm-gradient-monotonicity" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 4.2 (Gradient Monotonicity)</strong></span> Suppose <span class="math inline">f</span> is differentiable and <span class="math inline">\text{dom}(f)</span> is convex. Then <span class="math inline">f</span> is convex if and only if the gradient is <strong>monotone</strong>:</p>
+<p><span class="math display">\langle \nabla f(x) - \nabla f(y), \, x - y \rangle \geq 0 \quad \forall \, x, y \in \text{dom}(f).</span></p>
+<p><span class="math inline">f</span> is strictly convex if and only if the inequality is strict for <span class="math inline">x \neq y</span>.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof of <a href="#thm-gradient-monotonicity" class="quarto-xref">Theorem&nbsp;<span>4.2</span></a>.</strong></p>
+<p><strong>(<span class="math inline">\Longrightarrow</span>) Convexity implies gradient monotonicity.</strong> If <span class="math inline">f</span> is convex, the first-order condition (<a href="#eq-first-order-convexity" class="quarto-xref">Equation&nbsp;<span>4.2</span></a>) gives two inequalities:</p>
+<p><span class="math display">f(y) \geq f(x) + \nabla f(x)^\top(y - x), \qquad f(x) \geq f(y) + \nabla f(y)^\top(x - y).</span></p>
+<p>Adding these:</p>
+<p><span class="math display">0 \geq \nabla f(x)^\top(y - x) + \nabla f(y)^\top(x - y) = -\langle \nabla f(x) - \nabla f(y), \, x - y \rangle,</span></p>
+<p>which gives <span class="math inline">\langle \nabla f(x) - \nabla f(y), \, x - y \rangle \geq 0</span>.</p>
+<p><strong>(<span class="math inline">\Longleftarrow</span>) Gradient monotonicity implies convexity.</strong> Assume <span class="math inline">\langle \nabla f(x) - \nabla f(y), x - y \rangle \geq 0</span> for all <span class="math inline">x, y</span>. To show <span class="math inline">f</span> is convex, it suffices to verify the first-order condition. Fix <span class="math inline">x, y \in \text{dom}(f)</span> and define the restriction <span class="math inline">g(t) = f(x + t(y - x))</span> for <span class="math inline">t \in [0,1]</span>. Then <span class="math inline">g'(t) = \nabla f(x + t(y-x))^\top (y - x)</span>.</p>
+<p>For <span class="math inline">t_1 &gt; t_2</span>, set <span class="math inline">u = x + t_1(y-x)</span> and <span class="math inline">v = x + t_2(y-x)</span>, so <span class="math inline">u - v = (t_1 - t_2)(y - x)</span>. Gradient monotonicity gives:</p>
+<p><span class="math display">\langle \nabla f(u) - \nabla f(v), \, u - v \rangle = (t_1 - t_2) \cdot \bigl[\nabla f(u)^\top(y-x) - \nabla f(v)^\top(y-x)\bigr] \geq 0.</span></p>
+<p>Since <span class="math inline">t_1 - t_2 &gt; 0</span>, we get <span class="math inline">g'(t_1) \geq g'(t_2)</span>, so <span class="math inline">g'</span> is nondecreasing and <span class="math inline">g</span> is convex. By the univariate first-order condition: <span class="math inline">g(1) \geq g(0) + g'(0)</span>, which is <span class="math inline">f(y) \geq f(x) + \nabla f(x)^\top(y - x)</span>. <span class="math inline">\blacksquare</span></p>
+</div>
+<p>In the one-dimensional case (<span class="math inline">n = 1</span>), this simply says that <span class="math inline">f'</span> is a <strong>nondecreasing</strong> function: if <span class="math inline">x &gt; y</span>, then <span class="math inline">f'(x) \geq f'(y)</span>. This is a familiar characterization from calculus: a function is convex if and only if its derivative is nondecreasing. The theorem above is the natural generalization to <span class="math inline">\mathbb{R}^n</span>.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Intuition
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Monotonicity says that when you move from <span class="math inline">y</span> to <span class="math inline">x</span>, the gradient “rotates toward you” — the inner product of the displacement <span class="math inline">(x - y)</span> with the gradient change <span class="math inline">(\nabla f(x) - \nabla f(y))</span> is nonnegative. For a convex bowl, the gradient always points more steeply “outward” as you move away from the minimum.</p>
+</div>
+</div>
+<p>For strongly convex functions, the gradient is not merely monotone — it is <strong>strongly monotone</strong>, meaning the inner product grows at least proportionally to the squared distance between the points. This quantitative strengthening is the key property that gives strongly convex functions their fast (linear) convergence rates.</p>
+<div id="cor-strong-monotonicity" class="theorem corollary">
+<p><span class="theorem-title"><strong>Corollary 4.2 (Strong Monotonicity of the Gradient)</strong></span> If <span class="math inline">f</span> is <span class="math inline">m</span>-strongly convex and differentiable, then</p>
+<p><span id="eq-strong-monotonicity"><span class="math display">\langle \nabla f(x) - \nabla f(y), \, x - y \rangle \geq m \, \|x - y\|_2^2 \quad \forall \, x, y \in \text{dom}(f). \tag{4.3}</span></span></p>
+<p>Conversely, if the gradient satisfies <a href="#eq-strong-monotonicity" class="quarto-xref">Equation&nbsp;<span>4.3</span></a> for some <span class="math inline">m &gt; 0</span>, then <span class="math inline">f</span> is <span class="math inline">m</span>-strongly convex.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>Since <span class="math inline">f</span> is <span class="math inline">m</span>-strongly convex, the function <span class="math inline">\widetilde{f}(x) = f(x) - \frac{m}{2}\|x\|_2^2</span> is convex. The first-order condition for <span class="math inline">\widetilde{f}</span> gives, for all <span class="math inline">x, y</span>:</p>
+<p><span class="math display">\widetilde{f}(y) \geq \widetilde{f}(x) + \nabla \widetilde{f}(x)^\top(y - x).</span></p>
+<p>Substituting <span class="math inline">\widetilde{f}(x) = f(x) - \frac{m}{2}\|x\|_2^2</span> and <span class="math inline">\nabla \widetilde{f}(x) = \nabla f(x) - m\,x</span>:</p>
+<p><span class="math display">f(y) - \tfrac{m}{2}\|y\|_2^2 \geq f(x) - \tfrac{m}{2}\|x\|_2^2 + (\nabla f(x) - mx)^\top(y - x).</span></p>
+<p>Rearranging:</p>
+<p><span class="math display">f(y) \geq f(x) + \nabla f(x)^\top(y - x) + \tfrac{m}{2}\bigl(\|y\|_2^2 - \|x\|_2^2 - 2x^\top(y - x)\bigr) = f(x) + \nabla f(x)^\top(y - x) + \tfrac{m}{2}\|y - x\|_2^2.</span></p>
+<p>This is the <strong>strongly convex first-order condition</strong>: the tangent hyperplane underestimates <span class="math inline">f</span> by at least a quadratic term. Now write this inequality at <span class="math inline">(x, y)</span> and at <span class="math inline">(y, x)</span>:</p>
+<p><span class="math display">f(y) \geq f(x) + \nabla f(x)^\top(y - x) + \tfrac{m}{2}\|y - x\|_2^2,</span> <span class="math display">f(x) \geq f(y) + \nabla f(y)^\top(x - y) + \tfrac{m}{2}\|x - y\|_2^2.</span></p>
+<p>Adding the two inequalities, the <span class="math inline">f(x)</span> and <span class="math inline">f(y)</span> terms cancel:</p>
+<p><span class="math display">0 \geq \nabla f(x)^\top(y - x) + \nabla f(y)^\top(x - y) + m\|x - y\|_2^2 = -\langle \nabla f(x) - \nabla f(y), \, x - y\rangle + m\|x - y\|_2^2,</span></p>
+<p>which gives <span class="math inline">\langle \nabla f(x) - \nabla f(y), \, x - y \rangle \geq m\|x - y\|_2^2</span>. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Comparison.</strong> Gradient monotonicity (<a href="#thm-gradient-monotonicity" class="quarto-xref">Theorem&nbsp;<span>4.2</span></a>) says <span class="math inline">\langle \nabla f(x) - \nabla f(y), x - y \rangle \geq 0</span>; strong monotonicity (<a href="#cor-strong-monotonicity" class="quarto-xref">Corollary&nbsp;<span>4.2</span></a>) upgrades this to <span class="math inline">\geq m\|x - y\|_2^2</span>. The parameter <span class="math inline">m</span> measures the minimum curvature: larger <span class="math inline">m</span> means the gradients spread apart faster as <span class="math inline">x</span> and <span class="math inline">y</span> separate. Setting <span class="math inline">m = 0</span> recovers the ordinary monotonicity condition for convex (but not strongly convex) functions.</p>
+</div>
+</div>
+</div>
 <p>The first-order condition characterizes convexity through the gradient, but checking it still requires verifying an inequality at every pair of points. For twice-differentiable functions, there is an even more convenient test that involves only a local computation: checking the sign of the Hessian.</p>
+</section>
 </section>
 <section id="sec-second-order-condition" class="level2" data-number="4.3">
 <h2 data-number="4.3" class="anchored" data-anchor-id="sec-second-order-condition"><span class="header-section-number">4.3</span> Second-Order Condition</h2>
 <p>Since the Hessian captures local curvature, requiring it to be positive semidefinite everywhere is equivalent to saying the function curves upward in every direction at every point — which is exactly convexity. This gives the most computationally convenient characterization of the three.</p>
 <div id="thm-second-order-condition" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 4.2 (Theorem 4.6 (Second-Order Condition))</strong></span> Suppose <span class="math inline">f</span> is twice differentiable and <span class="math inline">\text{dom}(f)</span> is convex. Then:</p>
+<p><span class="theorem-title"><strong>Theorem 4.3 (Second-Order Condition)</strong></span> Suppose <span class="math inline">f</span> is twice differentiable and <span class="math inline">\text{dom}(f)</span> is convex. Then:</p>
 <p><span class="math display">f \text{ is convex} \iff \nabla^2 f(x) \succeq 0 \quad \forall\, x \in \text{dom}(f).</span></p>
 <p>That is, the Hessian matrix is positive semidefinite everywhere.</p>
 <p>Furthermore, if <span class="math inline">\nabla^2 f(x) \succ 0</span> for all <span class="math inline">x</span> (Hessian is positive definite), then <span class="math inline">f</span> is <strong>strictly convex</strong>.</p>
 </div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof of <a href="#thm-second-order-condition" class="quarto-xref">Theorem&nbsp;<span>4.3</span></a>.</strong> We prove both directions.</p>
+<p><strong>(<span class="math inline">\Longrightarrow</span>) Convexity implies <span class="math inline">\nabla^2 f(x) \succeq 0</span>.</strong> Assume <span class="math inline">f</span> is convex. Fix any <span class="math inline">x \in \text{dom}(f)</span> and any direction <span class="math inline">v \in \mathbb{R}^n</span>. Define <span class="math inline">g(t) = f(x + tv)</span>, which is a convex function of <span class="math inline">t</span> (by restriction to a line, <a href="#thm-restriction-to-line" class="quarto-xref">Theorem&nbsp;<span>4.4</span></a>). Since <span class="math inline">g</span> is a univariate convex function and is twice differentiable, <span class="math inline">g''(0) \geq 0</span>. Computing:</p>
+<p><span class="math display">g''(0) = v^\top \nabla^2 f(x) \, v \geq 0.</span></p>
+<p>Since this holds for every <span class="math inline">v \in \mathbb{R}^n</span>, the Hessian <span class="math inline">\nabla^2 f(x)</span> is positive semidefinite.</p>
+<p><strong>(<span class="math inline">\Longleftarrow</span>) <span class="math inline">\nabla^2 f(x) \succeq 0</span> everywhere implies convexity.</strong> Assume <span class="math inline">\nabla^2 f(x) \succeq 0</span> for all <span class="math inline">x</span>. We show the first-order condition <span class="math inline">f(y) \geq f(x) + \nabla f(x)^\top(y - x)</span> holds for all <span class="math inline">x, y</span>, which implies convexity by <a href="#thm-first-order-condition" class="quarto-xref">Theorem&nbsp;<span>4.1</span></a>.</p>
+<p>By the second-order Taylor expansion with integral remainder, for any <span class="math inline">x, y \in \text{dom}(f)</span>:</p>
+<p><span class="math display">f(y) = f(x) + \nabla f(x)^\top(y - x) + \int_0^1 (1-t) \, (y-x)^\top \nabla^2 f\bigl(x + t(y-x)\bigr) (y-x) \, dt.</span></p>
+<p>Since <span class="math inline">\nabla^2 f(x + t(y-x)) \succeq 0</span> for all <span class="math inline">t \in [0,1]</span> (the line segment lies in the convex domain), the integrand <span class="math inline">(1-t) \cdot (y-x)^\top \nabla^2 f(\cdot)(y-x) \geq 0</span> for all <span class="math inline">t</span>. Therefore the integral is nonnegative, giving</p>
+<p><span class="math display">f(y) \geq f(x) + \nabla f(x)^\top(y - x).</span></p>
+<p><strong>Strict convexity.</strong> If <span class="math inline">\nabla^2 f(x) \succ 0</span> for all <span class="math inline">x</span>, the integrand is strictly positive for <span class="math inline">y \neq x</span> (since <span class="math inline">(y-x)^\top \nabla^2 f(\cdot)(y-x) &gt; 0</span> for <span class="math inline">y-x \neq 0</span> when the Hessian is positive definite). Hence the integral is strictly positive, giving <span class="math inline">f(y) &gt; f(x) + \nabla f(x)^\top(y - x)</span> for <span class="math inline">y \neq x</span>, which implies strict convexity. <span class="math inline">\blacksquare</span></p>
+</div>
 <p>The second-order condition gives the most practical test for convexity of smooth functions: simply compute the Hessian and check whether all its eigenvalues are nonnegative. For quadratic functions the Hessian is constant, so one eigenvalue check suffices. For more general functions the Hessian varies with <span class="math inline">x</span>, and one must verify positive semidefiniteness at every point in the domain.</p>
 <div id="exm-hessian-convexity" class="theorem example">
-<p><span class="theorem-title"><strong>Example 4.2 (Verifying Convexity via the Hessian)</strong></span> Consider <span class="math inline">f(x) = x^\top Q x + b^\top x + c</span> where <span class="math inline">Q \in \mathbb{R}^{n \times n}</span> is symmetric.</p>
+<p><span class="theorem-title"><strong>Example 4.3 (Verifying Convexity via the Hessian)</strong></span> Consider <span class="math inline">f(x) = x^\top Q x + b^\top x + c</span> where <span class="math inline">Q \in \mathbb{R}^{n \times n}</span> is symmetric.</p>
 <p><span class="math inline">\nabla f(x) = 2Qx + b</span> and <span class="math inline">\nabla^2 f(x) = 2Q</span>.</p>
 <p>Thus <span class="math inline">f</span> is convex <span class="math inline">\iff</span> <span class="math inline">2Q \succeq 0</span> <span class="math inline">\iff</span> <span class="math inline">Q \succeq 0</span> (all eigenvalues of <span class="math inline">Q</span> are nonnegative).</p>
 </div>
-<p><a href="#fig-convex-function-characterization" class="quarto-xref">Figure&nbsp;<span>4.2</span></a> summarizes the three characterizations side by side: each gives a different lens on the same underlying property, and the choice among them depends on what information is available (function values, gradients, or Hessians).</p>
+<p><a href="#fig-convex-function-characterization" class="quarto-xref">Figure&nbsp;<span>4.3</span></a> summarizes the three characterizations side by side: each gives a different lens on the same underlying property, and the choice among them depends on what information is available (function values, gradients, or Hessians).</p>
 <div id="fig-convex-function-characterization" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-convex-function-characterization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="figures/convex-function-characterization.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;4.2: Three characterizations of convex functions: first-order (tangent line below), second-order (positive semidefinite Hessian), and epigraph (convex set above the graph)."><img src="figures/convex-function-characterization.svg" class="img-fluid figure-img"></a>
+<a href="figures/convex-function-characterization.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;4.3: Three characterizations of convex functions: first-order (tangent line below), second-order (positive semidefinite Hessian), and epigraph (convex set above the graph)."><img src="figures/convex-function-characterization.svg" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-convex-function-characterization-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4.2: Three characterizations of convex functions: first-order (tangent line below), second-order (positive semidefinite Hessian), and epigraph (convex set above the graph).
+Figure&nbsp;4.3: Three characterizations of convex functions: first-order (tangent line below), second-order (positive semidefinite Hessian), and epigraph (convex set above the graph).
 </figcaption>
 </figure>
 </div>
-<p>The three characterizations above — chord inequality, first-order condition, and second-order condition — give us ways to verify that a single function is convex. But in practice, objective functions arise as combinations of simpler pieces. Rather than checking convexity of the final expression from scratch, we can certify it compositionally using preservation rules.</p>
+<section id="sec-zeroth-order-char" class="level3" data-number="4.3.1">
+<h3 data-number="4.3.1" class="anchored" data-anchor-id="sec-zeroth-order-char"><span class="header-section-number">4.3.1</span> Zero-th Order Characterization: Restriction to a Line</h3>
+<p>The definition of convexity involves all pairs of points in <span class="math inline">\mathbb{R}^n</span>, which can be hard to check directly. A powerful simplification is that <strong>convexity in <span class="math inline">\mathbb{R}^n</span> can be verified one line at a time</strong>:</p>
+<div id="thm-restriction-to-line" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 4.4 (Zero-th Order Characterization)</strong></span> A function <span class="math inline">f : D \subseteq \mathbb{R}^n \to \mathbb{R}</span> is (strictly) convex if and only if for every <span class="math inline">u \in D</span> and every direction <span class="math inline">v \in \mathbb{R}^n</span>, the one-dimensional function</p>
+<p><span class="math display">g(\alpha) = f(u + \alpha \, v), \quad \text{defined on } \{\alpha : u + \alpha v \in D\},</span></p>
+<p>is a (strictly) convex function of the single variable <span class="math inline">\alpha</span>.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof of <a href="#thm-restriction-to-line" class="quarto-xref">Theorem&nbsp;<span>4.4</span></a>.</strong></p>
+<p><strong>(<span class="math inline">\Longrightarrow</span>) <span class="math inline">f</span> convex implies each restriction <span class="math inline">g</span> is convex.</strong> Let <span class="math inline">\alpha_1, \alpha_2</span> lie in the domain of <span class="math inline">g</span> and <span class="math inline">\lambda \in [0,1]</span>. Setting <span class="math inline">x = u + \alpha_1 v</span> and <span class="math inline">y = u + \alpha_2 v</span>, both in <span class="math inline">D</span>:</p>
+<p><span class="math display">g(\lambda \alpha_1 + (1-\lambda)\alpha_2) = f\bigl(u + (\lambda \alpha_1 + (1-\lambda)\alpha_2)v\bigr) = f\bigl(\lambda x + (1-\lambda)y\bigr) \leq \lambda \, f(x) + (1-\lambda) \, f(y) = \lambda \, g(\alpha_1) + (1-\lambda) \, g(\alpha_2),</span></p>
+<p>where the inequality uses convexity of <span class="math inline">f</span>.</p>
+<p><strong>(<span class="math inline">\Longleftarrow</span>) All restrictions convex implies <span class="math inline">f</span> convex.</strong> Let <span class="math inline">x, y \in D</span> and <span class="math inline">\lambda \in [0,1]</span>. Choose <span class="math inline">u = x</span> and <span class="math inline">v = y - x</span>, so <span class="math inline">g(\alpha) = f(x + \alpha(y-x))</span>. Then <span class="math inline">g(0) = f(x)</span> and <span class="math inline">g(1) = f(y)</span>. Since <span class="math inline">g</span> is convex:</p>
+<p><span class="math display">f(\lambda y + (1-\lambda) x) = g(\lambda) = g(\lambda \cdot 1 + (1-\lambda) \cdot 0) \leq \lambda \, g(1) + (1-\lambda) \, g(0) = \lambda \, f(y) + (1-\lambda) \, f(x).</span></p>
+<p>This is the definition of convexity for <span class="math inline">f</span>. <span class="math inline">\blacksquare</span></p>
+</div>
+<p>The practical value of this characterization is enormous — it lets us reduce a multivariate convexity check to a family of univariate checks, where we can use the simple criterion <span class="math inline">g'' \geq 0</span>.</p>
+<div id="exm-logdet-concave" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.4 (Example: <span class="math inline">\log\det(X)</span> is Concave)</strong></span> Consider <span class="math inline">f(X) = \log\det(X)</span> on the domain <span class="math inline">\mathbb{S}_{++}^n = \{X \in \mathbb{R}^{n \times n} : X \succ 0\}</span> (positive definite matrices). To show that <span class="math inline">f</span> is concave, we restrict to an arbitrary line: for any <span class="math inline">X \succ 0</span> and any symmetric matrix <span class="math inline">V</span>, define</p>
+<p><span class="math display">g(t) = \log\det(X + tV) = \log\det\!\bigl(X^{1/2}(I + t \, X^{-1/2}VX^{-1/2})X^{1/2}\bigr)</span></p>
+<p><span class="math display">= \log\det(X) + \log\det(I + tM), \quad \text{where } M = X^{-1/2}VX^{-1/2}.</span></p>
+<p>Let <span class="math inline">\lambda_1, \ldots, \lambda_n</span> be the eigenvalues of <span class="math inline">M</span>. Then <span class="math inline">g(t) = \log\det(X) + \sum_{j=1}^n \log(1 + t\lambda_j)</span>. Each term <span class="math inline">h_j(t) = \log(1 + t\lambda_j)</span> satisfies</p>
+<p><span class="math display">h_j''(t) = \frac{-\lambda_j^2}{(1 + t\lambda_j)^2} \leq 0,</span></p>
+<p>so <span class="math inline">g</span> is concave in <span class="math inline">t</span>. Since this holds for every line through every <span class="math inline">X \succ 0</span>, the function <span class="math inline">f(X) = \log\det(X)</span> is concave.</p>
+</div>
+<div id="exm-x2-over-y" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.5 (Example: <span class="math inline">f(x, y) = x^2/y</span> is Convex)</strong></span> Consider <span class="math inline">f(x, y) = x^2/y</span> on the domain <span class="math inline">\{(x, y) : y &gt; 0\}</span>. The gradient is</p>
+<p><span class="math display">\nabla f(x, y) = \begin{pmatrix} 2x/y \\ -x^2/y^2 \end{pmatrix},</span></p>
+<p>and the Hessian is</p>
+<p><span class="math display">\nabla^2 f(x, y) = \begin{pmatrix} 2/y &amp; -2x/y^2 \\ -2x/y^2 &amp; 2x^2/y^3 \end{pmatrix} = \frac{2}{y^3}\begin{pmatrix} y^2 &amp; -xy \\ -xy &amp; x^2 \end{pmatrix} = \frac{2}{y^3}\begin{pmatrix} y \\ -x \end{pmatrix}\begin{pmatrix} y &amp; -x \end{pmatrix} \succeq 0,</span></p>
+<p>since <span class="math inline">y &gt; 0</span> implies <span class="math inline">\frac{2}{y^3} &gt; 0</span>, and any rank-one matrix <span class="math inline">vv^\top</span> is PSD. Hence <span class="math inline">f</span> is convex.</p>
+</div>
+<div id="exm-geometric-mean-concave" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.6 (Example: Geometric Mean is Concave)</strong></span> The geometric mean <span class="math inline">f(x) = \bigl(\prod_{j=1}^n x_j\bigr)^{1/n}</span> is concave on <span class="math inline">\mathbb{R}_{++}^n = \{x : x_j &gt; 0\}</span>.</p>
+<p>This can be shown by restricting to a line and using the concavity of <span class="math inline">t \mapsto t^{1/n}</span>, or by the AM-GM inequality. It is an important example because it is concave but <em>not</em> convex (nor affine) — concavity of the geometric mean underpins many results in information theory and matrix analysis.</p>
+</div>
+</section>
+<section id="sec-equivalence-summary" class="level3" data-number="4.3.2">
+<h3 data-number="4.3.2" class="anchored" data-anchor-id="sec-equivalence-summary"><span class="header-section-number">4.3.2</span> Summary of Equivalent Characterizations</h3>
+<p>The results above can be unified into a single equivalence theorem. This is useful to have as a reference: depending on what tools are available (function values, gradients, or Hessians), we can pick the most convenient characterization.</p>
+<div id="thm-convexity-equivalences" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 4.5 (Equivalent Characterizations of Convexity)</strong></span> The following are equivalent for a continuously differentiable <span class="math inline">f</span> on a convex domain:</p>
+<p><strong>(a)</strong> <span class="math inline">f</span> is convex (chord inequality, <a href="#eq-convex-function-def" class="quarto-xref">Equation&nbsp;<span>4.1</span></a>).</p>
+<p><strong>(b)</strong> <span class="math inline">f(y) \geq f(x) + \langle \nabla f(x), \, y - x \rangle</span> for all <span class="math inline">x, y</span> (first-order condition, <a href="#eq-first-order-convexity" class="quarto-xref">Equation&nbsp;<span>4.2</span></a>).</p>
+<p><strong>(c)</strong> <span class="math inline">\langle \nabla f(x) - \nabla f(y), \, x - y \rangle \geq 0</span> for all <span class="math inline">x, y</span> (gradient monotonicity, <a href="#thm-gradient-monotonicity" class="quarto-xref">Theorem&nbsp;<span>4.2</span></a>).</p>
+<p>If additionally <span class="math inline">\nabla f</span> is continuously differentiable (i.e., <span class="math inline">f</span> is <span class="math inline">C^2</span>):</p>
+<p><strong>(d)</strong> <span class="math inline">\nabla^2 f(x) \succeq 0</span> for all <span class="math inline">x \in \text{dom}(f)</span> (Hessian PSD, <a href="#thm-second-order-condition" class="quarto-xref">Theorem&nbsp;<span>4.3</span></a>).</p>
+</div>
+<p>In each case, replacing <span class="math inline">\leq</span> with <span class="math inline">&lt;</span> (and <span class="math inline">\succeq</span> with <span class="math inline">\succ</span>) gives the corresponding characterization of <strong>strict</strong> convexity.</p>
+</section>
+<section id="sec-practical-convexity" class="level3" data-number="4.3.3">
+<h3 data-number="4.3.3" class="anchored" data-anchor-id="sec-practical-convexity"><span class="header-section-number">4.3.3</span> Practical Methods for Establishing Convexity</h3>
+<p>In practice, there are three main strategies for showing that a function is convex:</p>
+<ol type="1">
+<li><strong>Verify the definition</strong> (chord inequality), often simplified by <strong>restricting to a line</strong> (<a href="#thm-restriction-to-line" class="quarto-xref">Theorem&nbsp;<span>4.4</span></a>). This reduces the problem to checking convexity of 1D functions.</li>
+<li><strong>Compute the Hessian</strong> and verify <span class="math inline">\nabla^2 f(x) \succeq 0</span> for all <span class="math inline">x</span>. This is the most direct approach for smooth functions.</li>
+<li><strong>Use operations that preserve convexity</strong> (next section). Decompose the function into known convex building blocks connected by convexity-preserving operations.</li>
+</ol>
+<p>We now demonstrate each method on concrete functions that arise frequently in optimization and machine learning. These examples also illustrate <em>when</em> each method is most natural to apply.</p>
+<section id="method-1-restriction-to-a-line" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="method-1-restriction-to-a-line">Method 1: Restriction to a Line</h4>
+<p>This method is especially useful for functions on <strong>matrix</strong> domains, where computing and analyzing a full Hessian may be infeasible. By restricting to a line <span class="math inline">X + tV</span>, we reduce the problem to checking <span class="math inline">g''(t) \leq 0</span> or <span class="math inline">g''(t) \geq 0</span>.</p>
+<div id="exm-method1-logdet" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.7 (Example: <span class="math inline">\log\det(X)</span> is Concave (via Restriction to a Line))</strong></span> We already proved this in <a href="#exm-logdet-concave" class="quarto-xref">Example&nbsp;<span>4.4</span></a>: for any <span class="math inline">X \succ 0</span> and symmetric <span class="math inline">V</span>, the restriction <span class="math inline">g(t) = \log\det(X + tV) = \text{const} + \sum_j \log(1 + t\lambda_j)</span> satisfies <span class="math inline">g''(t) = -\sum_j \lambda_j^2 / (1 + t\lambda_j)^2 \leq 0</span>. Since every 1D restriction is concave, <span class="math inline">\log\det</span> is concave on <span class="math inline">\mathbb{S}_{++}^n</span>.</p>
+<p>This example illustrates why Method 1 is so powerful: <span class="math inline">X</span> lives in <span class="math inline">\mathbb{R}^{n \times n}</span>, so the Hessian would be an <span class="math inline">n^2 \times n^2</span> matrix — extremely unwieldy. Restricting to a line bypasses this entirely and reduces the check to a simple 1D computation.</p>
+</div>
+</section>
+<section id="method-2-hessian-analysis" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="method-2-hessian-analysis">Method 2: Hessian Analysis</h4>
+<p>This is the most direct approach for smooth functions on <span class="math inline">\mathbb{R}^n</span>. Compute <span class="math inline">\nabla^2 f(x)</span> and show it is PSD everywhere. Several techniques help:</p>
+<ul>
+<li>If the Hessian factors as <span class="math inline">\alpha \cdot vv^\top</span> with <span class="math inline">\alpha \geq 0</span>, it is rank-one PSD (<a href="#exm-x2-over-y" class="quarto-xref">Example&nbsp;<span>4.5</span></a>).</li>
+<li>If the Hessian is diagonal, check that each diagonal entry is nonneg.</li>
+<li>For general Hessians, show <span class="math inline">v^\top \nabla^2 f(x) \, v \geq 0</span> for all <span class="math inline">v</span> using inequalities like Cauchy–Schwarz.</li>
+</ul>
+<div id="exm-method2-least-squares" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.8 (Example: Least Squares <span class="math inline">f(x) = \|Ax - b\|_2^2</span> is Convex)</strong></span> Let <span class="math inline">A \in \mathbb{R}^{m \times n}</span> and <span class="math inline">b \in \mathbb{R}^m</span>. Expanding <span class="math inline">f(x) = (Ax - b)^\top(Ax - b) = x^\top A^\top A x - 2b^\top A x + \|b\|_2^2</span>, the gradient and Hessian are:</p>
+<p><span class="math display">\nabla f(x) = 2A^\top(Ax - b), \qquad \nabla^2 f(x) = 2A^\top A.</span></p>
+<p>The Hessian is constant (independent of <span class="math inline">x</span>), and <span class="math inline">A^\top A \succeq 0</span> because for any <span class="math inline">v \in \mathbb{R}^n</span>:</p>
+<p><span class="math display">v^\top (A^\top A) v = \|Av\|_2^2 \geq 0.</span></p>
+<p>Therefore <span class="math inline">f</span> is convex. Moreover, <span class="math inline">f</span> is <strong>strictly convex</strong> if and only if <span class="math inline">A</span> has full column rank (i.e., <span class="math inline">A^\top A \succ 0</span>), and <strong><span class="math inline">m</span>-strongly convex</strong> if and only if <span class="math inline">\lambda_{\min}(A^\top A) \geq m/2</span>.</p>
+</div>
+<div id="exm-method2-negative-entropy" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.9 (Example: Negative Entropy <span class="math inline">f(x) = \sum_{j=1}^n x_j \log x_j</span> is Convex)</strong></span> Let <span class="math inline">f(x) = \sum_{j=1}^n x_j \log x_j</span> on <span class="math inline">\mathbb{R}_{++}^n = \{x : x_j &gt; 0\}</span>. The gradient and Hessian are:</p>
+<p><span class="math display">\nabla f(x) = \begin{pmatrix} \log x_1 + 1 \\ \vdots \\ \log x_n + 1 \end{pmatrix}, \qquad \nabla^2 f(x) = \operatorname{diag}\!\left(\frac{1}{x_1}, \ldots, \frac{1}{x_n}\right).</span></p>
+<p>Since <span class="math inline">x_j &gt; 0</span>, every diagonal entry <span class="math inline">1/x_j &gt; 0</span>, so <span class="math inline">\nabla^2 f(x) \succ 0</span> for all <span class="math inline">x \in \mathbb{R}_{++}^n</span>. Therefore <span class="math inline">f</span> is <strong>strictly convex</strong>. The negative entropy function is central to information theory and appears in the KL divergence <span class="math inline">D_{\text{KL}}(p \| q) = \sum_j p_j \log(p_j / q_j)</span>.</p>
+</div>
+</section>
+<section id="method-3-operations-that-preserve-convexity" class="level4 unnumbered">
+<h4 class="unnumbered anchored" data-anchor-id="method-3-operations-that-preserve-convexity">Method 3: Operations That Preserve Convexity</h4>
+<p>When a function is built from simpler pieces, we can often establish convexity by decomposing it into known convex building blocks and applying preservation rules — without computing a single derivative. This is the most elegant and scalable approach.</p>
+<div id="exm-method3-log-barrier" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.10 (Example: Log-Barrier Function <span class="math inline">f(x) = -\sum_{i=1}^m \log(b_i - a_i^\top x)</span>)</strong></span> The function <span class="math inline">f(x) = -\sum_{i=1}^m \log(b_i - a_i^\top x)</span> on the domain <span class="math inline">\{x : a_i^\top x &lt; b_i \;\forall\, i\}</span> is convex. Here is the reasoning, purely from preservation rules:</p>
+<ol type="1">
+<li><span class="math inline">h(u) = -\log u</span> is convex on <span class="math inline">u &gt; 0</span> (univariate, verify by <span class="math inline">h''(u) = 1/u^2 &gt; 0</span>).</li>
+<li>For each <span class="math inline">i</span>, the map <span class="math inline">x \mapsto b_i - a_i^\top x</span> is affine, so <span class="math inline">g_i(x) = -\log(b_i - a_i^\top x)</span> is convex by <strong>affine composition</strong> (Rule 2).</li>
+<li><span class="math inline">f(x) = \sum_{i=1}^m g_i(x)</span> is a sum of convex functions with unit weights, so <span class="math inline">f</span> is convex by <strong>nonneg. weighted sum</strong> (Rule 1).</li>
+</ol>
+<p>This function is the <strong>logarithmic barrier</strong> used in interior-point methods. The argument above requires no Hessian computation — only the convexity of <span class="math inline">-\log</span> and two preservation rules.</p>
+</div>
+<div id="exm-method3-norm-affine" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.11 (Example: <span class="math inline">f(x) = \|Ax + b\|</span> for Any Norm)</strong></span> For any norm <span class="math inline">\|\cdot\|</span> on <span class="math inline">\mathbb{R}^m</span>, any <span class="math inline">A \in \mathbb{R}^{m \times n}</span>, and any <span class="math inline">b \in \mathbb{R}^m</span>, the function <span class="math inline">f(x) = \|Ax + b\|</span> is convex on <span class="math inline">\mathbb{R}^n</span>.</p>
+<ol type="1">
+<li>Any norm <span class="math inline">g(z) = \|z\|</span> is convex (proved in <a href="#exm-common-convex-concave-functions" class="quarto-xref">Example&nbsp;<span>4.2</span></a> via triangle inequality + homogeneity).</li>
+<li>The map <span class="math inline">x \mapsto Ax + b</span> is affine.</li>
+<li>By <strong>affine composition</strong> (Rule 2), <span class="math inline">f(x) = g(Ax + b) = \|Ax + b\|</span> is convex.</li>
+</ol>
+<p>This covers <span class="math inline">\|Ax + b\|_1</span> (sparsity-promoting), <span class="math inline">\|Ax + b\|_2</span> (least absolute deviation), <span class="math inline">\|Ax + b\|_\infty</span> (Chebyshev approximation), and matrix norms <span class="math inline">\|AX + B\|_*</span> (nuclear norm for low-rank).</p>
+</div>
+<p>The three strategies above — definition/restriction, Hessian, and preservation rules — give us complementary ways to verify convexity. In practice, most convexity proofs use either Method 2 (for smooth, self-contained functions) or Method 3 (for structured objectives built from simpler pieces). Method 1 is the tool of choice for functions on matrix domains.</p>
+</section>
+</section>
 </section>
 <section id="sec-operations-convex-funcs" class="level2" data-number="4.4">
 <h2 data-number="4.4" class="anchored" data-anchor-id="sec-operations-convex-funcs"><span class="header-section-number">4.4</span> Operations That Preserve Convexity</h2>
-<p>Just as we built complex convex sets from simpler ones (<a href="03-convex-sets.html#thm-operations-convex-sets" class="quarto-xref">Theorem&nbsp;<span>3.2</span></a>), we can establish convexity of complicated objective functions by decomposing them into simpler convex components. The following rules are the function-level analogue of those set operations: they let us certify convexity compositionally, without ever computing a Hessian.</p>
+<p>Just as we built complex convex sets from simpler ones (<a href="03-convex-sets.html#thm-operations-convex-sets" class="quarto-xref">Theorem&nbsp;<span>3.4</span></a>), we can establish convexity of complicated objective functions by decomposing them into simpler convex components. The following rules are the function-level analogue of those set operations: they let us certify convexity compositionally, without ever computing a Hessian.</p>
 <div id="thm-operations-convex-functions" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 4.3 (Theorem 4.7 (Operations Preserving Convexity of Functions))</strong></span> &nbsp;</p>
-<ol type="1">
-<li><strong>Nonnegative weighted sum:</strong> If <span class="math inline">f_1, \ldots, f_k</span> are convex and <span class="math inline">w_1, \ldots, w_k \geq 0</span>, then <span class="math inline">\sum_{i=1}^k w_i f_i</span> is convex.</li>
-<li><strong>Composition with affine:</strong> If <span class="math inline">f</span> is convex, then <span class="math inline">g(x) = f(Ax + b)</span> is convex.</li>
-<li><strong>Pointwise maximum:</strong> If <span class="math inline">f_1, \ldots, f_k</span> are convex, then <span class="math inline">f(x) = \max_i f_i(x)</span> is convex.</li>
-<li><strong>Pointwise supremum:</strong> If <span class="math inline">f(x,y)</span> is convex in <span class="math inline">x</span> for each <span class="math inline">y</span>, then <span class="math inline">g(x) = \sup_y f(x,y)</span> is convex.</li>
-<li><strong>Composition rules:</strong>
+<p><span class="theorem-title"><strong>Theorem 4.6 (Operations Preserving Convexity of Functions)</strong></span> The following six rules allow us to build convex functions from simpler ones. Together, they handle the vast majority of objectives encountered in practice.</p>
+<p><strong>1. Nonnegative weighted sums.</strong> If <span class="math inline">f_1, \ldots, f_k</span> are convex and <span class="math inline">w_1, \ldots, w_k \geq 0</span>, then <span class="math inline">\sum_{i=1}^k w_i f_i</span> is convex. This is the most basic rule — it says that convex functions form a convex cone. In practice, it covers regularized objectives like <span class="math inline">\ell(\theta) + \lambda \|\theta\|_2^2</span>, which is a nonnegative combination of a convex loss and a convex penalty.</p>
+<p><strong>2. Composition with affine maps.</strong> If <span class="math inline">f</span> is convex, then <span class="math inline">g(x) = f(Ax + b)</span> is convex. Affine pre-composition preserves convexity because it simply reparametrizes the domain. For example, <span class="math inline">\|Ax - b\|_2</span> is convex because the norm is convex and <span class="math inline">x \mapsto Ax - b</span> is affine.</p>
+<p><strong>3. Pointwise maximum.</strong> If <span class="math inline">f_1, \ldots, f_k</span> are convex, then <span class="math inline">f(x) = \max_i f_i(x)</span> is convex. Geometrically, the epigraph of the max is the intersection of the individual epigraphs (all convex sets), so it is convex. This rule explains why piecewise-linear convex functions arise naturally: the max of finitely many affine functions is always convex.</p>
+<p><strong>4. Pointwise supremum.</strong> More generally, if <span class="math inline">f(x,y)</span> is convex in <span class="math inline">x</span> for each <span class="math inline">y</span>, then <span class="math inline">g(x) = \sup_y f(x,y)</span> is convex. This extends rule 3 from a finite maximum to a (possibly infinite) supremum. It is the key tool for proving that support functions, norms, and conjugate functions are convex.</p>
+<p><strong>5. Composition rules.</strong> Two cases preserve convexity under scalar composition <span class="math inline">h \circ g</span>. If <span class="math inline">h</span> is convex and nondecreasing and <span class="math inline">g</span> is convex, then <span class="math inline">h(g(x))</span> is convex — for example, <span class="math inline">e^{g(x)}</span> is convex when <span class="math inline">g</span> is convex, since <span class="math inline">e^t</span> is convex and nondecreasing. Conversely, if <span class="math inline">h</span> is convex and nonincreasing and <span class="math inline">g</span> is concave, then <span class="math inline">h(g(x))</span> is convex — for example, <span class="math inline">1/g(x)</span> is convex when <span class="math inline">g</span> is positive and concave, since <span class="math inline">1/t</span> is convex and nonincreasing on <span class="math inline">t &gt; 0</span>.</p>
+<p><strong>6. Partial minimization.</strong> If <span class="math inline">f(x,y)</span> is jointly convex in <span class="math inline">(x,y)</span>, then <span class="math inline">g(x) = \inf_y f(x,y)</span> is convex (provided the infimum is attained or handled properly). This is the “projection” rule: minimizing out a variable preserves convexity. It is dual to rule 4 (supremum preserves convexity, infimum preserves convexity of the <em>joint</em> function).</p>
+</div>
+<p>The following interactive figure illustrates how these preservation rules work. Each panel shows a rule in action: starting from known convex functions and applying an operation to produce a new convex function.</p>
+<div class="figure-container">
+  <div id="fig-func-operations"></div>
+  <div class="figure-caption">Figure: Operations preserving convexity of functions. (a) Nonnegative weighted sum of two convex functions is convex. (b) Pointwise maximum of affine functions produces a convex piecewise-linear function. (c) Composition of convex nondecreasing $h$ with convex $g$ is convex. (d) Affine composition: $f(Ax+b)$ preserves convexity.</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const cfg = {responsive: true, displayModeBar: false};
+  const N = 300;
+
+  // ========== (a) Nonneg weighted sum ==========
+  const xa = [], f1a = [], f2a = [], ga = [];
+  for (let i = 0; i < N; i++) {
+    const t = -2.5 + 5 * i / (N - 1);
+    xa.push(t);
+    f1a.push(t * t);
+    f2a.push((t - 1.5) * (t - 1.5));
+    ga.push(0.6 * t * t + 0.4 * (t - 1.5) * (t - 1.5));
+  }
+
+  // ========== (b) Pointwise max ==========
+  const xb = [], l1 = [], l2 = [], l3 = [], maxb = [];
+  for (let i = 0; i < N; i++) {
+    const t = -2 + 4 * i / (N - 1);
+    xb.push(t);
+    const v1 = 1.2 * t + 0.5, v2 = -0.8 * t + 1.5, v3 = 0.3 * t - 0.8;
+    l1.push(v1); l2.push(v2); l3.push(v3);
+    maxb.push(Math.max(v1, v2, v3));
+  }
+
+  // ========== (c) Composition h(g(x)) ==========
+  const xc = [], gc = [], hgc = [];
+  for (let i = 0; i < N; i++) {
+    const t = -2 + 4 * i / (N - 1);
+    xc.push(t);
+    const gval = Math.max(t, 0); // ReLU (convex)
+    gc.push(gval);
+    hgc.push(gval * gval); // t^2 is convex nondecreasing on t>=0
+  }
+
+  // ========== (d) Affine composition ==========
+  const xd = [], fd_orig = [], fd_comp = [];
+  for (let i = 0; i < N; i++) {
+    const t = -2 + 4 * i / (N - 1);
+    xd.push(t);
+    fd_orig.push(t * t);
+    fd_comp.push((2 * t - 1) * (2 * t - 1)); // f(2x-1) = (2x-1)^2
+  }
+
+  const traces = [
+    // (a) Weighted sum
+    {x: xa, y: f1a, mode: 'lines', line: {color: '#7b97ad', width: 1.5, dash: 'dot'},
+     name: 'f\u2081(x)=x\u00b2', xaxis: 'x', yaxis: 'y', legendgroup: 'a'},
+    {x: xa, y: f2a, mode: 'lines', line: {color: '#b8995e', width: 1.5, dash: 'dot'},
+     name: 'f\u2082(x)=(x\u22121.5)\u00b2', xaxis: 'x', yaxis: 'y', legendgroup: 'a'},
+    {x: xa, y: ga, mode: 'lines', line: {color: '#7a9a7e', width: 3},
+     name: '0.6f\u2081+0.4f\u2082', xaxis: 'x', yaxis: 'y', legendgroup: 'a'},
+
+    // (b) Pointwise max
+    {x: xb, y: l1, mode: 'lines', line: {color: '#7b97ad', width: 1, dash: 'dot'},
+     xaxis: 'x2', yaxis: 'y2', showlegend: false},
+    {x: xb, y: l2, mode: 'lines', line: {color: '#b8995e', width: 1, dash: 'dot'},
+     xaxis: 'x2', yaxis: 'y2', showlegend: false},
+    {x: xb, y: l3, mode: 'lines', line: {color: '#907ea0', width: 1, dash: 'dot'},
+     xaxis: 'x2', yaxis: 'y2', showlegend: false},
+    {x: xb, y: maxb, mode: 'lines', line: {color: '#c47a6a', width: 3},
+     name: 'max(f\u2081,f\u2082,f\u2083)', xaxis: 'x2', yaxis: 'y2'},
+
+    // (c) Composition
+    {x: xc, y: gc, mode: 'lines', line: {color: '#7b97ad', width: 1.5, dash: 'dot'},
+     name: 'g(x)=ReLU(x)', xaxis: 'x3', yaxis: 'y3'},
+    {x: xc, y: hgc, mode: 'lines', line: {color: '#7a9a7e', width: 3},
+     name: 'h(g(x))=ReLU(x)\u00b2', xaxis: 'x3', yaxis: 'y3'},
+
+    // (d) Affine composition
+    {x: xd, y: fd_orig, mode: 'lines', line: {color: '#7b97ad', width: 1.5, dash: 'dot'},
+     name: 'f(x)=x\u00b2', xaxis: 'x4', yaxis: 'y4'},
+    {x: xd, y: fd_comp, mode: 'lines', line: {color: '#b8995e', width: 3},
+     name: 'f(2x\u22121)=(2x\u22121)\u00b2', xaxis: 'x4', yaxis: 'y4'},
+  ];
+
+  const ann = (text, x, y, col) => ({
+    text: '<b>'+text+'</b>', x, y, xref: 'paper', yref: 'paper',
+    showarrow: false, font: {size: 13, color: col || '#3d3530'}
+  });
+
+  const layout = {
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: {family: '"Source Serif 4", Georgia, serif', size: 12},
+    height: 480,
+    grid: {rows: 2, columns: 2, pattern: 'independent', xgap: 0.08, ygap: 0.14},
+    xaxis:  {title: 'x', domain: [0, 0.44], zeroline: true, zerolinecolor: '#d4c9b8', gridcolor: '#e8e2d8'},
+    yaxis:  {title: '', domain: [0.57, 1], range: [-0.5, 8], zeroline: false, gridcolor: '#e8e2d8'},
+    xaxis2: {title: 'x', domain: [0.56, 1], zeroline: true, zerolinecolor: '#d4c9b8', gridcolor: '#e8e2d8'},
+    yaxis2: {title: '', domain: [0.57, 1], range: [-2.5, 4], zeroline: false, gridcolor: '#e8e2d8'},
+    xaxis3: {title: 'x', domain: [0, 0.44], zeroline: true, zerolinecolor: '#d4c9b8', gridcolor: '#e8e2d8'},
+    yaxis3: {title: '', domain: [0, 0.43], range: [-0.5, 5], zeroline: false, gridcolor: '#e8e2d8'},
+    xaxis4: {title: 'x', domain: [0.56, 1], zeroline: true, zerolinecolor: '#d4c9b8', gridcolor: '#e8e2d8'},
+    yaxis4: {title: '', domain: [0, 0.43], range: [-1, 12], zeroline: false, gridcolor: '#e8e2d8'},
+    margin: {t: 10, b: 40, l: 40, r: 10},
+    showlegend: true,
+    legend: {x: 0.5, y: -0.12, orientation: 'h', font: {size: 10},
+             xanchor: 'center', yanchor: 'top'},
+    annotations: [
+      ann('(a) Nonneg. weighted sum', 0.22, 1.03, '#7a9a7e'),
+      ann('(b) Pointwise maximum', 0.78, 1.03, '#c47a6a'),
+      ann('(c) Composition h\u2218g', 0.22, 0.50, '#7a9a7e'),
+      ann('(d) Affine composition', 0.78, 0.50, '#b8995e'),
+    ],
+  };
+  Plotly.newPlot('fig-func-operations', traces, layout, cfg);
+});
+</script>
+<p>We now derive each rule. Rules 1–4 and 6 follow directly from the definition of convexity (<a href="#eq-convex-function-def" class="quarto-xref">Equation&nbsp;<span>4.1</span></a>); Rule 5 requires the chain rule and is the most instructive to work through carefully, especially in the multivariate setting.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof of <a href="#thm-operations-convex-functions" class="quarto-xref">Theorem&nbsp;<span>4.6</span></a>.</strong> Throughout, <span class="math inline">x, y \in \mathbb{R}^n</span> are arbitrary points in the domain and <span class="math inline">\lambda \in [0,1]</span>.</p>
+<p><strong>Rule 1 (Nonnegative weighted sums).</strong> Let <span class="math inline">g(x) = \sum_{i=1}^k w_i f_i(x)</span> with <span class="math inline">w_i \geq 0</span> and each <span class="math inline">f_i : \mathbb{R}^n \to \mathbb{R}</span> convex. For any <span class="math inline">x, y \in \mathbb{R}^n</span>,</p>
+<p><span class="math display">g(\lambda x + (1{-}\lambda)y) = \sum_{i=1}^k w_i \, f_i(\lambda x + (1{-}\lambda)y) \leq \sum_{i=1}^k w_i\bigl[\lambda \, f_i(x) + (1{-}\lambda) \, f_i(y)\bigr] = \lambda\, g(x) + (1{-}\lambda)\, g(y),</span></p>
+<p>where the inequality applies convexity of each <span class="math inline">f_i</span> term-by-term (the direction of the inequality is preserved because <span class="math inline">w_i \geq 0</span>). This extends to infinite sums and integrals: if <span class="math inline">f(x, \alpha)</span> is convex in <span class="math inline">x</span> for each <span class="math inline">\alpha</span> and <span class="math inline">w(\alpha) \geq 0</span>, then <span class="math inline">g(x) = \int f(x,\alpha)\, w(\alpha)\, d\alpha</span> is convex (provided the integral exists), since integration is a limit of nonneg. weighted sums.</p>
+<p><strong>Rule 2 (Affine composition).</strong> Let <span class="math inline">g(x) = f(Ax + b)</span> where <span class="math inline">A \in \mathbb{R}^{m \times n}</span>, <span class="math inline">b \in \mathbb{R}^m</span>, and <span class="math inline">f : \mathbb{R}^m \to \mathbb{R}</span> is convex. The key insight is that affine maps preserve the mixing structure of convex combinations:</p>
+<p><span class="math display">A\bigl(\lambda x + (1{-}\lambda)y\bigr) + b = \lambda(Ax + b) + (1{-}\lambda)(Ay + b).</span></p>
+<p>Substituting into <span class="math inline">f</span> and applying convexity of <span class="math inline">f</span>:</p>
+<p><span class="math display">g(\lambda x + (1{-}\lambda)y) = f\bigl(\lambda(Ax{+}b) + (1{-}\lambda)(Ay{+}b)\bigr) \leq \lambda \, f(Ax{+}b) + (1{-}\lambda) \, f(Ay{+}b) = \lambda\, g(x) + (1{-}\lambda)\, g(y).</span></p>
+<p>This rule is powerful in the multivariate setting because <span class="math inline">A</span> can change the dimension. For instance, if <span class="math inline">f : \mathbb{R}^m \to \mathbb{R}</span> is convex and <span class="math inline">A \in \mathbb{R}^{m \times n}</span>, then <span class="math inline">g(x) = f(Ax + b)</span> is a convex function on <span class="math inline">\mathbb{R}^n</span>, potentially with a different dimension than the original. Common applications:</p>
 <ul>
-<li>If <span class="math inline">h</span> is convex &amp; nondecreasing and <span class="math inline">g</span> is convex, then <span class="math inline">h(g(x))</span> is convex.</li>
-<li>If <span class="math inline">h</span> is convex &amp; nonincreasing and <span class="math inline">g</span> is concave, then <span class="math inline">h(g(x))</span> is convex.</li>
+<li><span class="math inline">\|Ax - b\|_2</span> is convex on <span class="math inline">\mathbb{R}^n</span> (norm composed with affine map <span class="math inline">x \mapsto Ax - b</span>)</li>
+<li><span class="math inline">\log\bigl(\sum_j e^{a_j^\top x + b_j}\bigr)</span> is convex (log-sum-exp composed with the affine map <span class="math inline">x \mapsto (a_1^\top x + b_1, \ldots, a_m^\top x + b_m)</span>)</li>
+</ul>
+<p><strong>Rule 3 (Pointwise maximum).</strong> Let <span class="math inline">g(x) = \max_{i \in [k]} f_i(x)</span>. The proof uses two inequalities in sequence. For each index <span class="math inline">i</span>:</p>
+<p><span class="math display">f_i(\lambda x + (1{-}\lambda)y) \leq \lambda \, f_i(x) + (1{-}\lambda) \, f_i(y) \leq \lambda \max_j f_j(x) + (1{-}\lambda)\max_j f_j(y) = \lambda\, g(x) + (1{-}\lambda)\, g(y).</span></p>
+<p>The first inequality is convexity of <span class="math inline">f_i</span>; the second replaces <span class="math inline">f_i(x) \leq \max_j f_j(x) = g(x)</span> and similarly for <span class="math inline">y</span>. Since this upper bound holds for every <span class="math inline">i</span>, taking the maximum over <span class="math inline">i</span> on the left gives <span class="math inline">g(\lambda x + (1{-}\lambda)y) \leq \lambda\, g(x) + (1{-}\lambda)\, g(y)</span>.</p>
+<p><em>Epigraph interpretation (alternative proof).</em> The epigraph of the pointwise max is <span class="math inline">\text{epi}(\max_i f_i) = \{(x,t) : f_i(x) \leq t \;\;\forall\, i\} = \bigcap_{i=1}^k \text{epi}(f_i)</span>. Since each <span class="math inline">\text{epi}(f_i)</span> is convex (<a href="#thm-epigraph-convex" class="quarto-xref">Theorem&nbsp;<span>4.7</span></a>), their intersection is convex (<a href="03-convex-sets.html#thm-operations-convex-sets" class="quarto-xref">Theorem&nbsp;<span>3.4</span></a>, Rule 1), so <span class="math inline">\max_i f_i</span> is convex.</p>
+<p><strong>Rule 4 (Pointwise supremum).</strong> The same argument as Rule 3 applies with <span class="math inline">\sup_y</span> replacing <span class="math inline">\max_i</span>. More precisely, let <span class="math inline">g(x) = \sup_{y \in \mathcal{Y}} f(x, y)</span> where <span class="math inline">f(x, y)</span> is convex in <span class="math inline">x</span> for each fixed <span class="math inline">y \in \mathcal{Y}</span>. For any fixed <span class="math inline">y</span>:</p>
+<p><span class="math display">f(\lambda x_1 + (1{-}\lambda)x_2, \; y) \leq \lambda \, f(x_1, y) + (1{-}\lambda) \, f(x_2, y) \leq \lambda\, g(x_1) + (1{-}\lambda)\, g(x_2),</span></p>
+<p>where the second inequality uses <span class="math inline">f(x_i, y) \leq \sup_{y'} f(x_i, y') = g(x_i)</span>. Taking <span class="math inline">\sup_y</span> on the left yields <span class="math inline">g(\lambda x_1 + (1{-}\lambda)x_2) \leq \lambda\, g(x_1) + (1{-}\lambda)\, g(x_2)</span>.</p>
+<p><strong>Rule 5 (Scalar composition).</strong> This is the most delicate rule and requires separate treatment of the univariate and multivariate cases.</p>
+<p><em>Univariate case (<span class="math inline">n = 1</span>).</em> Let <span class="math inline">f(x) = h(g(x))</span> where <span class="math inline">g : \mathbb{R} \to \mathbb{R}</span> and <span class="math inline">h : \mathbb{R} \to \mathbb{R}</span> are both twice differentiable. By the chain rule:</p>
+<p><span class="math display">f''(x) = h''(g(x))\,\bigl[g'(x)\bigr]^2 + h'(g(x))\, g''(x).</span></p>
+<p><em>Case (a): <span class="math inline">h</span> convex and nondecreasing, <span class="math inline">g</span> convex.</em> The first term is nonneg because <span class="math inline">h'' \geq 0</span> and <span class="math inline">[g']^2 \geq 0</span>. The second term is nonneg because <span class="math inline">h' \geq 0</span> (nondecreasing) and <span class="math inline">g'' \geq 0</span> (convex). Hence <span class="math inline">f'' \geq 0</span> and <span class="math inline">f</span> is convex.</p>
+<p><em>Case (b): <span class="math inline">h</span> convex and nonincreasing, <span class="math inline">g</span> concave.</em> The first term is still nonneg (<span class="math inline">h'' \geq 0</span>, <span class="math inline">[g']^2 \geq 0</span>). The second term is the product of <span class="math inline">h'(g(x)) \leq 0</span> (nonincreasing) and <span class="math inline">g''(x) \leq 0</span> (concave), which is nonneg. Hence <span class="math inline">f'' \geq 0</span>.</p>
+<p><em>Multivariate case (<span class="math inline">n \geq 1</span>, scalar-valued <span class="math inline">g</span>).</em> Now let <span class="math inline">g : \mathbb{R}^n \to \mathbb{R}</span> and <span class="math inline">h : \mathbb{R} \to \mathbb{R}</span>, so <span class="math inline">f(x) = h(g(x))</span> maps <span class="math inline">\mathbb{R}^n \to \mathbb{R}</span>. The multivariate chain rule gives the gradient and Hessian:</p>
+<p><span class="math display">\nabla f(x) = h'(g(x)) \, \nabla g(x),</span></p>
+<p><span class="math display">\nabla^2 f(x) = h''(g(x))\,\nabla g(x)\,\nabla g(x)^\top + h'(g(x))\,\nabla^2 g(x).</span></p>
+<p>The Hessian decomposes into two terms:</p>
+<ul>
+<li><strong>First term:</strong> <span class="math inline">h''(g(x)) \cdot \nabla g(x)\,\nabla g(x)^\top</span>. This is a <strong>rank-one</strong> matrix, and <span class="math inline">vv^\top \succeq 0</span> for any vector <span class="math inline">v</span>. So this term is PSD whenever <span class="math inline">h''(g(x)) \geq 0</span>, i.e., when <span class="math inline">h</span> is convex.</li>
+<li><strong>Second term:</strong> <span class="math inline">h'(g(x)) \cdot \nabla^2 g(x)</span>. This is the Hessian of <span class="math inline">g</span> scaled by <span class="math inline">h'(g(x))</span>.</li>
+</ul>
+<p>In case (a), <span class="math inline">h' \geq 0</span> and <span class="math inline">\nabla^2 g \succeq 0</span> (since <span class="math inline">g</span> is convex), so the second term is PSD. Both terms are PSD, hence <span class="math inline">\nabla^2 f \succeq 0</span>.</p>
+<p>In case (b), <span class="math inline">h' \leq 0</span> and <span class="math inline">\nabla^2 g \preceq 0</span> (since <span class="math inline">g</span> is concave), so <span class="math inline">h' \cdot \nabla^2 g \succeq 0</span> (product of two nonpositive quantities). Again both terms are PSD, so <span class="math inline">\nabla^2 f \succeq 0</span>.</p>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Two conditions that do NOT preserve convexity:</strong> (i) <span class="math inline">h</span> convex nondecreasing with <span class="math inline">g</span> concave, and (ii) <span class="math inline">h</span> convex nonincreasing with <span class="math inline">g</span> convex. In both cases, the two terms in the Hessian have opposite signs, and one cannot conclude PSD-ness. For example, <span class="math inline">h(t) = t^2</span> (convex nondecreasing on <span class="math inline">t \geq 0</span>) composed with <span class="math inline">g(x) = -x^2 + 1</span> (concave) gives <span class="math inline">f(x) = (-x^2+1)^2 = x^4 - 2x^2 + 1</span>, which satisfies <span class="math inline">f''(0) = -4 &lt; 0</span> — not convex.</p>
+</div>
+</div>
+</div>
+<p><strong>Rule 6 (Partial minimization).</strong> Let <span class="math inline">f : \mathbb{R}^n \times \mathbb{R}^m \to \mathbb{R}</span> be jointly convex in <span class="math inline">(x, y)</span> where <span class="math inline">x \in \mathbb{R}^n</span> and <span class="math inline">y \in \mathbb{R}^m</span>. Define <span class="math inline">g(x) = \inf_{y \in \mathbb{R}^m} f(x,y)</span>.</p>
+<p>For any <span class="math inline">x_1, x_2 \in \mathbb{R}^n</span> and <span class="math inline">\varepsilon &gt; 0</span>, choose <span class="math inline">y_1, y_2 \in \mathbb{R}^m</span> such that <span class="math inline">f(x_1, y_1) \leq g(x_1) + \varepsilon</span> and <span class="math inline">f(x_2, y_2) \leq g(x_2) + \varepsilon</span> (such <span class="math inline">y_i</span> exist by definition of infimum). Setting <span class="math inline">\bar{y} = \lambda y_1 + (1{-}\lambda)y_2</span>:</p>
+<p><span class="math display">g(\lambda x_1 + (1{-}\lambda)x_2) \leq f(\lambda x_1 + (1{-}\lambda)x_2,\;\bar{y}) \leq \lambda \, f(x_1, y_1) + (1{-}\lambda) \, f(x_2, y_2) \leq \lambda\, g(x_1) + (1{-}\lambda)\, g(x_2) + \varepsilon.</span></p>
+<p>The chain of inequalities uses three facts: (1) <span class="math inline">g(x) = \inf_y f(x,y) \leq f(x, \bar{y})</span> for any particular <span class="math inline">\bar{y}</span>; (2) joint convexity of <span class="math inline">f</span> in <span class="math inline">(x,y)</span>; (3) the choice of <span class="math inline">y_1, y_2</span> as near-minimizers. Since <span class="math inline">\varepsilon &gt; 0</span> is arbitrary, we conclude <span class="math inline">g(\lambda x_1 + (1{-}\lambda)x_2) \leq \lambda\, g(x_1) + (1{-}\lambda)\, g(x_2)</span>.</p>
+<p>Note that <span class="math inline">x</span> and <span class="math inline">y</span> can live in different-dimensional spaces: <span class="math inline">f(x, y)</span> is jointly convex in <span class="math inline">(x, y) \in \mathbb{R}^n \times \mathbb{R}^m</span>, and the resulting <span class="math inline">g(x)</span> is a convex function on <span class="math inline">\mathbb{R}^n</span>. The “minimized-out” variable <span class="math inline">y</span> disappears. <span class="math inline">\blacksquare</span></p>
+</div>
+<section id="sec-additional-preservation" class="level3" data-number="4.4.1">
+<h3 data-number="4.4.1" class="anchored" data-anchor-id="sec-additional-preservation"><span class="header-section-number">4.4.1</span> Additional Preservation Rules</h3>
+<p>The six rules above handle most cases, but a few additional rules are worth knowing.</p>
+<p><strong>7. Perspective of a convex function.</strong> Let <span class="math inline">f : D \subseteq \mathbb{R}^n \to \mathbb{R}</span> be convex. The <strong>perspective</strong> of <span class="math inline">f</span> is the function <span class="math inline">g : \mathbb{R}^{n+1} \to \mathbb{R}</span> defined by</p>
+<p><span class="math display">g(x, t) = t \cdot f\!\left(\frac{x}{t}\right), \quad \text{dom}(g) = \{(x, t) : x/t \in D, \; t &gt; 0\}.</span></p>
+<p>Then <span class="math inline">g</span> is convex. If <span class="math inline">f</span> is concave, then the perspective of <span class="math inline">f</span> is concave. The perspective operation “scales” the function by a positive variable, and it arises naturally in information theory (e.g., the KL divergence is the perspective of <span class="math inline">-\log</span>).</p>
+<p><strong>8. Vector composition (multivariate case).</strong> The scalar composition rule (Rule 5) handles <span class="math inline">h \circ g</span> where <span class="math inline">g : \mathbb{R}^n \to \mathbb{R}</span> is a single function. In practice, we often compose an “outer” function <span class="math inline">h</span> with multiple “inner” functions simultaneously. Suppose <span class="math inline">f(x) = h(g_1(x), g_2(x), \ldots, g_k(x))</span> where each <span class="math inline">g_i : \mathbb{R}^n \to \mathbb{R}</span> and <span class="math inline">h : \mathbb{R}^k \to \mathbb{R}</span>. Writing <span class="math inline">g(x) = (g_1(x), \ldots, g_k(x)) \in \mathbb{R}^k</span>, we have <span class="math inline">f = h \circ g</span>. Then:</p>
+<ul>
+<li><span class="math inline">f</span> is convex if <span class="math inline">h</span> is convex, <strong>nondecreasing in each argument</strong>, and each <span class="math inline">g_i</span> is convex.</li>
+<li><span class="math inline">f</span> is convex if <span class="math inline">h</span> is convex, <strong>nonincreasing in each argument</strong>, and each <span class="math inline">g_i</span> is concave.</li>
+</ul>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof (Vector composition, multivariate Hessian analysis).</strong> Assume all functions are twice differentiable. Let <span class="math inline">z = g(x) \in \mathbb{R}^k</span> and write the Jacobian of <span class="math inline">g</span> as <span class="math inline">J_g(x) \in \mathbb{R}^{k \times n}</span>, where the <span class="math inline">i</span>-th row is <span class="math inline">\nabla g_i(x)^\top</span>. By the multivariate chain rule:</p>
+<p><span class="math display">\nabla f(x) = J_g(x)^\top \, \nabla h(z),</span></p>
+<p><span class="math display">\nabla^2 f(x) = J_g(x)^\top \, \nabla^2 h(z) \, J_g(x) + \sum_{i=1}^k \frac{\partial h}{\partial z_i}(z) \, \nabla^2 g_i(x).</span></p>
+<p>The Hessian of <span class="math inline">f</span> decomposes into two parts:</p>
+<ul>
+<li><strong>First term:</strong> <span class="math inline">J_g(x)^\top \, \nabla^2 h(z) \, J_g(x)</span>. Since <span class="math inline">h</span> is convex, <span class="math inline">\nabla^2 h(z) \succeq 0</span>, so for any <span class="math inline">v \in \mathbb{R}^n</span>:</li>
+</ul>
+<p><span class="math display">v^\top \bigl[J_g^\top \nabla^2 h \, J_g\bigr] v = (J_g v)^\top \nabla^2 h \, (J_g v) \geq 0.</span></p>
+<p>This term is always PSD when <span class="math inline">h</span> is convex, regardless of the <span class="math inline">g_i</span>.</p>
+<ul>
+<li><p><strong>Second term:</strong> <span class="math inline">\sum_{i=1}^k \frac{\partial h}{\partial z_i} \, \nabla^2 g_i(x)</span>. This is a weighted sum of the Hessians of the individual <span class="math inline">g_i</span>’s. For this to be PSD, we need each weight <span class="math inline">\frac{\partial h}{\partial z_i}</span> and corresponding Hessian <span class="math inline">\nabla^2 g_i</span> to contribute nonnegatively:</p>
+<ul>
+<li>If <span class="math inline">h</span> is nondecreasing in argument <span class="math inline">i</span> (i.e., <span class="math inline">\frac{\partial h}{\partial z_i} \geq 0</span>) and <span class="math inline">g_i</span> is convex (<span class="math inline">\nabla^2 g_i \succeq 0</span>), then the <span class="math inline">i</span>-th term is PSD.</li>
+<li>If <span class="math inline">h</span> is nonincreasing in argument <span class="math inline">i</span> (i.e., <span class="math inline">\frac{\partial h}{\partial z_i} \leq 0</span>) and <span class="math inline">g_i</span> is concave (<span class="math inline">\nabla^2 g_i \preceq 0</span>), then the <span class="math inline">i</span>-th term is PSD (product of two non-positive quantities).</li>
 </ul></li>
-<li><strong>Partial minimization:</strong> If <span class="math inline">f(x,y)</span> is convex in <span class="math inline">(x,y)</span>, then <span class="math inline">g(x) = \inf_y f(x,y)</span> is convex (provided the infimum is attained or handled properly).</li>
-</ol>
+</ul>
+<p>In either case, the sum of PSD matrices is PSD, so <span class="math inline">\nabla^2 f(x) \succeq 0</span>. <span class="math inline">\blacksquare</span></p>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -576,25 +1122,148 @@ Figure&nbsp;4.2: Three characterizations of convex functions: first-order (tange
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Tip</span>Remark: Why These Rules Matter
+<span class="screen-reader-only">Tip</span>Multivariate Composition Examples
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>These rules let us establish convexity of complex functions <em>without</em> computing derivatives. For instance, <span class="math inline">\|Ax - b\|_2</span> is convex because the norm is convex and <span class="math inline">Ax - b</span> is affine (rule 2). The max of linear functions is convex (rule 3), which shows that piecewise-linear convex functions arise naturally.</p>
+<p>The vector composition rule handles complex multivariate objectives that Rule 5 alone cannot:</p>
+<ul>
+<li><strong><span class="math inline">f(x) = \log\!\bigl(e^{g_1(x)} + e^{g_2(x)} + \cdots + e^{g_k(x)}\bigr)</span></strong> is convex when each <span class="math inline">g_i</span> is convex, because <span class="math inline">h(z) = \text{log-sum-exp}(z)</span> is convex and nondecreasing in each <span class="math inline">z_i</span> (since <span class="math inline">\partial h / \partial z_i = e^{z_i}/\sum_j e^{z_j} &gt; 0</span>).</li>
+<li><strong><span class="math inline">f(x) = \bigl(\sum_{i=1}^k g_i(x)^p\bigr)^{1/p}</span></strong> for <span class="math inline">p \geq 1</span> is convex when each <span class="math inline">g_i</span> is convex and nonnegative, because <span class="math inline">h(z) = \|z\|_p</span> is convex and nondecreasing in each <span class="math inline">z_i</span> for <span class="math inline">z_i \geq 0</span>.</li>
+<li><strong><span class="math inline">f(x) = -\prod_{i=1}^k g_i(x)^{1/k}</span></strong> (negative geometric mean) is convex when each <span class="math inline">g_i</span> is concave and positive, because <span class="math inline">h(z) = -(\prod z_i)^{1/k}</span> is convex and nonincreasing in each <span class="math inline">z_i</span> on <span class="math inline">\mathbb{R}_{++}^k</span>.</li>
+</ul>
 </div>
 </div>
-<p>Having developed tools for building and recognizing convex functions, we now circle back to convex sets. It turns out that convex functions naturally produce convex sets when we “slice” their graphs at a fixed height. This connection is central to constrained optimization, where feasible regions are often defined by inequalities of the form <span class="math inline">f(x) \leq \alpha</span>.</p>
 </section>
-<section id="sec-sublevel-sets" class="level2" data-number="4.5">
-<h2 data-number="4.5" class="anchored" data-anchor-id="sec-sublevel-sets"><span class="header-section-number">4.5</span> Sublevel Sets and Quasiconvexity</h2>
+<section id="sec-preservation-examples" class="level3" data-number="4.4.2">
+<h3 data-number="4.4.2" class="anchored" data-anchor-id="sec-preservation-examples"><span class="header-section-number">4.4.2</span> Examples of Preservation Rules</h3>
+<div id="exm-preservation-applications" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.12 (Applications of Preservation Rules)</strong></span> <strong>(i) Piecewise linear functions.</strong> <span class="math inline">f(x) = \max_{i \in [m]}\{a_i^\top x + b_i\}</span> is convex (Rule 3: max of affine functions). This is the most general form of a convex piecewise linear function.</p>
+<p><strong>(ii) Sum of <span class="math inline">r</span>-largest components.</strong> For <span class="math inline">x \in \mathbb{R}^n</span>, let <span class="math inline">x_{(1)} \geq x_{(2)} \geq \cdots \geq x_{(n)}</span> denote the sorted entries. Then <span class="math inline">f(x) = x_{(1)} + x_{(2)} + \cdots + x_{(r)}</span> (the sum of the <span class="math inline">r</span> largest entries) is convex, because it can be written as:</p>
+<p><span class="math display">f(x) = \max_{1 \leq j_1 &lt; j_2 &lt; \cdots &lt; j_r \leq n} \{x_{j_1} + x_{j_2} + \cdots + x_{j_r}\},</span></p>
+<p>which is the pointwise maximum of <span class="math inline">\binom{n}{r}</span> linear functions (Rule 3).</p>
+<p><strong>(iii) Maximum eigenvalue.</strong> For a symmetric matrix <span class="math inline">X</span>, <span class="math inline">\lambda_{\max}(X) = \sup_{v : \|v\|_2 = 1} v^\top X v</span> is convex in <span class="math inline">X</span> (Rule 4: supremum of linear functions of <span class="math inline">X</span>).</p>
+<p><strong>(iv) Distance to a convex set.</strong> For a convex set <span class="math inline">S \subseteq \mathbb{R}^n</span> and any norm <span class="math inline">\|\cdot\|</span>, the distance function <span class="math inline">\text{dist}(x, S) = \inf_{y \in S} \|x - y\|</span> is convex on <span class="math inline">\mathbb{R}^n</span> (Rule 6: partial minimization of the jointly convex function <span class="math inline">\|x - y\|</span> over <span class="math inline">y \in S</span>).</p>
+</div>
+</section>
+</section>
+<section id="sec-epigraph" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="sec-epigraph"><span class="header-section-number">4.5</span> Epigraph and Connections to Convex Sets</h2>
+<p>Having developed tools for building and recognizing convex functions, we now establish the deep connection between convex functions and convex sets. The <strong>epigraph</strong> of a function is the set of points lying “on or above” its graph, and convexity of the function is equivalent to convexity of this set. This link is powerful: it lets us translate questions about functions into questions about sets, and vice versa.</p>
+<div id="def-epigraph" class="theorem definition">
+<p><span class="theorem-title"><strong>Definition 4.5 (Epigraph)</strong></span> The <strong>epigraph</strong> of a function <span class="math inline">f : \mathbb{R}^n \to \mathbb{R}</span> is the subset of <span class="math inline">\mathbb{R}^{n+1}</span> defined as</p>
+<p><span class="math display">\text{epi}(f) = \{(x, t) : x \in \text{dom}(f), \; f(x) \leq t\}.</span></p>
+<p>Geometrically, the epigraph is the region “above the graph” of <span class="math inline">f</span> (including the graph itself).</p>
+</div>
+<div class="figure-container">
+  <div id="fig-epigraph-2d"></div>
+  <div class="figure-caption">Figure: Epigraphs of a convex function (left, convex set) and a non-convex function (right, non-convex set). The shaded region above each curve is the epigraph.</div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const plotlyConfig = {responsive: true, displayModeBar: false};
+
+  // Convex function: f(x) = x^2
+  const N = 200;
+  const x1 = [], y1 = [], x1_fill = [], y1_fill = [];
+  for (let i = 0; i < N; i++) {
+    const t = -2 + 4 * i / (N - 1);
+    x1.push(t); y1.push(t * t);
+  }
+  // Fill region above curve
+  for (let i = 0; i < N; i++) { x1_fill.push(x1[i]); y1_fill.push(y1[i]); }
+  x1_fill.push(2); y1_fill.push(5);
+  x1_fill.push(-2); y1_fill.push(5);
+
+  // Non-convex function: f(x) = sin(2x) + 0.3x^2 + 1
+  const x2 = [], y2 = [], x2_fill = [], y2_fill = [];
+  for (let i = 0; i < N; i++) {
+    const t = -2 + 4 * i / (N - 1);
+    x2.push(t); y2.push(Math.sin(2*t) + 0.3*t*t + 1);
+  }
+  for (let i = 0; i < N; i++) { x2_fill.push(x2[i]); y2_fill.push(y2[i]); }
+  x2_fill.push(2); y2_fill.push(5);
+  x2_fill.push(-2); y2_fill.push(5);
+
+  const traces = [
+    {x: x1_fill, y: y1_fill, fill: 'toself', fillcolor: 'rgba(123,151,173,0.18)',
+     line: {color: 'rgba(0,0,0,0)'}, showlegend: false, xaxis: 'x', yaxis: 'y'},
+    {x: x1, y: y1, mode: 'lines', line: {color: '#7b97ad', width: 3},
+     name: 'f(x) = x² (convex)', xaxis: 'x', yaxis: 'y'},
+
+    {x: x2_fill, y: y2_fill, fill: 'toself', fillcolor: 'rgba(196,122,106,0.18)',
+     line: {color: 'rgba(0,0,0,0)'}, showlegend: false, xaxis: 'x2', yaxis: 'y2'},
+    {x: x2, y: y2, mode: 'lines', line: {color: '#c47a6a', width: 3},
+     name: 'non-convex f', xaxis: 'x2', yaxis: 'y2'},
+  ];
+
+  const layout = {
+    paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+    font: {family: '"Source Serif 4", Georgia, serif', size: 13},
+    grid: {rows: 1, columns: 2, pattern: 'independent'},
+    xaxis:  {title: 'x', domain: [0, 0.46], zeroline: false, gridcolor: '#e0d9d1'},
+    yaxis:  {title: 't', range: [-0.5, 5], zeroline: false, gridcolor: '#e0d9d1'},
+    xaxis2: {title: 'x', domain: [0.54, 1], zeroline: false, gridcolor: '#e0d9d1'},
+    yaxis2: {title: 't', range: [-0.5, 5], zeroline: false, gridcolor: '#e0d9d1'},
+    showlegend: true, legend: {x: 0.35, y: 1.0, font: {size: 12}},
+    margin: {t: 30, b: 50, l: 50, r: 20},
+    annotations: [
+      {text: '<b>Convex epigraph</b>', x: 0.23, y: 1.08, xref: 'paper', yref: 'paper',
+       showarrow: false, font: {size: 14, color: '#7b97ad'}},
+      {text: '<b>Non-convex epigraph</b>', x: 0.77, y: 1.08, xref: 'paper', yref: 'paper',
+       showarrow: false, font: {size: 14, color: '#c47a6a'}},
+      {text: 'epi(f)', x: 0, y: 4, xref: 'x', yref: 'y',
+       showarrow: false, font: {size: 15, color: '#7b97ad'}},
+      {text: 'epi(f)', x: 0, y: 4.3, xref: 'x2', yref: 'y2',
+       showarrow: false, font: {size: 15, color: '#c47a6a'}},
+    ],
+  };
+  Plotly.newPlot('fig-epigraph-2d', traces, layout, plotlyConfig);
+});
+</script>
+<p>The fundamental connection between convex functions and convex sets is:</p>
+<div id="thm-epigraph-convex" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 4.7 (Epigraph Characterization of Convexity)</strong></span> A function <span class="math inline">f : D \subseteq \mathbb{R}^n \to \mathbb{R}</span> is convex if and only if its epigraph <span class="math inline">\text{epi}(f) \subseteq \mathbb{R}^{n+1}</span> is a convex set.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>(1) <span class="math inline">f</span> not convex <span class="math inline">\Rightarrow</span> <span class="math inline">\text{epi}(f)</span> not convex.</strong> If <span class="math inline">f</span> is not convex, there exist <span class="math inline">x, y \in D</span> and <span class="math inline">\lambda \in [0,1]</span> such that <span class="math inline">f(\lambda x + (1-\lambda)y) &gt; \lambda f(x) + (1-\lambda) f(y)</span>. Consider the two points <span class="math inline">(x, f(x))</span> and <span class="math inline">(y, f(y))</span> in <span class="math inline">\text{epi}(f)</span>. Their convex combination is <span class="math inline">(\lambda x + (1-\lambda)y, \; \lambda f(x) + (1-\lambda)f(y))</span>. Since <span class="math inline">f(\lambda x + (1-\lambda)y) &gt; \lambda f(x) + (1-\lambda) f(y)</span>, this point lies <em>below</em> the graph of <span class="math inline">f</span>, hence it is not in <span class="math inline">\text{epi}(f)</span>. So <span class="math inline">\text{epi}(f)</span> is not convex.</p>
+<p><strong>(2) <span class="math inline">\text{epi}(f)</span> not convex <span class="math inline">\Rightarrow</span> <span class="math inline">f</span> not convex.</strong> If <span class="math inline">\text{epi}(f)</span> is not convex, there exist <span class="math inline">(x, t_x), (y, t_y) \in \text{epi}(f)</span> and <span class="math inline">\lambda \in [0,1]</span> such that <span class="math inline">(\lambda x + (1-\lambda)y, \; \lambda t_x + (1-\lambda)t_y) \notin \text{epi}(f)</span>. This means <span class="math inline">f(\lambda x + (1-\lambda)y) &gt; \lambda t_x + (1-\lambda) t_y \geq \lambda f(x) + (1-\lambda) f(y)</span> (since <span class="math inline">t_x \geq f(x)</span> and <span class="math inline">t_y \geq f(y)</span>). Hence <span class="math inline">f</span> is not convex. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Why the Epigraph Matters
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The epigraph characterization is more than a curiosity — it is a powerful proof technique. Many results about convex functions can be derived by applying known facts about convex sets to the epigraph. For example, Rule 3 (pointwise maximum) follows immediately: <span class="math inline">\text{epi}(\max_i f_i) = \bigcap_i \text{epi}(f_i)</span>, and the intersection of convex sets is convex.</p>
+</div>
+</div>
+</section>
+<section id="sec-sublevel-sets" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="sec-sublevel-sets"><span class="header-section-number">4.6</span> Sublevel Sets and Quasiconvexity</h2>
 <p>Sublevel sets describe the region where a function takes values at or below a given threshold — precisely the kind of set that arises as a feasible region when we impose an inequality constraint <span class="math inline">f(x) \leq \alpha</span>.</p>
 <div id="def-sublevel-set" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 4.2 (Definition 4.8 (Sublevel Set))</strong></span> The <strong><span class="math inline">\alpha</span>-sublevel set</strong> of a function <span class="math inline">f : \mathbb{R}^n \to \mathbb{R}</span> is</p>
+<p><span class="theorem-title"><strong>Definition 4.6 (Sublevel Set)</strong></span> The <strong><span class="math inline">\alpha</span>-sublevel set</strong> of a function <span class="math inline">f : \mathbb{R}^n \to \mathbb{R}</span> is</p>
 <p><span class="math display">C_\alpha = \{x \in \text{dom}(f) : f(x) \leq \alpha\}.</span></p>
+</div>
+<div id="fig-sublevel-sets" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-sublevel-sets-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch04-sublevel-sets.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;4.4: Sublevel sets illustrated in one and two dimensions. (a) For f(x) = \frac{1}{2}x^2, each sublevel set C_\alpha is a closed interval, and smaller \alpha gives a smaller interval — the sets are nested. (b) For f(x_1, x_2) = x_1^2 + 2x_2^2, the sublevel sets are nested ellipses shrinking toward the minimizer x^*."><img src="figures/ch04-sublevel-sets.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-sublevel-sets-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.4: Sublevel sets illustrated in one and two dimensions. (a) For <span class="math inline">f(x) = \frac{1}{2}x^2</span>, each sublevel set <span class="math inline">C_\alpha</span> is a closed interval, and smaller <span class="math inline">\alpha</span> gives a smaller interval — the sets are nested. (b) For <span class="math inline">f(x_1, x_2) = x_1^2 + 2x_2^2</span>, the sublevel sets are nested ellipses shrinking toward the minimizer <span class="math inline">x^*</span>.
+</figcaption>
+</figure>
 </div>
 <p>A natural and important consequence of function convexity is that cutting the graph at any height produces a convex “slice.” This means that constraints of the form <span class="math inline">f(x) \leq \alpha</span>, where <span class="math inline">f</span> is convex, always yield convex feasible regions.</p>
 <div id="thm-sublevel-sets-convex" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 4.4 (Theorem 4.8 (Sublevel Sets of Convex Functions Are Convex))</strong></span> If <span class="math inline">f</span> is convex, then every sublevel set <span class="math inline">C_\alpha = \{x : f(x) \leq \alpha\}</span> is convex.</p>
+<p><span class="theorem-title"><strong>Theorem 4.8 (Sublevel Sets of Convex Functions Are Convex)</strong></span> If <span class="math inline">f</span> is convex, then every sublevel set <span class="math inline">C_\alpha = \{x : f(x) \leq \alpha\}</span> is convex.</p>
 </div>
 <div class="proof">
 <p><span class="proof-title"><em>Proof</em>. </span>Let <span class="math inline">x, y \in C_\alpha</span>, so <span class="math inline">f(x) \leq \alpha</span> and <span class="math inline">f(y) \leq \alpha</span>. For any <span class="math inline">\lambda \in [0,1]</span>, applying the convexity definition (<a href="#eq-convex-function-def" class="quarto-xref">Equation&nbsp;<span>4.1</span></a>) gives the first inequality below, and the assumption <span class="math inline">f(x), f(y) \leq \alpha</span> gives the second:</p>
@@ -614,67 +1283,136 @@ Figure&nbsp;4.2: Three characterizations of convex functions: first-order (tange
 <p>The converse is <strong>not</strong> true: a function can have convex sublevel sets without being convex. For example, <span class="math inline">f(x) = -e^{-x^2}</span> has convex sublevel sets (intervals) but is not a convex function. The property of having convex sublevel sets is called <strong>quasiconvexity</strong>.</p>
 </div>
 </div>
+<div id="fig-quasiconvex" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-quasiconvex-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch04-quasiconvex.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;4.5: Convexity versus quasiconvexity. (Left) A convex function always has convex sublevel sets. (Center) The function f(x) = 3(1-e^{-x^2/2}) is quasiconvex — its sublevel sets are convex intervals — but it is not convex, as shown by the chord lying below the curve. (Right) A non-quasiconvex function has disconnected sublevel sets at some level \alpha."><img src="figures/ch04-quasiconvex.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-quasiconvex-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.5: Convexity versus quasiconvexity. (Left) A convex function always has convex sublevel sets. (Center) The function <span class="math inline">f(x) = 3(1-e^{-x^2/2})</span> is quasiconvex — its sublevel sets are convex intervals — but it is not convex, as shown by the chord lying below the curve. (Right) A non-quasiconvex function has disconnected sublevel sets at some level <span class="math inline">\alpha</span>.
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-jensen" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="sec-jensen"><span class="header-section-number">4.7</span> Jensen’s Inequality</h2>
+<p>The chord inequality defining convexity involves a convex combination of <em>two</em> points. Jensen’s inequality extends this to arbitrary <strong>random variables</strong>, making it one of the most widely used results connecting convexity to probability and statistics.</p>
+<div id="thm-jensen" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 4.9 (Jensen’s Inequality)</strong></span> Let <span class="math inline">X</span> be a random variable taking values in the domain of a convex function <span class="math inline">f</span>. Then</p>
+<p><span class="math display">f(\mathbb{E}[X]) \leq \mathbb{E}[f(X)].</span></p>
+<p>In words: the function of the mean is at most the mean of the function. If <span class="math inline">f</span> is concave, the inequality is reversed: <span class="math inline">f(\mathbb{E}[X]) \geq \mathbb{E}[f(X)]</span>.</p>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof of <a href="#thm-jensen" class="quarto-xref">Theorem&nbsp;<span>4.9</span></a>.</strong> We give two proofs: one for discrete random variables (by induction) and one for differentiable <span class="math inline">f</span> (via the first-order condition).</p>
+<p><strong>Proof 1 (Discrete case, by induction on <span class="math inline">k</span>).</strong> Suppose <span class="math inline">X</span> takes values <span class="math inline">x_1, \ldots, x_k</span> with probabilities <span class="math inline">p_1, \ldots, p_k</span> (where <span class="math inline">p_i \geq 0</span>, <span class="math inline">\sum_{i=1}^k p_i = 1</span>). We prove <span class="math inline">f\!\bigl(\sum_{i=1}^k p_i x_i\bigr) \leq \sum_{i=1}^k p_i \, f(x_i)</span> by induction.</p>
+<p><em>Base case (<span class="math inline">k = 2</span>):</em> This is exactly the definition of convexity with <span class="math inline">\lambda = p_1</span>:</p>
+<p><span class="math display">f(p_1 x_1 + p_2 x_2) \leq p_1 \, f(x_1) + p_2 \, f(x_2).</span></p>
+<p><em>Inductive step:</em> Assume the result holds for <span class="math inline">k-1</span> points. If <span class="math inline">p_k = 1</span>, the inequality is trivially <span class="math inline">f(x_k) \leq f(x_k)</span>. Otherwise <span class="math inline">1 - p_k &gt; 0</span>, and we write:</p>
+<p><span class="math display">\sum_{i=1}^k p_i x_i = p_k \, x_k + (1-p_k)\sum_{i=1}^{k-1} \frac{p_i}{1-p_k} x_i.</span></p>
+<p>Setting <span class="math inline">\bar{x} = \sum_{i=1}^{k-1} \frac{p_i}{1-p_k} x_i</span> (a convex combination of <span class="math inline">x_1, \ldots, x_{k-1}</span> since the weights sum to 1), apply the definition of convexity with <span class="math inline">\lambda = 1-p_k</span>:</p>
+<p><span class="math display">f\!\Bigl(\sum_{i=1}^k p_i x_i\Bigr) = f\bigl(p_k x_k + (1-p_k)\bar{x}\bigr) \leq p_k \, f(x_k) + (1-p_k) \, f(\bar{x}).</span></p>
+<p>By the inductive hypothesis applied to <span class="math inline">\bar{x}</span>:</p>
+<p><span class="math display">f(\bar{x}) \leq \sum_{i=1}^{k-1} \frac{p_i}{1-p_k} f(x_i).</span></p>
+<p>Combining: <span class="math inline">f\!\bigl(\sum_i p_i x_i\bigr) \leq p_k f(x_k) + \sum_{i=1}^{k-1} p_i f(x_i) = \sum_{i=1}^k p_i f(x_i)</span>.</p>
+<p><strong>Proof 2 (General case, via first-order condition).</strong> Assume <span class="math inline">f</span> is differentiable. Let <span class="math inline">\mu = \mathbb{E}[X]</span>. By the first-order condition (<a href="#eq-first-order-convexity" class="quarto-xref">Equation&nbsp;<span>4.2</span></a>) applied at <span class="math inline">x = \mu</span>:</p>
+<p><span class="math display">f(X) \geq f(\mu) + \nabla f(\mu)^\top(X - \mu) \quad \text{(holds for every realization of } X\text{)}.</span></p>
+<p>Taking expectations of both sides:</p>
+<p><span class="math display">\mathbb{E}[f(X)] \geq f(\mu) + \nabla f(\mu)^\top \underbrace{\mathbb{E}[X - \mu]}_{= \, 0} = f(\mu) = f(\mathbb{E}[X]).</span></p>
+<p>The key step is that the tangent hyperplane at <span class="math inline">\mu</span> provides a global linear lower bound, and linearity of expectation collapses the correction term to zero. <span class="math inline">\blacksquare</span></p>
+</div>
+<div id="exm-jensen-variance" class="theorem example">
+<p><span class="theorem-title"><strong>Example 4.13 (Example: Variance is Nonnegative)</strong></span> Take <span class="math inline">f(u) = u^2</span>, which is convex. Jensen’s inequality gives</p>
+<p><span class="math display">(\mathbb{E}[X])^2 \leq \mathbb{E}[X^2],</span></p>
+<p>which is equivalent to <span class="math inline">\text{Var}(X) = \mathbb{E}[X^2] - (\mathbb{E}[X])^2 \geq 0</span>. This familiar fact is a special case of Jensen’s inequality!</p>
+</div>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Applications of Jensen’s Inequality
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Jensen’s inequality appears throughout statistics and machine learning:</p>
+<ul>
+<li><strong>Information theory:</strong> The concavity of <span class="math inline">\log</span> gives <span class="math inline">\log(\mathbb{E}[X]) \geq \mathbb{E}[\log X]</span>, which is the basis of the <strong>evidence lower bound (ELBO)</strong> in variational inference.</li>
+<li><strong>EM algorithm:</strong> The E-step relies on Jensen’s inequality applied to <span class="math inline">\log</span> to construct a lower bound on the log-likelihood.</li>
+<li><strong>KL divergence:</strong> The nonnegativity of KL divergence (<span class="math inline">D_{\text{KL}}(p \| q) \geq 0</span>) follows from Jensen’s applied to <span class="math inline">-\log</span>.</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="sec-optimality-convex-functions" class="level2" data-number="4.8">
+<h2 data-number="4.8" class="anchored" data-anchor-id="sec-optimality-convex-functions"><span class="header-section-number">4.8</span> Optimality of Convex Functions</h2>
+<p>We conclude this chapter with the most important property of convex functions for optimization: <strong>every local minimum is a global minimum</strong>. This is the single fact that makes convex optimization tractable. We state it as a full theorem and prove all three directions of the equivalence.</p>
+<div id="thm-local-equals-global" class="theorem">
+<p><span class="theorem-title"><strong>Theorem 4.10 (Local Minimum <span class="math inline">\iff</span> Stationary Point <span class="math inline">\iff</span> Global Minimum)</strong></span> Let <span class="math inline">f : \mathbb{R}^n \to \mathbb{R}</span> be a convex and continuously differentiable function. Consider the unconstrained problem <span class="math inline">\min_{x \in \mathbb{R}^n} f(x)</span>. Then the following are equivalent:</p>
+<ol type="1">
+<li><span class="math inline">x^*</span> is a <strong>local minimizer</strong> of <span class="math inline">f</span>.</li>
+<li><span class="math inline">\nabla f(x^*) = 0</span> (i.e., <span class="math inline">x^*</span> is a <strong>stationary point</strong>).</li>
+<li><span class="math inline">x^*</span> is a <strong>global minimizer</strong> of <span class="math inline">f</span>.</li>
+</ol>
+</div>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span>We prove three implications.</p>
+<p><strong>(1) <span class="math inline">\Rightarrow</span> (2): Local minimum implies stationary point.</strong> Given a fixed <span class="math inline">x^* \in \mathbb{R}^n</span>, define a univariate function along the negative gradient direction:</p>
+<p><span class="math display">g(t) = f(x^* - t \, \nabla f(x^*)).</span></p>
+<p>Then <span class="math inline">g</span> is differentiable on <span class="math inline">\mathbb{R}</span> with <span class="math inline">g(0) = f(x^*)</span>. By the chain rule:</p>
+<p><span class="math display">g'(t)\big|_{t=0} = -\|\nabla f(x^*)\|_2^2 \leq 0.</span></p>
+<p>If <span class="math inline">x^*</span> is a local minimizer of <span class="math inline">f</span>, then <span class="math inline">t = 0</span> is a local minimizer of <span class="math inline">g</span> (since <span class="math inline">g(t) = f(x^* - t\nabla f(x^*)) \geq f(x^*) = g(0)</span> for small <span class="math inline">|t|</span>). By the first-order necessary condition for one-dimensional functions, <span class="math inline">g'(0) = 0</span>, which gives <span class="math inline">\|\nabla f(x^*)\|_2^2 = 0</span>, hence <span class="math inline">\nabla f(x^*) = 0</span>.</p>
+<p><strong>(2) <span class="math inline">\Rightarrow</span> (3): Stationary point implies global minimum.</strong> If <span class="math inline">\nabla f(x^*) = 0</span>, then by the first-order condition for convex functions (<a href="#eq-first-order-convexity" class="quarto-xref">Equation&nbsp;<span>4.2</span></a>):</p>
+<p><span class="math display">f(y) \geq f(x^*) + \nabla f(x^*)^\top(y - x^*) = f(x^*) + 0 = f(x^*) \quad \forall \, y \in \mathbb{R}^n.</span></p>
+<p>So <span class="math inline">x^*</span> achieves the smallest possible function value — it is a global minimizer.</p>
+<p><strong>(3) <span class="math inline">\Rightarrow</span> (1): Global minimum implies local minimum.</strong> This direction is trivial: if <span class="math inline">f(x^*) \leq f(x)</span> for all <span class="math inline">x</span>, then certainly <span class="math inline">f(x^*) \leq f(x)</span> for all <span class="math inline">x</span> in any neighborhood of <span class="math inline">x^*</span>. <span class="math inline">\blacksquare</span></p>
+</div>
+<div class="callout callout-style-simple callout-note">
+<div class="callout-body d-flex">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-body-container">
+<p><strong>Why this matters.</strong> For general (nonconvex) functions, we proved in <a href="03-convex-sets.html#sec-necessary-conditions" class="quarto-xref"><span>Section 3.2.3</span></a> that a local minimizer must be a stationary point, but the converse fails — a stationary point could be a saddle point or a local maximum. Convexity closes this gap completely: every stationary point is automatically a global minimizer. This means that <strong>any algorithm that finds a stationary point of a convex function has solved the optimization problem globally.</strong> This is the theoretical foundation for the entire field of convex optimization.</p>
+</div>
+</div>
+</div>
 <p>The function classes we have encountered — convex, strongly convex, Lipschitz continuous, and smooth — form a hierarchy of regularity conditions. Each additional property gives optimization algorithms more structure to exploit, leading to faster convergence guarantees. The diagram below summarizes the inclusion relationships among these classes and their key implications for optimization.</p>
 <div id="fig-function-hierarchy" class="quarto-float quarto-figure quarto-figure-center anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-function-hierarchy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="figures/ch01-function-hierarchy.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;4.3: Hierarchy of function classes used in optimization. Stronger regularity assumptions (inner classes) yield faster convergence rates. Lipschitz continuity and smoothness control how fast a function can change; strong convexity prevents the function from being “too flat” near its minimum."><img src="figures/ch01-function-hierarchy.svg" class="img-fluid figure-img"></a>
+<a href="figures/ch01-function-hierarchy.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-6" title="Figure&nbsp;4.6: Hierarchy of function classes used in optimization. Stronger regularity assumptions (inner classes) yield faster convergence rates. Lipschitz continuity and smoothness control how fast a function can change; strong convexity prevents the function from being “too flat” near its minimum."><img src="figures/ch01-function-hierarchy.svg" class="img-fluid figure-img"></a>
 </div>
 <figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-function-hierarchy-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;4.3: Hierarchy of function classes used in optimization. Stronger regularity assumptions (inner classes) yield faster convergence rates. Lipschitz continuity and smoothness control how fast a function can change; strong convexity prevents the function from being “too flat” near its minimum.
+Figure&nbsp;4.6: Hierarchy of function classes used in optimization. Stronger regularity assumptions (inner classes) yield faster convergence rates. Lipschitz continuity and smoothness control how fast a function can change; strong convexity prevents the function from being “too flat” near its minimum.
 </figcaption>
 </figure>
 </div>
-<div class="figure-container">
-  <div id="fig-sublevel-sets"></div>
-  <div class="figure-caption">Figure 4.3: Sublevel sets of f(x₁,x₂) = x₁² + 2x₂² at levels α = 1, 2, 4. Each sublevel set is an ellipse (convex).</div>
-</div>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  const plotlyConfig = {responsive: true, displayModeBar: false};
-
-  const alphas = [1, 2, 4];
-  const colors = ['rgba(122,154,126,0.2)', 'rgba(123,143,163,0.18)', 'rgba(144,126,160,0.18)'];
-  const strokes = ['#7a9a7e', '#7b97ad', '#907ea0'];
-
-  const tracesFilled = alphas.map((alpha, idx) => {
-    const pts = 80;
-    const ex = [], ey = [];
-    for (let k = 0; k <= pts; k++) {
-      const t = 2 * Math.PI * k / pts;
-      ex.push(Math.sqrt(alpha) * Math.cos(t));
-      ey.push(Math.sqrt(alpha / 2) * Math.sin(t));
-    }
-    return {
-      x: ex, y: ey, fill: 'toself', fillcolor: colors[idx],
-      line: {color: strokes[idx], width: 2.5},
-      name: '\u03B1 = ' + alpha, mode: 'lines',
-    };
-  }).reverse();
-
-  const layout = {
-    paper_bgcolor: 'rgba(0,0,0,0)',
-    plot_bgcolor: 'rgba(0,0,0,0)',
-    font: { family: '"Source Serif 4", Georgia, serif', size: 14 },
-    xaxis: { title: {text: 'x\u2081'}, range: [-3, 3], zeroline: true, gridcolor: '#e0d9d1', linecolor: '#968a80', tickfont: {size: 12} },
-    yaxis: { title: {text: 'x\u2082'}, range: [-2.2, 2.2], zeroline: true, scaleanchor: 'x', gridcolor: '#e0d9d1', linecolor: '#968a80', tickfont: {size: 12} },
-    showlegend: true, legend: { x: 0.75, y: 1, font: {size: 13} },
-    margin: {t: 20, b: 50, l: 55, r: 20},
-  };
-  Plotly.newPlot('fig-sublevel-sets', tracesFilled, layout, plotlyConfig);
-});
-</script>
-<p>We now have a complete toolkit for recognizing and building convex functions: three equivalent characterizations (chord inequality, first-order condition, Hessian test), a library of preservation rules, and the connection back to convex sets through sublevel sets. In the next chapter, we assemble these ingredients into the formal framework of convex optimization problems — standard forms, duality theory, and KKT optimality conditions — where the payoff of convexity becomes fully apparent.</p>
 </section>
 <section id="summary" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="summary">Summary</h2>
 <ul>
-<li><strong>Convex functions.</strong> A function <span class="math inline">f</span> is convex if <span class="math inline">f(\lambda x + (1-\lambda)y) \leq \lambda f(x) + (1-\lambda)f(y)</span>; equivalently, its epigraph is a convex set. First-order condition: <span class="math inline">f(y) \geq f(x) + \nabla f(x)^\top(y-x)</span>; second-order condition: <span class="math inline">\nabla^2 f(x) \succeq 0</span>.</li>
-<li><strong>Preservation rules.</strong> Nonnegative weighted sums, compositions with affine maps, and pointwise suprema of convex functions remain convex — these rules let us verify convexity of complex objectives without computing the Hessian.</li>
-<li><strong>Key consequence.</strong> For convex functions, <span class="math inline">\nabla f(x^*) = 0</span> implies <span class="math inline">x^*</span> is a global minimizer. This is why convex optimization is tractable: every local minimum is a global minimum.</li>
-<li><strong>Sublevel sets.</strong> Every sublevel set <span class="math inline">\{x : f(x) \leq \alpha\}</span> of a convex function is convex, which guarantees that the feasible region of a convex inequality constraint is a convex set.</li>
+<li><strong>Convex functions.</strong> A function <span class="math inline">f</span> is convex if <span class="math inline">f(\lambda x + (1-\lambda)y) \leq \lambda f(x) + (1-\lambda)f(y)</span>; equivalently, its epigraph is a convex set. Strictly convex means the inequality is strict; <span class="math inline">m</span>-strongly convex means <span class="math inline">f - \frac{m}{2}\|x\|^2</span> is convex.</li>
+<li><strong>Four characterizations.</strong> Chord inequality (zeroth order), tangent-line underestimator (first order), gradient monotonicity, and Hessian PSD (second order) are all equivalent for smooth convex functions.</li>
+<li><strong>Preservation rules.</strong> Nonnegative weighted sums, affine compositions, pointwise suprema, scalar/vector compositions, partial minimization, and perspectives all preserve convexity.</li>
+<li><strong>Epigraph.</strong> <span class="math inline">f</span> is convex <span class="math inline">\iff</span> <span class="math inline">\text{epi}(f)</span> is a convex set. This links function convexity to set convexity.</li>
+<li><strong>Key consequence.</strong> For convex functions, local minimum <span class="math inline">\iff</span> <span class="math inline">\nabla f(x^*) = 0</span> <span class="math inline">\iff</span> global minimum. This is why convex optimization is tractable.</li>
+<li><strong>Jensen’s inequality.</strong> <span class="math inline">f(\mathbb{E}[X]) \leq \mathbb{E}[f(X)]</span> for convex <span class="math inline">f</span> — the foundation of variational methods, EM, and information-theoretic arguments.</li>
+<li><strong>Sublevel sets.</strong> Every sublevel set <span class="math inline">\{x : f(x) \leq \alpha\}</span> of a convex function is convex (but the converse is false — that is quasiconvexity).</li>
 </ul>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Looking Ahead
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>In the next chapter, we assemble convex sets and convex functions into the formal framework of <strong>convex optimization problems</strong> — standard forms, the problem hierarchy (LP <span class="math inline">\subseteq</span> QP <span class="math inline">\subseteq</span> SOCP <span class="math inline">\subseteq</span> SDP), Lagrange duality, and the KKT optimality conditions. This is where the payoff of convexity becomes fully apparent: duality provides certificates of optimality, and the KKT conditions give a complete characterization of optimal points.</p>
+</div>
+</div>
 
 
 </section>
@@ -1093,50 +1831,6 @@ document.addEventListener('DOMContentLoaded', () => {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>
-// Plotly Warmtone theming helpers — shared across all lectures
-// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
-const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
-
-function css(v) {
-  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-}
-
-function legendStyle() {
-  return {
-    font: {family: figFont, size: 13, color: css('--fig-text')},
-    bgcolor: css('--fig-bg') + 'dd',
-    bordercolor: css('--fig-grid'),
-    borderwidth: 1,
-  };
-}
-
-function themeLayout(extra) {
-  return Object.assign({
-    paper_bgcolor: css('--fig-bg'),
-    plot_bgcolor: css('--fig-plot-bg'),
-    font: {family: figFont, color: css('--fig-text'), size: 14},
-  }, extra || {});
-}
-
-function themeAxis(title, extra) {
-  return Object.assign({
-    title: {text: title, font: {family: figFont, size: 14}},
-    gridcolor: css('--fig-grid'),
-    zerolinecolor: css('--fig-grid'),
-    linecolor: css('--fig-axis'),
-    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
-  }, extra || {});
-}
-
-// Plotly color sequences matching the Warmtone palette
-const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
-];
-</script>
 <script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
 (function() {
   let previousOnload = window.onload;

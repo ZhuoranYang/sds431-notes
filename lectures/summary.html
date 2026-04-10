@@ -71,6 +71,50 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -226,19 +270,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  <a href="../lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  <a href="../lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
   </div>
 </li>
       </ul>
@@ -296,7 +340,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -396,7 +440,7 @@ window.Quarto = {
 </section>
 <section id="first-order-methods" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="first-order-methods">First-Order Methods</h2>
-<p>With the theoretical foundations in place, we turned to algorithms. <strong>Gradient descent</strong> — the simplest and most fundamental iterative method — follows the negative gradient to reduce the objective at each step. We proved convergence rates under smoothness and strong convexity assumptions and saw how the <strong>condition number</strong> <span class="math inline">\kappa = M/m</span> governs the speed of convergence. Momentum methods (Polyak’s heavy ball, <strong>Nesterov’s accelerated gradient</strong>) reduce the dependence on <span class="math inline">\kappa</span> from linear to a square root, while adaptive methods (<strong>AdaGrad</strong>, <strong>RMSProp</strong>, <strong>Adam</strong>) automatically scale the step size per coordinate. <strong>Stochastic gradient descent</strong> made large-scale training feasible by replacing the full gradient with a cheap, noisy estimate, and <strong>proximal gradient methods</strong> extended first-order optimization to composite objectives with nonsmooth regularizers like the <span class="math inline">\ell_1</span> norm. For constrained problems, <strong>projected subgradient descent</strong> handles nonsmooth objectives over convex sets, while the <strong>Frank-Wolfe</strong> (conditional gradient) method offers a projection-free alternative when linear minimization is cheap.</p>
+<p>With the theoretical foundations in place, we turned to algorithms. <strong>Gradient descent</strong> — the simplest and most fundamental iterative method — follows the negative gradient to reduce the objective at each step. We proved convergence rates under smoothness and strong convexity assumptions and saw how the <strong>condition number</strong> <span class="math inline">\kappa = M/m</span> governs the speed of convergence. Momentum methods (Polyak’s heavy ball, <strong>Nesterov’s accelerated gradient</strong>) reduce the dependence on <span class="math inline">\kappa</span> from linear to a square root, while adaptive methods (<strong>AdaGrad</strong>, <strong>RMSProp</strong>, <strong>Adam</strong>) automatically scale the step size per coordinate. <strong>Stochastic gradient descent</strong> made large-scale training feasible by replacing the full gradient with a cheap, noisy estimate, and <strong>proximal gradient methods</strong> extended first-order optimization to composite objectives with nonsmooth regularizers like the <span class="math inline">\ell_1</span> norm. For constrained problems, <strong>projected subgradient descent</strong> handles nonsmooth objectives over convex sets, while the <strong>Frank-Wolfe</strong> (conditional gradient) method offers a projection-free alternative when linear minimization is cheap. Finally, <strong>modern matrix optimizers</strong> — Muon, Shampoo, and SOAP — go beyond per-coordinate adaptivity by exploiting the matrix geometry of neural network weights through spectral norms, SVD-based updates, and Kronecker-factored preconditioners.</p>
 </section>
 <section id="linear-programming" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="linear-programming">Linear Programming</h2>
@@ -404,7 +448,7 @@ window.Quarto = {
 </section>
 <section id="second-order-and-interior-point-methods" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="second-order-and-interior-point-methods">Second-Order and Interior Point Methods</h2>
-<p><strong>Newton’s method</strong> incorporates curvature information through the Hessian, achieving quadratic convergence near the optimum at the cost of solving a linear system at each iteration. Its affine invariance means it is immune to the ill-conditioning that plagues gradient descent. <strong>Modern matrix optimizers</strong> — Muon, Shampoo, and SOAP — extend these preconditioning ideas to the matrix geometry of neural network weight parameters through spectral norms, SVD-based updates, and Kronecker-factored preconditioners. The <strong>ellipsoid method</strong> resolved one of the great open questions in optimization by proving that LP can be solved in polynomial time: it maintains an ellipsoid guaranteed to contain the optimum, halving its volume at each step via a separating hyperplane. Finally, <strong>interior point methods</strong> extend Newton’s method to inequality-constrained problems through a logarithmic barrier, following the <strong>central path</strong> as the barrier parameter decreases. These methods achieve polynomial complexity <em>and</em> practical efficiency, and they are the engine behind modern solvers like MOSEK, Gurobi, and CVXPY.</p>
+<p><strong>Newton’s method</strong> incorporates curvature information through the Hessian, achieving quadratic convergence near the optimum at the cost of solving a linear system at each iteration. Its affine invariance means it is immune to the ill-conditioning that plagues gradient descent. The <strong>ellipsoid method</strong> resolved one of the great open questions in optimization by proving that LP can be solved in polynomial time: it maintains an ellipsoid guaranteed to contain the optimum, halving its volume at each step via a separating hyperplane. Finally, <strong>interior point methods</strong> extend Newton’s method to inequality-constrained problems through a logarithmic barrier, following the <strong>central path</strong> as the barrier parameter decreases. These methods achieve polynomial complexity <em>and</em> practical efficiency, and they are the engine behind modern solvers like MOSEK, Gurobi, and CVXPY.</p>
 </section>
 <section id="modern-computation-models" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="modern-computation-models">Modern Computation Models</h2>
@@ -500,7 +544,14 @@ window.Quarto = {
 <section id="where-to-go-next" class="level2 unnumbered">
 <h2 class="unnumbered anchored" data-anchor-id="where-to-go-next">Where to Go Next</h2>
 <p>This course has given you the practical optimization toolkit: you can formulate problems as convex programs, select an appropriate algorithm, and predict its convergence behavior. But there is much more to the story. <strong>S&amp;DS 432/632: Advanced Optimization Techniques</strong> develops the theoretical depth and modern research connections that build on everything covered here.</p>
-<p>In the advanced course, you will study <strong>duality theory</strong> in far greater depth — not just as a tool for optimality conditions, but as a design principle for algorithms. <strong>Mirror descent</strong> generalizes projected gradient descent by replacing the Euclidean geometry with a Bregman divergence tailored to the problem structure, yielding optimal algorithms for simplex-constrained and entropy-regularized problems. You will see <strong>accelerated methods</strong> derived from first principles, paired with information-theoretic <strong>lower bounds</strong> that prove these rates cannot be improved — settling the question of what is fundamentally achievable in first-order optimization. The course also explores <strong>implicit layers</strong>, which embed optimization problems as differentiable layers inside neural networks, enabling end-to-end learning of systems that solve optimization at inference time.</p>
+<p>Here is a preview of what the advanced course covers:</p>
+<ul>
+<li><p><strong>Duality theory in depth.</strong> Lagrangian relaxation, conjugate functions, and the beautiful duality between smoothness and strong convexity — not just as a tool for optimality conditions, but as a design principle for algorithms and a bridge between primal and dual perspectives.</p></li>
+<li><p><strong>Second-order methods with guarantees.</strong> Newton’s method revisited with self-concordance theory, and interior point methods analyzed through the lens of the central path — yielding polynomial-time algorithms for LP, SOCP, and SDP with provable iteration complexity <span class="math inline">O(\sqrt{m}\log(1/\varepsilon))</span>.</p></li>
+<li><p><strong>The full suite of first-order methods.</strong> Projected gradient descent for constrained problems, subgradient methods for nonsmooth objectives, proximal gradient (ISTA/FISTA) for composite objectives with <span class="math inline">\ell_1</span>-regularization, and mirror descent with Bregman divergences that achieve dimension-free rates on structured sets like the simplex.</p></li>
+<li><p><strong>Accelerated methods and lower bounds.</strong> Nesterov’s accelerated gradient achieves <span class="math inline">O(1/k^2)</span> for smooth convex objectives, and information-theoretic lower bounds prove this rate <em>cannot be improved</em> by any first-order method — settling the question of what is fundamentally achievable.</p></li>
+<li><p><strong>Implicit layers for deep learning.</strong> Optimization problems embedded as differentiable layers inside neural networks: implicit differentiation through fixed points and KKT conditions, deep equilibrium models, and differentiable optimization layers — connecting optimization theory directly to modern neural network design.</p></li>
+</ul>
 <p>In short, this course gave you the algorithms and the intuition; the advanced course reveals <em>why</em> they work, <em>when</em> they are optimal, and <em>how</em> to push beyond their limits. The transition from practitioner to researcher begins there.</p>
 
 
@@ -917,50 +968,6 @@ window.Quarto = {
   </div>
 </nav>
 </div> <!-- /content -->
-<script>
-// Plotly Warmtone theming helpers — shared across all lectures
-// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
-const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
-
-function css(v) {
-  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-}
-
-function legendStyle() {
-  return {
-    font: {family: figFont, size: 13, color: css('--fig-text')},
-    bgcolor: css('--fig-bg') + 'dd',
-    bordercolor: css('--fig-grid'),
-    borderwidth: 1,
-  };
-}
-
-function themeLayout(extra) {
-  return Object.assign({
-    paper_bgcolor: css('--fig-bg'),
-    plot_bgcolor: css('--fig-plot-bg'),
-    font: {family: figFont, color: css('--fig-text'), size: 14},
-  }, extra || {});
-}
-
-function themeAxis(title, extra) {
-  return Object.assign({
-    title: {text: title, font: {family: figFont, size: 14}},
-    gridcolor: css('--fig-grid'),
-    zerolinecolor: css('--fig-grid'),
-    linecolor: css('--fig-axis'),
-    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
-  }, extra || {});
-}
-
-// Plotly color sequences matching the Warmtone palette
-const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
-];
-</script>
 
 
 

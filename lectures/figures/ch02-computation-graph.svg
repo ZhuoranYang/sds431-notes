@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 280" width="700" height="280">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <marker id="arrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+      <polygon points="0,0 8,3 0,6" fill="#968a80"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="700" height="280" fill="#f9f6f0" rx="6"/>
+
+  <!-- Title -->
+  <text x="350" y="28" text-anchor="middle" font-size="15" font-weight="bold">Computation Graph for 𝑓(𝑥₁, 𝑥₂) = sin(𝑥₁) + 𝑥₁ · 𝑥₂</text>
+
+  <!-- ===================== INPUT NODES ===================== -->
+  <!-- x1 -->
+  <rect x="42" y="80" width="76" height="44" rx="22" fill="#7b97ad" fill-opacity="0.13" stroke="#7b97ad" stroke-width="1.8"/>
+  <text x="80" y="107" text-anchor="middle" font-size="15" fill="#7b97ad" font-weight="bold">𝑥₁</text>
+
+  <!-- x2 -->
+  <rect x="42" y="175" width="76" height="44" rx="22" fill="#7b97ad" fill-opacity="0.13" stroke="#7b97ad" stroke-width="1.8"/>
+  <text x="80" y="202" text-anchor="middle" font-size="15" fill="#7b97ad" font-weight="bold">𝑥₂</text>
+
+  <!-- ===================== INTERMEDIATE NODES ===================== -->
+  <!-- v1 = sin(x1) -->
+  <rect x="255" y="60" width="110" height="48" rx="24" fill="#7a9a7e" fill-opacity="0.13" stroke="#7a9a7e" stroke-width="1.8"/>
+  <text x="310" y="82" text-anchor="middle" font-size="13" fill="#7a9a7e" font-weight="bold">𝑣₁ = sin(𝑥₁)</text>
+  <text x="310" y="98" text-anchor="middle" font-size="10" fill="#7a9a7e">intermediate</text>
+
+  <!-- v2 = x1 * x2 -->
+  <rect x="255" y="165" width="110" height="48" rx="24" fill="#7a9a7e" fill-opacity="0.13" stroke="#7a9a7e" stroke-width="1.8"/>
+  <text x="310" y="187" text-anchor="middle" font-size="13" fill="#7a9a7e" font-weight="bold">𝑣₂ = 𝑥₁ · 𝑥₂</text>
+  <text x="310" y="203" text-anchor="middle" font-size="10" fill="#7a9a7e">intermediate</text>
+
+  <!-- ===================== OUTPUT NODE ===================== -->
+  <!-- f = v1 + v2 -->
+  <rect x="500" y="115" width="120" height="48" rx="24" fill="#b8995e" fill-opacity="0.15" stroke="#b8995e" stroke-width="2"/>
+  <text x="560" y="137" text-anchor="middle" font-size="14" fill="#b8995e" font-weight="bold">𝑓 = 𝑣₁ + 𝑣₂</text>
+  <text x="560" y="153" text-anchor="middle" font-size="10" fill="#b8995e">output</text>
+
+  <!-- ===================== EDGES ===================== -->
+  <!-- x1 -> v1 (sin) -->
+  <line x1="118" y1="96" x2="251" y2="84" stroke="#968a80" stroke-width="1.8" marker-end="url(#arrow)"/>
+  <text x="178" y="78" text-anchor="middle" font-size="12" fill="#907ea0" font-weight="bold" font-style="italic">sin</text>
+
+  <!-- x1 -> v2 (multiply, upper input) -->
+  <line x1="118" y1="108" x2="251" y2="180" stroke="#968a80" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+  <!-- x2 -> v2 (multiply, lower input) -->
+  <line x1="118" y1="197" x2="251" y2="193" stroke="#968a80" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+  <!-- operation label for multiply, placed between x1->v2 and x2->v2 -->
+  <text x="178" y="172" text-anchor="middle" font-size="14" fill="#907ea0" font-weight="bold">×</text>
+
+  <!-- v1 -> f (+) -->
+  <line x1="365" y1="88" x2="496" y2="131" stroke="#968a80" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+  <!-- v2 -> f (+) -->
+  <line x1="365" y1="193" x2="496" y2="148" stroke="#968a80" stroke-width="1.8" marker-end="url(#arrow)"/>
+
+  <!-- operation label for addition -->
+  <text x="430" y="130" text-anchor="middle" font-size="14" fill="#907ea0" font-weight="bold">+</text>
+
+  <!-- ===================== LEGEND ===================== -->
+  <rect x="42" y="244" width="12" height="12" rx="3" fill="#7b97ad" fill-opacity="0.25" stroke="#7b97ad" stroke-width="1"/>
+  <text x="60" y="255" font-size="10" fill="#968a80">Input</text>
+  <rect x="108" y="244" width="12" height="12" rx="3" fill="#7a9a7e" fill-opacity="0.25" stroke="#7a9a7e" stroke-width="1"/>
+  <text x="126" y="255" font-size="10" fill="#968a80">Intermediate</text>
+  <rect x="210" y="244" width="12" height="12" rx="3" fill="#b8995e" fill-opacity="0.25" stroke="#b8995e" stroke-width="1"/>
+  <text x="228" y="255" font-size="10" fill="#968a80">Output</text>
+</svg>

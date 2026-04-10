@@ -75,6 +75,50 @@ ul.task-list li input[type="checkbox"] {
     "search-label": "Search"
   }
 }</script>
+<script>
+// Plotly Warmtone theming helpers — shared across all lectures
+// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
+const plotlyConfig = {responsive: true, displayModeBar: false};
+const figFont = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+const figFontHeading = "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif";
+
+function css(v) {
+  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+}
+
+function legendStyle() {
+  return {
+    font: {family: figFont, size: 13, color: css('--fig-text')},
+    bgcolor: css('--fig-bg') + 'dd',
+    bordercolor: css('--fig-grid'),
+    borderwidth: 1,
+  };
+}
+
+function themeLayout(extra) {
+  return Object.assign({
+    paper_bgcolor: css('--fig-bg'),
+    plot_bgcolor: css('--fig-plot-bg'),
+    font: {family: figFont, color: css('--fig-text'), size: 14},
+  }, extra || {});
+}
+
+function themeAxis(title, extra) {
+  return Object.assign({
+    title: {text: title, font: {family: figFont, size: 14}},
+    gridcolor: css('--fig-grid'),
+    zerolinecolor: css('--fig-grid'),
+    linecolor: css('--fig-axis'),
+    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
+  }, extra || {});
+}
+
+// Plotly color sequences matching the Warmtone palette
+const warmtonePalette = [
+  '#2e86c1', '#d45d5d', '#27ae60', '#e67e22', '#8e44ad',
+  '#2c3e50', '#16a085', '#c0392b', '#2980b9', '#f39c12'
+];
+</script>
 <script src="https://cdn.plot.ly/plotly-2.35.0.min.js" charset="utf-8"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
@@ -230,19 +274,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/06-gradient-descent.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Gradient Descent</span></span></a>
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">A Primer of Unconstrained Optimization: Gradient Descent</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/07-momentum-adaptive-sgd.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum, Adaptive Methods, SGD, and Proximal Gradient</span></span></a>
+  <a href="../lectures/07-momentum-adaptive.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Momentum and Adaptive Methods</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
-  <a href="../lectures/08-constrained-first-order.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Constrained First-Order Methods</span></span></a>
+  <a href="../lectures/08-sgd-proximal-frank-wolfe.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">SGD, Proximal Gradient, and Frank-Wolfe</span></span></a>
   </div>
 </li>
       </ul>
@@ -300,7 +344,7 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="../lectures/14-newton-method.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method and Matrix Optimizers</span></span></a>
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">Newton’s Method</span></span></a>
   </div>
 </li>
           <li class="sidebar-item">
@@ -356,7 +400,8 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-norms" id="toc-sec-norms" class="nav-link active" data-scroll-target="#sec-norms"><span class="header-section-number">2.1</span> Norms: Vector and Matrix</a>
+  <li><a href="#what-will-be-covered" id="toc-what-will-be-covered" class="nav-link active" data-scroll-target="#what-will-be-covered">What Will Be Covered</a></li>
+  <li><a href="#sec-norms" id="toc-sec-norms" class="nav-link" data-scroll-target="#sec-norms"><span class="header-section-number">2.1</span> Norms: Vector and Matrix</a>
   <ul class="collapse">
   <li><a href="#sec-vector-norms" id="toc-sec-vector-norms" class="nav-link" data-scroll-target="#sec-vector-norms"><span class="header-section-number">2.1.1</span> Vector Norms</a></li>
   <li><a href="#sec-lp-norms" id="toc-sec-lp-norms" class="nav-link" data-scroll-target="#sec-lp-norms"><span class="header-section-number">2.1.2</span> <span class="math inline">\ell_p</span>-Norms and Norm Balls</a></li>
@@ -387,7 +432,7 @@ window.Quarto = {
   <li><a href="#sec-chain-rule" id="toc-sec-chain-rule" class="nav-link" data-scroll-target="#sec-chain-rule"><span class="header-section-number">2.6</span> Chain Rule and Backpropagation</a>
   <ul class="collapse">
   <li><a href="#sec-chain-rule-def" id="toc-sec-chain-rule-def" class="nav-link" data-scroll-target="#sec-chain-rule-def"><span class="header-section-number">2.6.1</span> Chain Rule</a></li>
-  <li><a href="#sec-autodiff" id="toc-sec-autodiff" class="nav-link" data-scroll-target="#sec-autodiff"><span class="header-section-number">2.6.2</span> Automatic Differentiation: Backpropagation</a></li>
+  <li><a href="#sec-autodiff" id="toc-sec-autodiff" class="nav-link" data-scroll-target="#sec-autodiff"><span class="header-section-number">2.6.2</span> Automatic Differentiation</a></li>
   </ul></li>
   <li><a href="#summary" id="toc-summary" class="nav-link" data-scroll-target="#summary">Summary</a></li>
   </ul>
@@ -418,13 +463,39 @@ window.Quarto = {
 <p>Before we can analyze optimization algorithms or prove convergence rates, we need a shared mathematical vocabulary. The language of optimization is built from linear algebra and multivariate calculus: norms tell us how to measure the size of errors and the distance to a solution, eigenvalues reveal the curvature of quadratic objectives, and gradients point us toward descent directions. Without fluency in these tools, the theoretical results in later chapters would remain opaque.</p>
 <p>This chapter is a self-contained review designed to bring all students to a common baseline. If you are already comfortable with vector and matrix norms, eigendecompositions, gradients, and the chain rule, you can skim quickly and use it as a reference. If any of these topics feel rusty, working through the details here will pay dividends throughout the course.</p>
 <p>We also introduce backpropagation — the reverse-mode automatic differentiation algorithm that powers modern deep learning. Even if you have used frameworks like PyTorch or JAX, understanding the mathematical mechanics beneath them will deepen your appreciation of why gradient-based optimization scales to problems with millions of parameters.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Companion Notebooks
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li><a href="https://colab.research.google.com/github/ZhuoranYang/sds431-notes/blob/main/notebooks/02a-automatic-differentiation.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" class="img-fluid" alt="Open In Colab"></a> <strong>Automatic Differentiation</strong> — computing gradients and Hessians with autograd, PyTorch, and JAX</li>
+</ul>
+</div>
+</div>
+<section id="what-will-be-covered" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="what-will-be-covered">What Will Be Covered</h2>
+<ul>
+<li>Vector norms (<span class="math inline">\ell_1</span>, <span class="math inline">\ell_2</span>, <span class="math inline">\ell_\infty</span>, <span class="math inline">\ell_p</span>) and matrix norms (operator, Frobenius, nuclear)</li>
+<li>Eigenvalues, eigenvectors, and the spectral theorem for symmetric matrices</li>
+<li>Positive semidefinite matrices and the Loewner ordering</li>
+<li>Gradients, Hessians, and the chain rule in multivariate calculus</li>
+<li>Taylor expansion and quadratic approximation</li>
+<li>Backpropagation as reverse-mode automatic differentiation</li>
+</ul>
+</section>
 <section id="sec-norms" class="level2" data-number="2.1">
 <h2 data-number="2.1" class="anchored" data-anchor-id="sec-norms"><span class="header-section-number">2.1</span> Norms: Vector and Matrix</h2>
 <p>When we talk about “approximate solutions” to a problem, we mean the answer is “close” to being correct. We measure <strong>closeness</strong> by a distance <span class="math inline">\|x - y\|</span>, for some norm. That is, <span class="math inline">x</span> is close to <span class="math inline">y</span> if <span class="math inline">\|x - y\|</span> is small.</p>
 <section id="sec-vector-norms" class="level3" data-number="2.1.1">
 <h3 data-number="2.1.1" class="anchored" data-anchor-id="sec-vector-norms"><span class="header-section-number">2.1.1</span> Vector Norms</h3>
 <div id="def-vector-norm" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 2.1 (Definition 2.1 (Vector Norm))</strong></span> A <strong>vector norm</strong> <span class="math inline">\|\cdot\| : \mathbb{R}^n \to \mathbb{R}</span> is a function that maps <span class="math inline">x \in \mathbb{R}^n</span> to <span class="math inline">\|x\| \in \mathbb{R}</span> satisfying the following properties:</p>
+<p><span class="theorem-title"><strong>Definition 2.1 (Vector Norm)</strong></span> A <strong>vector norm</strong> <span class="math inline">\|\cdot\| : \mathbb{R}^n \to \mathbb{R}</span> is a function that maps <span class="math inline">x \in \mathbb{R}^n</span> to <span class="math inline">\|x\| \in \mathbb{R}</span> satisfying the following properties:</p>
 <ol type="1">
 <li><strong>Positivity:</strong> <span class="math inline">\|x\| \geq 0</span> for all <span class="math inline">x \in \mathbb{R}^n</span>, and <span class="math inline">\|x\| = 0</span> if and only if <span class="math inline">x = 0</span> (zero vector).</li>
 <li><strong>Homogeneity:</strong> <span class="math inline">\|\alpha x\| = |\alpha| \cdot \|x\|</span> for all <span class="math inline">x \in \mathbb{R}^n</span>, <span class="math inline">\alpha \in \mathbb{R}</span> (<span class="math inline">|\alpha|</span> is absolute value).</li>
@@ -443,7 +514,7 @@ window.Quarto = {
 </div>
 <div class="figure-container">
   <div id="fig-norm-balls"></div>
-  <div class="figure-caption">Figure 2.1: Unit norm balls in \(\mathbb{R}^2\) for \(\ell_1\), \(\ell_2\), and \(\ell_\infty\) norms. The set \(\{x \in \mathbb{R}^2 : \|x\| \leq 1\}\) for each norm.</div>
+  <div class="figure-caption">Unit norm balls in ℝ<sup>2</sup> for ℓ<sub>1</sub>, ℓ<sub>2</sub>, and ℓ<sub>∞</sub> norms. The set {x ∈ ℝ<sup>2</sup> : ‖x‖ ≤ 1} for each norm.</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -511,7 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <p>A natural question arises when working with different norms: how do they compare? If we know <span class="math inline">\|x\|_2</span> is small, can we conclude anything about <span class="math inline">\|x\|_1</span> or <span class="math inline">\|x\|_\infty</span>? The following inequalities give precise answers, and they will be used repeatedly when converting convergence guarantees stated in one norm into bounds in another.</p>
 <div id="thm-norm-inequalities" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 2.1 (Theorem 2.1 (Norm Inequalities))</strong></span> For any <span class="math inline">x \in \mathbb{R}^n</span>: <span class="math display">\|x\|_\infty \leq \|x\|_2 \leq \|x\|_1.</span> For the other direction: <span class="math display">\|x\|_1 \leq \sqrt{n} \cdot \|x\|_2, \qquad \|x\|_2 \leq \sqrt{n} \cdot \|x\|_\infty.</span></p>
+<p><span class="theorem-title"><strong>Theorem 2.1 (Norm Inequalities)</strong></span> For any <span class="math inline">x \in \mathbb{R}^n</span>: <span class="math display">\|x\|_\infty \leq \|x\|_2 \leq \|x\|_1.</span> For the other direction: <span class="math display">\|x\|_1 \leq \sqrt{n} \cdot \|x\|_2, \qquad \|x\|_2 \leq \sqrt{n} \cdot \|x\|_\infty.</span></p>
 </div>
 <p>These inequalities tell us that the <span class="math inline">\ell_\infty</span>-norm is always the smallest, the <span class="math inline">\ell_1</span>-norm is always the largest, and the <span class="math inline">\ell_2</span>-norm sits in between. The reverse inequalities show that the gap between any two norms is at most a factor of <span class="math inline">\sqrt{n}</span>, so in fixed dimension all <span class="math inline">\ell_p</span>-norms are comparable.</p>
 <div class="callout callout-style-default callout-tip callout-titled">
@@ -532,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <h3 data-number="2.1.3" class="anchored" data-anchor-id="sec-norm-equivalence"><span class="header-section-number">2.1.3</span> Equivalence of <span class="math inline">\ell_p</span>-Norms in <span class="math inline">\mathbb{R}^n</span></h3>
 <p>The specific inequalities above are instances of a more general phenomenon: in finite dimensions, all <span class="math inline">\ell_p</span>-norms are equivalent up to dimension-dependent constants. This means that a sequence converging in one norm automatically converges in every other, so the choice of norm does not affect the fundamental behavior of an algorithm — only the constants in the convergence bounds.</p>
 <div id="thm-norm-equivalence" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 2.2 (Theorem 2.2 (Equivalence of <span class="math inline">\ell_p</span>-Norms))</strong></span> For any <span class="math inline">p, q \in [1, +\infty)</span>, there exist constants <span class="math inline">c_{p,q}</span> and <span class="math inline">C_{p,q}</span> such that <span class="math display">c_{p,q} \cdot \|x\|_q \;\leq\; \|x\|_p \;\leq\; C_{p,q} \cdot \|x\|_q \qquad \forall\, x \in \mathbb{R}^n.</span> Here <span class="math inline">c_{p,q}</span> and <span class="math inline">C_{p,q}</span> can depend on <span class="math inline">n</span>.</p>
+<p><span class="theorem-title"><strong>Theorem 2.2 (Equivalence of <span class="math inline">\ell_p</span>-Norms)</strong></span> For any <span class="math inline">p, q \in [1, +\infty)</span>, there exist constants <span class="math inline">c_{p,q}</span> and <span class="math inline">C_{p,q}</span> such that <span class="math display">c_{p,q} \cdot \|x\|_q \;\leq\; \|x\|_p \;\leq\; C_{p,q} \cdot \|x\|_q \qquad \forall\, x \in \mathbb{R}^n.</span> Here <span class="math inline">c_{p,q}</span> and <span class="math inline">C_{p,q}</span> can depend on <span class="math inline">n</span>.</p>
 <p>For example: <span class="math inline">\|x\|_2 \leq \|x\|_1 \leq \sqrt{n} \cdot \|x\|_2</span>, so <span class="math inline">c_{1,2} = 1</span>, <span class="math inline">C_{1,2} = \sqrt{n}</span>.</p>
 </div>
 <p>This theorem says that in finite-dimensional spaces, all <span class="math inline">\ell_p</span>-norms are “equivalent” in the sense that convergence in one norm implies convergence in every other. However, the equivalence constants can depend on the dimension <span class="math inline">n</span>, which becomes important in high-dimensional settings.</p>
@@ -548,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <h3 data-number="2.2.1" class="anchored" data-anchor-id="sec-inner-product-def"><span class="header-section-number">2.2.1</span> Inner Product Definition</h3>
 <p>The standard dot product on <span class="math inline">\mathbb{R}^n</span> is just one example of an inner product. To work with more general spaces — such as spaces of matrices, functions, or probability distributions — we need an axiomatic definition that captures the essential properties: a notion of angle, orthogonality, and an induced norm.</p>
 <div id="def-inner-product" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 2.2 (Definition 2.2 (Inner Product))</strong></span> An <strong>inner product</strong> <span class="math inline">\langle \cdot, \cdot \rangle : \mathcal{X} \times \mathcal{X} \to \mathbb{R}</span> defined on a general space <span class="math inline">\mathcal{X}</span> satisfies the following properties:</p>
+<p><span class="theorem-title"><strong>Definition 2.2 (Inner Product)</strong></span> An <strong>inner product</strong> <span class="math inline">\langle \cdot, \cdot \rangle : \mathcal{X} \times \mathcal{X} \to \mathbb{R}</span> defined on a general space <span class="math inline">\mathcal{X}</span> satisfies the following properties:</p>
 <ol type="1">
 <li><strong>Positivity:</strong> <span class="math inline">\langle x, x \rangle \geq 0</span> for all <span class="math inline">x \in \mathcal{X}</span>, and <span class="math inline">\langle x, x \rangle = 0</span> if and only if <span class="math inline">x = 0</span>.</li>
 <li><strong>Symmetry:</strong> <span class="math inline">\langle x, y \rangle = \langle y, x \rangle</span>.</li>
@@ -574,7 +645,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <section id="sec-cauchy-schwarz" class="level3" data-number="2.2.2">
 <h3 data-number="2.2.2" class="anchored" data-anchor-id="sec-cauchy-schwarz"><span class="header-section-number">2.2.2</span> Cauchy–Schwarz Inequality</h3>
 <div id="thm-cauchy-schwarz" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 2.3 (Theorem 2.3 (Cauchy–Schwarz Inequality))</strong></span> For any inner product and its induced norm, we always have: <span id="eq-cauchy-schwarz"><span class="math display">\langle x, y \rangle \;\leq\; \|x\| \cdot \|y\| \;=\; \sqrt{\langle x, x \rangle} \cdot \sqrt{\langle y, y \rangle}. \tag{2.1}</span></span></p>
+<p><span class="theorem-title"><strong>Theorem 2.3 (Cauchy–Schwarz Inequality)</strong></span> For any inner product and its induced norm, we always have: <span id="eq-cauchy-schwarz"><span class="math display">\langle x, y \rangle \;\leq\; \|x\| \cdot \|y\| \;=\; \sqrt{\langle x, x \rangle} \cdot \sqrt{\langle y, y \rangle}. \tag{2.1}</span></span></p>
 </div>
 <p>The Cauchy–Schwarz inequality (<a href="#eq-cauchy-schwarz" class="quarto-xref">Equation&nbsp;<span>2.1</span></a>) is one of the most fundamental results in all of mathematics. It says that the inner product of two vectors is bounded by the product of their norms, with equality if and only if the vectors are parallel. It underlies the triangle inequality for inner-product-induced norms and appears repeatedly in optimization convergence proofs.</p>
 <p>The proof proceeds by orthogonalizing <span class="math inline">x</span> against <span class="math inline">y</span> and applying the Pythagorean theorem.</p>
@@ -593,13 +664,13 @@ document.addEventListener('DOMContentLoaded', () => {
 <h2 data-number="2.3" class="anchored" data-anchor-id="sec-matrix-norms"><span class="header-section-number">2.3</span> Matrix Norms</h2>
 <p>Inner products can be defined on general spaces. For example, the space of matrices <span class="math inline">\mathbb{R}^{m \times n}</span>.</p>
 <div id="def-matrix-inner-product" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 2.3 (Definition 2.3 (Matrix Inner Product))</strong></span> For matrices <span class="math inline">A, B \in \mathbb{R}^{m \times n}</span>: <span class="math display">\langle A, B \rangle = \operatorname{tr}(A^\top B)</span> where <span class="math inline">\operatorname{tr}</span> denotes the trace (sum of diagonal entries), defined only for square matrices: <span class="math inline">\operatorname{tr}(X) = \sum_{i=1}^{n} X_{ii}</span>.</p>
+<p><span class="theorem-title"><strong>Definition 2.3 (Matrix Inner Product)</strong></span> For matrices <span class="math inline">A, B \in \mathbb{R}^{m \times n}</span>: <span class="math display">\langle A, B \rangle = \operatorname{tr}(A^\top B)</span> where <span class="math inline">\operatorname{tr}</span> denotes the trace (sum of diagonal entries), defined only for square matrices: <span class="math inline">\operatorname{tr}(X) = \sum_{i=1}^{n} X_{ii}</span>.</p>
 </div>
 <p>This inner product treats each matrix as a long vector of its entries and takes the usual dot product. It allows us to measure angles between matrices and define orthogonality of matrices, extending the familiar vector geometry to the space of matrices.</p>
 <section id="sec-frobenius-norm" class="level3" data-number="2.3.1">
 <h3 data-number="2.3.1" class="anchored" data-anchor-id="sec-frobenius-norm"><span class="header-section-number">2.3.1</span> Frobenius Norm</h3>
 <div id="def-frobenius-norm" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 2.4 (Definition 2.4 (Frobenius Norm))</strong></span> The <strong>Frobenius norm</strong> <span class="math inline">\|\cdot\|_F : \mathbb{R}^{m \times n} \to \mathbb{R}</span> is the norm induced by the matrix inner product: <span class="math display">\|A\|_F = \sqrt{\sum_{i=1}^{m} \sum_{j=1}^{n} (A_{ij})^2} = \|\operatorname{vec}(A)\|_2</span> where <span class="math inline">\operatorname{vec}(A) \in \mathbb{R}^{m \cdot n}</span> stacks all columns of <span class="math inline">A</span> into one long vector.</p>
+<p><span class="theorem-title"><strong>Definition 2.4 (Frobenius Norm)</strong></span> The <strong>Frobenius norm</strong> <span class="math inline">\|\cdot\|_F : \mathbb{R}^{m \times n} \to \mathbb{R}</span> is the norm induced by the matrix inner product: <span class="math display">\|A\|_F = \sqrt{\sum_{i=1}^{m} \sum_{j=1}^{n} (A_{ij})^2} = \|\operatorname{vec}(A)\|_2</span> where <span class="math inline">\operatorname{vec}(A) \in \mathbb{R}^{m \cdot n}</span> stacks all columns of <span class="math inline">A</span> into one long vector.</p>
 <p>Example: <span class="math inline">I_n</span> is the identity matrix in <span class="math inline">\mathbb{R}^{n \times n}</span>, then <span class="math inline">\|I_n\|_F = \sqrt{n}</span>.</p>
 </div>
 <p>The Frobenius norm is the most natural extension of the Euclidean vector norm to matrices: it simply measures the square root of the sum of squared entries. It is easy to compute and enjoys all the properties of the <span class="math inline">\ell_2</span>-norm on vectors, including submultiplicativity.</p>
@@ -609,7 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <h3 data-number="2.3.2" class="anchored" data-anchor-id="sec-operator-norms"><span class="header-section-number">2.3.2</span> Operator / Induced Norms</h3>
 <p>We can also define another class of matrix norms by viewing matrices as <strong>operators</strong> <span class="math inline">A: \mathbb{R}^n \to \mathbb{R}^m</span>. This gives <strong>operator norms</strong> (also called <strong>induced norms</strong>).</p>
 <div id="def-operator-norms" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 2.5 (Definition 2.5 (Operator Norms / Induced Norms))</strong></span> For any <span class="math inline">1 \leq p \leq \infty</span>, the matrix norm induced by <span class="math inline">\ell_p</span>-vector norms is: <span class="math display">\|A\|_p = \sup_{x \neq 0} \frac{\|Ax\|_p}{\|x\|_p}.</span> In particular, <span class="math inline">\|A\|_2</span> is often called the <strong>operator norm</strong> (also known as the <strong>spectral norm</strong>), denoted by <span class="math inline">\|A\|_{\mathrm{op}}</span>.</p>
+<p><span class="theorem-title"><strong>Definition 2.5 (Operator Norms / Induced Norms)</strong></span> For any <span class="math inline">1 \leq p \leq \infty</span>, the matrix norm induced by <span class="math inline">\ell_p</span>-vector norms is: <span class="math display">\|A\|_p = \sup_{x \neq 0} \frac{\|Ax\|_p}{\|x\|_p}.</span> In particular, <span class="math inline">\|A\|_2</span> is often called the <strong>operator norm</strong> (also known as the <strong>spectral norm</strong>), denoted by <span class="math inline">\|A\|_{\mathrm{op}}</span>.</p>
 <p>More generally, one can define the <span class="math inline">(p,q)</span>-norm: <span class="math inline">\|A\|_{p \to q} = \sup_{x \neq 0} \frac{\|Ax\|_q}{\|x\|_p}</span>.</p>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled">
@@ -627,7 +698,7 @@ document.addEventListener('DOMContentLoaded', () => {
 </div>
 <div class="figure-container">
   <div id="fig-operator-norm"></div>
-  <div class="figure-caption">Figure 2.2: The unit \(\ell_2\)-ball (left) mapped by \(A = \begin{pmatrix} 1 &amp; 2 \\ 0 &amp; 2 \end{pmatrix}\) to an ellipse (right). The operator norm \(\|A\|_2\) equals the largest semi-axis length.</div>
+  <div class="figure-caption">The unit ℓ<sub>2</sub>-ball (left) mapped by A = [[1, 2], [0, 2]] to an ellipse (right). The operator norm ‖A‖<sub>2</sub> equals the largest semi-axis length.</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -698,16 +769,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 <div id="thm-induced-norm-properties" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 2.4 (Theorem 2.4 (Properties of Induced Norms))</strong></span> &nbsp;</p>
-<ul>
-<li><strong>Consistent:</strong> <span class="math inline">\|Ax\|_p \leq \|A\|_p \cdot \|x\|_p</span> for all <span class="math inline">x \in \mathbb{R}^n</span>.</li>
-<li><strong>Submultiplicative:</strong> <span class="math inline">\|AB\|_p \leq \|A\|_p \cdot \|B\|_p</span>.</li>
-</ul>
-<p>All induced norms are submultiplicative. The Frobenius norm is also submultiplicative. Not every matrix norm is submultiplicative (e.g., <span class="math inline">\|A\|_{\max}</span>).</p>
+<p><span class="theorem-title"><strong>Theorem 2.4 (Properties of Induced Norms)</strong></span> Induced norms satisfy two key compatibility properties. First, they are <strong>consistent</strong> with the vector norm that defines them: <span class="math inline">\|Ax\|_p \leq \|A\|_p \cdot \|x\|_p</span> for all <span class="math inline">x \in \mathbb{R}^n</span>. Second, they are <strong>submultiplicative</strong>: <span class="math inline">\|AB\|_p \leq \|A\|_p \cdot \|B\|_p</span>. The Frobenius norm is also submultiplicative, but not every matrix norm is (e.g., <span class="math inline">\|A\|_{\max}</span>).</p>
 </div>
-<p>These properties are essential for bounding errors in iterative algorithms. The consistency property <span class="math inline">\|Ax\|_p \leq \|A\|_p \cdot \|x\|_p</span> lets us control how much a linear map can amplify a vector, while submultiplicativity lets us bound the norm of a product of matrices by the product of their norms.</p>
+<div class="proof">
+<p><span class="proof-title"><em>Proof</em>. </span><strong>Proof of consistency.</strong> By the definition of the induced norm, <span class="math inline">\|A\|_p = \sup_{z \neq 0} \|Az\|_p / \|z\|_p</span>, which means <span class="math inline">\|Az\|_p \leq \|A\|_p \cdot \|z\|_p</span> for every <span class="math inline">z</span>. Setting <span class="math inline">z = x</span> gives the result. (In fact, consistency is <em>immediate</em> from the definition — the induced norm is the smallest constant <span class="math inline">C</span> such that <span class="math inline">\|Ax\|_p \leq C\|x\|_p</span> for all <span class="math inline">x</span>.)</p>
+<p><strong>Proof of submultiplicativity.</strong> Applying consistency twice: <span class="math display">\|ABx\|_p = \|A(Bx)\|_p \leq \|A\|_p \cdot \|Bx\|_p \leq \|A\|_p \cdot \|B\|_p \cdot \|x\|_p.</span> Since this holds for all <span class="math inline">x</span>, dividing by <span class="math inline">\|x\|_p</span> and taking the supremum gives <span class="math inline">\|AB\|_p \leq \|A\|_p \cdot \|B\|_p</span>. <span class="math inline">\blacksquare</span></p>
+</div>
+<p>These properties are essential for bounding errors in iterative algorithms. The consistency property <span class="math inline">\|Ax\|_p \leq \|A\|_p \cdot \|x\|_p</span> lets us control how much a linear map can amplify a vector, while submultiplicativity lets us bound the norm of a product of matrices by the product of their norms. For example, if we run <span class="math inline">k</span> iterations of a linear recurrence <span class="math inline">x^{k} = Ax^{k-1}</span>, then <span class="math inline">\|x^k\|_p \leq \|A\|_p^k \|x^0\|_p</span>, so the iterates shrink whenever <span class="math inline">\|A\|_p &lt; 1</span>.</p>
 <div id="thm-closed-form-induced-norms" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 2.5 (Theorem 2.5 (Closed-Form Expressions for Induced Norms))</strong></span> &nbsp;</p>
+<p><span class="theorem-title"><strong>Theorem 2.5 (Closed-Form Expressions for Induced Norms)</strong></span> &nbsp;</p>
 <ol type="1">
 <li><span class="math inline">\|A\|_1 = \sup_{x \neq 0} \frac{\|Ax\|_1}{\|x\|_1} = \max_{j \in [n]} \sum_{i=1}^{m} |A_{ij}|</span> — <strong>max column sum</strong>.</li>
 <li><span class="math inline">\|A\|_\infty = \sup_{x \neq 0} \frac{\|Ax\|_\infty}{\|x\|_\infty} = \max_{i \in [m]} \sum_{j=1}^{n} |A_{ij}|</span> — <strong>max row sum</strong>.</li>
@@ -732,7 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
 <section id="sec-nuclear-norm" class="level3" data-number="2.3.3">
 <h3 data-number="2.3.3" class="anchored" data-anchor-id="sec-nuclear-norm"><span class="header-section-number">2.3.3</span> Nuclear Norm</h3>
 <div id="def-nuclear-norm" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 2.6 (Definition 2.6 (Nuclear Norm))</strong></span> The <strong>nuclear norm</strong> (also denoted <span class="math inline">\|\cdot\|_*</span> or <span class="math inline">\|\cdot\|_{\mathrm{nuc}}</span>) is the sum of singular values: <span class="math display">\|A\|_* = \sum_{i=1}^{\mathrm{rank}(A)} \sigma_i.</span></p>
+<p><span class="theorem-title"><strong>Definition 2.6 (Nuclear Norm)</strong></span> The <strong>nuclear norm</strong> (also denoted <span class="math inline">\|\cdot\|_*</span> or <span class="math inline">\|\cdot\|_{\mathrm{nuc}}</span>) is the sum of singular values: <span class="math display">\|A\|_* = \sum_{i=1}^{\mathrm{rank}(A)} \sigma_i.</span></p>
 </div>
 <p>The nuclear norm plays a role for matrices analogous to the <span class="math inline">\ell_1</span>-norm for vectors: just as <span class="math inline">\ell_1</span>-regularization promotes sparsity in vector entries, nuclear norm regularization promotes <strong>low rank</strong> in matrices. This connection is central to matrix completion and recommender systems.</p>
 <div class="callout callout-style-simple callout-note">
@@ -753,29 +823,41 @@ document.addEventListener('DOMContentLoaded', () => {
 <section id="sec-eigendecomp" class="level3" data-number="2.4.1">
 <h3 data-number="2.4.1" class="anchored" data-anchor-id="sec-eigendecomp"><span class="header-section-number">2.4.1</span> Eigendecomposition</h3>
 <div id="thm-eigendecomposition" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 2.6 (Theorem 2.6 (Eigendecomposition of Symmetric Matrices))</strong></span> Let <span class="math inline">A \in \mathbb{R}^{n \times n}</span> be a <strong>symmetric</strong> matrix, i.e., <span class="math inline">A^\top = A</span>. Then <span class="math inline">A</span> admits an eigendecomposition: <span class="math display">A = \sum_{i=1}^{n} \lambda_i \cdot v_i v_i^\top = V \Lambda V^\top</span> where:</p>
-<ul>
-<li><span class="math inline">V = (v_1, v_2, \ldots, v_n)</span> is an <strong>orthogonal matrix</strong> (<span class="math inline">VV^\top = V^\top V = I_n</span>).</li>
-<li><span class="math inline">\Lambda = \operatorname{diag}(\lambda_1, \lambda_2, \ldots, \lambda_n)</span> with <span class="math inline">\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_n</span>.</li>
-</ul>
+<p><span class="theorem-title"><strong>Theorem 2.6 (Eigendecomposition of Symmetric Matrices)</strong></span> Let <span class="math inline">A \in \mathbb{R}^{n \times n}</span> be a <strong>symmetric</strong> matrix, i.e., <span class="math inline">A^\top = A</span>. Then <span class="math inline">A</span> admits an eigendecomposition: <span class="math display">A = \sum_{i=1}^{n} \lambda_i \cdot v_i v_i^\top = V \Lambda V^\top</span> where <span class="math inline">V = (v_1, v_2, \ldots, v_n)</span> is an <strong>orthogonal matrix</strong> (<span class="math inline">VV^\top = V^\top V = I_n</span>) whose columns are the eigenvectors, and <span class="math inline">\Lambda = \operatorname{diag}(\lambda_1, \lambda_2, \ldots, \lambda_n)</span> is the diagonal matrix of eigenvalues ordered as <span class="math inline">\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_n</span>.</p>
 </div>
 <p>The eigendecomposition reveals a symmetric matrix as a weighted sum of rank-one projections <span class="math inline">v_i v_i^\top</span>. Each eigenvector <span class="math inline">v_i</span> is a principal direction of the linear map, and the eigenvalue <span class="math inline">\lambda_i</span> tells us how much the map stretches or compresses along that direction. When all eigenvalues are nonnegative, the matrix is positive semidefinite, which will be a recurring condition in convex optimization.</p>
+<p>Several important quantities reduce to simple functions of the eigenvalues:</p>
+<ul>
+<li><strong>Quadratic form:</strong> <span class="math inline">x^\top A x = \sum_{i=1}^{n} \lambda_i (v_i^\top x)^2</span>. This shows that the quadratic form is a weighted sum of squared projections onto the eigenvectors. In particular, <span class="math inline">A \succeq 0</span> (positive semidefinite) if and only if all <span class="math inline">\lambda_i \geq 0</span>.</li>
+<li><strong>Spectral norm:</strong> <span class="math inline">\|A\|_2 = \max_i |\lambda_i|</span>, the largest eigenvalue in magnitude.</li>
+<li><strong>Condition number:</strong> <span class="math inline">\kappa(A) = \lambda_1 / \lambda_n</span> (for <span class="math inline">A \succ 0</span>). This ratio controls the convergence speed of gradient descent on quadratic objectives — a theme we will return to when studying gradient descent.</li>
+<li><strong>Trace and determinant:</strong> <span class="math inline">\operatorname{tr}(A) = \sum_i \lambda_i</span> and <span class="math inline">\det(A) = \prod_i \lambda_i</span>.</li>
+</ul>
 </section>
 <section id="sec-svd" class="level3" data-number="2.4.2">
 <h3 data-number="2.4.2" class="anchored" data-anchor-id="sec-svd"><span class="header-section-number">2.4.2</span> Singular Value Decomposition (SVD)</h3>
 <div id="thm-svd" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 2.7 (Theorem 2.7 (SVD))</strong></span> Let <span class="math inline">A \in \mathbb{R}^{m \times n}</span> be a matrix with rank <span class="math inline">k</span>. Then we can write: <span class="math display">A = \sum_{i=1}^{k} \sigma_i \cdot u_i v_i^\top = U \Sigma V^\top</span> where:</p>
-<ul>
-<li><span class="math inline">U = (u_1, u_2, \ldots, u_m) \in \mathbb{R}^{m \times m}</span> is an orthogonal matrix.</li>
-<li><span class="math inline">V = (v_1, \ldots, v_n) \in \mathbb{R}^{n \times n}</span> is an orthogonal matrix.</li>
-<li><span class="math inline">\Sigma = \operatorname{diag}(\sigma_1, \sigma_2, \ldots, \sigma_k, 0, \ldots, 0)</span> with <span class="math inline">\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_k &gt; 0</span>.</li>
-</ul>
+<p><span class="theorem-title"><strong>Theorem 2.7 (SVD)</strong></span> Let <span class="math inline">A \in \mathbb{R}^{m \times n}</span> be a matrix with rank <span class="math inline">k</span>. Then we can write: <span class="math display">A = \sum_{i=1}^{k} \sigma_i \cdot u_i v_i^\top = U \Sigma V^\top</span> where <span class="math inline">U = (u_1, \ldots, u_m) \in \mathbb{R}^{m \times m}</span> and <span class="math inline">V = (v_1, \ldots, v_n) \in \mathbb{R}^{n \times n}</span> are orthogonal matrices (the left and right singular vectors, respectively), and <span class="math inline">\Sigma = \operatorname{diag}(\sigma_1, \ldots, \sigma_k, 0, \ldots, 0)</span> contains the singular values <span class="math inline">\sigma_1 \geq \sigma_2 \geq \cdots \geq \sigma_k &gt; 0</span>.</p>
 <p>Consequently, <span class="math inline">A^\top A = V \Sigma^2 V^\top</span> and <span class="math inline">AA^\top = U \Sigma^2 U^\top</span>, with eigenvalues <span class="math inline">\sigma_i^2</span>.</p>
 </div>
-<p>The SVD generalizes eigendecomposition to arbitrary (non-square, non-symmetric) matrices. It decomposes any matrix into a sum of rank-one terms <span class="math inline">\sigma_i u_i v_i^\top</span>, ordered by decreasing importance. The singular values <span class="math inline">\sigma_i</span> measure the “importance” of each component, and truncating the sum after the first few terms gives the best low-rank approximation to <span class="math inline">A</span> (the Eckart–Young theorem).</p>
+<p>The SVD generalizes eigendecomposition to arbitrary (non-square, non-symmetric) matrices. It decomposes any matrix into a sum of rank-one terms <span class="math inline">\sigma_i u_i v_i^\top</span>, ordered by decreasing importance. The singular values <span class="math inline">\sigma_i</span> measure the “importance” of each component.</p>
+<p>Geometrically, the SVD says that every linear map can be decomposed into three steps: (1) rotate in the input space (by <span class="math inline">V^\top</span>), (2) scale along coordinate axes (by <span class="math inline">\Sigma</span>), and (3) rotate in the output space (by <span class="math inline">U</span>). This explains why the image of the unit sphere under any linear map is always an ellipsoid, with semi-axes of lengths <span class="math inline">\sigma_1, \ldots, \sigma_k</span>.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Best Low-Rank Approximation (Eckart–Young Theorem)
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>The truncated SVD <span class="math inline">A_r = \sum_{i=1}^{r} \sigma_i u_i v_i^\top</span> is the best rank-<span class="math inline">r</span> approximation to <span class="math inline">A</span> in both the Frobenius and spectral norms: <span class="math display">A_r = \arg\min_{\operatorname{rank}(B) \leq r} \|A - B\|_F, \qquad \|A - A_r\|_F = \sqrt{\sigma_{r+1}^2 + \cdots + \sigma_k^2}.</span> This result is the mathematical foundation of dimensionality reduction (PCA), image compression, and low-rank matrix completion in recommender systems.</p>
+</div>
+</div>
 <div class="figure-container">
   <div id="fig-eigenvalues"></div>
-  <div class="figure-caption">Figure 2.3: Eigenvalue spectrum of a symmetric matrix. The eigenvalues determine the shape of the associated quadratic form \(x^\top A x\).</div>
+  <div class="figure-caption">Eigenvalue spectrum of a symmetric matrix. The eigenvalues determine the shape of the associated quadratic form x<sup>⊤</sup>Ax.</div>
 </div>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
@@ -897,12 +979,12 @@ Return: x^k -&gt; v_1, lambda^k -&gt; lambda_1 as k -&gt; infinity.</code></pre>
 <section id="sec-gradient" class="level3" data-number="2.5.1">
 <h3 data-number="2.5.1" class="anchored" data-anchor-id="sec-gradient"><span class="header-section-number">2.5.1</span> Gradient</h3>
 <div id="def-gradient" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 2.7 (Definition 2.7 (Partial Derivatives and Gradient))</strong></span> The <span class="math inline">i</span>-th <strong>partial derivative</strong> <span class="math inline">\frac{\partial f}{\partial x_i} : \mathbb{R}^n \to \mathbb{R}</span> is defined by only perturbing the <span class="math inline">i</span>-th entry at <span class="math inline">a</span>: <span class="math display">\frac{\partial f}{\partial x_i}(a) = \lim_{t \to 0} \frac{f(a + t \cdot e_i) - f(a)}{t}</span> where <span class="math inline">e_i</span> is the <span class="math inline">i</span>-th canonical basis vector.</p>
+<p><span class="theorem-title"><strong>Definition 2.7 (Partial Derivatives and Gradient)</strong></span> The <span class="math inline">i</span>-th <strong>partial derivative</strong> <span class="math inline">\frac{\partial f}{\partial x_i} : \mathbb{R}^n \to \mathbb{R}</span> is defined by only perturbing the <span class="math inline">i</span>-th entry at <span class="math inline">a</span>: <span class="math display">\frac{\partial f}{\partial x_i}(a) = \lim_{t \to 0} \frac{f(a + t \cdot e_i) - f(a)}{t}</span> where <span class="math inline">e_i</span> is the <span class="math inline">i</span>-th canonical basis vector.</p>
 <p>The <strong>gradient</strong> <span class="math inline">\nabla f : \mathbb{R}^n \to \mathbb{R}^n</span> is defined as: <span class="math display">\nabla f(a) = \begin{pmatrix} \frac{\partial f}{\partial x_1}(a) \\ \vdots \\ \frac{\partial f}{\partial x_n}(a) \end{pmatrix}.</span></p>
 </div>
 <p>The gradient collects all partial derivatives into a single vector that points in the direction of steepest ascent of <span class="math inline">f</span> at the point <span class="math inline">a</span>. Its negative, <span class="math inline">-\nabla f(a)</span>, therefore points in the direction of steepest descent, which is the foundation of gradient descent algorithms.</p>
 <div id="thm-linear-approximation" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 2.8 (Theorem 2.8 (Linear Approximation via Gradient))</strong></span> Let <span class="math inline">\delta \in \mathbb{R}^n</span> be a small perturbation. Then: <span id="eq-linear-approximation"><span class="math display">f(a + \delta) \approx f(a) + \sum_{i=1}^{n} \delta_i \cdot \frac{\partial f}{\partial x_i}(a) = f(a) + \langle \nabla f(a), \delta \rangle. \tag{2.2}</span></span> The approximation is accurate if <span class="math inline">\|\delta\|</span> is small. The linear function <span class="math inline">g_a(x) = f(a) + \langle \nabla f(a), x - a \rangle</span> is an approximation of <span class="math inline">f</span> in a neighborhood of <span class="math inline">a</span>.</p>
+<p><span class="theorem-title"><strong>Theorem 2.8 (Linear Approximation via Gradient)</strong></span> Let <span class="math inline">\delta \in \mathbb{R}^n</span> be a small perturbation. Then: <span id="eq-linear-approximation"><span class="math display">f(a + \delta) \approx f(a) + \sum_{i=1}^{n} \delta_i \cdot \frac{\partial f}{\partial x_i}(a) = f(a) + \langle \nabla f(a), \delta \rangle. \tag{2.2}</span></span> The approximation is accurate if <span class="math inline">\|\delta\|</span> is small. The linear function <span class="math inline">g_a(x) = f(a) + \langle \nabla f(a), x - a \rangle</span> is an approximation of <span class="math inline">f</span> in a neighborhood of <span class="math inline">a</span>.</p>
 </div>
 <p>This theorem formalizes the idea that any smooth function looks locally like a linear function. The gradient captures all the first-order information about how <span class="math inline">f</span> changes near <span class="math inline">a</span>, and the quality of the approximation improves as we zoom in (i.e., as <span class="math inline">\|\delta\| \to 0</span>).</p>
 <div id="exm-gradient" class="theorem example">
@@ -914,7 +996,7 @@ Return: x^k -&gt; v_1, lambda^k -&gt; lambda_1 as k -&gt; infinity.</code></pre>
 <h3 data-number="2.5.2" class="anchored" data-anchor-id="sec-hessian"><span class="header-section-number">2.5.2</span> Hessian</h3>
 <p>The gradient provides a first-order (linear) approximation to <span class="math inline">f</span>, but this approximation says nothing about curvature. Near a critical point where <span class="math inline">\nabla f(a) \approx 0</span>, the linear approximation reduces to a constant and becomes uninformative. To distinguish a minimum from a maximum or a saddle point, and to build more accurate local models that algorithms like Newton’s method can exploit, we need <strong>second-order information</strong>.</p>
 <div id="def-hessian" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 2.8 (Definition 2.8 (Hessian))</strong></span> The <strong>Hessian</strong> of <span class="math inline">f</span> at point <span class="math inline">x \in \mathbb{R}^n</span> is defined as: <span class="math display">\nabla^2 f(x) \;(\text{also written as } H_f(x)) \;=\; \begin{pmatrix} \frac{\partial^2 f}{\partial x_1^2} &amp; \cdots &amp; \frac{\partial^2 f}{\partial x_n \partial x_1} \\ \vdots &amp; \ddots &amp; \vdots \\ \frac{\partial^2 f}{\partial x_1 \partial x_n} &amp; \cdots &amp; \frac{\partial^2 f}{\partial x_n^2} \end{pmatrix}.</span></p>
+<p><span class="theorem-title"><strong>Definition 2.8 (Hessian)</strong></span> The <strong>Hessian</strong> of <span class="math inline">f</span> at point <span class="math inline">x \in \mathbb{R}^n</span> is defined as: <span class="math display">\nabla^2 f(x) \;(\text{also written as } H_f(x)) \;=\; \begin{pmatrix} \frac{\partial^2 f}{\partial x_1^2} &amp; \cdots &amp; \frac{\partial^2 f}{\partial x_n \partial x_1} \\ \vdots &amp; \ddots &amp; \vdots \\ \frac{\partial^2 f}{\partial x_1 \partial x_n} &amp; \cdots &amp; \frac{\partial^2 f}{\partial x_n^2} \end{pmatrix}.</span></p>
 <p><span class="math inline">\nabla^2 f(x)</span> is always a <strong>symmetric matrix</strong> when <span class="math inline">f</span> is twice continuously differentiable, by Clairaut’s theorem: <span class="math inline">\frac{\partial^2 f}{\partial x_i \partial x_j} = \frac{\partial^2 f}{\partial x_j \partial x_i}</span>.</p>
 </div>
 <p>The Hessian captures the <strong>curvature</strong> of <span class="math inline">f</span>: its eigenvalues tell us how fast the function curves in each direction. A positive definite Hessian means the function curves upward in all directions (like a bowl), indicating a local minimum. An indefinite Hessian (with both positive and negative eigenvalues) indicates a saddle point.</p>
@@ -923,7 +1005,7 @@ Return: x^k -&gt; v_1, lambda^k -&gt; lambda_1 as k -&gt; infinity.</code></pre>
 <p><span class="math inline">f^2(x,y) = x^2 - y^2 \;\Rightarrow\; \nabla^2 f^2(x,y) = \begin{pmatrix} 2 &amp; 0 \\ 0 &amp; -2 \end{pmatrix}</span> (indefinite — saddle shape).</p>
 </div>
 <div id="thm-quadratic-approximation" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 2.9 (Theorem 2.9 (Quadratic Approximation via Hessian))</strong></span> The Hessian gives a <strong>quadratic approximation</strong> around <span class="math inline">a</span>: <span id="eq-quadratic-approximation"><span class="math display">f(x) \approx f(a) + \langle \nabla f(a), x - a \rangle + \tfrac{1}{2}(x - a)^\top \nabla^2 f(a)\, (x - a). \tag{2.3}</span></span></p>
+<p><span class="theorem-title"><strong>Theorem 2.9 (Quadratic Approximation via Hessian)</strong></span> The Hessian gives a <strong>quadratic approximation</strong> around <span class="math inline">a</span>: <span id="eq-quadratic-approximation"><span class="math display">f(x) \approx f(a) + \langle \nabla f(a), x - a \rangle + \tfrac{1}{2}(x - a)^\top \nabla^2 f(a)\, (x - a). \tag{2.3}</span></span></p>
 </div>
 <p>This quadratic approximation (<a href="#eq-quadratic-approximation" class="quarto-xref">Equation&nbsp;<span>2.3</span></a>) extends the linear approximation (<a href="#eq-linear-approximation" class="quarto-xref">Equation&nbsp;<span>2.2</span></a>) by incorporating curvature via the Hessian. While the gradient provides a tangent plane approximation, the Hessian adds second-order information, yielding a much more accurate local model of <span class="math inline">f</span>. Newton’s method exploits this by minimizing the quadratic model at each step.</p>
 </section>
@@ -934,7 +1016,7 @@ Return: x^k -&gt; v_1, lambda^k -&gt; lambda_1 as k -&gt; infinity.</code></pre>
 <h3 data-number="2.6.1" class="anchored" data-anchor-id="sec-chain-rule-def"><span class="header-section-number">2.6.1</span> Chain Rule</h3>
 <p>In practice, objective functions are rarely written as simple closed-form expressions. Instead, they are compositions of simpler operations — sums, products, nonlinearities, and matrix multiplications. The chain rule tells us how to compute the gradient of such a composite function by combining the derivatives of its individual pieces. This seemingly elementary calculus rule is the theoretical backbone of all automatic differentiation and, by extension, all of modern deep learning.</p>
 <div id="thm-chain-rule" class="theorem">
-<p><span class="theorem-title"><strong>Theorem 2.10 (Theorem 2.10 (Chain Rule))</strong></span> Let <span class="math inline">f_1, \ldots, f_m : \mathbb{R}^n \to \mathbb{R}</span> be <span class="math inline">m</span> functions, and let <span class="math inline">g : \mathbb{R}^m \to \mathbb{R}</span>. Consider the composite function: <span class="math display">h(x) = g\big(f_1(x), f_2(x), \ldots, f_m(x)\big).</span> Then: <span class="math display">\nabla h(x) = \frac{d}{dx} g\big(f_1(x), \ldots, f_m(x)\big) = \sum_{j=1}^{m} \frac{\partial g}{\partial y_j}\big(f_1(x), \ldots, f_m(x)\big) \cdot \nabla f_j(x).</span></p>
+<p><span class="theorem-title"><strong>Theorem 2.10 (Chain Rule)</strong></span> Let <span class="math inline">f_1, \ldots, f_m : \mathbb{R}^n \to \mathbb{R}</span> be <span class="math inline">m</span> functions, and let <span class="math inline">g : \mathbb{R}^m \to \mathbb{R}</span>. Consider the composite function: <span class="math display">h(x) = g\big(f_1(x), f_2(x), \ldots, f_m(x)\big).</span> Then: <span class="math display">\nabla h(x) = \frac{d}{dx} g\big(f_1(x), \ldots, f_m(x)\big) = \sum_{j=1}^{m} \frac{\partial g}{\partial y_j}\big(f_1(x), \ldots, f_m(x)\big) \cdot \nabla f_j(x).</span></p>
 </div>
 <p>The chain rule decomposes the derivative of a composite function into a sum of contributions, one from each intermediate function <span class="math inline">f_j</span>. Each contribution is the product of how sensitively the outer function <span class="math inline">g</span> depends on that intermediate value and how sensitively that intermediate value depends on the input <span class="math inline">x</span>. This decomposition is the mathematical engine behind backpropagation in deep learning.</p>
 <div id="exm-chain-rule" class="theorem example">
@@ -946,17 +1028,109 @@ Return: x^k -&gt; v_1, lambda^k -&gt; lambda_1 as k -&gt; infinity.</code></pre>
 </div>
 </section>
 <section id="sec-autodiff" class="level3" data-number="2.6.2">
-<h3 data-number="2.6.2" class="anchored" data-anchor-id="sec-autodiff"><span class="header-section-number">2.6.2</span> Automatic Differentiation: Backpropagation</h3>
-<p>This systematic application of the chain rule is exactly <strong>backpropagation</strong> — automatic differentiation via <strong>computational graphs</strong> and the chain rule.</p>
+<h3 data-number="2.6.2" class="anchored" data-anchor-id="sec-autodiff"><span class="header-section-number">2.6.2</span> Automatic Differentiation</h3>
+<p>The chain rule example above computed <span class="math inline">\partial h / \partial x_1</span> by hand, introducing intermediate variables and applying the chain rule step by step. This is precisely the idea behind <strong>automatic differentiation</strong> (AD): instead of deriving gradients symbolically (which can produce exponentially large expressions) or estimating them numerically (which is slow and inaccurate), AD applies the chain rule <em>mechanically</em> to a sequence of elementary operations. The result is exact (up to floating-point arithmetic) and computationally efficient.</p>
+<p>Why does this matter so much? Consider training a neural network with 100 million parameters. We need <span class="math inline">\nabla_\theta \mathcal{L}(\theta) \in \mathbb{R}^{10^8}</span> at every iteration. Finite differences would require <span class="math inline">10^8</span> function evaluations per gradient. Symbolic differentiation would produce an expression too large to store. Automatic differentiation computes the entire gradient in roughly the same time as a single function evaluation — a fact that makes modern deep learning computationally feasible.</p>
+<section id="sec-computation-graphs" class="level4" data-number="2.6.2.1">
+<h4 data-number="2.6.2.1" class="anchored" data-anchor-id="sec-computation-graphs"><span class="header-section-number">2.6.2.1</span> Computational Graphs</h4>
 <div id="def-computational-graph" class="theorem definition">
-<p><span class="theorem-title"><strong>Definition 2.9 (Definition 2.9 (Computational Graph))</strong></span> A <strong>computational graph</strong> <span class="math inline">\mathcal{G} = (\mathcal{V}, \mathcal{E})</span> is a directed graph which encodes a computation relationship:</p>
-<ul>
-<li><strong>Node set</strong> <span class="math inline">\mathcal{V} = \{v_1, \ldots, v_N\}</span>: quantities to be computed (input, intermediate values, output).</li>
-<li>Each <strong>edge</strong> <span class="math inline">e = (v_i \to v_j) \in \mathcal{E}</span> means <span class="math inline">v_j</span> uses <span class="math inline">v_i</span> as input.</li>
-</ul>
+<p><span class="theorem-title"><strong>Definition 2.9 (Computational Graph)</strong></span> A <strong>computational graph</strong> <span class="math inline">\mathcal{G} = (\mathcal{V}, \mathcal{E})</span> is a directed acyclic graph (DAG) that encodes the dependency structure of a computation. The <strong>node set</strong> <span class="math inline">\mathcal{V} = \{v_1, \ldots, v_N\}</span> represents the quantities to be computed: <strong>input nodes</strong> (the variables <span class="math inline">x_1, \ldots, x_n</span>), <strong>intermediate nodes</strong> (results of elementary operations), and <strong>output nodes</strong> (the final result). Each <strong>edge</strong> <span class="math inline">(v_j \to v_i) \in \mathcal{E}</span> indicates that the computation of <span class="math inline">v_i</span> uses <span class="math inline">v_j</span> as an input.</p>
 </div>
-<p>A computational graph makes the dependency structure of a calculation explicit. Every modern deep learning framework (PyTorch, TensorFlow, JAX) constructs such a graph automatically, enabling efficient gradient computation via automatic differentiation.</p>
-<p>Input <span class="math inline">x</span> goes through a computational graph, intermediate variables are computed, and the final output is the loss <span class="math inline">J</span>. The derivative <span class="math inline">\frac{\partial J}{\partial x_i}</span> can be calculated by going <strong>backwards</strong> on the computational graph using the chain rule.</p>
+<p>Every modern deep learning framework — PyTorch, TensorFlow, JAX — constructs such a graph either eagerly (tracing operations as they execute) or statically (before execution). Once the graph exists, both the function value and its gradient can be computed by traversing the graph in the appropriate direction.</p>
+<div id="fig-computation-graph" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-computation-graph-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch02-computation-graph.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;2.1: Computation graph for f(x_1, x_2) = \sin(x_1) + x_1 \cdot x_2. Inputs (blue) feed into intermediate nodes (sage) via elementary operations, which combine into the output (gold)."><img src="figures/ch02-computation-graph.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-computation-graph-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.1: Computation graph for <span class="math inline">f(x_1, x_2) = \sin(x_1) + x_1 \cdot x_2</span>. Inputs (blue) feed into intermediate nodes (sage) via elementary operations, which combine into the output (gold).
+</figcaption>
+</figure>
+</div>
+</section>
+<section id="sec-autodiff-example" class="level4" data-number="2.6.2.2">
+<h4 data-number="2.6.2.2" class="anchored" data-anchor-id="sec-autodiff-example"><span class="header-section-number">2.6.2.2</span> A Worked Example</h4>
+<p>Let us trace through automatic differentiation on a concrete function. Consider: <span class="math display">f(x_1, x_2) = \sin(x_1) + x_1 \cdot x_2.</span> We want to compute <span class="math inline">\nabla f = \left(\frac{\partial f}{\partial x_1}, \frac{\partial f}{\partial x_2}\right)</span> at the point <span class="math inline">(x_1, x_2) = (\pi/6, \, 2)</span>.</p>
+<p><strong>Step 1: Build the computation graph.</strong> We decompose <span class="math inline">f</span> into elementary operations and introduce intermediate variables:</p>
+<table class="table-striped caption-top table">
+<caption>Forward evaluation trace</caption>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Node</th>
+<th style="text-align: center;">Operation</th>
+<th style="text-align: center;">Value at <span class="math inline">(\pi/6, 2)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">x_1</span></td>
+<td style="text-align: center;">input</td>
+<td style="text-align: center;"><span class="math inline">\pi/6 \approx 0.524</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span class="math inline">x_2</span></td>
+<td style="text-align: center;">input</td>
+<td style="text-align: center;"><span class="math inline">2</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">v_1</span></td>
+<td style="text-align: center;"><span class="math inline">\sin(x_1)</span></td>
+<td style="text-align: center;"><span class="math inline">0.5</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span class="math inline">v_2</span></td>
+<td style="text-align: center;"><span class="math inline">x_1 \cdot x_2</span></td>
+<td style="text-align: center;"><span class="math inline">1.047</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">f</span></td>
+<td style="text-align: center;"><span class="math inline">v_1 + v_2</span></td>
+<td style="text-align: center;"><span class="math inline">1.547</span></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Step 2: Compute local partial derivatives.</strong> Each node’s derivative with respect to its immediate inputs is an elementary calculus fact:</p>
+<table class="table-striped caption-top table">
+<caption>Local partial derivatives (edge weights)</caption>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Edge</th>
+<th style="text-align: center;">Local derivative</th>
+<th style="text-align: center;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">x_1 \to v_1</span></td>
+<td style="text-align: center;"><span class="math inline">\cos(x_1)</span></td>
+<td style="text-align: center;"><span class="math inline">\sqrt{3}/2 \approx 0.866</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span class="math inline">x_1 \to v_2</span></td>
+<td style="text-align: center;"><span class="math inline">x_2</span></td>
+<td style="text-align: center;"><span class="math inline">2</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">x_2 \to v_2</span></td>
+<td style="text-align: center;"><span class="math inline">x_1</span></td>
+<td style="text-align: center;"><span class="math inline">\pi/6 \approx 0.524</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span class="math inline">v_1 \to f</span></td>
+<td style="text-align: center;"><span class="math inline">1</span></td>
+<td style="text-align: center;"><span class="math inline">1</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">v_2 \to f</span></td>
+<td style="text-align: center;"><span class="math inline">1</span></td>
+<td style="text-align: center;"><span class="math inline">1</span></td>
+</tr>
+</tbody>
+</table>
+<p>With this graph and these local derivatives in hand, we can compute the gradient by traversing the graph in two different directions.</p>
+</section>
+<section id="sec-forward-mode" class="level4" data-number="2.6.2.3">
+<h4 data-number="2.6.2.3" class="anchored" data-anchor-id="sec-forward-mode"><span class="header-section-number">2.6.2.3</span> Forward Mode AD</h4>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -967,11 +1141,60 @@ Return: x^k -&gt; v_1, lambda^k -&gt; lambda_1 as k -&gt; infinity.</code></pre>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>To compute <span class="math inline">\frac{\partial f}{\partial x_i}</span>: compute <span class="math inline">\frac{\partial v}{\partial x_i}</span> for all nodes <span class="math inline">v</span> in <span class="math inline">\mathcal{V}</span> using a <strong>forward pass</strong>.</p>
-<p>If <span class="math inline">v_i = h_i(\{v_j : (j \to i) \in \mathcal{E}\})</span>, then: <span class="math display">\frac{\partial v_i}{\partial x_\ell} = \sum_{j:\, (j \to i) \in \mathcal{E}} \frac{\partial h_i}{\partial v_j} \cdot \frac{\partial v_j}{\partial x_\ell}.</span></p>
-<p>Cost: one forward pass per input dimension. Slow when <span class="math inline">\dim(\text{input})</span> is large.</p>
+<p><strong>Goal:</strong> Compute <span class="math inline">\frac{\partial f}{\partial x_\ell}</span> for a chosen input <span class="math inline">x_\ell</span>.</p>
+<p><strong>Idea:</strong> Propagate <strong>tangent values</strong> <span class="math inline">\dot{v}_i = \frac{\partial v_i}{\partial x_\ell}</span> from inputs to output, following the edges forward.</p>
+<p>If node <span class="math inline">v_i</span> is computed as <span class="math inline">v_i = h_i(\{v_j : (j \to i) \in \mathcal{E}\})</span>, then: <span class="math display">\dot{v}_i = \sum_{j:\, (j \to i) \in \mathcal{E}} \frac{\partial h_i}{\partial v_j} \cdot \dot{v}_j.</span></p>
+<p><strong>Seed:</strong> Set <span class="math inline">\dot{x}_\ell = 1</span> and <span class="math inline">\dot{x}_k = 0</span> for <span class="math inline">k \neq \ell</span>.</p>
 </div>
 </div>
+<p><strong>Forward mode trace for <span class="math inline">\partial f / \partial x_1</span>:</strong> We seed <span class="math inline">\dot{x}_1 = 1</span>, <span class="math inline">\dot{x}_2 = 0</span>.</p>
+<table class="table-striped caption-top table">
+<caption>Forward mode trace for <span class="math inline">\partial f / \partial x_1</span></caption>
+<colgroup>
+<col style="width: 17%">
+<col style="width: 61%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Node</th>
+<th style="text-align: center;">Tangent computation</th>
+<th style="text-align: center;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">\dot{x}_1</span></td>
+<td style="text-align: center;">seed</td>
+<td style="text-align: center;"><span class="math inline">1</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span class="math inline">\dot{x}_2</span></td>
+<td style="text-align: center;">seed</td>
+<td style="text-align: center;"><span class="math inline">0</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">\dot{v}_1</span></td>
+<td style="text-align: center;"><span class="math inline">\cos(x_1) \cdot \dot{x}_1 = 0.866 \cdot 1</span></td>
+<td style="text-align: center;"><span class="math inline">0.866</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span class="math inline">\dot{v}_2</span></td>
+<td style="text-align: center;"><span class="math inline">x_2 \cdot \dot{x}_1 + x_1 \cdot \dot{x}_2 = 2 \cdot 1 + 0.524 \cdot 0</span></td>
+<td style="text-align: center;"><span class="math inline">2</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">\dot{f}</span></td>
+<td style="text-align: center;"><span class="math inline">\dot{v}_1 + \dot{v}_2 = 0.866 + 2</span></td>
+<td style="text-align: center;"><span class="math inline">2.866</span></td>
+</tr>
+</tbody>
+</table>
+<p>So <span class="math inline">\frac{\partial f}{\partial x_1}\big|_{(\pi/6, 2)} = \cos(\pi/6) + 2 = \frac{\sqrt{3}}{2} + 2 \approx 2.866</span>. To also get <span class="math inline">\frac{\partial f}{\partial x_2}</span>, we would need a <em>second</em> forward pass with seed <span class="math inline">\dot{x}_1 = 0</span>, <span class="math inline">\dot{x}_2 = 1</span>.</p>
+<p><strong>Cost:</strong> One forward pass per input variable. If there are <span class="math inline">n</span> inputs and <span class="math inline">m</span> outputs, computing the full Jacobian costs <span class="math inline">\mathcal{O}(n)</span> forward passes. This is efficient when <span class="math inline">n</span> is small (few inputs, many outputs).</p>
+</section>
+<section id="sec-reverse-mode" class="level4" data-number="2.6.2.4">
+<h4 data-number="2.6.2.4" class="anchored" data-anchor-id="sec-reverse-mode"><span class="header-section-number">2.6.2.4</span> Reverse Mode AD (Backpropagation)</h4>
 <div class="callout callout-style-default callout-important callout-titled">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
@@ -982,15 +1205,136 @@ Return: x^k -&gt; v_1, lambda^k -&gt; lambda_1 as k -&gt; infinity.</code></pre>
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Deep learning packages implement <strong>Reverse Mode AD</strong>.</p>
-<p>Define the <strong>adjoint</strong>: <span class="math inline">\bar{v}_i = \frac{\partial y}{\partial v_i}</span> (assuming a single output <span class="math inline">y</span>).</p>
-<p><strong>Idea:</strong> For any <span class="math inline">v_j \in \mathcal{V}</span> such that <span class="math inline">(j \to i) \in \mathcal{E}</span>, <span class="math inline">\bar{v}_j</span> receives a contribution <span class="math inline">\frac{\partial v_i}{\partial v_j} \cdot \bar{v}_i</span> from <span class="math inline">v_i</span>. Thus: <span class="math display">\bar{v}_j = \sum_{i:\, (j \to i) \in \mathcal{E}} \frac{\partial v_i}{\partial v_j} \cdot \bar{v}_i.</span></p>
+<p><strong>Goal:</strong> Compute <span class="math inline">\frac{\partial f}{\partial x_i}</span> for <em>all</em> inputs <span class="math inline">x_i</span> simultaneously.</p>
+<p><strong>Idea:</strong> Propagate <strong>adjoint values</strong> <span class="math inline">\bar{v}_j = \frac{\partial f}{\partial v_j}</span> from the output back to the inputs, following the edges in reverse.</p>
+<p>For each node <span class="math inline">v_j</span>, accumulate contributions from all its children: <span class="math display">\bar{v}_j = \sum_{i:\, (j \to i) \in \mathcal{E}} \frac{\partial v_i}{\partial v_j} \cdot \bar{v}_i.</span></p>
+<p><strong>Seed:</strong> Set <span class="math inline">\bar{f} = 1</span> (the output’s adjoint).</p>
 <p><strong>Steps:</strong></p>
-<pre><code>1. Run a forward pass to evaluate all nodes {v_j}_{j in V}.
-2. Compute partial derivatives {dv_j/dv_i : (j -&gt; i) in E}.  // new edge weights
-3. Evaluate each v_bar_j reversely on the graph.</code></pre>
-<p>Cost: <strong>one forward + one backward pass</strong>, regardless of input dimension!</p>
+<ol type="1">
+<li><strong>Forward pass:</strong> evaluate all nodes <span class="math inline">\{v_j\}</span> and store intermediate values.</li>
+<li><strong>Backward pass:</strong> compute adjoints <span class="math inline">\bar{v}_j</span> in reverse topological order.</li>
+</ol>
 </div>
+</div>
+<p><strong>Reverse mode trace:</strong> We seed <span class="math inline">\bar{f} = 1</span> and propagate backwards.</p>
+<table class="table-striped caption-top table">
+<caption>Reverse mode trace (backpropagation)</caption>
+<colgroup>
+<col style="width: 17%">
+<col style="width: 61%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Node</th>
+<th style="text-align: center;">Adjoint computation</th>
+<th style="text-align: center;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">\bar{f}</span></td>
+<td style="text-align: center;">seed</td>
+<td style="text-align: center;"><span class="math inline">1</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span class="math inline">\bar{v}_1</span></td>
+<td style="text-align: center;"><span class="math inline">\bar{f} \cdot \frac{\partial f}{\partial v_1} = 1 \cdot 1</span></td>
+<td style="text-align: center;"><span class="math inline">1</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">\bar{v}_2</span></td>
+<td style="text-align: center;"><span class="math inline">\bar{f} \cdot \frac{\partial f}{\partial v_2} = 1 \cdot 1</span></td>
+<td style="text-align: center;"><span class="math inline">1</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><span class="math inline">\bar{x}_2</span></td>
+<td style="text-align: center;"><span class="math inline">\bar{v}_2 \cdot \frac{\partial v_2}{\partial x_2} = 1 \cdot x_1</span></td>
+<td style="text-align: center;"><span class="math inline">0.524</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><span class="math inline">\bar{x}_1</span></td>
+<td style="text-align: center;"><span class="math inline">\bar{v}_1 \cdot \frac{\partial v_1}{\partial x_1} + \bar{v}_2 \cdot \frac{\partial v_2}{\partial x_1} = 1 \cdot \cos(x_1) + 1 \cdot x_2</span></td>
+<td style="text-align: center;"><span class="math inline">2.866</span></td>
+</tr>
+</tbody>
+</table>
+<p>In a single backward pass, we obtain <em>both</em> partial derivatives: <span class="math inline">\frac{\partial f}{\partial x_1} = 2.866</span> and <span class="math inline">\frac{\partial f}{\partial x_2} = 0.524</span>. This matches the analytical gradient <span class="math inline">\nabla f = (\cos(x_1) + x_2, \; x_1)</span>.</p>
+<p><strong>Cost:</strong> One forward pass + one backward pass, regardless of the number of inputs. If there are <span class="math inline">n</span> inputs and <span class="math inline">m</span> outputs, computing the full Jacobian costs <span class="math inline">\mathcal{O}(m)</span> backward passes.</p>
+</section>
+<section id="sec-forward-vs-reverse" class="level4" data-number="2.6.2.5">
+<h4 data-number="2.6.2.5" class="anchored" data-anchor-id="sec-forward-vs-reverse"><span class="header-section-number">2.6.2.5</span> Forward vs.&nbsp;Reverse: When to Use Which</h4>
+<div id="fig-forward-vs-reverse" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-forward-vs-reverse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch02-forward-vs-reverse.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;2.2: Forward mode (left, sage) propagates tangent derivatives from inputs to output. Reverse mode (right, rosewood) propagates adjoint derivatives from output to inputs. The same computation graph is traversed in opposite directions."><img src="figures/ch02-forward-vs-reverse.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-forward-vs-reverse-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.2: Forward mode (left, sage) propagates tangent derivatives from inputs to output. Reverse mode (right, rosewood) propagates adjoint derivatives from output to inputs. The same computation graph is traversed in opposite directions.
+</figcaption>
+</figure>
+</div>
+<p>The fundamental trade-off between forward and reverse mode is captured by a simple rule:</p>
+<table class="caption-top table">
+<caption>Comparison of forward and reverse mode AD</caption>
+<colgroup>
+<col style="width: 28%">
+<col style="width: 35%">
+<col style="width: 35%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: center;">Forward Mode</th>
+<th style="text-align: center;">Reverse Mode</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Propagation direction</td>
+<td style="text-align: center;">Inputs <span class="math inline">\to</span> Output</td>
+<td style="text-align: center;">Output <span class="math inline">\to</span> Inputs</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">One pass computes</td>
+<td style="text-align: center;">One column of Jacobian</td>
+<td style="text-align: center;">One row of Jacobian</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Full Jacobian cost</td>
+<td style="text-align: center;"><span class="math inline">\mathcal{O}(n)</span> passes</td>
+<td style="text-align: center;"><span class="math inline">\mathcal{O}(m)</span> passes</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Efficient when</td>
+<td style="text-align: center;"><span class="math inline">n \ll m</span> (few inputs)</td>
+<td style="text-align: center;"><span class="math inline">m \ll n</span> (few outputs)</td>
+</tr>
+</tbody>
+</table>
+<p>In deep learning, the typical setting is <span class="math inline">m = 1</span> (scalar loss) and <span class="math inline">n = 10^6</span> to <span class="math inline">10^9</span> (model parameters). Reverse mode computes the entire gradient <span class="math inline">\nabla_\theta \mathcal{L} \in \mathbb{R}^n</span> in a single backward pass — this is why <strong>backpropagation</strong> (reverse mode AD) is the dominant algorithm for training neural networks.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Remark: Memory vs.&nbsp;Computation
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Reverse mode’s efficiency comes at a cost: it must store all intermediate values from the forward pass to use during the backward pass. For a computation graph with <span class="math inline">N</span> nodes, this requires <span class="math inline">\mathcal{O}(N)</span> memory. Techniques like <strong>gradient checkpointing</strong> trade computation for memory by recomputing some intermediate values instead of storing them, reducing memory to <span class="math inline">\mathcal{O}(\sqrt{N})</span> at the cost of roughly doubling the computation time.</p>
+</div>
+</div>
+<div id="fig-backpropagation" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-backpropagation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="figures/ch03-backpropagation.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;2.3: Backpropagation through a neural network. Forward arrows (solid, green) propagate activations from input x through layers W_1, ReLU, W_2 to the loss \mathcal{L}. Backward arrows (dashed, red) propagate gradients via the chain rule: \partial \mathcal{L}/\partial W_1 = (\partial \mathcal{L}/\partial W_2)(\partial W_2 / \partial \text{ReLU})(\partial \text{ReLU} / \partial W_1)."><img src="figures/ch03-backpropagation.svg" class="img-fluid figure-img"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-backpropagation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2.3: Backpropagation through a neural network. Forward arrows (solid, green) propagate activations from input <span class="math inline">x</span> through layers <span class="math inline">W_1</span>, ReLU, <span class="math inline">W_2</span> to the loss <span class="math inline">\mathcal{L}</span>. Backward arrows (dashed, red) propagate gradients via the chain rule: <span class="math inline">\partial \mathcal{L}/\partial W_1 = (\partial \mathcal{L}/\partial W_2)(\partial W_2 / \partial \text{ReLU})(\partial \text{ReLU} / \partial W_1)</span>.
+</figcaption>
+</figure>
 </div>
 <div class="callout callout-style-simple callout-note">
 <div class="callout-body d-flex">
@@ -998,19 +1342,9 @@ Return: x^k -&gt; v_1, lambda^k -&gt; lambda_1 as k -&gt; infinity.</code></pre>
 <i class="callout-icon"></i>
 </div>
 <div class="callout-body-container">
-<p><strong>Main takeaway:</strong> Whenever we can build a computational graph, we know how to compute the gradient. This is the general philosophy of deep learning.</p>
+<p><strong>Main takeaway:</strong> Whenever we can express a computation as a directed acyclic graph of elementary operations, we can compute exact gradients efficiently via automatic differentiation. Forward mode is natural for functions with few inputs; reverse mode (backpropagation) is natural for functions with few outputs. Since training a neural network means differentiating a scalar loss with respect to millions of parameters, reverse mode is the workhorse of modern deep learning.</p>
 </div>
 </div>
-</div>
-<div id="fig-backpropagation" class="quarto-float quarto-figure quarto-figure-center anchored">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-backpropagation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<a href="figures/ch03-backpropagation.svg" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;2.1: Computation graph for backpropagation. Forward arrows (solid, green) propagate activations from input x through layers W_1, ReLU, W_2 to the loss \mathcal{L}. Backward arrows (dashed, red) propagate gradients via the chain rule."><img src="figures/ch03-backpropagation.svg" class="img-fluid figure-img"></a>
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-backpropagation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;2.1: Computation graph for backpropagation. Forward arrows (solid, green) propagate activations from input <span class="math inline">x</span> through layers <span class="math inline">W_1</span>, ReLU, <span class="math inline">W_2</span> to the loss <span class="math inline">\mathcal{L}</span>. Backward arrows (dashed, red) propagate gradients via the chain rule.
-</figcaption>
-</figure>
 </div>
 <div class="callout callout-style-default callout-tip callout-titled">
 <div class="callout-header d-flex align-content-center">
@@ -1025,6 +1359,7 @@ Figure&nbsp;2.1: Computation graph for backpropagation. Forward arrows (solid, g
 <p>With the mathematical vocabulary established in this chapter — norms for measuring distance, decompositions for revealing structure, and derivatives for guiding descent — we are ready to formalize the optimization problems themselves. The next chapter introduces convex sets and functions, building on the linear algebra and calculus developed here.</p>
 </div>
 </div>
+</section>
 </section>
 </section>
 <section id="summary" class="level2 unnumbered">
@@ -1453,50 +1788,6 @@ Figure&nbsp;2.1: Computation graph for backpropagation. Forward arrows (solid, g
   </div>
 </nav>
 </div> <!-- /content -->
-<script>
-// Plotly Warmtone theming helpers — shared across all lectures
-// Reads CSS custom properties set by _warmtone.scss (light/dark aware)
-const plotlyConfig = {responsive: true, displayModeBar: false};
-const figFont = '"Source Serif 4", Georgia, "Times New Roman", serif';
-const figFontHeading = '"Crimson Pro", Georgia, serif';
-
-function css(v) {
-  return getComputedStyle(document.documentElement).getPropertyValue(v).trim();
-}
-
-function legendStyle() {
-  return {
-    font: {family: figFont, size: 13, color: css('--fig-text')},
-    bgcolor: css('--fig-bg') + 'dd',
-    bordercolor: css('--fig-grid'),
-    borderwidth: 1,
-  };
-}
-
-function themeLayout(extra) {
-  return Object.assign({
-    paper_bgcolor: css('--fig-bg'),
-    plot_bgcolor: css('--fig-plot-bg'),
-    font: {family: figFont, color: css('--fig-text'), size: 14},
-  }, extra || {});
-}
-
-function themeAxis(title, extra) {
-  return Object.assign({
-    title: {text: title, font: {family: figFont, size: 14}},
-    gridcolor: css('--fig-grid'),
-    zerolinecolor: css('--fig-grid'),
-    linecolor: css('--fig-axis'),
-    tickfont: {family: figFont, size: 12, color: css('--fig-axis')},
-  }, extra || {});
-}
-
-// Plotly color sequences matching the Warmtone palette
-const warmtonePalette = [
-  '#7b97ad', '#b8995e', '#ad8480', '#7a9a7e', '#907ea0',
-  '#6f9996', '#8a6e5e', '#b56b6b', '#8fa3b8', '#a09488'
-];
-</script>
 <script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
 (function() {
   let previousOnload = window.onload;

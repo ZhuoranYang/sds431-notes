@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 300" width="700" height="300">
+  <defs>
+    <style>
+      text { font-family: 'Palatino Linotype', Palatino, Georgia, serif; fill: #3d352f; }
+    </style>
+    <!-- Forward mode arrow (sage) -->
+    <marker id="arr-fwd" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#7a9a7e"/>
+    </marker>
+    <!-- Reverse mode arrow (rosewood) -->
+    <marker id="arr-rev" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#ad8480"/>
+    </marker>
+    <!-- Neutral arrow -->
+    <marker id="arr-n" markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
+      <polygon points="0,0 7,2.5 0,5" fill="#968a80"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="700" height="300" fill="#f9f6f0" rx="6"/>
+
+  <!-- Dividing line -->
+  <line x1="350" y1="30" x2="350" y2="290" stroke="#e0d9d1" stroke-width="1.2" stroke-dasharray="4 3"/>
+
+  <!-- =========================================================== -->
+  <!--                  LEFT PANEL: FORWARD MODE                    -->
+  <!-- =========================================================== -->
+  <text x="175" y="24" text-anchor="middle" font-size="14" font-weight="bold" fill="#7a9a7e">Forward Mode</text>
+  <text x="175" y="40" text-anchor="middle" font-size="10" fill="#968a80" font-style="italic">Compute ∂𝑓/∂𝑥₁ by propagating tangents →</text>
+
+  <!-- Nodes (compact positions) -->
+  <!-- x1 at (30, 105) -->
+  <rect x="14" y="83" width="48" height="32" rx="16" fill="#7b97ad" fill-opacity="0.13" stroke="#7b97ad" stroke-width="1.4"/>
+  <text x="38" y="103" text-anchor="middle" font-size="12" fill="#7b97ad" font-weight="bold">𝑥₁</text>
+
+  <!-- x2 at (30, 195) -->
+  <rect x="14" y="179" width="48" height="32" rx="16" fill="#7b97ad" fill-opacity="0.13" stroke="#7b97ad" stroke-width="1.4"/>
+  <text x="38" y="199" text-anchor="middle" font-size="12" fill="#7b97ad" font-weight="bold">𝑥₂</text>
+
+  <!-- v1 = sin(x1) at (145, 90) -->
+  <rect x="106" y="72" width="56" height="36" rx="18" fill="#7a9a7e" fill-opacity="0.13" stroke="#7a9a7e" stroke-width="1.4"/>
+  <text x="134" y="95" text-anchor="middle" font-size="11" fill="#7a9a7e" font-weight="bold">𝑣₁</text>
+
+  <!-- v2 = x1*x2 at (145, 190) -->
+  <rect x="106" y="172" width="56" height="36" rx="18" fill="#7a9a7e" fill-opacity="0.13" stroke="#7a9a7e" stroke-width="1.4"/>
+  <text x="134" y="195" text-anchor="middle" font-size="11" fill="#7a9a7e" font-weight="bold">𝑣₂</text>
+
+  <!-- f = v1+v2 at (268, 140) -->
+  <rect x="240" y="124" width="56" height="36" rx="18" fill="#b8995e" fill-opacity="0.15" stroke="#b8995e" stroke-width="1.6"/>
+  <text x="268" y="147" text-anchor="middle" font-size="12" fill="#b8995e" font-weight="bold">𝑓</text>
+
+  <!-- Forward arrows (sage, solid) with derivative labels -->
+  <!-- x1 -> v1 -->
+  <line x1="62" y1="94" x2="103" y2="90" stroke="#7a9a7e" stroke-width="1.8" marker-end="url(#arr-fwd)"/>
+  <text x="76" y="82" text-anchor="middle" font-size="9" fill="#7a9a7e" font-style="italic">sin</text>
+
+  <!-- x1 -> v2 -->
+  <line x1="62" y1="106" x2="103" y2="185" stroke="#7a9a7e" stroke-width="1.8" marker-end="url(#arr-fwd)"/>
+
+  <!-- x2 -> v2 -->
+  <line x1="62" y1="195" x2="103" y2="192" stroke="#7a9a7e" stroke-width="1.8" marker-end="url(#arr-fwd)"/>
+  <text x="73" y="165" text-anchor="middle" font-size="9" fill="#7a9a7e" font-style="italic">×</text>
+
+  <!-- v1 -> f -->
+  <line x1="162" y1="90" x2="237" y2="135" stroke="#7a9a7e" stroke-width="1.8" marker-end="url(#arr-fwd)"/>
+
+  <!-- v2 -> f -->
+  <line x1="162" y1="193" x2="237" y2="149" stroke="#7a9a7e" stroke-width="1.8" marker-end="url(#arr-fwd)"/>
+  <text x="200" y="130" text-anchor="middle" font-size="9" fill="#7a9a7e" font-style="italic">+</text>
+
+  <!-- Tangent (dot) values displayed below each node -->
+  <!-- dx1/dx1 = 1 -->
+  <text x="38" y="128" text-anchor="middle" font-size="9" fill="#7a9a7e">ẋ₁ = 1</text>
+  <!-- dx2/dx1 = 0 -->
+  <text x="38" y="224" text-anchor="middle" font-size="9" fill="#7a9a7e">ẋ₂ = 0</text>
+  <!-- dv1/dx1 = cos(x1) -->
+  <text x="134" y="120" text-anchor="middle" font-size="9" fill="#7a9a7e">v̇₁ = cos(𝑥₁)</text>
+  <!-- dv2/dx1 = x2 -->
+  <text x="134" y="220" text-anchor="middle" font-size="9" fill="#7a9a7e">v̇₂ = 𝑥₂</text>
+  <!-- df/dx1 -->
+  <text x="268" y="173" text-anchor="middle" font-size="9" fill="#b8995e" font-weight="bold">ḟ = cos(𝑥₁) + 𝑥₂</text>
+
+  <!-- Summary formula -->
+  <text x="175" y="260" text-anchor="middle" font-size="10" fill="#968a80" font-style="italic">One pass yields ∂𝑓/∂𝑥₁ = cos(𝑥₁) + 𝑥₂</text>
+  <text x="175" y="276" text-anchor="middle" font-size="9" fill="#968a80">Cost: 𝒪(1) per input variable</text>
+
+  <!-- =========================================================== -->
+  <!--                 RIGHT PANEL: REVERSE MODE                    -->
+  <!-- =========================================================== -->
+  <text x="525" y="24" text-anchor="middle" font-size="14" font-weight="bold" fill="#ad8480">Reverse Mode (Backpropagation)</text>
+  <text x="525" y="40" text-anchor="middle" font-size="10" fill="#968a80" font-style="italic">Compute all ∂𝑓/∂𝑥ᵢ by propagating adjoints ←</text>
+
+  <!-- Nodes -->
+  <!-- x1 at (380, 105) -->
+  <rect x="364" y="83" width="48" height="32" rx="16" fill="#7b97ad" fill-opacity="0.13" stroke="#7b97ad" stroke-width="1.4"/>
+  <text x="388" y="103" text-anchor="middle" font-size="12" fill="#7b97ad" font-weight="bold">𝑥₁</text>
+
+  <!-- x2 at (380, 195) -->
+  <rect x="364" y="179" width="48" height="32" rx="16" fill="#7b97ad" fill-opacity="0.13" stroke="#7b97ad" stroke-width="1.4"/>
+  <text x="388" y="199" text-anchor="middle" font-size="12" fill="#7b97ad" font-weight="bold">𝑥₂</text>
+
+  <!-- v1 at (495, 90) -->
+  <rect x="456" y="72" width="56" height="36" rx="18" fill="#7a9a7e" fill-opacity="0.13" stroke="#7a9a7e" stroke-width="1.4"/>
+  <text x="484" y="95" text-anchor="middle" font-size="11" fill="#7a9a7e" font-weight="bold">𝑣₁</text>
+
+  <!-- v2 at (495, 190) -->
+  <rect x="456" y="172" width="56" height="36" rx="18" fill="#7a9a7e" fill-opacity="0.13" stroke="#7a9a7e" stroke-width="1.4"/>
+  <text x="484" y="195" text-anchor="middle" font-size="11" fill="#7a9a7e" font-weight="bold">𝑣₂</text>
+
+  <!-- f at (618, 140) -->
+  <rect x="590" y="124" width="56" height="36" rx="18" fill="#b8995e" fill-opacity="0.15" stroke="#b8995e" stroke-width="1.6"/>
+  <text x="618" y="147" text-anchor="middle" font-size="12" fill="#b8995e" font-weight="bold">𝑓</text>
+
+  <!-- Faint forward structure arrows (neutral, thin) -->
+  <line x1="412" y1="94" x2="453" y2="90" stroke="#e0d9d1" stroke-width="1" marker-end="url(#arr-n)"/>
+  <line x1="412" y1="106" x2="453" y2="185" stroke="#e0d9d1" stroke-width="1" marker-end="url(#arr-n)"/>
+  <line x1="412" y1="195" x2="453" y2="192" stroke="#e0d9d1" stroke-width="1" marker-end="url(#arr-n)"/>
+  <line x1="512" y1="90" x2="587" y2="135" stroke="#e0d9d1" stroke-width="1" marker-end="url(#arr-n)"/>
+  <line x1="512" y1="193" x2="587" y2="149" stroke="#e0d9d1" stroke-width="1" marker-end="url(#arr-n)"/>
+
+  <!-- Reverse arrows (rosewood, dashed) -->
+  <!-- f -> v1 -->
+  <line x1="590" y1="131" x2="515" y2="92" stroke="#ad8480" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#arr-rev)"/>
+  <text x="558" y="104" text-anchor="middle" font-size="8.5" fill="#ad8480" font-style="italic">v̄₁ · 1</text>
+
+  <!-- f -> v2 -->
+  <line x1="590" y1="153" x2="515" y2="192" stroke="#ad8480" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#arr-rev)"/>
+  <text x="558" y="182" text-anchor="middle" font-size="8.5" fill="#ad8480" font-style="italic">v̄₂ · 1</text>
+
+  <!-- v1 -> x1 -->
+  <line x1="456" y1="82" x2="415" y2="92" stroke="#ad8480" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#arr-rev)"/>
+  <text x="428" y="76" text-anchor="middle" font-size="8.5" fill="#ad8480" font-style="italic">cos(𝑥₁)</text>
+
+  <!-- v2 -> x1 -->
+  <line x1="456" y1="185" x2="415" y2="110" stroke="#ad8480" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#arr-rev)"/>
+  <text x="424" y="148" text-anchor="middle" font-size="8.5" fill="#ad8480" font-style="italic">𝑥₂</text>
+
+  <!-- v2 -> x2 -->
+  <line x1="456" y1="195" x2="415" y2="195" stroke="#ad8480" stroke-width="1.8" stroke-dasharray="5 3" marker-end="url(#arr-rev)"/>
+  <text x="436" y="212" text-anchor="middle" font-size="8.5" fill="#ad8480" font-style="italic">𝑥₁</text>
+
+  <!-- Adjoint values below each node -->
+  <!-- f-bar = 1 (seed) -->
+  <text x="618" y="173" text-anchor="middle" font-size="9" fill="#ad8480">f̄ = 1</text>
+  <!-- v1-bar = 1 -->
+  <text x="484" y="120" text-anchor="middle" font-size="9" fill="#ad8480">v̄₁ = 1</text>
+  <!-- v2-bar = 1 -->
+  <text x="484" y="220" text-anchor="middle" font-size="9" fill="#ad8480">v̄₂ = 1</text>
+  <!-- x1-bar = cos(x1) + x2 -->
+  <text x="388" y="128" text-anchor="middle" font-size="9" fill="#ad8480" font-weight="bold">x̄₁ = cos(𝑥₁) + 𝑥₂</text>
+  <!-- x2-bar = x1 -->
+  <text x="388" y="224" text-anchor="middle" font-size="9" fill="#ad8480" font-weight="bold">x̄₂ = 𝑥₁</text>
+
+  <!-- Summary formula -->
+  <text x="525" y="253" text-anchor="middle" font-size="10" fill="#968a80" font-style="italic">One pass yields all gradients:</text>
+  <text x="525" y="268" text-anchor="middle" font-size="10" fill="#968a80" font-style="italic">∂𝑓/∂𝑥₁ = cos(𝑥₁) + 𝑥₂ ,  ∂𝑓/∂𝑥₂ = 𝑥₁</text>
+  <text x="525" y="284" text-anchor="middle" font-size="9" fill="#968a80">Cost: 𝒪(1) per output variable</text>
+</svg>
